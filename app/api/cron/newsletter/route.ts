@@ -1,0 +1,185 @@
+import { NextResponse } from 'next/server';
+
+import { SITE } from '@/lib/collections';
+
+import { sendEmail } from '@/lib/email';
+
+import { createAdminClient } from '@/lib/supabase/admin';
+import { saveWithColumnFallback } from '@/lib/supabase-save';
+
+
+
+function authorized(request: Request) {
+
+  const secret = process.env.CRON_SECRET;
+
+  if (!secret) return process.env.NODE_ENV !== 'production';
+
+  const header = request.headers.get('authorization');
+
+  const query = new URL(request.url).searchParams.get('secret');
+
+  return header === `Bearer ${secret}` || query === secret;
+
+}
+
+
+
+function isEligibleForDigest(lastSent: string | null | undefined) {
+
+  if (!lastSent) return true;
+
+  const last = new Date(lastSent);
+
+  if (Number.isNaN(last.getTime())) return true;
+
+  const monthAgo = new Date();
+
+  monthAgo.setDate(monthAgo.getDate() - 28);
+
+  return last < monthAgo;
+
+}
+
+
+
+export async function GET(request: Request) {
+
+  if (!authorized(request)) {
+
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  }
+
+
+
+  try {
+
+    const supabase = createAdminClient();
+
+    const [{ data: subscribers }, { data: tours }, { data: updates }] = await Promise.all([
+
+      supabase.from('subscribers').select('id,email,last_digest_at'),
+
+      supabase.from('tours').select('title,slug,country').limit(6),
+
+      supabase.from('safari_updates').select('title,slug').limit(5),
+
+    ]);
+
+
+
+    const eligible = (subscribers || []).filter((row) => {
+
+      const email = String(row.email || '').trim();
+
+      return email.includes('@') && isEligibleForDigest(row.last_digest_at ? String(row.last_digest_at) : null);
+
+    });
+
+
+
+    if (!eligible.length) {
+
+      return NextResponse.json({ ok: true, sent: 0, reason: 'No eligible subscribers this month' });
+
+    }
+
+
+
+    const tourList = (tours || [])
+
+      .map((tour) => `<li><a href="${SITE.url}/tours/${tour.slug || ''}">${tour.title}</a> — ${tour.country || ''}</li>`)
+
+      .join('');
+
+    const newsList = (updates || [])
+
+      .map((post) => `<li><a href="${SITE.url}/safari-updates/${post.slug || ''}">${post.title}</a></li>`)
+
+      .join('');
+
+
+
+    const html = `
+
+      <div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937">
+
+        <p>${SITE.name}</p>
+
+        <h1>This month on safari</h1>
+
+        <p>Popular tour packages and the latest safari updates from our team.</p>
+
+        <h2>Popular tours</h2>
+
+        <ul>${tourList || '<li>Browse live packages on our website.</li>'}</ul>
+
+        <h2>Safari updates</h2>
+
+        <ul>${newsList || '<li>New stories are published on the journal.</li>'}</ul>
+
+        <p><a href="${SITE.url}">Visit Eton Safaris</a></p>
+
+      </div>
+
+    `;
+
+
+
+    let sent = 0;
+
+    const now = new Date().toISOString();
+
+
+
+    for (const row of eligible) {
+
+      const email = String(row.email || '').trim();
+
+      const result = await sendEmail({
+
+        title: `${SITE.name} monthly safari digest`,
+
+        message: 'Popular tours and safari updates for this month.',
+
+        html,
+
+        to: [email],
+
+        category: 'subscriber',
+
+      });
+
+      if (!result.ok) continue;
+
+      sent += 1;
+
+      if (row.id) {
+
+        await saveWithColumnFallback('subscribers', { last_digest_at: now }, { id: row.id, client: supabase });
+
+      }
+
+    }
+
+
+
+    return NextResponse.json({ ok: true, sent, eligible: eligible.length });
+
+  } catch (error) {
+
+    console.error('[Newsletter cron] Failed:', error);
+
+    return NextResponse.json(
+
+      { ok: false, error: error instanceof Error ? error.message : 'Cron failed' },
+
+      { status: 500 }
+
+    );
+
+  }
+
+}
+

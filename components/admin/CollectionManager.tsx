@@ -1,0 +1,986 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
+import AdminItemCard from '@/components/admin/AdminItemCard';
+import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
+import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
+import {
+  fetchCollectionRecords,
+  formatColumnLabel,
+  getDynamicColumns,
+  getRecordImage,
+  getRecordTitle,
+  pickString,
+  pickNumber,
+  slugify,
+  isLanguagePost,
+} from '@/lib/data';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
+import { notifyWorkspace } from '@/lib/notify';
+import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
+import { supabase } from '@/lib/supabase/client';
+import SeoPanel from '@/components/admin/SeoPanel';
+import CoverImageField from '@/components/admin/CoverImageField';
+import RichTextEditor from '@/components/admin/RichTextEditor';
+import SearchableSelect from '@/components/admin/SearchableSelect';
+import {
+  defaultSeoValues,
+  seoValuesFromRecord,
+  type SeoValues,
+} from '@/lib/seo';
+import { buildSavePayload } from '@/lib/supabase-payload';
+import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
+import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
+import { countryCategoryPath } from '@/lib/country-utils';
+import { generateBookingCode } from '@/lib/booking-code';
+import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+
+export default function CollectionManager({ config }: { config: CollectionConfig }) {
+  const router = useRouter();
+  const isTours = config.id === 'tours';
+  const isSafariUpdates = config.id === 'safari_updates';
+  const isCountries = config.id === 'countries';
+  const isCategories = config.id === 'categories';
+  const isNationalPark = config.id === 'national_park';
+  const isAccommodations = config.id === 'accommodations';
+  const isExplore = config.id === 'explore';
+  const isPages = config.id === 'pages';
+  const isLandingPages = config.id === 'landing_pages';
+  const isOps = ['bookings', 'inquiries', 'pesapal_payments', 'registered_agents', 'notifications', 'subscribers'].includes(
+    config.id
+  );
+  const [records, setRecords] = useState<RecordRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<RecordRow | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues());
+  const [saving, setSaving] = useState(false);
+  const [countryFilter, setCountryFilter] = useState('');
+  const [postKind, setPostKind] = useState<'standard' | 'language'>('standard');
+  const [seoSaved, setSeoSaved] = useState(false);
+  const [guestLogsAgent, setGuestLogsAgent] = useState<RecordRow | null>(null);
+  const [guestLogs, setGuestLogs] = useState<RecordRow[]>([]);
+  const [guestLogsLoading, setGuestLogsLoading] = useState(false);
+  const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<RecordRow | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<RecordRow[]>([]);
+
+  async function load() {
+    if (!config.table) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      let data = await fetchCollectionRecords(config.table, config.aliases);
+      if (config.id === 'pages') {
+        const created = await ensureDefaultCmsPages();
+        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
+      }
+      if (config.id === 'landing_pages') {
+        const created = await ensureDefaultLandingPages();
+        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
+      }
+      setRecords(
+        data.slice().sort((a, b) => {
+          const aDate = String(a.created_at || '');
+          const bDate = String(b.created_at || '');
+          return bDate.localeCompare(aDate);
+        })
+      );
+      if (data.length === 0) {
+        console.error(`[Supabase] "${config.table}" returned 0 rows. Check RLS policies or empty table.`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load records';
+      console.error(err);
+      setError(message);
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.table]);
+
+  const columns = useMemo(() => getDynamicColumns(records), [records]);
+  const filtered = useMemo(() => {
+    const needle = query.toLowerCase().trim();
+    return records.filter((record) => {
+      if (isSafariUpdates) {
+        const language = isLanguagePost(record);
+        if (postKind === 'language' ? !language : language) return false;
+      }
+      if (countryFilter) {
+        const country = String(record.country ?? record.destination ?? '').toLowerCase();
+        if (!country.includes(countryFilter.toLowerCase())) return false;
+      }
+      if (!needle) return true;
+      return Object.keys(record).some((key) => String(record[key] ?? '').toLowerCase().includes(needle));
+    });
+  }, [records, query, countryFilter, postKind, isSafariUpdates]);
+
+  const countryOptions = useMemo(() => {
+    const fromRecords = Array.from(
+      new Set(records.map((record) => String(record.country || record.destination || '').trim()).filter(Boolean))
+    );
+    const defaults = [...NAV_COUNTRIES.map((item) => item.name), ...OTHER_DESTINATIONS.map((item) => item.name)];
+    return Array.from(new Set([...defaults, ...fromRecords]));
+  }, [records]);
+
+  function publicHref(record: RecordRow): string | null {
+    if (config.id === 'categories') {
+      const country = pickString(record, ['country']);
+      if (country) return countryCategoryPath(country, record);
+      const value = pickString(record, ['slug', 'name', 'title']);
+      return value ? `/tours?category=${encodeURIComponent(value)}` : null;
+    }
+    const slug =
+      pickString(record, ['slug']) ||
+      (record.id !== undefined && record.id !== null ? String(record.id) : '') ||
+      slugify(getRecordTitle(record));
+    if (config.id === 'pages' && slug) return pagePublicPath(slug);
+    if (config.id === 'landing_pages') {
+      const landingSlug = pickString(record, ['slug', 'seo_slug']) || pickString(record, ['country']);
+      return landingSlug ? landingPreviewPath(landingSlug) : null;
+    }
+    if (config.id === 'countries' && slug) return destinationPublicPath(slug);
+    if (!config.publicPath) return null;
+    if (!slug) return null;
+    return `${config.publicPath.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`;
+  }
+
+  function cardBadge() {
+    const badges: Record<string, string> = {
+      safari_updates: 'SAFARI POST',
+      tours: 'TOUR',
+      countries: 'DESTINATION',
+      categories: 'CATEGORY',
+      national_park: 'PARK',
+      accommodations: 'STAY',
+      explore: 'PLACE',
+      pages: 'PAGE',
+      landing_pages: 'LANDING',
+      bookings: 'BOOKING',
+      inquiries: 'INQUIRY',
+      pesapal_payments: 'PAYMENT',
+      subscribers: 'SUBSCRIBER',
+      registered_agents: 'AGENT',
+      notifications: 'NOTICE',
+    };
+    return badges[config.id] || config.label.toUpperCase();
+  }
+
+  function cardDate(record: RecordRow) {
+    const raw = pickString(record, ['published_at', 'created_at', 'travel_date', 'updated_at']);
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
+  }
+
+  function opsColumns(): OpsColumn[] {
+    if (config.id === 'bookings') {
+      return [
+        { label: 'Guest', keys: ['guest_name', 'name'] },
+        { label: 'Email', keys: ['email'] },
+        { label: 'Tour', keys: ['tour'] },
+        { label: 'Destination', keys: ['destination'] },
+        { label: 'Travel date', keys: ['travel_date'], date: true },
+        { label: 'Booking code', keys: ['booking_code'] },
+        { label: 'Payment', keys: ['payment_status', 'status'], badge: true },
+        { label: 'Paid', keys: ['amount_paid'], money: true },
+        { label: 'Balance', keys: ['remaining_balance'], money: true },
+        { label: 'Status', keys: ['status'], badge: true },
+      ];
+    }
+    if (config.id === 'inquiries') {
+      return [
+        { label: 'Name', keys: ['name', 'guest_name'] },
+        { label: 'Email', keys: ['email'] },
+        { label: 'Phone', keys: ['phone'] },
+        { label: 'Tour / destination', keys: ['tour', 'destination', 'title'] },
+        { label: 'Message', keys: ['message'], clamp: true },
+        { label: 'Status', keys: ['status'], badge: true },
+        { label: 'Received', keys: ['created_at'], date: true },
+      ];
+    }
+    if (config.id === 'pesapal_payments') {
+      return [
+        { label: 'Reference', keys: ['reference', 'order_tracking_id'] },
+        { label: 'Email', keys: ['email'] },
+        { label: 'Tour', keys: ['tour'] },
+        { label: 'Amount', keys: ['pesapal_amount', 'amount', 'total_amount'], money: true },
+        { label: 'Type', keys: ['payment_type'] },
+        { label: 'Status', keys: ['status'], badge: true },
+        { label: 'Tracking ID', keys: ['order_tracking_id'] },
+        { label: 'Date', keys: ['created_at'], date: true },
+      ];
+    }
+    if (config.id === 'registered_agents') {
+      return [
+        { label: 'Name', keys: ['name', 'full_name'] },
+        { label: 'Email', keys: ['email'] },
+        { label: 'Country', keys: ['country'] },
+        { label: 'Phone', keys: ['phone'] },
+        { label: 'Company', keys: ['company'] },
+        { label: 'Status', keys: ['status'], badge: true },
+        { label: 'Registered', keys: ['created_at'], date: true },
+      ];
+    }
+    if (config.id === 'notifications') {
+      return [
+        { label: 'Title', keys: ['title'] },
+        { label: 'Message', keys: ['message'], clamp: true },
+        { label: 'Category', keys: ['category'], badge: true },
+        { label: 'Date', keys: ['created_at'], date: true },
+      ];
+    }
+    return [
+      { label: 'Email', keys: ['email'] },
+      { label: 'Subscribed', keys: ['created_at'], date: true },
+    ];
+  }
+
+  function opsActionButton(label: string, onClick: () => void) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="rounded-full border border-[#00A651]/30 bg-[#00A651]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#00A651] hover:bg-[#00A651] hover:text-white"
+      >
+        {label}
+      </button>
+    );
+  }
+
+  function opsActions(record: RecordRow) {
+    return (
+      <>
+        {config.id === 'inquiries' &&
+          opsActionButton('Create Quote', () =>
+            router.push(`/admin/quotations_inquiries?inquiry=${encodeURIComponent(String(record.id || ''))}`)
+          )}
+        {config.id === 'bookings' && (
+          <>
+            {opsActionButton('Confirm Down Payment', () => confirmDownPayment(record))}
+            {opsActionButton('Payment History', () => viewPayments(record))}
+          </>
+        )}
+        {config.id === 'registered_agents' && (
+          <>
+            {opsActionButton('View Guest Logs', () => viewGuestLogs(record))}
+            {opsActionButton(
+              pickString(record, ['status']) === 'Active' ? 'Deactivate' : 'Activate',
+              () => setAgentStatus(record, pickString(record, ['status']) === 'Active' ? 'Inactive' : 'Active')
+            )}
+          </>
+        )}
+      </>
+    );
+  }
+
+  function cardActions(record: RecordRow) {
+    return (
+      <>
+        {config.id === 'bookings' && (
+          <>
+            <button type="button" onClick={() => confirmDownPayment(record)} className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300">
+              Confirm Down Payment
+            </button>
+            <button type="button" onClick={() => viewPayments(record)} className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300">
+              Payment history
+            </button>
+          </>
+        )}
+        {config.id === 'registered_agents' && (
+          <>
+            <button type="button" onClick={() => viewGuestLogs(record)} className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300">
+              View Guest Logs
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgentStatus(record, pickString(record, ['status']) === 'Active' ? 'Inactive' : 'Active')}
+              className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300"
+            >
+              {pickString(record, ['status']) === 'Active' ? 'Deactivate' : 'Activate'}
+            </button>
+          </>
+        )}
+      </>
+    );
+  }
+
+  function openCreate() {
+    if (isTours) {
+      router.push('/admin/tours/new');
+      return;
+    }
+    if (isSafariUpdates) {
+      router.push('/admin/safari_updates/new');
+      return;
+    }
+    if (isCountries) {
+      router.push('/admin/countries/new');
+      return;
+    }
+    if (isCategories) {
+      router.push('/admin/categories/new');
+      return;
+    }
+    if (isNationalPark) {
+      router.push('/admin/national_park/new');
+      return;
+    }
+    if (isAccommodations) {
+      router.push('/admin/accommodations/new');
+      return;
+    }
+    if (isExplore) {
+      router.push('/admin/explore/new');
+      return;
+    }
+    if (isPages) {
+      router.push('/admin/pages/new');
+      return;
+    }
+    if (isLandingPages) {
+      router.push('/admin/landing_pages/new');
+      return;
+    }
+    if (config.id === 'registered_agents') return;
+    setEditing(null);
+    const defaults: Record<string, string> = {};
+    config.fields.forEach((field) => {
+      defaults[field.name] = '';
+    });
+    setForm(defaults);
+    setSeo(defaultSeoValues());
+    setSeoSaved(false);
+    setModalOpen(true);
+  }
+
+  function openEdit(record: RecordRow) {
+    if (isTours && record.id !== undefined) {
+      router.push(`/admin/tours/${record.id}/edit`);
+      return;
+    }
+    if (isSafariUpdates && record.id !== undefined) {
+      router.push(`/admin/safari_updates/${record.id}/edit`);
+      return;
+    }
+    if (isCountries && record.id !== undefined) {
+      router.push(`/admin/countries/${record.id}/edit`);
+      return;
+    }
+    if (isCategories && record.id !== undefined) {
+      router.push(`/admin/categories/${record.id}/edit`);
+      return;
+    }
+    if (isNationalPark && record.id !== undefined) {
+      router.push(`/admin/national_park/${record.id}/edit`);
+      return;
+    }
+    if (isAccommodations && record.id !== undefined) {
+      router.push(`/admin/accommodations/${record.id}/edit`);
+      return;
+    }
+    if (isExplore && record.id !== undefined) {
+      router.push(`/admin/explore/${record.id}/edit`);
+      return;
+    }
+    if (isPages && record.id !== undefined) {
+      router.push(`/admin/pages/${record.id}/edit`);
+      return;
+    }
+    if (isLandingPages && record.id !== undefined) {
+      router.push(`/admin/landing_pages/${record.id}/edit`);
+      return;
+    }
+    setEditing(record);
+    const next: Record<string, string> = {};
+    const keys = config.fields.length > 0 ? config.fields.map((field) => field.name) : Object.keys(record);
+    keys.forEach((key) => {
+      const value = record[key];
+      const text = value === null || value === undefined ? '' : String(value);
+      next[key] = /description|content|summary|excerpt/i.test(key) ? stripEmbeddedContent(text) : text;
+    });
+    setForm(next);
+    setSeo(seoValuesFromRecord(record as Record<string, unknown>));
+    setSeoSaved(true);
+    setModalOpen(true);
+  }
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    const raw: Record<string, unknown> = { ...form };
+    if (!raw.slug && typeof raw.title === 'string') raw.slug = slugify(raw.title as string);
+    if (!raw.slug && typeof raw.name === 'string') raw.slug = slugify(raw.name as string);
+
+    const table = config.table;
+    const previousHtml = String(editing?.description || editing?.content || '');
+    const previousEmbed = extractEmbeddedContent(previousHtml);
+    if (typeof raw.description === 'string') {
+      raw.description = embedContent(String(raw.description), previousEmbed);
+    }
+    if (typeof raw.content === 'string') {
+      raw.content = embedContent(String(raw.content), previousEmbed);
+    }
+    if (!editing?.id) {
+      raw.published_at = new Date().toISOString();
+    }
+    const payload = buildSavePayload(table, raw, { seo, knownColumns: columns });
+    const result = await saveWithColumnFallback(table, payload, editing?.id);
+
+    if (result.error) {
+      console.error('[Supabase] Save failed:', result.error);
+      setError(result.error.message);
+      setSaving(false);
+      return;
+    }
+
+    if (table === 'bookings') {
+      const status = String(raw.status || '');
+      const guestEmail = String(raw.email || '');
+      const guestName = String(raw.guest_name || guestEmail);
+      const event = bookingCalendarEvent({
+        guestName,
+        tour: String(raw.tour || ''),
+        destination: String(raw.destination || ''),
+        travelDate: String(raw.travel_date || ''),
+        email: guestEmail,
+      });
+      const calendarUrl = googleCalendarUrl(event);
+      if (!editing) {
+        await notifyWorkspace({
+          title: 'New Booking',
+          message: `${guestName} booked ${String(raw.tour || 'a safari')}. Add to calendar: ${calendarUrl}`,
+          category: 'booking',
+          guestEmail: guestEmail || undefined,
+        });
+      }
+      if (['Confirmed', 'Completed', 'Cancelled'].includes(status) && guestEmail) {
+        await notifyWorkspace({
+          title: `Booking ${status}`,
+          message: `Booking for ${guestName} is now ${status}. Calendar: ${calendarUrl}`,
+          category: 'booking',
+          guestEmail,
+        });
+      }
+    }
+
+    setModalOpen(false);
+    setSaving(false);
+    await load();
+    router.refresh();
+  }
+
+  async function remove(record: RecordRow) {
+    if (!record.id || !confirm('Delete this record?')) return;
+    const { error: deleteError } = await supabase.from(config.table).delete().eq('id', record.id);
+    if (deleteError) {
+      console.error(deleteError);
+      setError(deleteError.message);
+      return;
+    }
+    await load();
+  }
+
+  async function setAgentStatus(record: RecordRow, status: 'Active' | 'Inactive' | 'Pending') {
+    if (!record.id) return;
+    const { error: updateError } = await saveWithColumnFallback(config.table, { status }, record.id);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    if (status === 'Active') {
+      const agentEmail = pickString(record, ['email']);
+      await notifyWorkspace({
+        title: 'Agent account approved',
+        message: `Your Eton Safaris agent profile has been activated. Sign in at https://etonsafaris.com/login and open the agent portal: https://etonsafaris.com/agents/portal`,
+        category: 'system',
+        guestEmail: agentEmail,
+      });
+    }
+    await load();
+  }
+
+  async function viewGuestLogs(record: RecordRow) {
+    setGuestLogsAgent(record);
+    setGuestLogs([]);
+    setGuestLogsLoading(true);
+    const email = pickString(record, ['email']);
+    if (!email) {
+      setGuestLogsLoading(false);
+      return;
+    }
+    const { data, error: logsError } = await supabase.from('bookings').select('*').eq('agent_email', email);
+    if (logsError) {
+      console.error(logsError);
+      setError(logsError.message);
+    }
+    setGuestLogs((data as RecordRow[]) || []);
+    setGuestLogsLoading(false);
+  }
+
+  async function confirmGuest(guest: RecordRow) {
+    if (!guest.id) return;
+    const guestEmail = pickString(guest, ['email']);
+    const guestName = pickString(guest, ['guest_name', 'name']) || guestEmail;
+    const code = pickString(guest, ['booking_code']) || generateBookingCode();
+    const { error: updateError } = await saveWithColumnFallback(
+      'bookings',
+      { status: 'Confirmed', booking_code: code },
+      guest.id
+    );
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setGuestLogs((current) =>
+      current.map((row) => (row.id === guest.id ? { ...row, status: 'Confirmed', booking_code: code } : row))
+    );
+    if (guestEmail) {
+      await notifyWorkspace({
+        title: 'Booking Confirmed',
+        message: `Hi ${guestName}, your safari booking is confirmed. Your booking code is ${code}. Verify anytime at ${SITE.url}/verify`,
+        category: 'booking',
+        guestEmail,
+      });
+    }
+  }
+
+  async function confirmDownPayment(record: RecordRow) {
+    if (!record.id) return;
+    const entered = window.prompt('Amount paid');
+    if (!entered) return;
+    const paid = Number(entered);
+    if (!Number.isFinite(paid) || paid <= 0) {
+      setError('Enter a valid amount paid.');
+      return;
+    }
+    const total = pickNumber(record, ['final_tour_price', 'total_price', 'amount'], paid);
+    const remaining = Math.max(0, total - paid);
+    const code = pickString(record, ['booking_code']) || generateBookingCode();
+    const paymentStatus = remaining <= 0 ? 'Full Payment' : 'Partial Payment';
+    const { error: updateError } = await saveWithColumnFallback(
+      'bookings',
+      {
+        amount_paid: paid,
+        remaining_balance: remaining,
+        final_tour_price: total,
+        booking_code: code,
+        payment_status: paymentStatus,
+        status: remaining <= 0 ? 'Confirmed' : 'Partial Payment',
+      },
+      record.id
+    );
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    await load();
+  }
+
+  async function viewPayments(record: RecordRow) {
+    setPaymentHistoryBooking(record);
+    setPaymentHistory([]);
+    if (!record.id) return;
+    const { data, error: paymentsError } = await supabase.from('pesapal_payments').select('*').eq('booking_id', record.id);
+    if (paymentsError || !(data || []).length) {
+      const email = pickString(record, ['email']);
+      if (email) {
+        const fallback = await supabase.from('pesapal_payments').select('*').eq('email', email);
+        setPaymentHistory((fallback.data as RecordRow[]) || []);
+        return;
+      }
+    }
+    setPaymentHistory((data as RecordRow[]) || []);
+  }
+
+  const fields: FormField[] =
+    config.fields.length > 0
+      ? config.fields.filter((field) => field.name !== 'slug')
+      : columns
+          .filter((column) => column !== 'id' && column !== 'slug')
+          .map((column) => ({
+            name: column,
+            label: formatColumnLabel(column),
+            type: 'text',
+          }));
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">{config.label}</h2>
+          <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">{config.subtitle}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments'].includes(config.id) && (
+            <span className="relative inline-flex items-center gap-1 rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
+              <Bell className="h-3.5 w-3.5" />
+              {records.filter((row) => pickString(row, ['status']).toLowerCase() === 'pending').length} pending
+            </span>
+          )}
+          <span className="rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
+            {records.length.toLocaleString()} records
+          </span>
+          <button
+            type="button"
+            onClick={() => load()}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
+          >
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </button>
+          {config.addLabel && (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex items-center gap-2 rounded-full bg-[#00A651] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#00945a]"
+            >
+              <Plus className="h-4 w-4" /> {config.addLabel}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row dark:border-white/10 dark:bg-[#161b22]">
+        {(isTours || isCountries || isNationalPark || isAccommodations || isExplore || isCategories || isSafariUpdates || isLandingPages) && (
+          <div className="w-full sm:w-56">
+            <SearchableSelect
+              value={countryFilter}
+              onChange={setCountryFilter}
+              options={[
+                { value: '', label: 'All countries' },
+                ...countryOptions.map((country) => ({ value: country, label: country })),
+              ]}
+              placeholder="All countries"
+            />
+          </div>
+        )}
+        {isSafariUpdates && (
+          <div className="w-full sm:w-52">
+            <SearchableSelect
+              value={postKind}
+              onChange={(value) => setPostKind(value === 'language' ? 'language' : 'standard')}
+              options={[
+                { value: 'standard', label: 'Standard Posts' },
+                { value: 'language', label: 'Language Posts' },
+              ]}
+              placeholder="Post type"
+            />
+          </div>
+        )}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={`Search ${config.label.toLowerCase()}...`}
+            className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] py-3 pl-10 pr-4 text-sm outline-none focus:border-[#00A651] dark:border-white/10 dark:bg-[#0a0c10] dark:text-white"
+          />
+        </div>
+        {!isOps && (
+          <div className="flex rounded-xl border border-gray-200 p-1 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setView('grid')}
+              aria-label="Grid view"
+              className={`rounded-lg p-2 ${view === 'grid' ? 'bg-[#00A651]/15 text-[#00A651]' : 'text-gray-500 dark:text-gray-400'}`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('list')}
+              aria-label="List view"
+              className={`rounded-lg p-2 ${view === 'list' ? 'bg-[#00A651]/15 text-[#00A651]' : 'text-gray-500 dark:text-gray-400'}`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-moss border-t-transparent" />
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+          <p className="font-semibold">Unable to load {config.label}</p>
+          <p className="mt-1">{error}</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-400">
+          No records found in this collection.
+        </div>
+      ) : isOps ? (
+        <OpsRecordTable
+          columns={opsColumns()}
+          records={filtered}
+          extraActions={opsActions}
+          onEdit={openEdit}
+          onDelete={remove}
+        />
+      ) : view === 'grid' ? (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {filtered.map((record, index) => (
+            <AdminItemCard
+              key={String(record.id ?? index)}
+              layout="grid"
+              href={publicHref(record)}
+              image={getRecordImage(record) || undefined}
+              badge={cardBadge()}
+              date={cardDate(record)}
+              title={getRecordTitle(record)}
+              onEdit={() => openEdit(record)}
+              onDelete={() => remove(record)}
+              extraActions={cardActions(record)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((record, index) => (
+            <AdminItemCard
+              key={String(record.id ?? index)}
+              layout="list"
+              href={publicHref(record)}
+              image={getRecordImage(record) || undefined}
+              badge={cardBadge()}
+              date={cardDate(record)}
+              title={getRecordTitle(record)}
+              onEdit={() => openEdit(record)}
+              onDelete={() => remove(record)}
+              extraActions={cardActions(record)}
+            />
+          ))}
+        </div>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
+          <form id={`collection-form-${config.id}`} onSubmit={save} className="w-full max-w-6xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#161b22] sm:p-8">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-serif text-2xl dark:text-white">{editing ? 'Edit item' : config.addLabel || 'Add item'}</h3>
+              <button type="button" onClick={() => setModalOpen(false)}><X /></button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {fields.filter((field) => field.name !== 'slug').map((field) => {
+                const isImage = field.name === 'image_url' || /image|cover|photo/i.test(field.name);
+                const isRich = field.type === 'textarea' && /description|content|excerpt|message|summary/i.test(field.name);
+                return (
+                  <div
+                    key={field.name}
+                    className={`text-sm font-medium text-gray-700 ${field.type === 'textarea' || isImage ? 'sm:col-span-2' : ''}`}
+                  >
+                    {isImage ? (
+                      <CoverImageField
+                        label={field.label}
+                        folder={config.table || 'uploads'}
+                        value={form[field.name] || ''}
+                        onChange={(url) => {
+                          setForm({ ...form, [field.name]: url, image_url: url });
+                          setSeo((current) => ({ ...current, social_image_url: url }));
+                        }}
+                      />
+                    ) : isRich ? (
+                      <>
+                        <span className="mb-2 block">{field.label}</span>
+                        <RichTextEditor
+                          value={form[field.name] || ''}
+                          onChange={(value) => setForm({ ...form, [field.name]: value })}
+                          placeholder={field.placeholder || 'Type here...'}
+                        />
+                      </>
+                    ) : field.type === 'textarea' ? (
+                      <label className="block">
+                        {field.label}
+                        <textarea
+                          required={field.required}
+                          value={form[field.name] || ''}
+                          onChange={(event) => setForm({ ...form, [field.name]: event.target.value })}
+                          className="mt-1 h-28 w-full rounded-lg border px-3 py-2 focus:border-[#00A651] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
+                        />
+                      </label>
+                    ) : field.type === 'select' ? (
+                      <label className="block">
+                        {field.label}
+                        <div className="mt-1">
+                          <SearchableSelect
+                            value={form[field.name] || ''}
+                            onChange={(value) => setForm({ ...form, [field.name]: value })}
+                            options={(field.options || []).map((option) => ({ value: option, label: option }))}
+                            placeholder={`Select ${field.label}`}
+                          />
+                        </div>
+                      </label>
+                    ) : (
+                      <label className="block">
+                        {field.label}
+                        <input
+                          type={field.type}
+                          required={field.required}
+                          placeholder={field.placeholder}
+                          value={form[field.name] || ''}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setForm({ ...form, [field.name]: value });
+                            if (field.name === 'slug') setSeo({ ...seo, slug: value });
+                            if (field.name === 'title' && !seo.seo_title) {
+                              setSeo({ ...seo, seo_title: value });
+                            }
+                          }}
+                          className="mt-1 w-full rounded-lg border px-3 py-2 focus:border-[#00A651] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
+                        />
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {config.publicPath ? (
+              <SeoPanel
+                className="mt-6"
+                values={seo}
+                onChange={setSeo}
+                pageTitle={String(form.title || form.name || 'Untitled')}
+                coverImageUrl={String(form.image_url || form.cover_image || form.featured_image || form.image || '')}
+                contentForReadability={form.description || form.content || form.excerpt || ''}
+                onSave={() => setSeoSaved(true)}
+                saving={saving}
+                contentType={
+                  config.id === 'tours'
+                    ? 'tour'
+                    : config.id === 'countries'
+                      ? 'country'
+                      : config.id === 'categories'
+                        ? 'category'
+                        : config.id === 'national_park'
+                          ? 'park'
+                          : config.id === 'accommodations'
+                            ? 'stay'
+                            : config.id === 'explore'
+                              ? 'place'
+                              : config.id === 'safari_updates'
+                                ? 'article'
+                                : 'page'
+                }
+              />
+            ) : null}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2">Cancel</button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-[#00A651] px-5 py-2.5 font-semibold text-white hover:bg-[#00945a] disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {guestLogsAgent && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-serif text-2xl">
+                Guest logs · {getRecordTitle(guestLogsAgent) || pickString(guestLogsAgent, ['email'])}
+              </h3>
+              <button type="button" onClick={() => setGuestLogsAgent(null)} aria-label="Close guest logs">
+                <X />
+              </button>
+            </div>
+            {guestLogsLoading ? (
+              <p className="text-sm text-gray-500">Loading guest records…</p>
+            ) : guestLogs.length === 0 ? (
+              <p className="text-sm text-gray-500">No guests recorded by this agent yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {guestLogs.map((guest, index) => (
+                  <article key={String(guest.id ?? index)} className="rounded-lg border border-gray-200 px-4 py-3 text-sm">
+                    <p className="font-semibold">{pickString(guest, ['guest_name', 'name']) || pickString(guest, ['email'])}</p>
+                    <p className="text-gray-500">{pickString(guest, ['email'])}</p>
+                    <p className="mt-1 text-gray-600">
+                      {pickString(guest, ['tour']) || 'Tour not set'} · {pickString(guest, ['destination'])} ·{' '}
+                      {pickString(guest, ['status']) || 'Pending'}
+                    </p>
+                    {pickString(guest, ['travel_date', 'created_at']) && (
+                      <p className="mt-1 text-xs text-gray-400">
+                        {pickString(guest, ['travel_date', 'created_at']).slice(0, 10)}
+                      </p>
+                    )}
+                    {pickString(guest, ['status']).toLowerCase() !== 'confirmed' && (
+                      <button
+                        type="button"
+                        onClick={() => confirmGuest(guest)}
+                        className="mt-3 rounded-md bg-moss px-3 py-1.5 text-xs font-semibold text-white"
+                      >
+                        Confirm Guest
+                      </button>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {paymentHistoryBooking && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-serif text-2xl">
+                Payment history · {pickString(paymentHistoryBooking, ['guest_name', 'email'])}
+              </h3>
+              <button type="button" onClick={() => setPaymentHistoryBooking(null)} aria-label="Close payment history">
+                <X />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">
+              {pickString(paymentHistoryBooking, ['payment_status']) || 'Pending Booking'} · Paid{' '}
+              {pickNumber(paymentHistoryBooking, ['amount_paid'])} · Remaining{' '}
+              {pickNumber(paymentHistoryBooking, ['remaining_balance'])}
+            </p>
+            {paymentHistory.length === 0 ? (
+              <p className="mt-4 text-sm text-gray-500">No Pesapal payments linked to this booking yet.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {paymentHistory.map((payment, index) => (
+                  <article key={String(payment.id ?? index)} className="rounded-lg border px-4 py-3 text-sm">
+                    <p className="font-semibold">{pickString(payment, ['reference'])}</p>
+                    <p className="text-gray-500">
+                      {pickString(payment, ['currency']) || 'USD'} {pickNumber(payment, ['pesapal_amount', 'amount'])} ·{' '}
+                      {pickString(payment, ['status']) || 'Pending'}
+                    </p>
+                    {pickString(payment, ['order_tracking_id']) && (
+                      <p className="text-xs text-gray-400">Tracking: {pickString(payment, ['order_tracking_id'])}</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

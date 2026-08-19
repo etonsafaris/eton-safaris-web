@@ -1,0 +1,19 @@
+---
+description: Public country pages always use Destinations; conversion landings stay admin-only
+alwaysApply: true
+---
+
+# Country pages vs landing pages
+
+Do not show conversion landing pages on the public website unless the user explicitly asks to change this.
+
+Public country flow (header, footer, home, chips, `/{country}-safaris`, `/{country}`):
+- URL: `/destinations/{country}` via `destinationPublicPath`
+- Component: `CountryPageContent` only
+- Never render `LandingPageContent` on these routes
+
+Conversion landings:
+- Admin preview only at `/landing/{country}-safaris` (`landingPreviewPath`)
+- Middleware must send guests from `/landing/*` to `/destinations/{country}`
+- Do not add `/landing/*` to the public sitemap or nav
+- `landingPublicPath` must keep returning the country destination URL

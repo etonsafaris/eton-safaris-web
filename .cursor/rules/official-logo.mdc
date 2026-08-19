@@ -1,0 +1,14 @@
+---
+description: Keep the official Eton Safaris gorilla logo on the unique current file
+alwaysApply: true
+---
+
+# Official logo
+
+The logo file is `public/eton-safaris-gorilla.png`. `SITE_LOGO` in `lib/collections.ts` must point at `/eton-safaris-gorilla.png`.
+
+That artwork is the brighter Dav green (`#20A048`) gorilla with grey silverback and white ETON SAFARIS lettering.
+
+Do not point the site at Base44 OvalLogo URLs. Header, footer, admin, and tab icon all use `SITE_LOGO`. Only the browser tab title may change per page.
+
+Do not add redirects from `/icon.png`, `/apple-icon.png`, or `/favicon.ico` — those loops crash the site on refresh.
