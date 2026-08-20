@@ -13,7 +13,7 @@ import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { NAV_COUNTRIES, SITE } from '@/lib/collections';
-import { destinationPublicPath } from '@/lib/cms-routes';
+import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import {
@@ -156,7 +156,7 @@ export default function HomePage() {
     countries.length > 0 ? countries : NAV_COUNTRIES.map((item) => ({ name: item.name, slug: item.slug }))
   ).map((country, index) => {
     const slug =
-      pickString(country, ['slug', 'name']).toLowerCase().replace(/\s+/g, '-') || NAV_COUNTRIES[index]?.slug || '';
+      countrySlugFromLanding(pickString(country, ['slug', 'name'])) || NAV_COUNTRIES[index]?.slug || '';
     return (
       <Link key={slug || index} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">

@@ -173,7 +173,7 @@ export default function CountryPageContent({
                 <PlaceCard
                   key={String(park.id ?? index)}
                   href={`/parks/${pickString(park, ['slug']) || park.id}`}
-                  image={getRecordImage(park) || undefined}
+                  image={getRecordImage(park) || countryHeroImage(slug, country)}
                   title={getRecordTitle(park)}
                   location={pickString(park, ['location', 'country'])}
                   description={pickPlainText(park, ['description', 'excerpt', 'content'])}
@@ -199,7 +199,7 @@ export default function CountryPageContent({
                 <PlaceCard
                   key={String(place.id ?? index)}
                   href={countryPlacePath(slug, place)}
-                  image={getRecordImage(place) || undefined}
+                  image={getRecordImage(place) || countryHeroImage(slug, country)}
                   title={getRecordTitle(place)}
                   location={pickString(place, ['location', 'country'])}
                   description={pickPlainText(place, ['description', 'excerpt', 'content'])}
