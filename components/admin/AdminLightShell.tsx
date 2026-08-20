@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import { SITE } from '@/lib/collections';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
@@ -58,7 +59,7 @@ export default function AdminLightShell({ children }: { children: React.ReactNod
   if (!ready) {
     return (
       <div className="flex h-dvh items-center justify-center bg-[#f3f4f6]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00A651] border-t-transparent" />
+        <AdminLogoLoader label="Loading dashboard" />
       </div>
     );
   }

@@ -7,7 +7,7 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 import type { User } from '@supabase/supabase-js';
-import type { RecordRow } from '@/lib/types';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 
 export default function AgentPortalPage() {
   const router = useRouter();
@@ -93,7 +93,7 @@ export default function AgentPortalPage() {
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-moss border-t-transparent" />
+        <AdminLogoLoader label="Loading portal" />
       </div>
     );
   }

@@ -761,7 +761,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-moss border-t-transparent" />
+          <AdminLogoLoader label={`Loading ${config.label}`} />
         </div>
       ) : error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
