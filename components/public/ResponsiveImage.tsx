@@ -21,6 +21,7 @@ export default function ResponsiveImage({
   variant = 'card',
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
+  if (!resolved) return null;
   const displaySrc = variant === 'hero' ? heroImageSrc(resolved) : cardImageSrc(resolved);
   const srcSet = imageSrcSet(resolved);
   return (
