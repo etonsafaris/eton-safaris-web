@@ -40,8 +40,6 @@ import { countryHeroImage } from '@/lib/country-heroes';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { gorillaPermitHowTo } from '@/lib/country-planning';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { destinationPublicPath } from '@/lib/cms-routes';
-import Link from 'next/link';
 import type { RecordRow } from '@/lib/types';
 
 type CountryPageContentProps = {
