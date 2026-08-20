@@ -454,6 +454,31 @@ export default function RichTextEditor({
           </p>
         )}
       </div>
+      {mediaStatus ? (
+        <p className="border-b border-[#e5e7eb] bg-[#f0fdf4] px-3 py-1 text-xs text-[#166534]">{mediaStatus}</p>
+      ) : null}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        aria-label="Browse image"
+        onChange={(event) => {
+          void handleMediaFile(event.target.files?.[0], 'image');
+          event.target.value = '';
+        }}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v"
+        className="hidden"
+        aria-label="Browse video"
+        onChange={(event) => {
+          void handleMediaFile(event.target.files?.[0], 'video');
+          event.target.value = '';
+        }}
+      />
 
       <div
         ref={editorRef}
@@ -464,7 +489,7 @@ export default function RichTextEditor({
         onInput={emit}
         onPaste={handlePaste}
         onClick={markSelectedMedia}
-        className="description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)]"
+        className="description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)] [&_img[data-eton-media]]:ring-2 [&_img[data-eton-media]]:ring-[#00A651] [&_video[data-eton-media]]:ring-2 [&_video[data-eton-media]]:ring-[#00A651]"
         style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
       />
 
