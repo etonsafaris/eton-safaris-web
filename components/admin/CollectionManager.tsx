@@ -42,6 +42,8 @@ import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-c
 import { countryCategoryPath } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import FaqEditor from '@/components/admin/FaqEditor';
+import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   const router = useRouter();
@@ -76,6 +78,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [guestLogsLoading, setGuestLogsLoading] = useState(false);
   const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<RecordRow | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<RecordRow[]>([]);
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
 
   async function load() {
     if (!config.table) {
@@ -392,45 +396,49 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setForm(defaults);
     setSeo(defaultSeoValues());
     setSeoSaved(false);
+    setFaqs([]);
     setModalOpen(true);
   }
 
   function openEdit(record: RecordRow) {
-    if (isTours && record.id !== undefined) {
-      router.push(`/admin/tours/${record.id}/edit`);
-      return;
-    }
-    if (isSafariUpdates && record.id !== undefined) {
-      router.push(`/admin/safari_updates/${record.id}/edit`);
-      return;
-    }
-    if (isCountries && record.id !== undefined) {
-      router.push(`/admin/countries/${record.id}/edit`);
-      return;
-    }
-    if (isCategories && record.id !== undefined) {
-      router.push(`/admin/categories/${record.id}/edit`);
-      return;
-    }
-    if (isNationalPark && record.id !== undefined) {
-      router.push(`/admin/national_park/${record.id}/edit`);
-      return;
-    }
-    if (isAccommodations && record.id !== undefined) {
-      router.push(`/admin/accommodations/${record.id}/edit`);
-      return;
-    }
-    if (isExplore && record.id !== undefined) {
-      router.push(`/admin/explore/${record.id}/edit`);
-      return;
-    }
-    if (isPages && record.id !== undefined) {
-      router.push(`/admin/pages/${record.id}/edit`);
-      return;
-    }
-    if (isLandingPages && record.id !== undefined) {
-      router.push(`/admin/landing_pages/${record.id}/edit`);
-      return;
+    const recordId = pickRecordId(record);
+    if (recordId != null) {
+      if (isTours) {
+        router.push(`/admin/tours/${recordId}/edit`);
+        return;
+      }
+      if (isSafariUpdates) {
+        router.push(`/admin/safari_updates/${recordId}/edit`);
+        return;
+      }
+      if (isCountries) {
+        router.push(`/admin/countries/${recordId}/edit`);
+        return;
+      }
+      if (isCategories) {
+        router.push(`/admin/categories/${recordId}/edit`);
+        return;
+      }
+      if (isNationalPark) {
+        router.push(`/admin/national_park/${recordId}/edit`);
+        return;
+      }
+      if (isAccommodations) {
+        router.push(`/admin/accommodations/${recordId}/edit`);
+        return;
+      }
+      if (isExplore) {
+        router.push(`/admin/explore/${recordId}/edit`);
+        return;
+      }
+      if (isPages) {
+        router.push(`/admin/pages/${recordId}/edit`);
+        return;
+      }
+      if (isLandingPages) {
+        router.push(`/admin/landing_pages/${recordId}/edit`);
+        return;
+      }
     }
     setEditing(record);
     const next: Record<string, string> = {};
@@ -443,6 +451,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setForm(next);
     setSeo(seoValuesFromRecord(record as Record<string, unknown>));
     setSeoSaved(true);
+    setFaqs(parseCmsPageExtras(record, String(record.slug || '')).faqs);
     setModalOpen(true);
   }
 
@@ -456,11 +465,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     const table = config.table;
     const previousHtml = String(editing?.description || editing?.content || '');
     const previousEmbed = extractEmbeddedContent(previousHtml);
+    const packedFaqs = usesFaqs ? serializeFaqs(faqs) : '';
+    if (usesFaqs) raw.faqs = packedFaqs;
+    const embedData = usesFaqs
+      ? { ...previousEmbed, fields: { ...previousEmbed.fields, faqs: packedFaqs } }
+      : previousEmbed;
     if (typeof raw.description === 'string') {
-      raw.description = embedContent(String(raw.description), previousEmbed);
+      raw.description = embedContent(String(raw.description), embedData);
     }
     if (typeof raw.content === 'string') {
-      raw.content = embedContent(String(raw.content), previousEmbed);
+      raw.content = embedContent(String(raw.content), embedData);
     }
     if (!editing?.id) {
       raw.published_at = new Date().toISOString();
@@ -668,6 +682,11 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         <div>
           <h2 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">{config.label}</h2>
           <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">{config.subtitle}</p>
+          {usesFaqs ? (
+            <p className="mt-2 text-sm font-medium text-[#00A651]">
+              FAQ questions are on the edit form. Click the pencil on a record (or Add) — the green FAQ module is directly under the title fields.
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-3">
           {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments', 'registered_agents'].includes(config.id) && (
@@ -824,6 +843,14 @@ export default function CollectionManager({ config }: { config: CollectionConfig
               <h3 className="font-serif text-2xl dark:text-white">{editing ? 'Edit item' : config.addLabel || 'Add item'}</h3>
               <button type="button" onClick={() => setModalOpen(false)}><X /></button>
             </div>
+            {usesFaqs ? (
+              <FaqEditor
+                faqs={faqs}
+                onChange={setFaqs}
+                title="Frequently asked questions"
+                description="These appear on the public page under the typed description."
+              />
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               {fields.filter((field) => field.name !== 'slug').map((field) => {
                 const isImage = field.name === 'image_url' || /image|cover|photo/i.test(field.name);
