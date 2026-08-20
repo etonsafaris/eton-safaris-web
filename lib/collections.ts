@@ -107,8 +107,8 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
       { name: 'name', label: 'Category Title', type: 'text', required: true },
       slugField(),
       { name: 'country', label: 'Country', type: 'text', placeholder: 'Select Country' },
-      imageField(),
       descriptionField(),
+      imageField(),
     ],
   },
   {

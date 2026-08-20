@@ -42,7 +42,6 @@ import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-c
 import { countryCategoryPath } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
-import FaqEditor from '@/components/admin/FaqEditor';
 import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
@@ -864,6 +863,20 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                           value={form[field.name] || ''}
                           onChange={(value) => setForm({ ...form, [field.name]: value })}
                           placeholder={field.placeholder || 'Type here...'}
+                          faqs={usesFaqs && /description|content/i.test(field.name) ? faqs : undefined}
+                          onFaqsChange={
+                            usesFaqs && /description|content/i.test(field.name) ? setFaqs : undefined
+                          }
+                          faqTitle={
+                            isCountries
+                              ? 'Country FAQ'
+                              : isCategories
+                                ? 'Category FAQ'
+                                : isLandingPages
+                                  ? 'Landing FAQ'
+                                  : 'Page FAQ'
+                          }
+                          faqDescription="Add a new question below, or edit a saved question in place."
                         />
                       </>
                     ) : field.type === 'textarea' ? (
