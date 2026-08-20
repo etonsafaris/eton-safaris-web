@@ -3,7 +3,7 @@ const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-st
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'table', 'thead',
-  'tbody', 'tr', 'th', 'td', 'img', 'hr', 'sup', 'sub', 'span', 'div', 'font',
+  'tbody', 'tr', 'th', 'td', 'img', 'video', 'source', 'hr', 'sup', 'sub', 'span', 'div', 'font',
   'mark', 'pre', 'code',
 ]);
 
@@ -89,7 +89,21 @@ export function sanitizeWordHtml(input: string): string {
       const src = attr(rest, 'src').replace(/"/g, '');
       if (!src || /^(javascript|data):/i.test(src)) return '';
       const alt = attr(rest, 'alt').replace(/"/g, '');
-      return `<img src="${src}" alt="${alt}" />`;
+      return `<img src="${src}" alt="${alt}" style="max-width:100%" />`;
+    }
+
+    if (tag === 'video') {
+      const src = attr(rest, 'src').replace(/"/g, '');
+      if (closing) return '</video>';
+      if (!src || /^(javascript|data):/i.test(src)) return '<video controls style="max-width:100%">';
+      return `<video src="${src}" controls style="max-width:100%">`;
+    }
+
+    if (tag === 'source') {
+      const src = attr(rest, 'src').replace(/"/g, '');
+      if (!src || /^(javascript|data):/i.test(src)) return '';
+      const type = attr(rest, 'type').replace(/"/g, '');
+      return `<source src="${src}"${type ? ` type="${type}"` : ''} />`;
     }
 
     if (tag === 'font') {

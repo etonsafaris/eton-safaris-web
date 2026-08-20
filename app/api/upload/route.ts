@@ -13,10 +13,18 @@ function hasAdminSession(request: Request) {
 
 function extensionFor(file: File) {
   const name = file.name.toLowerCase();
-  if (file.type.includes('webp') || name.endsWith('.webp')) return 'webp';
-  if (file.type.includes('png') || name.endsWith('.png')) return 'png';
-  if (file.type.includes('gif') || name.endsWith('.gif')) return 'gif';
+  const type = file.type.toLowerCase();
+  if (type.includes('mp4') || name.endsWith('.mp4') || name.endsWith('.m4v')) return 'mp4';
+  if (type.includes('webm') || name.endsWith('.webm')) return 'webm';
+  if (type.includes('quicktime') || name.endsWith('.mov')) return 'mov';
+  if (type.includes('webp') || name.endsWith('.webp')) return 'webp';
+  if (type.includes('png') || name.endsWith('.png')) return 'png';
+  if (type.includes('gif') || name.endsWith('.gif')) return 'gif';
   return 'jpg';
+}
+
+function isVideoFile(file: File) {
+  return file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
 }
 
 async function saveLocalFile(file: File, folder: string) {
@@ -40,12 +48,17 @@ export async function POST(request: Request) {
     const file = form.get('file');
     const folder = String(form.get('folder') || 'uploads').replace(/[^a-z0-9/_-]/gi, '') || 'uploads';
     if (!(file instanceof File) || file.size < 1) {
-      return NextResponse.json({ error: 'Choose an image file to upload.' }, { status: 400 });
+      return NextResponse.json({ error: 'Choose an image or video file to upload.' }, { status: 400 });
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Files must be 50 MB or smaller.' }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const ext = extensionFor(file);
     const objectPath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const contentType = file.type || (isVideoFile(file) ? `video/${ext}` : `image/${ext}`);
+    const sizeLimit = isVideoFile(file) ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
 
     try {
       const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceClient() : createAdminClient();
@@ -54,7 +67,7 @@ export async function POST(request: Request) {
       let bucket = BUCKETS.find((name) => existing.has(name));
 
       if (!bucket) {
-        const created = await supabase.storage.createBucket('media', { public: true, fileSizeLimit: 10 * 1024 * 1024 });
+        const created = await supabase.storage.createBucket('media', { public: true, fileSizeLimit: sizeLimit });
         if (created.error && !/already exists/i.test(created.error.message)) {
           throw created.error;
         }
@@ -62,14 +75,14 @@ export async function POST(request: Request) {
       }
 
       let { error } = await supabase.storage.from(bucket).upload(objectPath, buffer, {
-        contentType: file.type || `image/${ext}`,
+        contentType,
         upsert: true,
       });
 
       if (error && /row-level security|rls/i.test(error.message)) {
-        await supabase.storage.updateBucket(bucket, { public: true, fileSizeLimit: 10 * 1024 * 1024 }).catch(() => null);
+        await supabase.storage.updateBucket(bucket, { public: true, fileSizeLimit: sizeLimit }).catch(() => null);
         const retry = await supabase.storage.from(bucket).upload(objectPath, buffer, {
-          contentType: file.type || `image/${ext}`,
+          contentType,
           upsert: true,
         });
         error = retry.error;
