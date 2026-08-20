@@ -80,6 +80,14 @@ export default function HomePageClient({
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
 
   useEffect(() => {
+    setCountries(initialCountries);
+    setTours(initialTours);
+    setUpdates(initialUpdates);
+    setParks(initialParks);
+    setCategories(initialCategories);
+  }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadHero() {
