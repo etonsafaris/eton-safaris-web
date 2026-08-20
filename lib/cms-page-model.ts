@@ -50,6 +50,17 @@ export function inferPageLayout(slug: string): CmsPageLayout {
   return 'standard';
 }
 
+export function serializeFaqs(faqs: PageFaq[]) {
+  return JSON.stringify(
+    faqs
+      .map((faq) => ({
+        question: String(faq.question || '').trim(),
+        answer: String(faq.answer || '').trim(),
+      }))
+      .filter((faq) => faq.question && faq.answer)
+  );
+}
+
 export function parseFaqList(value: unknown): PageFaq[] {
   if (Array.isArray(value)) {
     return value

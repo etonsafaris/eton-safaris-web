@@ -6,7 +6,12 @@ import { useEffect, useState } from 'react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
+import FaqEditor from '@/components/admin/FaqEditor';
+import RichTextEditor from '@/components/admin/RichTextEditor';
+import SeoPanel from '@/components/admin/SeoPanel';
 import { fetchCollectionRecords, slugify } from '@/lib/data';
+import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
   defaultSeoValues,
@@ -33,6 +38,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
   const [headline, setHeadline] = useState('');
   const [description, setDescription] = useState('');
   const [summary, setSummary] = useState('');
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [featuredImage, setFeaturedImage] = useState('');
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('country'));
   const [saving, setSaving] = useState(false);
@@ -47,8 +53,9 @@ export default function CountryForm({ countryId }: CountryFormProps) {
 
       setName(String(country.name || ''));
       setHeadline(String(country.tagline || country.headline || ''));
-      setDescription(String(country.description || ''));
+      setDescription(stripEmbeddedContent(String(country.description || '')));
       setSummary(String(country.summary || country.excerpt || ''));
+      setFaqs(parseCmsPageExtras(country, String(country.slug || '')).faqs);
       setFeaturedImage(String(country.image_url || ''));
       setSeo(seoValuesFromRecord(country as Record<string, unknown>));
     });

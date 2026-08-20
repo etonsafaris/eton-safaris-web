@@ -61,8 +61,8 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
   national_park: ['park_blocks', 'published_at'],
   accommodations: ['accommodation_blocks', 'national_park', 'park', 'park_name', 'published_at'],
   explore: ['place_blocks', 'published_at'],
-  countries: ['published_at'],
-  categories: ['published_at'],
+  countries: ['published_at', 'faqs'],
+  categories: ['published_at', 'faqs'],
   pages: [
     'published_at',
     'excerpt',

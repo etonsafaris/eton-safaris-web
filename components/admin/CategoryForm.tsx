@@ -7,7 +7,13 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
+import FaqEditor from '@/components/admin/FaqEditor';
+import RichTextEditor from '@/components/admin/RichTextEditor';
+import SearchableSelect from '@/components/admin/SearchableSelect';
+import SeoPanel from '@/components/admin/SeoPanel';
 import { fetchCollectionRecords, getRecordTitle, slugify } from '@/lib/data';
+import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
   seoValuesFromRecord,
