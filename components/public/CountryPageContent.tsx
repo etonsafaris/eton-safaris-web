@@ -13,7 +13,9 @@ import {
   countryCategoryPath,
   countryLabelFromSlug,
   matchesCountry,
+  normalizeSlug,
 } from '@/lib/country-utils';
+import { useCmsLive } from '@/lib/cms-live';
 import {
   COUNTRY_SPECIALISTS_LINE,
   countryArticleHtml,
@@ -53,9 +55,11 @@ function toProseHtml(value: string) {
 
 export default function CountryPageContent({
   slug,
-  country,
+  country: countryProp,
   heroTitle,
 }: CountryPageContentProps) {
+  const live = useCmsLive();
+  const [country, setCountry] = useState<RecordRow | null>(countryProp);
   const [categories, setCategories] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [parks, setParks] = useState<RecordRow[]>([]);
@@ -63,14 +67,19 @@ export default function CountryPageContent({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    setCountry(countryProp);
     async function load() {
       try {
-        const [allCategories, allTours, allParks, allPlaces] = await Promise.all([
+        const [countryRows, allCategories, allTours, allParks, allPlaces] = await Promise.all([
+          fetchCollectionRecords('countries'),
           fetchCollectionRecords('categories'),
           fetchCollectionRecords('tours'),
           fetchCollectionRecords('national_park', ['national_parks', 'parks']),
           fetchCollectionRecords('explore'),
         ]);
+        const match =
+          countryRows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === slug) || null;
+        if (match && isPublishedRecord(match)) setCountry(match);
         setCategories(
           allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
         );
@@ -84,7 +93,7 @@ export default function CountryPageContent({
       }
     }
     load();
-  }, [slug]);
+  }, [slug, live, countryProp]);
 
   const extras = parseCmsPageExtras(country, slug);
   const title = country ? getRecordTitle(country) : countryLabelFromSlug(slug);

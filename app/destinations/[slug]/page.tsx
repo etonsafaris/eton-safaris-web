@@ -7,6 +7,7 @@ import PublicShell from '@/components/public/PublicShell';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
+import { useCmsLive } from '@/lib/cms-live';
 import { fetchCollectionRecords, isPublishedRecord, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -35,7 +36,7 @@ export default function DestinationCountryPage({ params }: { params: { slug: str
     return () => {
       mounted = false;
     };
-  }, [slug]);
+  }, [slug, live]);
 
   const seeded = SEEDED.find((item) => item.slug === slug);
   if (ready && !country && !seeded) notFound();

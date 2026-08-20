@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCmsLive } from '@/lib/cms-live';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';

@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { IM_Fell_DW_Pica, Inter, Merriweather, Roboto } from 'next/font/google';
 import './globals.css';
+import CmsLiveHost from '@/components/public/CmsLiveHost';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -136,7 +140,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://images.unsplash.com" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
       </head>
-      <body className={roboto.className}>{children}</body>
+      <body className={roboto.className}>
+        <CmsLiveHost />
+        {children}
+      </body>
     </html>
   );
 }

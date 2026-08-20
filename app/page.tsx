@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useCmsLive } from '@/lib/cms-live';
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
