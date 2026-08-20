@@ -847,8 +847,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
               <FaqEditor
                 faqs={faqs}
                 onChange={setFaqs}
-                title="Frequently asked questions"
-                description="These appear on the public page under the typed description."
+                title={
+                  isCountries
+                    ? 'Country FAQ'
+                    : isCategories
+                      ? 'Category FAQ'
+                      : isLandingPages
+                        ? 'Landing FAQ'
+                        : 'Page FAQ'
+                }
+                description="Appears on the public page and is added to FAQ structured data for ranking."
               />
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2">

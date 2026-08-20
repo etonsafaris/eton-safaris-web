@@ -201,9 +201,6 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
           Landing pages are admin conversion drafts. Guests who click a country always open the normal Destinations
           page. Preview below is signed-in only and is never linked from the public site.
         </p>
-        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
-          The green FAQ module sits under Excerpt, before the landing article — it is not inside SEO.
-        </p>
         {(seo.slug || country) && (
           <p className="mt-3 text-center text-sm">
             <a
@@ -299,7 +296,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
           faqs={faqs}
           onChange={setFaqs}
           title="Landing FAQ"
-          description="Appears under the country article on the public landing preview."
+          description="Appears under the country article and is added to FAQ structured data for ranking."
         />
 
         <div className="mt-6">

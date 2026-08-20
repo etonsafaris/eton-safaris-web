@@ -127,9 +127,6 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         <h1 className="text-center font-serif text-3xl font-bold text-[#111827]">
           {isEdit ? 'Edit Destination' : 'Add New Destination'}
         </h1>
-        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
-          The green FAQ module is directly under Country Name — it is not inside SEO.
-        </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>
@@ -160,13 +157,6 @@ export default function CountryForm({ countryId }: CountryFormProps) {
           </div>
         </div>
 
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="Frequently asked questions"
-          description="These appear on this country’s public page, directly under the country description."
-        />
-
         <div className="mt-8">
           <FieldLabel>Country Description</FieldLabel>
           <RichTextEditor
@@ -177,6 +167,13 @@ export default function CountryForm({ countryId }: CountryFormProps) {
             showFooter
           />
         </div>
+
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Country FAQ"
+          description="Appears under the country description and is added to FAQ structured data for ranking."
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">

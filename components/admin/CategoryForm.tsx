@@ -163,9 +163,6 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b]">
           {isEdit ? 'Edit Category' : 'Add New Category'}
         </h1>
-        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
-          The green FAQ module is directly under Category Title — it is not inside SEO.
-        </p>
 
         <div className="mt-8">
           <FieldLabel>Category Title</FieldLabel>
@@ -185,13 +182,6 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
           />
         </div>
 
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="Frequently asked questions"
-          description="These appear on this category’s public page, directly under the category description."
-        />
-
         <div className="mt-8">
           <FieldLabel>Category Description</FieldLabel>
           <RichTextEditor
@@ -202,6 +192,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             showFooter
           />
         </div>
+
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Category FAQ"
+          description="Appears under the category description and is added to FAQ structured data for ranking."
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>

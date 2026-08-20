@@ -214,9 +214,6 @@ export default function PageForm({ pageId }: PageFormProps) {
           Pages power About, Terms, Privacy, Agency, Community, and Contact SEO. Layout controls how the page appears on
           the live website.
         </p>
-        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
-          The green FAQ module sits under Excerpt, before Page content — it is not inside SEO.
-        </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>
@@ -274,8 +271,8 @@ export default function PageForm({ pageId }: PageFormProps) {
         <FaqEditor
           faqs={faqs}
           onChange={setFaqs}
-          title="FAQ (schema + page)"
-          description="Shown on the live page under the page content."
+          title="Page FAQ"
+          description="Appears under the page content and is added to FAQ structured data for ranking."
         />
 
         <div className="mt-6">
