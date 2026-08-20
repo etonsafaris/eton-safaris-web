@@ -79,7 +79,9 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
   useEffect(() => {
     if (!landingId) return;
     fetchCollectionRecords('landing_pages').then((rows) => {
-      const landing = rows.find((row) => String(row.id) === landingId);
+      const landing = rows.find(
+        (row) => String(pickRecordId(row) ?? '') === String(landingId) || String(row.id) === String(landingId)
+      );
       if (!landing) return;
       const extras = parseCmsPageExtras(landing);
       setTitle(String(landing.title || landing.name || ''));
@@ -198,6 +200,9 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-[#6b7280]">
           Landing pages are admin conversion drafts. Guests who click a country always open the normal Destinations
           page. Preview below is signed-in only and is never linked from the public site.
+        </p>
+        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
+          The green FAQ module sits under Excerpt, before the landing article — it is not inside SEO.
         </p>
         {(seo.slug || country) && (
           <p className="mt-3 text-center text-sm">
