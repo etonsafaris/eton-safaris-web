@@ -521,6 +521,5 @@ export default function RichTextEditor({
         </div>
       )}
     </div>
-    </div>
   );
 }
