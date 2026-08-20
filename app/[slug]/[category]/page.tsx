@@ -8,9 +8,14 @@ import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } fr
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo } from '@/lib/seo-public';
 
+import { loadCountryPageData } from '@/lib/load-public';
+
 type PageProps = {
   params: { slug: string; category: string };
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const path = `/${params.slug}/${params.category}`;
@@ -58,6 +63,9 @@ export default async function CountryCategoryPage({ params }: PageProps) {
     table = 'categories';
   }
 
+  const countrySlug = resolved.countrySlug || resolved.canonical;
+  const countryData = await loadCountryPageData(countrySlug);
+
   return (
     <>
       <JsonLd
@@ -66,7 +74,13 @@ export default async function CountryCategoryPage({ params }: PageProps) {
         path={`/${params.slug}/${params.category}`}
         schemaHint={schemaHint}
       />
-      <CmsSlugClient />
+      <CmsSlugClient
+        initialCountry={countryData.country}
+        initialCategories={countryData.categories}
+        initialTours={countryData.tours}
+        initialParks={countryData.parks}
+        initialPlaces={countryData.places}
+      />
     </>
   );
 }

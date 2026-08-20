@@ -5,12 +5,10 @@ import JsonLd from '@/components/public/JsonLd';
 import { destinationPublicPath, matchCmsRecord, pageAliases, resolvePublicSlug } from '@/lib/cms-routes';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
-
 import { loadCountryPageData } from '@/lib/load-public';
-import { isPublishedRecord } from '@/lib/data';
 
 type PageProps = {
   params: { slug: string };

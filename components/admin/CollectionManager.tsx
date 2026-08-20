@@ -21,7 +21,7 @@ import {
 } from '@/lib/data';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { notifyWorkspace } from '@/lib/notify';
-import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import { supabase } from '@/lib/supabase/client';

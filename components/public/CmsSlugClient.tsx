@@ -61,6 +61,12 @@ export default function CmsSlugClient({
 
   useEffect(() => {
     let mounted = true;
+    if (live === 0 && !categorySlug && (initialCountry || initialPage)) {
+      setCountry(initialCountry);
+      setPage(initialPage);
+      setReady(true);
+      return undefined;
+    }
 
     async function loadCountry(canonical: string, countrySlug: string) {
       const [countryRows, categoryRows, placeRows] = await Promise.all([
@@ -200,17 +206,22 @@ export default function CmsSlugClient({
   const cmsLooksRich = /<(h4|p|ul|ol|b|strong)\b/i.test(cmsContent);
   const title =
     extras.hero_title ||
-    (isPolicy ? fallback?.title : page ? getRecordTitle(page) : fallback?.title) ||
-    seeded?.title ||
+    (page ? getRecordTitle(page) : '') ||
+    (isPolicy ? fallback?.title : '') ||
     resolved.canonical.replace(/-/g, ' ');
-  const content =
-    (isPolicy && !cmsLooksRich ? fallback?.content : cmsContent) || fallback?.content || seeded?.content || '';
-  const image = (page ? getRecordImage(page) : '') || seeded?.image_url || undefined;
-  const blocks = parseCmsBlocks(page).length ? parseCmsBlocks(page) : seeded?.blocks || [];
-  const faqs = extras.faqs.length ? extras.faqs : seeded?.faqs || [];
-  const destinations = extras.destinations.length ? extras.destinations : seeded?.destinations || [];
+  const content = cmsContent || (!page && isPolicy ? fallback?.content || '' : '');
+  const image = page ? getRecordImage(page) || undefined : undefined;
+  const blocks = parseCmsBlocks(page);
+  const faqs = extras.faqs;
+  const destinations = extras.destinations;
 
-  if (!ready && !fallback && !seeded) return null;
+  if (!ready && !page) {
+    return (
+      <PublicShell>
+        <div className="py-24 text-center text-gray-500">Loading…</div>
+      </PublicShell>
+    );
+  }
 
   return (
     <CmsPageView
