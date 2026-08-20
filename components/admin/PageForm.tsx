@@ -399,13 +399,6 @@ export default function PageForm({ pageId }: PageFormProps) {
           </div>
         </div>
 
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="FAQ (schema + page)"
-          description="Shown on the live page and output as FAQPage structured data for richer Google results."
-        />
-
         {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 
         <div className="mt-10 flex justify-center border-t border-[#e5e7eb] pt-10">
