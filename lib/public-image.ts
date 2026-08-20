@@ -1,5 +1,4 @@
-export const DEFAULT_PUBLIC_IMAGE =
-  'https://images.unsplash.com/photo-1516426122078-c23e76319840?auto=format&fit=crop&w=1080&q=70';
+export const DEFAULT_PUBLIC_IMAGE = '/heroes/kenya.jpg';
 
 function isLocalDevHost(hostname: string) {
   return /^(localhost|127\.0\.0\.1)$/i.test(hostname);
@@ -15,6 +14,7 @@ function allowLocalOnlyPaths() {
 function isKnownPublicAsset(pathname: string) {
   return (
     pathname === '/eton-safaris-gorilla.png' ||
+    pathname.startsWith('/heroes/') ||
     pathname.startsWith('/flags/') ||
     pathname.startsWith('/eton-safaris')
   );

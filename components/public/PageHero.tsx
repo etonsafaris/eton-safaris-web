@@ -45,7 +45,10 @@ export default function PageHero({
   return (
     <>
       <PageFavicon title={title} />
-      <section className={`relative overflow-hidden ${isPolicy ? 'h-[400px]' : 'h-[300px] md:h-[350px]'}`}>
+      <section
+        className={`relative overflow-hidden ${isPolicy ? 'h-[400px]' : 'h-[300px] md:h-[350px]'}`}
+        style={{ backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
         {src ? (
           <ResponsiveImage
             src={src}

@@ -33,13 +33,13 @@ const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: st
     title: 'Crafted Safaris Across the African Wild',
     subtitle:
       "Step into a world of untamed luxury — where every sunrise brings a new encounter with Africa's most extraordinary wildlife and landscapes",
-    image: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?auto=format&fit=crop&w=1080&q=70',
+    image: '/heroes/uganda.jpg',
   },
   kenya: {
     title: 'Where the Wild Meets Refined Comfort',
     subtitle:
       "From the Maasai Mara's endless plains to intimate bush dinners under the stars — experience Africa at its most captivating.",
-    image: 'https://images.unsplash.com/photo-1516426122078-c23e76319840?auto=format&fit=crop&w=1080&q=70',
+    image: '/heroes/kenya.jpg',
   },
   rwanda: {
     title: 'The Land of a Thousand Hidden Wonders',
