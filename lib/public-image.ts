@@ -55,7 +55,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
   }
 }
 
-export function resolvePublicImage(src?: string | null, fallback = DEFAULT_PUBLIC_IMAGE) {
+export function resolvePublicImage(src?: string | null, fallback = '') {
   if (isDeployableImageUrl(src)) {
     return src.replace(/^http:\/\//i, 'https://');
   }

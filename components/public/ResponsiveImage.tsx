@@ -1,6 +1,6 @@
 'use client';
 
-import { DEFAULT_PUBLIC_IMAGE, resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicImage } from '@/lib/public-image';
 import { cardImageSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {

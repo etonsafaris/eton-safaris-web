@@ -56,6 +56,7 @@ export default function TourDetailPage() {
   const [captchaOk, setCaptchaOk] = useState(false);
   const [review, setReview] = useState({ author: '', email: '', rating: 5, content: '', country: '' });
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [ready, setReady] = useState(false);
   const live = useCmsLive();
 
   useEffect(() => {

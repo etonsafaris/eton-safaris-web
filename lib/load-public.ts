@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { categoryMatchesCountry, matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
-import { fetchCollectionRecords, isLanguagePost, isPublishedRecord, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickString } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
@@ -99,7 +99,7 @@ export async function loadParkDetail(slug: string) {
     loadPublishedRecords('accommodations'),
   ]);
   const park = findRecordBySlug(parks, slug);
-  const parkName = park ? pickString(park, ['title', 'name']) : '';
+  const parkName = park ? getRecordTitle(park) : '';
   return {
     park,
     others: parks.filter((row) => row !== park).slice(0, 20),
