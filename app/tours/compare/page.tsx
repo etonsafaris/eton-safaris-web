@@ -5,9 +5,11 @@ import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function TourComparePage() {
+  const live = useCmsLive();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [destination, setDestination] = useState('All');
 
@@ -15,7 +17,7 @@ export default function TourComparePage() {
     fetchCollectionRecords('tours')
       .then(setTours)
       .catch((error) => console.error(error));
-  }, []);
+  }, [live]);
 
   const countries = useMemo(() => {
     const unique = new Set(tours.map((tour) => pickString(tour, ['country'])).filter(Boolean));

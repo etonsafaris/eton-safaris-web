@@ -7,6 +7,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecords, slugify } from '@/lib/data';
+import { isLiveCmsImage } from '@/lib/public-image';
 import {
   defaultSeoValues,
   seoValuesFromRecord,
@@ -58,6 +59,20 @@ export default function CountryForm({ countryId }: CountryFormProps) {
     setSaving(true);
     setError('');
 
+    const imageUrl = featuredImage.startsWith('blob:') ? '' : featuredImage;
+    if (
+      typeof window !== 'undefined' &&
+      !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) &&
+      imageUrl &&
+      !isLiveCmsImage(imageUrl)
+    ) {
+      setError(
+        'That cover image is only stored on this computer, so the public website cannot show it. Upload the image again so it is saved to cloud storage, then save.'
+      );
+      setSaving(false);
+      return;
+    }
+
     const payload = buildSavePayload(
       'countries',
       {
@@ -65,7 +80,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         tagline: headline,
         description,
         summary,
-        image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        image_url: imageUrl,
         slug: seo.slug || slugify(name),
       },
       { seo }

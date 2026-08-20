@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { uploadOptimizedImage } from '@/lib/upload-media';
+import { isLiveCmsImage } from '@/lib/public-image';
 
 type CoverImageFieldProps = {
   value: string;
@@ -32,6 +33,11 @@ export default function CoverImageField({
     setError('');
     try {
       const url = await uploadOptimizedImage(file, folder);
+      if (typeof window !== 'undefined' && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) && !isLiveCmsImage(url)) {
+        throw new Error(
+          'This image will not appear on the public website. Upload needs a public Supabase Storage URL. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then try again.'
+        );
+      }
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Image could not be added. Check storage permissions.');

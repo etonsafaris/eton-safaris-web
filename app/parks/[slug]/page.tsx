@@ -19,6 +19,7 @@ import {
   visibleRecordHtml,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { useCmsLive } from '@/lib/cms-live';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
 
@@ -28,6 +29,7 @@ export default function ParkDetailPage() {
   const [park, setPark] = useState<RecordRow | null>(null);
   const [others, setOthers] = useState<RecordRow[]>([]);
   const [stays, setStays] = useState<RecordRow[]>([]);
+  const live = useCmsLive();
 
   useEffect(() => {
     async function load() {
@@ -52,7 +54,7 @@ export default function ParkDetailPage() {
       }
     }
     load();
-  }, [slug]);
+  }, [slug, live]);
 
   const stayItems = useMemo(
     () =>
