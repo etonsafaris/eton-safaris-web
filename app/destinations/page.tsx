@@ -7,13 +7,13 @@ import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
-  getRecordImage,
   getRecordTitle,
   pickPlainText,
   pickString,
 } from '@/lib/data';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import { countryHeroImage } from '@/lib/country-heroes';
 import type { RecordRow } from '@/lib/types';
 
 export default function DestinationsIndexPage() {
@@ -36,7 +36,7 @@ export default function DestinationsIndexPage() {
       <PageHero
         title="Destinations"
         subtitle="Safari countries across Africa, from gorilla forests to savannah and coast."
-        image={items[0] ? getRecordImage(items[0]) : undefined}
+        image={countryHeroImage(pickString(items[0] || {}, ['slug', 'name']), items[0])}
       />
       <ListingSection>
         <ListingGrid>
@@ -46,7 +46,7 @@ export default function DestinationsIndexPage() {
               <PlaceCard
                 key={String(country.id ?? slug ?? index)}
                 href={destinationPublicPath(String(slug))}
-                image={getRecordImage(country) || undefined}
+                image={countryHeroImage(String(slug), country)}
                 title={getRecordTitle(country)}
                 location={pickString(country, ['tagline', 'subtitle', 'headline'])}
                 description={pickPlainText(country, ['summary', 'description', 'excerpt'])}

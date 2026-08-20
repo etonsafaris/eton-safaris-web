@@ -8,6 +8,7 @@ import PostMetaBar, { formatPublishedDate } from '@/components/public/PostMetaBa
 import RelatedSidebar from '@/components/public/RelatedSidebar';
 import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
 import { countryLabelFromSlug, findPlaceBySlug, matchesCountry } from '@/lib/country-utils';
+import { countryHeroImage } from '@/lib/country-heroes';
 import {
   fetchCollectionRecords,
   getRecordImage,
@@ -94,7 +95,8 @@ export default function PlacePageContent({
     (countrySlugProp ? countryLabelFromSlug(countrySlugProp.replace(/-safaris$/, '')) : '') ||
     pickStoredString(place, ['country']) ||
     'this destination';
-  const heroImage = (place && getRecordImage(place)) || getRecordImage(country || {}) || '';
+  const heroImage =
+    (place && getRecordImage(place)) || countryHeroImage(countrySlugProp, country || {});
   const descriptionTitle = place ? pickStoredString(place, ['description_title']) : '';
   const descriptionHtml = toProseHtml(
     place ? visibleRecordHtml(place, ['description', 'content', 'summary', 'about']) : ''

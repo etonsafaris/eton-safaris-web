@@ -4,7 +4,7 @@ import { useState } from 'react';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { supabase } from '@/lib/supabase/client';
-import { pickNumber, pickString } from '@/lib/data';
+import { pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function VerifyBookingPage() {
@@ -39,10 +39,6 @@ export default function VerifyBookingPage() {
     setBooking(match);
     setCheckedAt(new Date().toLocaleString());
   }
-
-  const total = booking ? pickNumber(booking, ['final_tour_price', 'total_price', 'amount'], 0) : 0;
-  const paid = booking ? pickNumber(booking, ['amount_paid'], 0) : 0;
-  const remaining = booking ? pickNumber(booking, ['remaining_balance'], Math.max(0, total - paid)) : 0;
 
   return (
     <PublicShell>
@@ -86,16 +82,8 @@ export default function VerifyBookingPage() {
                 <dd className="mt-1">{pickString(booking, ['tour'])}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-moss">Total cost</dt>
-                <dd className="mt-1">{total ? `USD ${total.toFixed(2)}` : 'Agreed with tour operator'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-moss">Amount paid</dt>
-                <dd className="mt-1">USD {paid.toFixed(2)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-moss">Remaining balance</dt>
-                <dd className="mt-1">USD {remaining.toFixed(2)}</dd>
+                <dt className="text-xs uppercase tracking-wide text-moss">Status</dt>
+                <dd className="mt-1">{pickString(booking, ['status', 'payment_status']) || 'Confirmed'}</dd>
               </div>
             </dl>
             {checkedAt && <p className="mt-4 text-xs text-gray-500">Verified at {checkedAt}</p>}

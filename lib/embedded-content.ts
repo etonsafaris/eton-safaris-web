@@ -1,3 +1,4 @@
+import { stripPublicMoney } from '@/lib/public-money';
 import { sanitizeWordHtml } from '@/lib/sanitize-html';
 
 export type ContentBlock = {
@@ -92,5 +93,5 @@ export function recordBodyHtml(record: Record<string, unknown> | null | undefine
 }
 
 export function publicBodyHtml(html: string): string {
-  return sanitizeWordHtml(stripEmbeddedContent(html));
+  return stripPublicMoney(sanitizeWordHtml(stripEmbeddedContent(html)));
 }

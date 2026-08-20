@@ -24,6 +24,8 @@ import {
   pickString,
   pickPlainText,
 } from '@/lib/data';
+import { countryHeroImage } from '@/lib/country-heroes';
+import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
 const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: string }> = {
@@ -122,7 +124,7 @@ export default function HomePage() {
           (dbCountry ? pickString(dbCountry, ['hero_subtitle', 'tagline', 'excerpt']) : '') || defaults.subtitle,
         cta: `Explore ${label}`,
         href: destinationPublicPath(slug),
-        image: getRecordImage(dbCountry || {}) || defaults.image,
+        image: countryHeroImage(slug, dbCountry),
       };
     });
   }, [countries]);
@@ -157,9 +159,9 @@ export default function HomePage() {
     return (
       <Link key={slug || index} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">
-          {getRecordImage(country) ? (
+          {countryHeroImage(slug, country as RecordRow) ? (
             <ResponsiveImage
-              src={getRecordImage(country) || ''}
+              src={countryHeroImage(slug, country as RecordRow)}
               alt=""
               className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
             />
@@ -175,7 +177,7 @@ export default function HomePage() {
           </div>
         </div>
         <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-[#666]">
-          {pickPlainText(country, ['description', 'excerpt'])}
+          {stripPublicMoney(pickPlainText(country, ['description', 'excerpt']))}
         </p>
         <span className="text-xs font-semibold uppercase tracking-widest text-moss group-hover:text-[#4a6b3a]">
           Popular Tour
@@ -204,7 +206,7 @@ export default function HomePage() {
           <MapPin className="h-4 w-4 text-moss" />
           <h4 className="font-serif text-base font-bold text-[#333]">{getRecordTitle(park)}</h4>
         </div>
-        <p className="line-clamp-3 text-sm text-[#666]">{pickPlainText(park, ['description'])}</p>
+        <p className="line-clamp-3 text-sm text-[#666]">{stripPublicMoney(pickPlainText(park, ['description']))}</p>
       </div>
     </Link>
   ));
@@ -354,7 +356,7 @@ export default function HomePage() {
                   <p className="text-xs text-gray-400">{pickString(post, ['published_at', 'created_at']).slice(0, 10)}</p>
                   <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{getRecordTitle(post)}</h4>
                   <p className="mt-2 line-clamp-2 text-sm text-[#666]">
-                    {pickPlainText(post, ['excerpt', 'description', 'content'])}
+                    {stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content']))}
                   </p>
                 </div>
               </Link>

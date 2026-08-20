@@ -46,7 +46,7 @@ while ($true) {
       continue
     }
 
-    & $Git commit -m "Automated update via watch script"
+    & $Git -c user.name="etonsafaris" -c user.email="etonsafaris@users.noreply.github.com" commit -m "Automated update via watch script"
     if ($LASTEXITCODE -eq 0) {
       Write-WatchLog "Committed. Pushing to origin."
       & $Git push

@@ -20,6 +20,7 @@ import {
   visibleRecordHtml,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { countryHeroImage } from '@/lib/country-heroes';
 import type { RecordRow } from '@/lib/types';
 
 type CategoryPageContentProps = {
@@ -90,7 +91,7 @@ export default function CategoryPageContent({
     : titleFromSlug(categorySlug) || 'Safari Category';
   const countryTitle = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
   const heroImage =
-    (selectedCategory && getRecordImage(selectedCategory)) || getRecordImage(country || {}) || '';
+    (selectedCategory && getRecordImage(selectedCategory)) || countryHeroImage(slug, country);
   const descriptionHtml = toProseHtml(
     selectedCategory ? visibleRecordHtml(selectedCategory, ['description', 'content', 'about', 'summary']) : ''
   );

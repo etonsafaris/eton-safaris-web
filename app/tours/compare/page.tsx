@@ -36,7 +36,7 @@ export default function TourComparePage() {
     <PublicShell>
       <PageHero
         title="Compare Safari Packages"
-        subtitle="Compare duration and included activities across destinations. Packages do not list a public price."
+        subtitle="Compare duration and included activities across destinations."
         image={rows[0] ? getRecordImage(rows[0]) : undefined}
       />
       <section className="mx-auto max-w-7xl px-4 py-8">

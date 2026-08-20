@@ -11,9 +11,9 @@ import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
 import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import { SITE } from '@/lib/collections';
+import { countryHeroImage } from '@/lib/country-heroes';
 import { quoteRequestPath } from '@/lib/quote-request';
 import { reviewSourceBadges } from '@/lib/review-links';
-import { SITE_MEDIA } from '@/lib/site-media';
 import {
   fetchCollectionRecords,
   getRecordImage,
@@ -83,10 +83,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
     extras.cta_href && (extras.cta_href.startsWith('/') || /^https?:\/\//i.test(extras.cta_href)) && !extras.cta_href.includes('contact')
       ? extras.cta_href
       : quoteRequestPath({ country: countryName });
-  const image =
-    getRecordImage(landing || {}) ||
-    getRecordImage(country || {}) ||
-    (slug.includes('rwanda') || slug.includes('uganda') ? SITE_MEDIA.gorillasForest : SITE_MEDIA.wildlifeNationalPark);
+  const image = getRecordImage(landing || {}) || countryHeroImage(slug, country);
   const faqs = extras.faqs.length ? extras.faqs : copy.faqs;
   const excerptText = extras.excerpt.replace(/<[^>]+>/g, ' ').trim();
   const articleHtml = toProseHtml(excerptText.length >= 40 && excerptText.length < 700 ? extras.excerpt : copy.seoIntro);

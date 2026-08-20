@@ -2,6 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { stripPublicMoney } from '@/lib/public-money';
 import type { ItineraryDay } from '@/lib/itinerary';
 
 export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
@@ -14,9 +15,9 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
       </h2>
       <div className="space-y-4">
         {days.map((day, index) => {
-          const title = day.title || `Day ${index + 1}`;
-          const meals = day.mealPlan || day.meal_plan || '';
-          const stay = day.accommodationPlan || day.accommodation_plan || '';
+          const title = stripPublicMoney(day.title || `Day ${index + 1}`);
+          const meals = stripPublicMoney(day.mealPlan || day.meal_plan || '');
+          const stay = stripPublicMoney(day.accommodationPlan || day.accommodation_plan || '');
           return (
             <details key={`${title}-${index}`} className="group">
               <summary className="flex cursor-pointer list-none items-center gap-3 marker:content-none [&::-webkit-details-marker]:hidden">

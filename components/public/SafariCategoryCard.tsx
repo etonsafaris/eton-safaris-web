@@ -1,4 +1,5 @@
 import { getRecordImage, getRecordTitle, pickPlainText } from '@/lib/data';
+import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 import Link from 'next/link';
 
@@ -20,7 +21,7 @@ export default function SafariCategoryCard({
   titleOnly = false,
   href,
 }: SafariCategoryCardProps) {
-  const description = titleOnly ? '' : pickPlainText(category, ['description', 'excerpt', 'summary']);
+  const description = titleOnly ? '' : stripPublicMoney(pickPlainText(category, ['description', 'excerpt', 'summary']));
   const title = getRecordTitle(category);
   const image = getRecordImage(category);
 

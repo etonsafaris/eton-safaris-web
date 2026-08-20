@@ -1,3 +1,6 @@
+'use client';
+
+import { DEFAULT_PUBLIC_IMAGE, resolvePublicImage } from '@/lib/public-image';
 import { cardImageSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -17,8 +20,9 @@ export default function ResponsiveImage({
   priority = false,
   variant = 'card',
 }: ResponsiveImageProps) {
-  const displaySrc = variant === 'hero' ? heroImageSrc(src) : cardImageSrc(src);
-  const srcSet = imageSrcSet(src);
+  const resolved = resolvePublicImage(src);
+  const displaySrc = variant === 'hero' ? heroImageSrc(resolved) : cardImageSrc(resolved);
+  const srcSet = imageSrcSet(resolved);
   return (
     <img
       src={displaySrc}
@@ -29,6 +33,14 @@ export default function ResponsiveImage({
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : 'low'}
       decoding={priority ? 'sync' : 'async'}
+      referrerPolicy="no-referrer"
+      onError={(event) => {
+        const image = event.currentTarget;
+        if (image.src !== DEFAULT_PUBLIC_IMAGE) {
+          image.srcset = '';
+          image.src = DEFAULT_PUBLIC_IMAGE;
+        }
+      }}
     />
   );
 }

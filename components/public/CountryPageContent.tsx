@@ -32,6 +32,7 @@ import {
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PageFaqList from '@/components/public/PageFaqList';
+import { countryHeroImage } from '@/lib/country-heroes';
 import type { RecordRow } from '@/lib/types';
 
 type CountryPageContentProps = {
@@ -110,7 +111,7 @@ export default function CountryPageContent({
 
   return (
     <>
-      <PageHero title={bannerTitle} image={getRecordImage(country || {})} variant="country" />
+      <PageHero title={bannerTitle} image={countryHeroImage(slug, country)} variant="country" />
 
       <section className="bg-[#f3f3f3] px-4 py-12">
         <div className="mx-auto max-w-[1200px]">

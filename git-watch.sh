@@ -41,7 +41,7 @@ while true; do
       sleep "$POLL_SECONDS"
       continue
     fi
-    if "$GIT" commit -m "Automated update via watch script"; then
+    if "$GIT" -c user.name="etonsafaris" -c user.email="etonsafaris@users.noreply.github.com" commit -m "Automated update via watch script"; then
       log "Committed. Pushing to origin."
       if "$GIT" push; then
         log "Push complete."

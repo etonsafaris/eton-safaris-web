@@ -191,7 +191,7 @@ export default function QuoteRequestForm() {
         />
         <textarea
           required
-          placeholder="Tell us more about your travel, overall budget, level of accommodation, message etc (it's ok to be detailed here)"
+          placeholder="Tell us more about your travel, level of accommodation, and message (it's ok to be detailed here)"
           value={form.message}
           onChange={(event) => setForm({ ...form, message: event.target.value })}
           className="dav-filled-input min-h-[120px] resize-y"

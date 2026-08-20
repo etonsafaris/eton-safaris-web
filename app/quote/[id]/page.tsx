@@ -7,6 +7,7 @@ import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { SITE } from '@/lib/collections';
 import { fetchCollectionRecords, pickString } from '@/lib/data';
+import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
 export default function GuestQuotePage() {
@@ -84,10 +85,10 @@ export default function GuestQuotePage() {
               </div>
             </dl>
             {pickString(quote, ['message']) && (
-              <p className="mt-6 leading-relaxed text-gray-700">{pickString(quote, ['message'])}</p>
+              <p className="mt-6 leading-relaxed text-gray-700">{stripPublicMoney(pickString(quote, ['message']))}</p>
             )}
             <p className="mt-6 text-sm text-gray-500">
-              Final price and day-by-day itinerary are confirmed privately with your tour operator and are not shown on this quotation.
+              Booking details and the day-by-day itinerary are confirmed privately with your tour operator.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button

@@ -3,9 +3,9 @@ import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageFavicon from '@/components/public/PageFavicon';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { DEFAULT_PUBLIC_IMAGE } from '@/lib/public-image';
 
-export const DEFAULT_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1516426122078-c23e76319840?auto=format&fit=crop&w=1080&q=70';
+export const DEFAULT_HERO_IMAGE = DEFAULT_PUBLIC_IMAGE;
 
 type PageHeroProps = {
   title: string;

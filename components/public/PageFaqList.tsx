@@ -1,4 +1,5 @@
 import type { PageFaq } from '@/lib/cms-page-model';
+import { stripPublicMoney } from '@/lib/public-money';
 
 export default function PageFaqList({
   faqs,
@@ -22,8 +23,10 @@ export default function PageFaqList({
               dark ? 'border-white/15 bg-white/5' : 'border-[#e5e7eb] bg-white'
             }`}
           >
-            <summary className="cursor-pointer text-base font-semibold">{faq.question}</summary>
-            <p className={`public-article-body mt-3 text-sm leading-relaxed ${dark ? 'text-white/75' : 'text-[#555]'}`}>{faq.answer}</p>
+            <summary className="cursor-pointer text-base font-semibold">{stripPublicMoney(faq.question)}</summary>
+            <p className={`public-article-body mt-3 text-sm leading-relaxed ${dark ? 'text-white/75' : 'text-[#555]'}`}>
+              {stripPublicMoney(faq.answer)}
+            </p>
           </details>
         ))}
       </div>

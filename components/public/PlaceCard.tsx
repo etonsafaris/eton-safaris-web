@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
 import DavCtaButton from '@/components/public/DavCtaButton';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { stripPublicMoney } from '@/lib/public-money';
 
 export default function PlaceCard({
   href,
@@ -44,7 +45,9 @@ export default function PlaceCard({
           </p>
         ) : null}
         {description ? (
-          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[#555]">{description}</p>
+          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[#555]">
+            {stripPublicMoney(description)}
+          </p>
         ) : null}
         <div className="mt-auto flex items-end justify-between gap-2 pt-4">
           <div className="flex items-center gap-0.5">

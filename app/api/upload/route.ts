@@ -79,8 +79,28 @@ export async function POST(request: Request) {
         const publicUrl = supabase.storage.from(bucket).getPublicUrl(objectPath).data.publicUrl;
         return NextResponse.json({ url: publicUrl });
       }
+
+      console.error('[Upload] Storage upload failed:', error.message);
+      if (process.env.VERCEL) {
+        return NextResponse.json(
+          {
+            error:
+              'Image upload needs a public Supabase Storage bucket. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then run scripts/fix-storage-rls.sql.',
+          },
+          { status: 500 }
+        );
+      }
     } catch (storageError) {
       console.error('[Upload] Storage upload failed, using local media folder:', storageError);
+      if (process.env.VERCEL) {
+        return NextResponse.json(
+          {
+            error:
+              'Image upload needs a public Supabase Storage bucket. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then run scripts/fix-storage-rls.sql.',
+          },
+          { status: 500 }
+        );
+      }
     }
 
     const localUrl = await saveLocalFile(file, folder);

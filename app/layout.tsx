@@ -108,7 +108,6 @@ const SITE_GRAPH = {
       image: `${SITE.url}${SITE_LOGO}`,
       logo: `${SITE.url}${SITE_LOGO}`,
       sameAs: Object.values(SOCIAL_LINKS),
-      priceRange: '$$',
       areaServed: ['UG', 'KE', 'TZ', 'RW'],
       address: {
         '@type': 'PostalAddress',

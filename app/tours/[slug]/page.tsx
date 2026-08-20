@@ -22,6 +22,7 @@ import {
 import { matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { stripPublicMoney } from '@/lib/public-money';
 import { splitContentList } from '@/lib/content-list';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
 import MathCaptcha from '@/components/public/MathCaptcha';
@@ -46,7 +47,6 @@ export default function TourDetailPage() {
     phone: '',
     guests: '1',
     message: '',
-    agreed_price: '',
     travel_date: '',
     country_of_residence: '',
     duration_of_stay: '',
@@ -76,15 +76,15 @@ export default function TourDetailPage() {
 
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);
   const highlights = useMemo(
-    () => splitContentList(pickStoredString(tour || {}, ['highlights'])),
+    () => splitContentList(pickStoredString(tour || {}, ['highlights'])).map(stripPublicMoney).filter(Boolean),
     [tour]
   );
   const includes = useMemo(
-    () => splitContentList(pickStoredString(tour || {}, ['price_includes'])),
+    () => splitContentList(pickStoredString(tour || {}, ['price_includes'])).map(stripPublicMoney).filter(Boolean),
     [tour]
   );
   const excludes = useMemo(
-    () => splitContentList(pickStoredString(tour || {}, ['price_excludes'])),
+    () => splitContentList(pickStoredString(tour || {}, ['price_excludes'])).map(stripPublicMoney).filter(Boolean),
     [tour]
   );
   const journeyDetails = pickStoredString(tour || {}, ['journey_details']);
@@ -109,8 +109,6 @@ export default function TourDetailPage() {
       status: 'Pending Booking',
       payment_status: 'Pending Booking',
       booking_code: bookingCode,
-      final_tour_price: form.agreed_price ? Number(form.agreed_price) : null,
-      remaining_balance: form.agreed_price ? Number(form.agreed_price) : null,
       amount_paid: 0,
     });
     const { data, error } = await saveWithColumnFallback('bookings', payload);
@@ -248,7 +246,7 @@ export default function TourDetailPage() {
                 {includes.length > 0 && (
                   <div>
                     <h2 className="content-subheading">
-                      Price Includes
+                      Includes
                     </h2>
                     <ul className="list-none space-y-3">
                       {includes.map((item, index) => (
@@ -265,7 +263,7 @@ export default function TourDetailPage() {
                 {excludes.length > 0 && (
                   <div>
                     <h2 className="content-subheading">
-                      Price Excludes
+                      Excludes
                     </h2>
                     <ul className="list-none space-y-3">
                       {excludes.map((item, index) => (
@@ -368,16 +366,6 @@ export default function TourDetailPage() {
                   value={form.message}
                   onChange={(event) => setForm({ ...form, message: event.target.value })}
                   className="dav-filled-input h-24 resize-y"
-                />
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  placeholder="Agreed Tour Price"
-                  value={form.agreed_price}
-                  onChange={(event) => setForm({ ...form, agreed_price: event.target.value })}
-                  className="dav-filled-input"
                 />
                 <div className="pt-1">
                   <MathCaptcha onValidChange={setCaptchaOk} />

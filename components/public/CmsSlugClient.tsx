@@ -23,6 +23,7 @@ import {
   isPublishedRecord,
   pickString,
 } from '@/lib/data';
+import { countryHeroImage } from '@/lib/country-heroes';
 import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
@@ -128,7 +129,7 @@ export default function CmsSlugClient() {
       ...(country || {}),
       title: countryName,
       name: countryName,
-      image_url: (country && getRecordImage(country)) || fallback?.image || '',
+      image_url: countryHeroImage(countrySlug, country) || fallback?.image || '',
     };
 
     return (

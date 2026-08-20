@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import { extractEmbeddedContent, recordBodyHtml, stripEmbeddedContent } from '@/lib/embedded-content';
 import { decodeHtmlEntities } from '@/lib/sanitize-html';
 import { rememberKnownColumns } from '@/lib/supabase-payload';
+import { isDeployableImageUrl } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 const PAGE_SIZE = 1000;
@@ -86,11 +87,7 @@ export function getDynamicColumns(records: RecordRow[]): string[] {
 }
 
 function isUsableImageUrl(value: unknown): value is string {
-  if (typeof value !== 'string') return false;
-  const trimmed = value.trim();
-  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return false;
-  return true;
+  return isDeployableImageUrl(value);
 }
 
 export function getRecordImage(record: RecordRow): string | null {
@@ -114,8 +111,8 @@ export function getRecordImage(record: RecordRow): string | null {
     if (isUsableImageUrl(value)) return value.trim();
   }
   const html = recordBodyHtml(record);
-  const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(html);
-  return fromHtml?.[1]?.trim() || null;
+  const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(html)?.[1]?.trim();
+  return fromHtml && isUsableImageUrl(fromHtml) ? fromHtml : null;
 }
 
 export function getRecordTitle(record: RecordRow): string {

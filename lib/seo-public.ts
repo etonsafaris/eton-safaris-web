@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { countryHeroImage } from '@/lib/country-heroes';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
+import { isDeployableImageUrl } from '@/lib/public-image';
 import {
   buildDefaultJsonLd,
   seoValuesFromRecord,
@@ -38,10 +40,8 @@ function safeCanonical(values: SeoValues, path: string) {
 }
 
 function safeImageUrl(image?: string) {
-  const raw = (image || '').trim();
-  if (!raw || raw.startsWith('blob:') || raw.startsWith('data:')) return undefined;
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('/')) return raw;
-  return undefined;
+  if (!isDeployableImageUrl(image)) return undefined;
+  return image.replace(/^http:\/\//i, 'https://');
 }
 
 function robotsContent(values: SeoValues) {
@@ -158,11 +158,17 @@ export function jsonLdFromRecord(
       // fall through to generated graph
     }
   }
+  const pathSlug = options.path.replace(/^\/destinations\//, '').split('/')[0];
   const graph = buildDefaultJsonLd(values, {
     title,
     description: description.slice(0, 220),
     url: values.canonical_url || absoluteUrl(options.path),
-    image: values.social_image_url || getRecordImage(record as RecordRow) || SITE_LOGO,
+    image:
+      values.social_image_url ||
+      (options.schemaHint === 'TouristDestination'
+        ? countryHeroImage(pathSlug, record as RecordRow)
+        : getRecordImage(record as RecordRow)) ||
+      SITE_LOGO,
     siteName: SITE.name,
     siteUrl: SITE.url,
     dateModified: extras.published_at || undefined,
@@ -187,7 +193,8 @@ export async function publicRecordMetadata(
       title,
       description: description.slice(0, 160),
       path,
-      image: getRecordImage(record) || undefined,
+      image:
+        (table === 'countries' ? countryHeroImage(slug, record) : getRecordImage(record)) || undefined,
     });
   } catch {
     return { title: SITE.name };
