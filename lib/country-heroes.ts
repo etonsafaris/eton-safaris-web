@@ -28,10 +28,16 @@ export function bundledCountryHero(slug?: string | null) {
   return FILES[key] || DEFAULT_COUNTRY_HERO;
 }
 
-/** Prefer the admin-uploaded country image; fall back to files in public/heroes. */
+function recordLooksSaved(record?: RecordRow | null) {
+  if (!record) return false;
+  return Boolean(record.id || record.image_url || record.title || record.name || record.slug);
+}
+
+/** Prefer the admin-uploaded country image. Do not resurrect bundled heroes after CMS content exists. */
 export function countryHeroImage(slug?: string | null, record?: RecordRow | null) {
   const fromCms = record ? getRecordImage(record) : null;
   if (isLiveCmsImage(fromCms)) return fromCms;
+  if (recordLooksSaved(record)) return fromCms || '';
   const fromRecord = record ? String(record.slug || record.name || record.title || '') : '';
   return bundledCountryHero(slug || fromRecord);
 }

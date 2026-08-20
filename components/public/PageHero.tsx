@@ -36,7 +36,7 @@ export default function PageHero({
   groupSize,
   published,
 }: PageHeroProps) {
-  const src = image || DEFAULT_HERO_IMAGE;
+  const src = image?.trim() || '';
   const isTour = variant === 'tour';
   const isPark = variant === 'park';
   const isCountry = variant === 'country';
@@ -47,8 +47,12 @@ export default function PageHero({
     <>
       <PageFavicon title={title} />
       <section
-        className={`relative w-full overflow-hidden ${isPolicy ? 'h-[430px]' : 'h-[338px] md:h-[398px]'}`}
-        style={{ backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        className={`relative w-full overflow-hidden bg-[#141612] ${isPolicy ? 'h-[430px]' : 'h-[338px] md:h-[398px]'}`}
+        style={
+          src
+            ? { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : undefined
+        }
       >
         {src ? (
           <ResponsiveImage
@@ -59,7 +63,7 @@ export default function PageHero({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full bg-forest" />
+          <div className="h-full bg-[#141612]" />
         )}
         <div className="absolute inset-0 bg-black/18" />
         {isAbout ? (

@@ -36,11 +36,9 @@ export default function ResponsiveImage({
       referrerPolicy="no-referrer"
       onError={(event) => {
         const image = event.currentTarget;
-        const fallback = DEFAULT_PUBLIC_IMAGE;
-        if (!image.src.includes('/heroes/') && image.src !== fallback) {
-          image.srcset = '';
-          image.src = fallback;
-        }
+        image.srcset = '';
+        image.removeAttribute('srcset');
+        image.style.visibility = 'hidden';
       }}
     />
   );

@@ -8,6 +8,7 @@ import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 import type { User } from '@supabase/supabase-js';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import type { RecordRow } from '@/lib/types';
 
 export default function AgentPortalPage() {
   const router = useRouter();
