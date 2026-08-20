@@ -12,8 +12,6 @@ import { NAV_COUNTRIES, SITE } from '@/lib/collections';
 import { useCmsLive } from '@/lib/cms-live';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
-import { publicRecordSlug } from '@/lib/data';
-import { SITE } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';
 
 function ToursList() {
@@ -78,6 +76,25 @@ function ToursList() {
         <Link href="/tours/compare" className="inline-flex text-sm font-semibold text-[#00A651] hover:underline">
           Compare packages →
         </Link>
+        {filtered.length > 0 ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                name: `${SITE.name} safari tour packages`,
+                numberOfItems: filtered.length,
+                itemListElement: filtered.slice(0, 30).map((tour, index) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  name: getRecordTitle(tour),
+                  url: `${SITE.url}/tours/${publicRecordSlug(tour)}`,
+                })),
+              }).replace(/</g, '\\u003c'),
+            }}
+          />
+        ) : null}
         {filtered.length === 0 ? (
           <p className="mt-16 text-center text-gray-500">No tour package found. Try another search.</p>
         ) : (

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import Carousel from '@/components/public/Carousel';
@@ -7,7 +8,7 @@ import PlaceCard from '@/components/public/PlaceCard';
 import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import PageHero from '@/components/public/PageHero';
-import { countryPlacePath } from '@/lib/cms-routes';
+import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import {
   categoryMatchesCountry,
   countryCategoryPath,
