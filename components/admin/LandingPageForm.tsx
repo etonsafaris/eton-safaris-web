@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import CoverImageField from '@/components/admin/CoverImageField';
+import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
@@ -64,7 +65,6 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
   const [featuredImage, setFeaturedImage] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
-  const [draftFaq, setDraftFaq] = useState<PageFaq>({ question: '', answer: '' });
   const [countries, setCountries] = useState<RecordRow[]>([]);
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('country'));
   const [saving, setSaving] = useState(false);
@@ -120,12 +120,6 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
     if (!headline) setHeadline(copy.h1);
     if (!offerLine) setOfferLine(copy.offerLine);
     if (!readyHeading) setReadyHeading(copy.readyHeading);
-  }
-
-  function addFaq() {
-    if (!draftFaq.question.trim() || !draftFaq.answer.trim()) return;
-    setFaqs((current) => [...current, draftFaq]);
-    setDraftFaq({ question: '', answer: '' });
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -332,50 +326,12 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
           />
         </div>
 
-        <div className="mt-8 rounded-xl border border-[#e5e7eb] p-6">
-          <h2 className="font-serif text-2xl font-bold text-[#111827]">Landing FAQ</h2>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            Appears under the country article and is added to FAQ structured data for ranking.
-          </p>
-          <div className="mt-4 space-y-3">
-            {faqs.map((faq, index) => (
-              <div key={`${faq.question}-${index}`} className="rounded-xl bg-[#f8fafc] p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827]">{faq.question}</p>
-                    <p className="mt-1 text-sm text-[#6b7280]">{faq.answer}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-red-600"
-                    onClick={() => setFaqs((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <PillInput
-              value={draftFaq.question}
-              onChange={(value) => setDraftFaq({ ...draftFaq, question: value })}
-              placeholder="Question"
-            />
-            <PillInput
-              value={draftFaq.answer}
-              onChange={(value) => setDraftFaq({ ...draftFaq, answer: value })}
-              placeholder="Answer"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={addFaq}
-            className="mt-4 rounded-full bg-[#00A651] px-5 py-2 text-sm font-semibold text-white"
-          >
-            Add FAQ
-          </button>
-        </div>
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Landing FAQ"
+          description="Appears under the country article and is added to FAQ structured data for ranking."
+        />
 
         {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 
