@@ -14,6 +14,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 
 type CountryFormProps = {
   countryId?: string;
@@ -78,6 +79,12 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Destination',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? countryId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/countries');
     router.refresh();

@@ -24,6 +24,7 @@ import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 
 type PageFormProps = {
@@ -192,6 +193,12 @@ export default function PageForm({ pageId }: PageFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Page',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? pageId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/pages');
     router.refresh();

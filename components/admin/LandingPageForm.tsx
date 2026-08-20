@@ -16,6 +16,7 @@ import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 
 type LandingPageFormProps = {
@@ -176,6 +177,12 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Landing Page',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? landingId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/landing_pages');
     router.refresh();

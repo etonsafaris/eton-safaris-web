@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pencil, Star, Trash2, X } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { statusBadgeClass } from '@/components/admin/OpsRecordTable';
-import { fetchCollectionRecords, pickDateValue, pickNumber, pickString } from '@/lib/data';
+import { pickDateValue, pickNumber, pickString } from '@/lib/data';
+import { fetchAdminTable } from '@/lib/admin-records-client';
 import { REVIEW_SOURCE_LABELS, reviewExternalHref } from '@/lib/review-links';
 import { supabase } from '@/lib/supabase/client';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 
 const SOURCES = ['All', ...REVIEW_SOURCE_LABELS];
@@ -23,7 +25,7 @@ export default function ReviewsPanel() {
 
   async function load() {
     try {
-      const data = await fetchCollectionRecords('reviews');
+      const data = await fetchAdminTable('reviews');
       setRows(
         data.slice().sort((a, b) => pickDateValue(b, ['created_at']).localeCompare(pickDateValue(a, ['created_at'])))
       );
@@ -71,12 +73,17 @@ export default function ReviewsPanel() {
       ...form,
       rating: Number(form.rating),
     });
-    const { error: updateError } = await saveWithColumnFallback('reviews', payload, editing.id);
+    const { error: updateError, data } = await saveWithColumnFallback('reviews', payload, editing.id);
     setSaving(false);
     if (updateError) {
       setError(updateError.message);
       return;
     }
+    await notifyAdminItemSaved({
+      module: 'Review',
+      action: 'updated',
+      item: { ...payload, ...(data?.[0] || {}), id: editing.id },
+    });
     setEditing(null);
     await load();
   }

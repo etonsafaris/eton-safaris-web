@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
-import { sendEmail } from '@/lib/email';
+import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { pesapalRequest } from '@/lib/pesapal';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -199,9 +199,15 @@ async function handleIpn(request: Request) {
         const currency = String(payment?.currency || booking.currency || 'USD');
         const clientName = String(booking.guest_name || payment?.guest_name || payment?.email || 'Guest');
         const bookingReference = String(booking.booking_code || booking.id || reference);
-        await sendEmail({
-          title: remaining <= 0.009 ? 'Safari payment completed — Full Payment' : 'Partial safari payment received',
-          message: `${clientName} paid ${money(confirmedAmount, currency)} for ${String(booking.tour || payment?.tour || 'a safari')}. Total paid: ${money(paid, currency)}. Remaining: ${money(remaining, currency)}. Status: ${paymentLabel}.`,
+        const guestEmail = String(booking.email || payment?.email || '');
+        const title = remaining <= 0.009 ? 'Safari payment completed — Full Payment' : 'Partial safari payment received';
+        const message = `${clientName} paid ${money(confirmedAmount, currency)} for ${String(booking.tour || payment?.tour || 'a safari')}. Total paid: ${money(paid, currency)}. Remaining: ${money(remaining, currency)}. Status: ${paymentLabel}.`;
+        await deliverIncomingAlert({
+          title,
+          message,
+          category: 'booking',
+          guestEmail,
+          sendToGuest: guestEmail.includes('@'),
           html: paymentReceiptHtml({
             clientName,
             bookingReference,
@@ -213,16 +219,18 @@ async function handleIpn(request: Request) {
             paymentStatus: paymentLabel,
             tour: String(booking.tour || payment?.tour || ''),
           }),
-          to: [process.env.ADMIN_EMAIL || SITE.email, String(booking.email || payment?.email || '')].filter(Boolean),
-          category: 'booking',
         });
       }
     } else if (!alreadyCompleted) {
       const currency = String(payment?.currency || 'USD');
       const clientName = String(payment?.guest_name || payment?.email || 'Guest');
-      await sendEmail({
+      const guestEmail = String(payment?.email || '');
+      await deliverIncomingAlert({
         title: 'Safari payment completed',
         message: `${clientName} paid ${money(confirmedAmount, currency)}. Booking reference: ${reference}.`,
+        category: 'booking',
+        guestEmail,
+        sendToGuest: guestEmail.includes('@'),
         html: paymentReceiptHtml({
           clientName,
           bookingReference: reference,
@@ -234,8 +242,6 @@ async function handleIpn(request: Request) {
           paymentStatus: 'Full Payment',
           tour: String(payment?.tour || ''),
         }),
-        to: [process.env.ADMIN_EMAIL || SITE.email, String(payment?.email || '')].filter(Boolean),
-        category: 'booking',
       });
     }
 

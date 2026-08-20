@@ -23,6 +23,7 @@ import { canAccessModule, collectionIdFromPath, parseModules } from '@/lib/admin
 import { collectionIcon } from '@/lib/admin-icons';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
+import { fetchAdminTable } from '@/lib/admin-records-client';
 
 function NavLink({
   href,
@@ -115,12 +116,18 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           });
       });
 
-    Promise.all([
-      supabase.from('notifications').select('id', { count: 'exact', head: true }),
-      supabase.from('inquiries').select('id', { count: 'exact', head: true }).eq('status', 'Pending'),
-      supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'Pending'),
+    void Promise.all([
+      fetchAdminTable('notifications').catch(() => []),
+      fetchAdminTable('inquiries').catch(() => []),
+      fetchAdminTable('bookings').catch(() => []),
     ]).then(([notes, inquiries, bookings]) => {
-      setNoticeCount((notes.count || 0) + (inquiries.count || 0) + (bookings.count || 0));
+      const pendingInquiries = inquiries.filter(
+        (row) => String(row.status || '').toLowerCase() === 'pending'
+      ).length;
+      const pendingBookings = bookings.filter(
+        (row) => String(row.status || '').toLowerCase() === 'pending'
+      ).length;
+      setNoticeCount(notes.length + pendingInquiries + pendingBookings);
     });
   }, [user]);
 

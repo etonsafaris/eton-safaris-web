@@ -5,6 +5,17 @@ export function pesapalBaseUrl() {
   return process.env.PESAPAL_ENV === 'live' ? LIVE : SANDBOX;
 }
 
+export function isPesapalLive() {
+  return process.env.PESAPAL_ENV === 'live';
+}
+
+export function pesapalPublicSiteUrl() {
+  const configured = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+  if (configured.startsWith('https://')) return configured;
+  if (isPesapalLive()) return 'https://etonsafaris.com';
+  return configured || 'http://localhost:3000';
+}
+
 export function pesapalErrorMessage(json: Record<string, unknown>, fallback: string) {
   const error = json.error;
   if (typeof error === 'string' && error.trim()) return error;

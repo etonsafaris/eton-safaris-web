@@ -10,6 +10,7 @@ import {
 } from '@/lib/keywords';
 import { clearCollectionCache, fetchCollectionRecords, pickString } from '@/lib/data';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
@@ -167,6 +168,12 @@ export default function KeywordsPanel() {
         setError(result.error.message);
         return;
       }
+
+      await notifyAdminItemSaved({
+        module: 'Keywords',
+        action: existingRow?.id ? 'updated' : 'created',
+        item: { country, category, keywords: nextChips.join(', '), id: existingRow?.id || result.data?.[0]?.id },
+      });
 
       if (duplicateIds.length > 0) {
         await deleteRows(duplicateIds);

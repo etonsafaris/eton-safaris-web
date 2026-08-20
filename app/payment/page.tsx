@@ -198,7 +198,7 @@ function PaymentPortalInner() {
       const body = await response.json();
       if (!response.ok) {
         setStep(1);
-        setError(String(body.error || 'Pesapal checkout failed. Check the sandbox keys and try again.'));
+        setError(String(body.error || 'Pesapal checkout failed. Check the live merchant keys and try again.'));
         setSaving(false);
         return;
       }

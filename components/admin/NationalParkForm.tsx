@@ -17,6 +17,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import type { RecordRow } from '@/lib/types';
 
@@ -207,6 +208,12 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'National Park',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? parkId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/national_park');
     router.refresh();

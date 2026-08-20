@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { SITE } from '@/lib/collections';
 import { generateBookingCode } from '@/lib/booking-code';
-import { sendEmail } from '@/lib/email';
+import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
@@ -47,11 +46,12 @@ export async function POST(request: Request) {
     );
     const booking = bookingResult.data?.[0];
 
-    await sendEmail({
+    await deliverIncomingAlert({
       title: 'Quotation accepted',
       message: `${quote.name || 'Guest'} accepted the quotation for ${quote.tour || 'a safari'}.`,
-      to: [process.env.ADMIN_EMAIL || SITE.email, String(quote.email || '')].filter(Boolean),
       category: 'booking',
+      guestEmail: String(quote.email || ''),
+      sendToGuest: String(quote.email || '').includes('@'),
     });
 
     return NextResponse.json({

@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { SITE } from '@/lib/collections';
@@ -66,13 +65,15 @@ function LoginForm() {
   const fullName = `${firstName} ${lastName}`.trim();
 
   useEffect(() => {
-    document.documentElement.classList.add('login-screen', 'login-locked');
-    document.body.classList.add('login-screen', 'login-locked');
+    document.documentElement.classList.add('login-screen');
+    document.body.classList.add('login-screen');
+    document.documentElement.classList.toggle('login-locked', !isSignup);
+    document.body.classList.toggle('login-locked', !isSignup);
     return () => {
       document.documentElement.classList.remove('login-screen', 'login-locked');
       document.body.classList.remove('login-screen', 'login-locked');
     };
-  }, []);
+  }, [isSignup]);
 
   useEffect(() => {
     let mounted = true;
@@ -111,6 +112,12 @@ function LoginForm() {
 
     if (isSignup && password !== confirmPassword) {
       setError('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+
+    if (isSignup && isAgentRole(role)) {
+      router.push('/agents/register');
       setLoading(false);
       return;
     }
@@ -156,7 +163,7 @@ function LoginForm() {
         await notifyWorkspace({
           title: 'New agent registration — approval required',
           message: `${fullName} (${email}) registered as a Travel Agent from Create Account. Approval: ${approveLink}`,
-          category: 'system',
+          category: 'agent',
           guestEmail: email,
         });
       } else {
@@ -202,10 +209,21 @@ function LoginForm() {
     }
 
     const { data: agents } = await supabase.from('registered_agents').select('id,status').eq('email', email);
-    const isAgent = (agents || []).length > 0;
+    const agentRow = (agents || [])[0] as { id?: string; status?: string } | undefined;
+    const isAgent = Boolean(agentRow);
+    const agentStatus = String(agentRow?.status || '').toLowerCase();
     const roleValue = String(profileRow?.role || authResult.data.user?.user_metadata?.role || '');
     const isStaff =
       /admin|full access|tour operator|content manager/i.test(roleValue) && !/travel agent/i.test(roleValue);
+
+    if (isAgent && !isStaff && agentStatus !== 'active') {
+      await supabase.auth.signOut();
+      setError(
+        'Your agent application is waiting for administrator approval. You will be notified by email when it is activated.'
+      );
+      setLoading(false);
+      return;
+    }
     const mustChange =
       Boolean(authResult.data.user?.user_metadata?.must_change_password) ||
       Boolean((profileRow as { must_change_password?: boolean } | null)?.must_change_password);
@@ -223,6 +241,18 @@ function LoginForm() {
     router.replace(destination);
   }
 
+  function isAgentRole(value: string) {
+    return /travel agent/i.test(value);
+  }
+
+  function onRoleChange(value: string) {
+    if (isAgentRole(value)) {
+      router.push('/agents/register');
+      return;
+    }
+    setRole(value);
+  }
+
   function toggleMode() {
     setMode((current) => (current === 'signin' ? 'signup' : 'signin'));
     setError('');
@@ -230,30 +260,39 @@ function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-dvh w-full items-center justify-center px-6 py-10 font-ui">
-      <PlusGrid />
+    <div
+      className={
+        isSignup
+          ? 'relative min-h-dvh w-full overflow-y-auto font-ui'
+          : 'relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden font-ui'
+      }
+    >
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <PlusGrid />
+      </div>
 
-      <div className="relative w-full max-w-[340px] animate-fade-in-up">
+      <div
+        className={
+          isSignup
+            ? 'relative z-10 mx-auto w-full max-w-[360px] animate-fade-in-up px-4 py-8'
+            : 'relative z-10 w-full max-w-[360px] animate-fade-in-up px-4'
+        }
+      >
         <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
-          <div className="px-6 pb-3 pt-5 text-center">
-            <div className="mb-3 flex justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 scale-150 rounded-full bg-[#00A651]/20 blur-xl" />
-                <div className="relative">
-                  <BrandLogo size={80} />
-                </div>
-              </div>
+          <div className="px-6 pb-2 pt-4 text-center">
+            <div className="mb-2 flex justify-center">
+              <BrandLogo size={56} />
             </div>
-            <h1 className="mb-1 text-2xl font-bold text-gray-900">
+            <h1 className="mb-0.5 text-[22px] font-bold leading-tight text-gray-900">
               {isSignup ? 'Create Account' : 'Welcome Back'}
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-[13px] text-gray-500">
               {isSignup ? `Join ${SITE.name} and start your journey` : 'Sign in to your account to continue'}
             </p>
           </div>
 
-          <div className="px-6 pb-5">
-            <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="px-6 pb-4">
+            <form onSubmit={handleSubmit} className="space-y-2.5">
               {isSignup ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -324,7 +363,7 @@ function LoginForm() {
                   <select
                     id="role"
                     value={role}
-                    onChange={(event) => setRole(event.target.value)}
+                    onChange={(event) => onRoleChange(event.target.value)}
                     className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-900 transition-all duration-200 focus:border-[#00A651] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
                   >
                     {ROLES.map((item) => (
@@ -441,14 +480,9 @@ function LoginForm() {
           </div>
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-white/60">
-            © {new Date().getFullYear()} {SITE.name}. All rights reserved.
-          </p>
-          <Link href="/agents/register" className="mt-1 inline-block text-xs text-white/40 hover:text-white/70">
-            Agent registration
-          </Link>
-        </div>
+        <p className="mt-3 text-center text-[13px] text-white/70">
+          © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+        </p>
       </div>
     </div>
   );
@@ -458,7 +492,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative flex min-h-dvh w-full items-center justify-center px-6 py-10 font-ui">
+        <div className="relative flex h-dvh w-full items-center justify-center overflow-hidden px-4 font-ui">
           <PlusGrid />
           <div className="relative h-[420px] w-full max-w-[340px] animate-pulse rounded-2xl bg-white/90 shadow-2xl" />
         </div>

@@ -19,6 +19,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import type { RecordRow } from '@/lib/types';
 
@@ -171,6 +172,12 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Safari Update',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? postId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/safari_updates');
     router.refresh();

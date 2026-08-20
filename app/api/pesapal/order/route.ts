@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
-import { getPesapalIpnId, normalizePhone, pesapalRequest } from '@/lib/pesapal';
+import { getPesapalIpnId, isPesapalLive, normalizePhone, pesapalPublicSiteUrl, pesapalRequest } from '@/lib/pesapal';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
@@ -57,17 +57,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
     }
 
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
-    const callbackUrl = `${siteUrl.replace(/\/$/, '')}/payment?status=complete`;
-    const publicIpn =
-      process.env.PESAPAL_IPN_URL ||
-      (siteUrl.startsWith('https://') ? `${siteUrl.replace(/\/$/, '')}/api/pesapal/ipn` : 'https://etonsafaris.com/api/pesapal/ipn');
+    const siteUrl = pesapalPublicSiteUrl();
+    const callbackUrl = `${siteUrl}/payment?status=complete`;
+    const publicIpn = process.env.PESAPAL_IPN_URL || `${siteUrl}/api/pesapal/ipn`;
 
     const ipnId = await getPesapalIpnId(publicIpn);
     if (!ipnId) {
       return NextResponse.json(
-        { error: 'Pesapal IPN registration failed. Register an HTTPS IPN URL in the sandbox dashboard, then set PESAPAL_IPN_ID.' },
+        { error: 'Pesapal IPN registration failed. Register an HTTPS IPN URL in the Pesapal live dashboard, then set PESAPAL_IPN_ID.' },
         { status: 500 }
       );
     }
@@ -118,7 +115,7 @@ export async function POST(request: Request) {
       redirect_url: order.redirect_url || order.redirectUrl,
       order_tracking_id: trackingId,
       merchant_email: SITE.email,
-      sandbox: process.env.PESAPAL_ENV !== 'live',
+      sandbox: !isPesapalLive(),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Pesapal order failed';

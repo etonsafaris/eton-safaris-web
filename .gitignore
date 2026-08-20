@@ -36,4 +36,22 @@ yarn-error.log*
 
 # local tools / capture frames
 .video-frames/
+.video-frames-v2/
+.tmp-dav-frames/
+.tools/
+/tmp/
+git-watch.log
+
+
+# vercel
+.vercel
+
+# uploaded cover images (local fallback)
+/public/media/
+
+# typescript
+*.tsbuildinfo
+
+# local tools / capture frames
+.video-frames/
 .tools/

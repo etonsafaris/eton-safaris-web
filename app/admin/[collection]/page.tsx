@@ -141,6 +141,8 @@ function ProfilePanel() {
 
 function SettingsPanel() {
   const [status, setStatus] = useState<{ pesapal: boolean; resend: boolean; pesapalEnv: string; adminEmail: string } | null>(null);
+  const [demoStatus, setDemoStatus] = useState('');
+  const [demoSending, setDemoSending] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -154,6 +156,24 @@ function SettingsPanel() {
     });
   }, []);
 
+  async function sendDemoEmail() {
+    setDemoSending(true);
+    setDemoStatus('');
+    try {
+      const response = await fetch('/api/email/test-inquiry', { method: 'POST' });
+      const body = (await response.json()) as { emailed?: boolean; error?: string; reason?: string; to?: string[] };
+      if (body.emailed) {
+        setDemoStatus(`Demo sent to ${(body.to || ['etonsafaris@gmail.com']).join(', ')}. Check Gmail and spam.`);
+      } else {
+        setDemoStatus(body.error || body.reason || 'Email provider is not connected yet.');
+      }
+    } catch (error) {
+      setDemoStatus(error instanceof Error ? error.message : 'Could not send the demo email.');
+    } finally {
+      setDemoSending(false);
+    }
+  }
+
   return (
     <div className="max-w-2xl space-y-4">
       <h2 className="font-serif text-3xl">Settings</h2>
@@ -164,8 +184,17 @@ function SettingsPanel() {
         <h3 className="font-medium">Notifications</h3>
         <p className="mt-1 text-sm text-gray-500">
           Admin alerts go to {status?.adminEmail || 'etonsafaris@gmail.com'}. Email sending is{' '}
-          {status?.resend ? 'connected via Resend.' : 'logged until RESEND_API_KEY is set.'}
+          {status?.resend ? 'connected via Resend.' : 'delivering to Gmail through the website inbox relay until RESEND_API_KEY is set.'}
         </p>
+        <button
+          type="button"
+          onClick={sendDemoEmail}
+          disabled={demoSending}
+          className="mt-3 rounded-md bg-[#20A048] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        >
+          {demoSending ? 'Sending demo…' : 'Send demo email to etonsafaris@gmail.com'}
+        </button>
+        {demoStatus ? <p className="mt-2 text-sm text-gray-600">{demoStatus}</p> : null}
       </div>
       <div className="rounded-xl border bg-white p-5">
         <h3 className="font-medium">Pesapal checkout</h3>
@@ -174,7 +203,7 @@ function SettingsPanel() {
           {status?.pesapal ? 'present.' : 'not set yet — checkout will record locally and show the missing-key error until you add them.'}
         </p>
         <p className="mt-2 text-xs text-gray-400">
-          Required: PESAPAL_CONSUMER_KEY, PESAPAL_CONSUMER_SECRET, optional PESAPAL_ENV=live, PESAPAL_IPN_ID.
+          Required: PESAPAL_CONSUMER_KEY, PESAPAL_CONSUMER_SECRET, PESAPAL_ENV=live, optional PESAPAL_IPN_ID.
         </p>
       </div>
       <div className="rounded-xl border bg-white p-5">
@@ -296,6 +325,7 @@ function UserManagement() {
         message: `Your Eton Safaris dashboard account (${String(user.email || '')}) has been approved. You can now sign in at https://etonsafaris.com/login`,
         category: 'system',
         guestEmail: String(user.email || ''),
+        sendToGuest: true,
       });
     }
     setStatus(nextStatus === 'Active' ? 'User activated.' : 'User set back to pending.');

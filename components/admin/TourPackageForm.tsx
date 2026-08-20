@@ -25,6 +25,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { fetchCollectionRecords, getRecordTitle, pickDateValue, slugify } from '@/lib/data';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
@@ -327,6 +328,12 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Tour Package',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? tourId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/tours');
     router.refresh();

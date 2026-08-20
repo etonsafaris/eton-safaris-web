@@ -152,17 +152,17 @@ export default function TourDetailPage() {
       content: review.content.trim(),
       country: review.country.trim(),
     });
-    const { error } = await saveWithColumnFallback('reviews', payload);
-    if (error) {
-      console.error(error);
-      setReviewStatus(error.message);
+    const response = await fetch('/api/public/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      console.error(body);
+      setReviewStatus(body.error || 'Could not save the review.');
       return;
     }
-    await notifyWorkspace({
-      title: 'New Tour Review',
-      message: `${review.author} (${review.email}) rated ${getRecordTitle(tour || {})} ${review.rating}/5: ${review.content.trim()}`,
-      category: 'system',
-    });
     setReviewSubmitted(true);
     setReviewStatus('Review Submitted');
     setReview({ author: '', email: '', rating: 5, content: '', country: '' });

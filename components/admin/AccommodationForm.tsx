@@ -17,6 +17,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import type { RecordRow } from '@/lib/types';
 
@@ -254,6 +255,12 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Accommodation',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? accommodationId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/accommodations');
     router.refresh();

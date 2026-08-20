@@ -119,9 +119,13 @@ export default function AgentPortalPage() {
           </p>
         )}
         {agent && !active && (
-          <p className="rounded-xl border bg-white p-6 text-sm text-gray-600">
-            Your agent account is {agentStatus}. An administrator must activate it before you can record guests.
-          </p>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
+            <p className="font-semibold text-amber-900">Please wait for admin approval</p>
+            <p className="mt-2 text-sm text-amber-800">
+              Your agent account is {agentStatus}. An administrator must click Activate before you can record guests. You
+              will also receive an email when access is granted.
+            </p>
+          </div>
         )}
         {active && (
           <>

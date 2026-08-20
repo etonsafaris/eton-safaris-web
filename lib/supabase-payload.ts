@@ -129,7 +129,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'inquiry_id',
     'accepted_by',
   ],
-  notifications: ['title', 'message', 'category'],
+  notifications: ['title', 'message', 'category', 'body', 'content', 'status', 'read', 'seen'],
   subscribers: ['email', 'last_digest_at'],
 };
 

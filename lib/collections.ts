@@ -277,13 +277,14 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     id: 'notifications',
     label: 'Notifications',
     table: 'notifications',
+    aliases: ['notification', 'alerts'],
     icon: 'bell',
-    subtitle: 'System and guest notifications',
-    view: 'custom',
+    subtitle: 'Inquiries, bookings, subscribers, reviews, and agent alerts',
+    view: 'table',
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'message', label: 'Message', type: 'textarea' },
-      { name: 'category', label: 'Category', type: 'select', options: ['subscriber', 'inquiry', 'booking', 'system'] },
+      { name: 'category', label: 'Category', type: 'select', options: ['subscriber', 'inquiry', 'booking', 'system', 'review', 'agent'] },
     ],
   },
   {

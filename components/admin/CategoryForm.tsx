@@ -15,6 +15,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import type { RecordRow } from '@/lib/types';
 
@@ -129,6 +130,12 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       setSaving(false);
       return;
     }
+
+    await notifyAdminItemSaved({
+      module: 'Category',
+      action: isEdit ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? categoryId : result.data?.[0]?.id },
+    });
 
     router.push('/admin/categories');
     router.refresh();

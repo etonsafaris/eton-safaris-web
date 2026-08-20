@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { adminInbox } from '@/lib/email';
 import { requireAdminUser } from '@/lib/require-admin';
 
 export async function GET(request: Request) {
@@ -8,6 +9,6 @@ export async function GET(request: Request) {
     pesapal: Boolean(process.env.PESAPAL_CONSUMER_KEY && process.env.PESAPAL_CONSUMER_SECRET),
     resend: Boolean(process.env.RESEND_API_KEY),
     pesapalEnv: process.env.PESAPAL_ENV || 'sandbox',
-    adminEmail: process.env.ADMIN_EMAIL || 'etonsafaris@gmail.com',
+    adminEmail: adminInbox(),
   });
 }

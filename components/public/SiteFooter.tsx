@@ -6,8 +6,6 @@ import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { notifyWorkspace } from '@/lib/notify';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 
 function FacebookIcon({ className }: { className?: string }) {
@@ -66,18 +64,17 @@ export default function SiteFooter() {
   async function subscribe(event: React.FormEvent) {
     event.preventDefault();
     if (isSpamHoneypot(honeypot)) return;
-    const { error } = await saveWithColumnFallback('subscribers', { email });
-    if (error) {
-      console.error('[Supabase] Newsletter subscribe failed:', error);
-      setStatus(error.message);
+    const response = await fetch('/api/public/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, honeypot }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      console.error('[Subscribe] Failed:', body);
+      setStatus(body.error || 'Could not subscribe right now.');
       return;
     }
-    await notifyWorkspace({
-      title: 'New Subscriber',
-      message: `${email} subscribed via the footer.`,
-      category: 'subscriber',
-      guestEmail: email,
-    });
     setEmail('');
     setStatus('Subscribed. Thank you!');
   }

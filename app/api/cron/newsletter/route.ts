@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { SITE } from '@/lib/collections';
-
+import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { sendEmail } from '@/lib/email';
 
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
         html,
 
         to: [email],
-
+        skipAdminCopy: true,
         category: 'subscriber',
 
       });
@@ -164,6 +164,14 @@ export async function GET(request: Request) {
     }
 
 
+
+    if (sent > 0) {
+      await deliverIncomingAlert({
+        title: `${SITE.name} monthly digest sent`,
+        message: `The monthly safari digest was emailed to ${sent} subscriber${sent === 1 ? '' : 's'}.`,
+        category: 'subscriber',
+      });
+    }
 
     return NextResponse.json({ ok: true, sent, eligible: eligible.length });
 

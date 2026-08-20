@@ -14,11 +14,15 @@ import {
   getRecordTitle,
   pickString,
   pickNumber,
+  pickRecordId,
   slugify,
   isLanguagePost,
+  clearCollectionCache,
 } from '@/lib/data';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { notifyWorkspace } from '@/lib/notify';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
+import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import { supabase } from '@/lib/supabase/client';
 import SeoPanel from '@/components/admin/SeoPanel';
@@ -55,6 +59,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
   const [query, setQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [modalOpen, setModalOpen] = useState(false);
@@ -78,8 +83,20 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     }
     setLoading(true);
     setError('');
+    setActionError('');
     try {
-      let data = await fetchCollectionRecords(config.table, config.aliases);
+      clearCollectionCache(config.table);
+      (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
+      let data: RecordRow[] = [];
+      if (isOps) {
+        try {
+          data = await fetchAdminTable(config.table);
+        } catch {
+          data = await fetchCollectionRecords(config.table, config.aliases);
+        }
+      } else {
+        data = await fetchCollectionRecords(config.table, config.aliases);
+      }
       if (config.id === 'pages') {
         const created = await ensureDefaultCmsPages();
         if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
@@ -93,6 +110,9 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           const aDate = String(a.created_at || '');
           const bDate = String(b.created_at || '');
           return bDate.localeCompare(aDate);
+        }).map((row) => {
+          const id = pickRecordId(row);
+          return id != null && (row.id === undefined || row.id === null || row.id === '') ? { ...row, id } : row;
         })
       );
       if (data.length === 0) {
@@ -252,6 +272,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     ];
   }
 
+  function agentIsActive(record: RecordRow) {
+    return pickString(record, ['status']).trim().toLowerCase() === 'active';
+  }
+
   function opsActionButton(label: string, onClick: () => void) {
     return (
       <button
@@ -281,8 +305,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           <>
             {opsActionButton('View Guest Logs', () => viewGuestLogs(record))}
             {opsActionButton(
-              pickString(record, ['status']) === 'Active' ? 'Deactivate' : 'Activate',
-              () => setAgentStatus(record, pickString(record, ['status']) === 'Active' ? 'Inactive' : 'Active')
+              agentIsActive(record) ? 'Deactivate' : 'Activate',
+              () => void setAgentStatus(record, agentIsActive(record) ? 'Inactive' : 'Active')
             )}
           </>
         )}
@@ -310,10 +334,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
             </button>
             <button
               type="button"
-              onClick={() => setAgentStatus(record, pickString(record, ['status']) === 'Active' ? 'Inactive' : 'Active')}
+              onClick={() => void setAgentStatus(record, agentIsActive(record) ? 'Inactive' : 'Active')}
               className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300"
             >
-              {pickString(record, ['status']) === 'Active' ? 'Deactivate' : 'Activate'}
+              {agentIsActive(record) ? 'Deactivate' : 'Activate'}
             </button>
           </>
         )}
@@ -450,6 +474,12 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       return;
     }
 
+    await notifyAdminItemSaved({
+      module: config.label,
+      action: editing?.id ? 'updated' : 'created',
+      item: { ...payload, ...(result.data?.[0] || {}), id: editing?.id || result.data?.[0]?.id },
+    });
+
     if (table === 'bookings') {
       const status = String(raw.status || '');
       const guestEmail = String(raw.email || '');
@@ -476,6 +506,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           message: `Booking for ${guestName} is now ${status}. Calendar: ${calendarUrl}`,
           category: 'booking',
           guestEmail,
+          sendToGuest: true,
         });
       }
     }
@@ -498,20 +529,28 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   }
 
   async function setAgentStatus(record: RecordRow, status: 'Active' | 'Inactive' | 'Pending') {
-    if (!record.id) return;
-    const { error: updateError } = await saveWithColumnFallback(config.table, { status }, record.id);
-    if (updateError) {
-      setError(updateError.message);
+    const id = pickRecordId(record);
+    const email = pickString(record, ['email', 'Email', 'agent_email']).trim();
+    if (id == null && !email.includes('@')) {
+      setActionError('This agent has no id or email, so it cannot be activated. Open the row, add an email, then try Activate again.');
       return;
     }
-    if (status === 'Active') {
-      const agentEmail = pickString(record, ['email']);
-      await notifyWorkspace({
-        title: 'Agent account approved',
-        message: `Your Eton Safaris agent profile has been activated. Sign in at https://etonsafaris.com/login and open the agent portal: https://etonsafaris.com/agents/portal`,
-        category: 'system',
-        guestEmail: agentEmail,
-      });
+    setActionError('');
+    const response = await fetch('/api/admin/agents/status', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({
+        id: id ?? undefined,
+        status,
+        email,
+        name: pickString(record, ['name', 'full_name', 'Name']),
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setActionError(body.error || 'Could not update the agent status.');
+      return;
     }
     await load();
   }
@@ -557,6 +596,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         message: `Hi ${guestName}, your safari booking is confirmed. Your booking code is ${code}. Verify anytime at ${SITE.url}/verify`,
         category: 'booking',
         guestEmail,
+        sendToGuest: true,
       });
     }
   }
@@ -628,7 +668,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">{config.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments'].includes(config.id) && (
+          {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments', 'registered_agents'].includes(config.id) && (
             <span className="relative inline-flex items-center gap-1 rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
               <Bell className="h-3.5 w-3.5" />
               {records.filter((row) => pickString(row, ['status']).toLowerCase() === 'pending').length} pending
@@ -713,6 +753,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           </div>
         )}
       </div>
+
+      {actionError ? (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{actionError}</div>
+      ) : null}
 
       {loading ? (
         <div className="flex justify-center py-20">

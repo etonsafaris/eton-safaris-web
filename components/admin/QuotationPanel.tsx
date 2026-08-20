@@ -7,6 +7,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import { SITE } from '@/lib/collections';
 import { fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
+import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
@@ -152,6 +153,12 @@ export default function QuotationPanel() {
       return;
     }
 
+    await notifyAdminItemSaved({
+      module: 'Quotation',
+      action: 'created',
+      item: { ...payload, ...(result.data?.[0] || {}) },
+    });
+
     if (inquiryId) {
       await saveWithColumnFallback('inquiries', { status: 'Quote Sent' }, inquiryId);
     }
@@ -168,6 +175,7 @@ export default function QuotationPanel() {
       message: `Dear ${form.name}, your safari quotation for ${selected ? getRecordTitle(selected) : 'your tour'} is ready. View and accept it here: https://etonsafaris.com/quote/${quoteId || ''}`,
       category: 'inquiry',
       guestEmail: form.email,
+      sendToGuest: true,
     });
 
     setStatus('Quote sent to the guest. Price and itinerary stay internal.');

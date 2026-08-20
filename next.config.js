@@ -6,6 +6,7 @@ const nextConfig = {
   swcMinify: true,
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    serverComponentsExternalPackages: ['resend', '@react-email/render'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],

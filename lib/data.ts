@@ -161,10 +161,38 @@ export function slugify(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+export function pickRecordId(record: RecordRow | null | undefined): string | number | null {
+  if (!record) return null;
+  const preferred = ['id', 'uuid', '_id', 'agent_id', 'registered_agent_id', 'pk', 'ID', 'Id'];
+  for (const key of preferred) {
+    const parsed = asRecordId(record[key]);
+    if (parsed != null) return parsed;
+  }
+  for (const [key, value] of Object.entries(record)) {
+    if (key.toLowerCase() === 'id') {
+      const parsed = asRecordId(value);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+}
+
+function asRecordId(value: unknown): string | number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'bigint') return String(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'undefined') return null;
+    return trimmed;
+  }
+  return null;
+}
+
 export function pickString(record: RecordRow, keys: string[], fallback = ''): string {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === 'string' && value.trim()) return value;
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   }
   return fallback;
 }

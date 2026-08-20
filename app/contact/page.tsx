@@ -71,18 +71,17 @@ export default function ContactPage() {
   async function subscribe(event: React.FormEvent) {
     event.preventDefault();
     if (isSpamHoneypot(newsletterHoneypot)) return;
-    const { error } = await saveWithColumnFallback('subscribers', { email: newsletterEmail.trim() });
-    if (error) {
-      console.error('[Supabase] Newsletter subscribe failed:', error);
-      setNewsletterStatus(error.message);
+    const response = await fetch('/api/public/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newsletterEmail.trim(), honeypot: newsletterHoneypot }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      console.error('[Subscribe] Failed:', body);
+      setNewsletterStatus(body.error || 'Could not subscribe right now.');
       return;
     }
-    await notifyWorkspace({
-      title: 'New Subscriber',
-      message: `${newsletterEmail} subscribed to the newsletter`,
-      category: 'subscriber',
-      guestEmail: newsletterEmail,
-    });
     setNewsletterEmail('');
     setNewsletterStatus('Subscribed. Thank you!');
   }
@@ -247,11 +246,6 @@ export default function ContactPage() {
                     <li>
                       <a href={`mailto:${SITE.email}`} className="hover:text-[#5bc787]">
                         {SITE.email}
-                      </a>
-                    </li>
-                    <li>
-                      <a href="mailto:bookings@etonsafaris.com" className="hover:text-[#5bc787]">
-                        bookings@etonsafaris.com
                       </a>
                     </li>
                   </ul>

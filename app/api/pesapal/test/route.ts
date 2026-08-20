@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pesapalToken } from '@/lib/pesapal';
+import { isPesapalLive, pesapalToken } from '@/lib/pesapal';
 import { requireAdminUser } from '@/lib/require-admin';
 
 export async function GET(request: Request) {
@@ -7,11 +7,14 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
   try {
     const token = await pesapalToken();
+    const live = isPesapalLive();
     return NextResponse.json({
       ok: true,
-      sandbox: process.env.PESAPAL_ENV !== 'live',
+      sandbox: !live,
       authenticated: Boolean(token),
-      message: 'Pesapal sandbox token received. Checkout is ready to test.',
+      message: live
+        ? 'Pesapal live token received. Checkout is using the production merchant account.'
+        : 'Pesapal sandbox token received. Checkout is ready to test.',
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Pesapal auth failed';
