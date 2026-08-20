@@ -45,6 +45,13 @@ async function uploadViaApi(file: File, folder: string) {
   return payload.url;
 }
 
+export async function uploadMediaFile(file: File, folder: string): Promise<string> {
+  if (file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(file.name)) {
+    return uploadViaApi(file, folder);
+  }
+  return uploadOptimizedImage(file, folder);
+}
+
 export async function uploadOptimizedImage(file: File, folder: string): Promise<string> {
   const optimized = await optimizeImageFile(file).catch(() => file);
   try {

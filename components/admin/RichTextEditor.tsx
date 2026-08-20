@@ -30,6 +30,7 @@ import {
   Video,
 } from 'lucide-react';
 import { sanitizeWordHtml, wordCountFromHtml } from '@/lib/sanitize-html';
+import { uploadMediaFile } from '@/lib/upload-media';
 
 type RichTextEditorProps = {
   value: string;
@@ -83,9 +84,12 @@ export default function RichTextEditor({
   showFooter = true,
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<Tab>('Home');
   const [font, setFont] = useState('Roboto');
   const [size, setSize] = useState('16px');
+  const [mediaStatus, setMediaStatus] = useState('');
   const wordCount = wordCountFromHtml(value);
 
   useEffect(() => {
@@ -140,8 +144,42 @@ export default function RichTextEditor({
   }
 
   function addImage() {
-    const src = window.prompt('Image URL', 'https://');
-    if (src) insertHtml(`<img src="${src}" alt="" />`);
+    imageInputRef.current?.click();
+  }
+
+  function addVideo() {
+    videoInputRef.current?.click();
+  }
+
+  function markSelectedMedia(event: React.MouseEvent<HTMLDivElement>) {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.querySelectorAll('[data-eton-media]').forEach((node) => node.removeAttribute('data-eton-media'));
+    const target = (event.target as HTMLElement).closest('img, video');
+    if (target && editor.contains(target)) {
+      target.setAttribute('data-eton-media', '1');
+    }
+  }
+
+  async function handleMediaFile(file: File | undefined, kind: 'image' | 'video') {
+    if (!file) return;
+    setMediaStatus(kind === 'image' ? 'Uploading image…' : 'Uploading video…');
+    try {
+      const url = await uploadMediaFile(file, 'editor');
+      const editor = editorRef.current;
+      const selected = editor?.querySelector(kind === 'image' ? 'img[data-eton-media]' : 'video[data-eton-media]');
+      if (selected) {
+        selected.setAttribute('src', url);
+        emit();
+      } else if (kind === 'image') {
+        insertHtml(`<img src="${url}" alt="" style="max-width:100%" />`);
+      } else {
+        insertHtml(`<p><video src="${url}" controls style="max-width:100%"></video></p>`);
+      }
+      setMediaStatus(kind === 'image' ? 'Image updated.' : 'Video updated.');
+    } catch (error) {
+      setMediaStatus(error instanceof Error ? error.message : 'Upload failed.');
+    }
   }
 
   function addTable() {
@@ -189,6 +227,13 @@ export default function RichTextEditor({
       </div>
 
       <div className="flex w-full flex-wrap items-center gap-0.5 border-b border-[#e5e7eb] bg-[#f8fafc] px-2 py-1.5">
+        <ToolbarButton title="Browse or update image" onClick={addImage}>
+          <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton title="Browse or update video" onClick={addVideo}>
+          <Video className="h-4 w-4" />
+        </ToolbarButton>
+        <span className="mx-1 h-6 w-px bg-[#d1d5db]" />
         {tab === 'File' && (
           <>
             <ToolbarButton title="Print" onClick={printEditor}>
@@ -322,9 +367,6 @@ export default function RichTextEditor({
             <ToolbarButton title="Link" onClick={addLink}>
               <Link2 className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton title="Image" onClick={addImage}>
-              <ImageIcon className="h-4 w-4" />
-            </ToolbarButton>
             <ToolbarButton title="Table" onClick={addTable}>
               <Table className="h-4 w-4" />
             </ToolbarButton>
@@ -333,12 +375,6 @@ export default function RichTextEditor({
             </ToolbarButton>
             <ToolbarButton title="Code" onClick={() => insertHtml('<pre><code>code</code></pre>')}>
               <Code className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton title="Video" onClick={() => {
-              const src = window.prompt('Video URL', 'https://');
-              if (src) insertHtml(`<p><video src="${src}" controls style="max-width:100%"></video></p>`);
-            }}>
-              <Video className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton title="Date/Time" onClick={addDate}>
               Date
@@ -427,6 +463,7 @@ export default function RichTextEditor({
         data-placeholder={placeholder}
         onInput={emit}
         onPaste={handlePaste}
+        onClick={markSelectedMedia}
         className="description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)]"
         style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
       />
