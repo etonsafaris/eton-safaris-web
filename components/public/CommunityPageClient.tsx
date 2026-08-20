@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import CmsPageView from '@/components/public/CmsPageView';
-import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { inferPageLayout, parseCmsBlocks, parseCmsPageExtras } from '@/lib/cms-page-model';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
-import { STATIC_PAGES } from '@/lib/static-pages';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 const SLUG = 'community-support';
 
-export default function CommunityPageClient() {
-  const seeded = DEFAULT_CMS_PAGES.find((item) => item.slug === SLUG);
+export default function CommunityPageClient({ initialPage = null }: { initialPage?: RecordRow | null }) {
   const live = useCmsLive();
-  const [page, setPage] = useState<RecordRow | null>(null);
-  const [ready, setReady] = useState(false);
+  const [page, setPage] = useState<RecordRow | null>(initialPage);
+  const [ready, setReady] = useState(true);
 
   useEffect(() => {
+    setPage(initialPage);
+  }, [initialPage]);
+
+  useEffect(() => {
+    if (live === 0) return;
     fetchCollectionRecords('pages')
       .then((rows) => {
         const match = matchCmsRecord(rows, SLUG, pageAliases(SLUG));
@@ -28,14 +30,15 @@ export default function CommunityPageClient() {
       .finally(() => setReady(true));
   }, [live]);
 
-  const fallback = STATIC_PAGES[SLUG];
   const extras = parseCmsPageExtras(page, SLUG);
-  const title = extras.hero_title || (page ? getRecordTitle(page) : '') || seeded?.title || fallback?.title || 'Our Community';
-  const content = pickString(page || {}, ['content', 'description', 'body']) || seeded?.content || fallback?.content || '';
-  const image = (page ? getRecordImage(page) : '') || seeded?.image_url;
-  const blocks = parseCmsBlocks(page).length ? parseCmsBlocks(page) : seeded?.blocks || [];
+  const title = extras.hero_title || (page ? getRecordTitle(page) : '') || 'Our Community';
+  const content = page ? pickString(page, ['content', 'description', 'body']) : '';
+  const image = page ? getRecordImage(page) || undefined : undefined;
+  const blocks = parseCmsBlocks(page);
 
-  if (!ready && !seeded && !fallback) return null;
+  if (!ready && !page) {
+    return <div className="py-24 text-center text-gray-500">Loading…</div>;
+  }
 
   return (
     <CmsPageView
@@ -43,8 +46,8 @@ export default function CommunityPageClient() {
       image={image}
       content={content}
       variant={extras.layout !== 'standard' ? extras.layout : inferPageLayout(SLUG)}
-      subtitle={extras.subtitle || seeded?.subtitle}
-      faqs={extras.faqs.length ? extras.faqs : seeded?.faqs || []}
+      subtitle={extras.subtitle}
+      faqs={extras.faqs}
       blocks={blocks}
       ctaLabel={extras.cta_label || 'Plan Your Safari'}
       ctaHref={extras.cta_href || '/contact-us'}

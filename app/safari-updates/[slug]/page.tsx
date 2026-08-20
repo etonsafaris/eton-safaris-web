@@ -53,9 +53,7 @@ export default function SafariUpdateDetailPage() {
   }, [slug, live]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
-  const heroImage =
-    (post && (getRecordImage(post) || pickString(post, ['image_url', 'social_image_url', 'cover_image']))) ||
-    SITE_MEDIA.wildlifeNationalPark;
+  const heroImage = post ? getRecordImage(post) || undefined : undefined;
 
   return (
     <PublicShell>
