@@ -15,11 +15,13 @@ import {
   pickString,
 } from '@/lib/data';
 import { countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function LandingSeoClient({ slug }: { slug: string }) {
   const canonical = landingCmsSlug(slug);
   const countrySlug = countrySlugFromLanding(canonical);
+  const live = useCmsLive();
   const [landing, setLanding] = useState<RecordRow | null>(null);
   const [country, setCountry] = useState<RecordRow | null>(null);
 
@@ -47,7 +49,7 @@ export default function LandingSeoClient({ slug }: { slug: string }) {
     return () => {
       mounted = false;
     };
-  }, [canonical, countrySlug]);
+  }, [canonical, countrySlug, live]);
 
   const seeded = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].find((item) => item.slug === countrySlug);
   const fallback = LANDING_PAGE_DEFAULTS[canonical];

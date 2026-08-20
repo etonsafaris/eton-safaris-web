@@ -7,12 +7,14 @@ import { inferPageLayout, parseCmsBlocks, parseCmsPageExtras } from '@/lib/cms-p
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
 import { STATIC_PAGES } from '@/lib/static-pages';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 const SLUG = 'community-support';
 
 export default function CommunityPageClient() {
   const seeded = DEFAULT_CMS_PAGES.find((item) => item.slug === SLUG);
+  const live = useCmsLive();
   const [page, setPage] = useState<RecordRow | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -24,7 +26,7 @@ export default function CommunityPageClient() {
       })
       .catch((error) => console.error('[CMS] Community page load failed:', error))
       .finally(() => setReady(true));
-  }, []);
+  }, [live]);
 
   const fallback = STATIC_PAGES[SLUG];
   const extras = parseCmsPageExtras(page, SLUG);

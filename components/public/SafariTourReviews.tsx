@@ -6,6 +6,7 @@ import Carousel from '@/components/public/Carousel';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString } from '@/lib/data';
 import { reviewExternalHref } from '@/lib/review-links';
 import { matchesCountry } from '@/lib/country-utils';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 const FALLBACKS: RecordRow[] = [
@@ -108,6 +109,7 @@ function ReviewCard({
 }
 
 export default function SafariTourReviews({ countrySlug, countryName }: { countrySlug: string; countryName: string }) {
+  const live = useCmsLive();
   const [reviews, setReviews] = useState<RecordRow[]>([]);
   const [open, setOpen] = useState<RecordRow | null>(null);
 
@@ -120,7 +122,7 @@ export default function SafariTourReviews({ countrySlug, countryName }: { countr
         setReviews(pool.length ? pool.slice(0, 24) : FALLBACKS);
       })
       .catch(() => setReviews(FALLBACKS));
-  }, [countrySlug]);
+  }, [countrySlug, live]);
 
   useEffect(() => {
     if (!open) return undefined;

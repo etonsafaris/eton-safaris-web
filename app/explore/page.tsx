@@ -15,6 +15,7 @@ import {
   isPublishedRecord,
   pickPlainText,
 } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 function ExploreContent() {

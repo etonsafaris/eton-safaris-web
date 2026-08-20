@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { languagePostSearchCard, searchLanguagePosts } from '@/lib/content-search';
 import { fetchCollectionRecords, pickString } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';
 
 export default function HeaderSearch() {
   const router = useRouter();
+  const live = useCmsLive();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [languagePosts, setLanguagePosts] = useState<RecordRow[]>([]);
   const [query, setQuery] = useState('');
@@ -24,7 +26,7 @@ export default function HeaderSearch() {
         setLanguagePosts(postRows);
       })
       .catch((error) => console.error('[Search] Failed to load search data:', error));
-  }, []);
+  }, [live]);
 
   const suggestions = useMemo(() => suggestTours(tours, query), [tours, query]);
   const guides = useMemo(() => searchLanguagePosts(languagePosts, query), [languagePosts, query]);

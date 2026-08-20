@@ -9,6 +9,7 @@ import TourCard from '@/components/public/TourCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import { NAV_COUNTRIES } from '@/lib/collections';
+import { useCmsLive } from '@/lib/cms-live';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';

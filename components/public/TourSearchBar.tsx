@@ -13,6 +13,7 @@ import { Search } from 'lucide-react';
 import { languagePostSearchCard, searchLanguagePosts } from '@/lib/content-search';
 
 import { fetchCollectionRecords } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 
@@ -73,6 +74,8 @@ export default function TourSearchBar({
   const [open, setOpen] = useState(false);
 
   const boxRef = useRef<HTMLDivElement>(null);
+
+  const live = useCmsLive();
 
 
 

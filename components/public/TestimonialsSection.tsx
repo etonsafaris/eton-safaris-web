@@ -9,6 +9,7 @@ import { Quote, Star } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 
 import { fetchCollectionRecords, getRecordTitle, pickNumber, pickString } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 
 import { reviewExternalHref } from '@/lib/review-links';
 
@@ -17,6 +18,8 @@ import type { RecordRow } from '@/lib/types';
 
 
 export default function TestimonialsSection() {
+
+  const live = useCmsLive();
 
   const [reviews, setReviews] = useState<RecordRow[]>([]);
 
@@ -30,7 +33,7 @@ export default function TestimonialsSection() {
 
       .catch((error) => console.error('[Supabase] Failed to load testimonials:', error));
 
-  }, []);
+  }, [live]);
 
 
 
