@@ -6,13 +6,11 @@ import PublicShell from '@/components/public/PublicShell';
 import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
-import { SITE_MEDIA } from '@/lib/site-media';
 
 export default function RequestQuotePage() {
   return (
     <PublicShell>
-      <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden text-white">
-        <img src={SITE_MEDIA.elephantSunset} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
         <div className="absolute inset-0 bg-black/40" />
         <h1
           className="relative z-10 mx-auto max-w-[90%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"

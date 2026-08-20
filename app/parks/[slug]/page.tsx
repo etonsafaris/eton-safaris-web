@@ -29,6 +29,7 @@ export default function ParkDetailPage() {
   const [park, setPark] = useState<RecordRow | null>(null);
   const [others, setOthers] = useState<RecordRow[]>([]);
   const [stays, setStays] = useState<RecordRow[]>([]);
+  const [ready, setReady] = useState(false);
   const live = useCmsLive();
 
   useEffect(() => {
@@ -51,6 +52,8 @@ export default function ParkDetailPage() {
         );
       } catch (error) {
         console.error(error);
+      } finally {
+        setReady(true);
       }
     }
     load();
@@ -72,10 +75,14 @@ export default function ParkDetailPage() {
     [stays]
   );
 
-  if (!park) {
+  if (!ready || !park) {
     return (
       <PublicShell>
-        <p className="px-4 py-20 text-center text-gray-500">No records found in this collection.</p>
+        {ready ? (
+          <p className="px-4 py-20 text-center text-gray-500">No records found in this collection.</p>
+        ) : (
+          <div className="h-[338px] bg-[#141612] md:h-[398px]" />
+        )}
       </PublicShell>
     );
   }

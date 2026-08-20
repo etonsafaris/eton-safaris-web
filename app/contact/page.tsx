@@ -5,7 +5,6 @@ import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import PublicShell from '@/components/public/PublicShell';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
-import { SITE_MEDIA } from '@/lib/site-media';
 import { notifyWorkspace } from '@/lib/notify';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -97,8 +96,7 @@ export default function ContactPage() {
 
   return (
     <PublicShell>
-      <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden text-white">
-        <img src={SITE_MEDIA.gorillasForest} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
         <div className="absolute inset-0 bg-[#5bc787]/25" />
         <h1
           className="relative z-10 mx-auto max-w-[75%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"
