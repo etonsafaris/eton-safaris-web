@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
+import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import { DEFAULT_PUBLIC_IMAGE } from '@/lib/public-image';
@@ -46,13 +47,13 @@ export default function PageHero({
     <>
       <PageFavicon title={title} />
       <section
-        className={`relative overflow-hidden ${isPolicy ? 'h-[400px]' : 'h-[300px] md:h-[350px]'}`}
+        className={`relative w-full overflow-hidden ${isPolicy ? 'h-[430px]' : 'h-[338px] md:h-[398px]'}`}
         style={{ backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       >
         {src ? (
           <ResponsiveImage
             src={src}
-            alt=""
+            alt={title}
             variant="hero"
             priority
             className="h-full w-full object-cover"
@@ -60,7 +61,7 @@ export default function PageHero({
         ) : (
           <div className="h-full bg-forest" />
         )}
-        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 bg-black/18" />
         {isAbout ? (
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="rounded-2xl bg-white/85 px-10 py-7 text-center shadow-sm backdrop-blur-[2px] md:px-16">
@@ -113,6 +114,7 @@ export default function PageHero({
           </div>
         )}
       </section>
+      <PageBreadcrumbs currentTitle={title} />
       {isTour ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
