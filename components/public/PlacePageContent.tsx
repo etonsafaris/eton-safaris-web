@@ -49,9 +49,14 @@ export default function PlacePageContent({
   const [place, setPlace] = useState<RecordRow | null>(initialPlace);
   const [others, setOthers] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(Boolean(initialPlace));
 
   useEffect(() => {
+    if (live === 0 && initialPlace) {
+      setPlace(initialPlace);
+      setReady(true);
+      return undefined;
+    }
     let mounted = true;
     async function load() {
       try {
@@ -97,8 +102,7 @@ export default function PlacePageContent({
     (countrySlugProp ? countryLabelFromSlug(countrySlugProp.replace(/-safaris$/, '')) : '') ||
     pickStoredString(place, ['country']) ||
     'this destination';
-  const heroImage =
-    (place && getRecordImage(place)) || countryHeroImage(countrySlugProp, country || {});
+  const heroImage = (place && getRecordImage(place)) || countryHeroImage(countrySlugProp, country);
   const descriptionTitle = place ? pickStoredString(place, ['description_title']) : '';
   const descriptionHtml = toProseHtml(
     place ? visibleRecordHtml(place, ['description', 'content', 'summary', 'about']) : ''

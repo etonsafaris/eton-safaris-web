@@ -54,13 +54,21 @@ export default function CategoryPageContent({
   slug,
   country,
   categorySlug,
+  initialCategories = [],
+  initialTours = [],
 }: CategoryPageContentProps) {
   const live = useCmsLive();
-  const [categories, setCategories] = useState<RecordRow[]>([]);
-  const [tours, setTours] = useState<RecordRow[]>([]);
-  const [ready, setReady] = useState(false);
+  const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
+  const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [ready, setReady] = useState(true);
 
   useEffect(() => {
+    setCategories(initialCategories);
+    setTours(initialTours);
+  }, [initialCategories, initialTours]);
+
+  useEffect(() => {
+    if (live === 0) return undefined;
     let mounted = true;
     async function load() {
       try {

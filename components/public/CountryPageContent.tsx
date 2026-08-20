@@ -169,7 +169,7 @@ export default function CountryPageContent({
             {summaryIsDistinct ? (
               <div className="public-prose mt-8" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
             ) : null}
-            <PageFaqList faqs={faqs} tone="light" />
+            <PageFaqList faqs={faqs} tone="light" className="mt-10" />
           </div>
           <div className="md:col-span-1">
             <div className="md:sticky md:top-24">
