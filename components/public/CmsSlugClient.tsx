@@ -39,6 +39,8 @@ export default function CmsSlugClient({
   initialTours = [],
   initialParks = [],
   initialPlaces = [],
+  initialNestedPlace = null,
+  initialNestedIsCategory = false,
 }: {
   initialCountry?: RecordRow | null;
   initialPage?: RecordRow | null;
@@ -46,6 +48,8 @@ export default function CmsSlugClient({
   initialTours?: RecordRow[];
   initialParks?: RecordRow[];
   initialPlaces?: RecordRow[];
+  initialNestedPlace?: RecordRow | null;
+  initialNestedIsCategory?: boolean;
 }) {
   const params = useParams<{ slug?: string | string[]; category?: string | string[] }>();
   const rawSlug = paramValue(params?.slug);
@@ -54,16 +58,22 @@ export default function CmsSlugClient({
   const live = useCmsLive();
   const [page, setPage] = useState<RecordRow | null>(initialPage);
   const [country, setCountry] = useState<RecordRow | null>(initialCountry);
-  const [nestedPlace, setNestedPlace] = useState<RecordRow | null>(null);
-  const [nestedIsCategory, setNestedIsCategory] = useState(false);
+  const [nestedPlace, setNestedPlace] = useState<RecordRow | null>(initialNestedPlace);
+  const [nestedIsCategory, setNestedIsCategory] = useState(initialNestedIsCategory);
   const [forceCountry, setForceCountry] = useState(Boolean(initialCountry && resolved?.kind === 'country'));
-  const [ready, setReady] = useState(Boolean(initialCountry || initialPage));
+  const [ready, setReady] = useState(Boolean(initialCountry || initialPage || initialNestedPlace || initialNestedIsCategory));
 
   useEffect(() => {
     let mounted = true;
-    if (live === 0 && !categorySlug && (initialCountry || initialPage)) {
+    if (
+      live === 0 &&
+      (initialCountry || initialPage) &&
+      (!categorySlug || initialNestedPlace || initialNestedIsCategory)
+    ) {
       setCountry(initialCountry);
       setPage(initialPage);
+      setNestedPlace(initialNestedPlace);
+      setNestedIsCategory(initialNestedIsCategory);
       setReady(true);
       return undefined;
     }
@@ -173,7 +183,13 @@ export default function CmsSlugClient({
               place={nestedPlace}
             />
           ) : (
-            <CategoryPageContent slug={countrySlug} country={merged} categorySlug={categorySlug} />
+            <CategoryPageContent
+              slug={countrySlug}
+              country={merged}
+              categorySlug={categorySlug}
+              initialCategories={initialCategories}
+              initialTours={initialTours}
+            />
           )
         ) : (
           <CountryPageContent
@@ -203,7 +219,6 @@ export default function CmsSlugClient({
   const layout = extras.layout && extras.layout !== 'standard' ? extras.layout : inferPageLayout(resolved.canonical);
   const isPolicy = layout === 'policy';
   const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
-  const cmsLooksRich = /<(h4|p|ul|ol|b|strong)\b/i.test(cmsContent);
   const title =
     extras.hero_title ||
     (page ? getRecordTitle(page) : '') ||
@@ -229,8 +244,8 @@ export default function CmsSlugClient({
       image={image}
       content={content}
       variant={layout}
-      subtitle={extras.subtitle || seeded?.subtitle}
-      videoUrl={extras.video_url || seeded?.video_url}
+      subtitle={extras.subtitle || (!page ? seeded?.subtitle : '')}
+      videoUrl={extras.video_url || (!page ? seeded?.video_url : '')}
       destinations={destinations}
       faqs={faqs}
       blocks={blocks}

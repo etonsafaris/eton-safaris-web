@@ -149,7 +149,7 @@ export default function HomePageClient({
           (dbCountry ? pickString(dbCountry, ['hero_subtitle', 'tagline', 'excerpt']) : '') || defaults.subtitle,
         cta: `Explore ${label}`,
         href: destinationPublicPath(slug),
-        image: countryHeroImage(slug, dbCountry),
+        image: countryHeroImage(slug, dbCountry) || '',
       };
     });
   }, [countries]);
@@ -238,7 +238,7 @@ export default function HomePageClient({
     <PublicShell>
       {current && (
         <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
-          {current ? (
+          {current.image ? (
             <ResponsiveImage
               src={current.image}
               alt=""

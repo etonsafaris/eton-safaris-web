@@ -4,9 +4,6 @@ import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
-import { DEFAULT_PUBLIC_IMAGE } from '@/lib/public-image';
-
-export const DEFAULT_HERO_IMAGE = DEFAULT_PUBLIC_IMAGE;
 
 type PageHeroProps = {
   title: string;

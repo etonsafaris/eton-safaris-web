@@ -28,6 +28,8 @@ type CategoryPageContentProps = {
   slug: string;
   country: RecordRow | null;
   categorySlug: string;
+  initialCategories?: RecordRow[];
+  initialTours?: RecordRow[];
 };
 
 function toProseHtml(value: string) {

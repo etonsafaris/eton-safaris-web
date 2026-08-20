@@ -77,3 +77,35 @@ export async function loadCountryPageData(slug: string) {
     places: places.filter((row) => matchesCountry(row, slug)),
   };
 }
+
+export async function loadTourDetail(slug: string) {
+  noStore();
+  const tours = await loadPublishedRecords('tours');
+  const tour = findRecordBySlug(tours, slug);
+  const country = tour ? pickString(tour, ['country']) : '';
+  const category = tour ? pickString(tour, ['category']) : '';
+  const sameCountry = tours.filter((row) => row !== tour && (!country || matchesCountry(row, country)));
+  const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
+  return {
+    tour,
+    related: (sameCategory.length ? sameCategory : sameCountry).slice(0, 12),
+  };
+}
+
+export async function loadParkDetail(slug: string) {
+  noStore();
+  const [parks, accommodations] = await Promise.all([
+    loadPublishedRecords('national_park', ['national_parks', 'parks']),
+    loadPublishedRecords('accommodations'),
+  ]);
+  const park = findRecordBySlug(parks, slug);
+  const parkName = park ? pickString(park, ['title', 'name']) : '';
+  return {
+    park,
+    others: parks.filter((row) => row !== park).slice(0, 20),
+    stays: accommodations.filter((item) => {
+      const name = pickString(item, ['national_park', 'park', 'park_name']);
+      return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
+    }),
+  };
+}

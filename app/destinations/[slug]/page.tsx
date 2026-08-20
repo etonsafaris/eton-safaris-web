@@ -17,11 +17,18 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   const seeded = SEEDED.find((item) => item.slug === slug);
   if (!data.country && !seeded) notFound();
 
-  const country = data.country || {
-    name: seeded?.name || countryLabelFromSlug(slug),
-    title: seeded?.name || countryLabelFromSlug(slug),
-    slug,
-  };
+  const country = data.country ||
+    (seeded
+      ? {
+          name: seeded.name,
+          title: seeded.name,
+          slug,
+        }
+      : {
+          name: countryLabelFromSlug(slug),
+          title: countryLabelFromSlug(slug),
+          slug,
+        });
 
   return (
     <PublicShell>
