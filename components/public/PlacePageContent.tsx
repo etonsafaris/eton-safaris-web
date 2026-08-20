@@ -19,6 +19,7 @@ import {
   visibleRecordHtml,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 type PlacePageContentProps = {
@@ -44,6 +45,7 @@ export default function PlacePageContent({
   country = null,
   place: initialPlace = null,
 }: PlacePageContentProps) {
+  const live = useCmsLive();
   const [place, setPlace] = useState<RecordRow | null>(initialPlace);
   const [others, setOthers] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
@@ -87,7 +89,7 @@ export default function PlacePageContent({
     return () => {
       mounted = false;
     };
-  }, [placeSlug, countrySlugProp, initialPlace]);
+  }, [placeSlug, countrySlugProp, initialPlace, live]);
 
   const placeTitle = place ? getRecordTitle(place) : placeSlug.replace(/-/g, ' ');
   const countryTitle =

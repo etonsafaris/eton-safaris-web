@@ -15,6 +15,7 @@ const SEEDED = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS];
 
 export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);
+  const live = useCmsLive();
   const [country, setCountry] = useState<RecordRow | null>(null);
   const [ready, setReady] = useState(false);
 

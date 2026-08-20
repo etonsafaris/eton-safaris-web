@@ -18,13 +18,14 @@ import { countryHeroImage } from '@/lib/country-heroes';
 import type { RecordRow } from '@/lib/types';
 
 export default function DestinationsIndexPage() {
+  const live = useCmsLive();
   const [countries, setCountries] = useState<RecordRow[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('countries')
       .then(setCountries)
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
-  }, []);
+  }, [live]);
 
   const fallback = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS];
   const items =

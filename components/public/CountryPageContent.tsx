@@ -93,7 +93,7 @@ export default function CountryPageContent({
       }
     }
     load();
-  }, [slug, live, countryProp]);
+  }, [slug, live]);
 
   const extras = parseCmsPageExtras(country, slug);
   const title = country ? getRecordTitle(country) : countryLabelFromSlug(slug);

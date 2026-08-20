@@ -21,6 +21,7 @@ import {
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 type CategoryPageContentProps = {
@@ -52,6 +53,7 @@ export default function CategoryPageContent({
   country,
   categorySlug,
 }: CategoryPageContentProps) {
+  const live = useCmsLive();
   const [categories, setCategories] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [ready, setReady] = useState(false);
@@ -79,7 +81,7 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug]);
+  }, [slug, live]);
 
   const selectedCategory = useMemo(
     () => findCategoryBySlug(categories, categorySlug),

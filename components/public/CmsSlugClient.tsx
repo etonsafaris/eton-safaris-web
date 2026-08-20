@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useCmsLive } from '@/lib/cms-live';
 import PublicShell from '@/components/public/PublicShell';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
@@ -37,6 +38,7 @@ export default function CmsSlugClient() {
   const rawSlug = paramValue(params?.slug);
   const categorySlug = paramValue(params?.category);
   const resolved = resolvePublicSlug(rawSlug);
+  const live = useCmsLive();
   const [page, setPage] = useState<RecordRow | null>(null);
   const [country, setCountry] = useState<RecordRow | null>(null);
   const [nestedPlace, setNestedPlace] = useState<RecordRow | null>(null);
@@ -105,7 +107,7 @@ export default function CmsSlugClient() {
     return () => {
       mounted = false;
     };
-  }, [rawSlug, categorySlug, resolved?.canonical, resolved?.kind, resolved?.countrySlug]);
+  }, [rawSlug, categorySlug, resolved?.canonical, resolved?.kind, resolved?.countrySlug, live]);
 
   const showCountry = resolved?.kind === 'country' || forceCountry;
 

@@ -24,6 +24,7 @@ import {
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { countryLabelFromSlug, matchesCountry } from '@/lib/country-utils';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 type LandingPageContentProps = {
@@ -44,6 +45,7 @@ function toProseHtml(value: string) {
 }
 
 export default function LandingPageContent({ slug, country, landing, heroTitle }: LandingPageContentProps) {
+  const live = useCmsLive();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [reviews, setReviews] = useState<RecordRow[]>([]);
   const [parks, setParks] = useState<RecordRow[]>([]);
@@ -70,7 +72,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
       }
     }
     load();
-  }, [slug]);
+  }, [slug, live]);
 
   const countryName = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
   const copy = landingConversionCopy(slug, countryName);

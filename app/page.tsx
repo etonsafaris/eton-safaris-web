@@ -57,6 +57,7 @@ const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: st
 };
 
 export default function HomePage() {
+  const live = useCmsLive();
   const [slide, setSlide] = useState(0);
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [updates, setUpdates] = useState<RecordRow[]>([]);
@@ -107,7 +108,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [live]);
 
   const heroSlides = useMemo(() => {
     return NAV_COUNTRIES.map(({ slug, name }) => {
