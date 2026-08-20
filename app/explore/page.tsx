@@ -21,13 +21,14 @@ import type { RecordRow } from '@/lib/types';
 function ExploreContent() {
   const searchParams = useSearchParams();
   const countryFilter = searchParams?.get('country') || '';
+  const live = useCmsLive();
   const [places, setPlaces] = useState<RecordRow[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('explore')
       .then((rows) => setPlaces(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load explore places:', error));
-  }, []);
+  }, [live]);
 
   const filteredPlaces = useMemo(() => {
     if (!countryFilter) return places;

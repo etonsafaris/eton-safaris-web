@@ -18,13 +18,14 @@ import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function ParksPage() {
+  const live = useCmsLive();
   const [parks, setParks] = useState<RecordRow[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('national_park', ['national_parks', 'parks'])
       .then((rows) => setParks(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load parks:', error));
-  }, []);
+  }, [live]);
 
   return (
     <PublicShell>

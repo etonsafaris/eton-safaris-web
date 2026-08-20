@@ -22,6 +22,7 @@ import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function SafariUpdateDetailPage() {
@@ -30,6 +31,7 @@ export default function SafariUpdateDetailPage() {
   const [post, setPost] = useState<RecordRow | null>(null);
   const [related, setRelated] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
+  const live = useCmsLive();
 
   useEffect(() => {
     Promise.all([fetchCollectionRecords('safari_updates'), fetchCollectionRecords('tours')])
@@ -48,7 +50,7 @@ export default function SafariUpdateDetailPage() {
         );
       })
       .catch((error) => console.error(error));
-  }, [slug]);
+  }, [slug, live]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage =

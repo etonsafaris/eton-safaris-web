@@ -16,6 +16,7 @@ import {
   pickString,
 } from '@/lib/data';
 import { SITE_MEDIA } from '@/lib/site-media';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 function formatJournalDate(value: string) {
@@ -26,13 +27,14 @@ function formatJournalDate(value: string) {
 }
 
 export default function SafariUpdatesPage() {
+  const live = useCmsLive();
   const [posts, setPosts] = useState<RecordRow[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('safari_updates')
       .then((rows) => setPosts(rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row))))
       .catch((error) => console.error(error));
-  }, []);
+  }, [live]);
 
   return (
     <PublicShell>

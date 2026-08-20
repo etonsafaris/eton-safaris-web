@@ -33,6 +33,7 @@ import { generateBookingCode } from '@/lib/booking-code';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import type { RecordRow } from '@/lib/types';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
+import { useCmsLive } from '@/lib/cms-live';
 
 export default function TourDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -55,6 +56,7 @@ export default function TourDetailPage() {
   const [captchaOk, setCaptchaOk] = useState(false);
   const [review, setReview] = useState({ author: '', email: '', rating: 5, content: '', country: '' });
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const live = useCmsLive();
 
   useEffect(() => {
     fetchCollectionRecords('tours')
@@ -72,7 +74,7 @@ export default function TourDetailPage() {
         setRelated((sameCategory.length ? sameCategory : sameCountry).slice(0, 12));
       })
       .catch((error) => console.error(error));
-  }, [slug]);
+  }, [slug, live]);
 
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);
   const highlights = useMemo(

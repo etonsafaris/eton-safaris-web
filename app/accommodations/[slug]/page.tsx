@@ -11,6 +11,7 @@ import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedReco
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailPage() {
@@ -19,6 +20,7 @@ export default function AccommodationDetailPage() {
   const [item, setItem] = useState<RecordRow | null>(null);
   const [others, setOthers] = useState<RecordRow[]>([]);
   const [tours, setTours] = useState<RecordRow[]>([]);
+  const live = useCmsLive();
 
   useEffect(() => {
     Promise.all([fetchCollectionRecords('accommodations'), fetchCollectionRecords('tours')])
@@ -36,7 +38,7 @@ export default function AccommodationDetailPage() {
         );
       })
       .catch((error) => console.error(error));
-  }, [slug]);
+  }, [slug, live]);
 
   if (!item) {
     return (

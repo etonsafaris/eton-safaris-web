@@ -99,7 +99,7 @@ export default function TourSearchBar({
 
       .catch((error) => console.error('[Search] Failed to load language posts:', error));
 
-  }, []);
+  }, [live]);
 
 
 

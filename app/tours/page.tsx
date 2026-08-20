@@ -24,6 +24,7 @@ function ToursList() {
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [categories, setCategories] = useState<RecordRow[]>([]);
   const [countries, setCountries] = useState<RecordRow[]>([]);
+  const live = useCmsLive();
 
   useEffect(() => {
     Promise.all([
@@ -37,7 +38,7 @@ function ToursList() {
         setCountries(countryRows.filter(isPublishedRecord));
       })
       .catch((error) => console.error(error));
-  }, []);
+  }, [live]);
 
   const destinationOptions = useMemo(() => {
     if (countries.length > 0) return countries.map((country) => getRecordTitle(country));

@@ -13,16 +13,18 @@ import {
   pickPlainText,
   pickString,
 } from '@/lib/data';
+import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationsPage() {
+  const live = useCmsLive();
   const [rows, setRows] = useState<RecordRow[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('accommodations')
       .then((rows) => setRows(rows.filter(isPublishedRecord)))
       .catch((error) => console.error(error));
-  }, []);
+  }, [live]);
 
   return (
     <PublicShell>
