@@ -838,22 +838,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
               <h3 className="font-serif text-2xl dark:text-white">{editing ? 'Edit item' : config.addLabel || 'Add item'}</h3>
               <button type="button" onClick={() => setModalOpen(false)}><X /></button>
             </div>
-            {usesFaqs ? (
-              <FaqEditor
-                faqs={faqs}
-                onChange={setFaqs}
-                title={
-                  isCountries
-                    ? 'Country FAQ'
-                    : isCategories
-                      ? 'Category FAQ'
-                      : isLandingPages
-                        ? 'Landing FAQ'
-                        : 'Page FAQ'
-                }
-                description="Appears on the public page and is added to FAQ structured data for ranking."
-              />
-            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               {fields.filter((field) => field.name !== 'slug').map((field) => {
                 const isImage = field.name === 'image_url' || /image|cover|photo/i.test(field.name);

@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import { sanitizeWordHtml, wordCountFromHtml } from '@/lib/sanitize-html';
 import { uploadMediaFile } from '@/lib/upload-media';
+import FaqEditor from '@/components/admin/FaqEditor';
+import type { PageFaq } from '@/lib/cms-page-model';
 
 type RichTextEditorProps = {
   value: string;
@@ -38,6 +40,10 @@ type RichTextEditorProps = {
   placeholder?: string;
   minHeight?: number;
   showFooter?: boolean;
+  faqs?: PageFaq[];
+  onFaqsChange?: (faqs: PageFaq[]) => void;
+  faqTitle?: string;
+  faqDescription?: string;
 };
 
 const TABS = ['File', 'Home', 'Insert', 'Design', 'Layout', 'References', 'Mailings', 'Review', 'View', 'Help'] as const;
@@ -82,6 +88,10 @@ export default function RichTextEditor({
   onChange,
   placeholder = 'Type description here...',
   showFooter = true,
+  faqs,
+  onFaqsChange,
+  faqTitle = 'FAQ',
+  faqDescription,
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -210,7 +220,10 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="wysiwyg-editor-container w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20">
+    <div>
+    <div className={`wysiwyg-editor-container w-full overflow-hidden border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20 ${
+      onFaqsChange ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'
+    }`}>
       <div className="flex w-full flex-wrap border-b border-[#e5e7eb] bg-[#f3f4f6]">
         {TABS.map((item) => (
           <button
@@ -499,6 +512,17 @@ export default function RichTextEditor({
           <span>Pasted formatting is kept unless you change it with the toolbar</span>
         </div>
       )}
+    </div>
+    {onFaqsChange ? (
+      <div className="overflow-hidden rounded-b-lg border border-t-0 border-[#e5e7eb]">
+        <FaqEditor
+          faqs={faqs || []}
+          onChange={onFaqsChange}
+          title={faqTitle}
+          description={faqDescription}
+        />
+      </div>
+    ) : null}
     </div>
   );
 }

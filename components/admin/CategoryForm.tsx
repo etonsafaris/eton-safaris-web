@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CoverImageField from '@/components/admin/CoverImageField';
-import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
@@ -190,15 +189,12 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             placeholder="Type category description here..."
             minHeight={260}
             showFooter
+            faqs={faqs}
+            onFaqsChange={setFaqs}
+            faqTitle="Category FAQ"
+            faqDescription="Appears under the category description. Add a new question below, or edit a saved question in place."
           />
         </div>
-
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="Category FAQ"
-          description="Appears under the category description and is added to FAQ structured data for ranking."
-        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>

@@ -89,9 +89,9 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
       { name: 'name', label: 'Name', type: 'text', required: true },
       slugField(),
       { name: 'tagline', label: 'Headline', type: 'text' },
+      descriptionField(),
       { name: 'summary', label: 'Summary', type: 'textarea' },
       imageField(),
-      descriptionField(),
     ],
   },
   {
