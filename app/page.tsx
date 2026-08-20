@@ -14,6 +14,7 @@ import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { NAV_COUNTRIES, SITE } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
@@ -45,13 +46,13 @@ const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: st
     title: 'The Land of a Thousand Hidden Wonders',
     subtitle:
       'Meet the gentle giants of Volcanoes National Park and discover friendly people, mountain gorillas, and stunning views of the great rift valley.',
-    image: 'https://images.unsplash.com/photo-1547970810-dc8fa3298e51?auto=format&fit=crop&w=1080&q=70',
+    image: '/heroes/rwanda.jpg',
   },
   tanzania: {
     title: 'Witness the Great Migration',
     subtitle:
       'Witness the great wildebeest migration, climb Kilimanjaro, and discover Serengeti wildlife on unforgettable journeys.',
-    image: 'https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1080&q=70',
+    image: '/heroes/tanzania.jpg',
   },
 };
 
@@ -114,7 +115,7 @@ export default function HomePage() {
       const defaults = HERO_DEFAULTS[slug] || {
         title: `Discover ${name}`,
         subtitle: `Discover unforgettable safari experiences in ${name}.`,
-        image: 'https://images.unsplash.com/photo-1516426122078-c23e76319840?auto=format&fit=crop&w=1080&q=70',
+        image: '/heroes/kenya.jpg',
       };
       const label = dbCountry ? getRecordTitle(dbCountry) : name;
       return {
