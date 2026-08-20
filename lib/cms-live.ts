@@ -67,7 +67,6 @@ export function startCmsLiveSync() {
   window.addEventListener(CHANNEL, onRemote);
   document.addEventListener('visibilitychange', onVisible);
   const poll = window.setInterval(refreshLocal, POLL_MS);
-
   const realtime = supabase
     .channel('eton-public-cms')
     .on('postgres_changes', { event: '*', schema: 'public' }, onRemote)

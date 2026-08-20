@@ -95,3 +95,16 @@ export function withImageCacheBust(src: string, stamp?: string | null) {
     return src;
   }
 }
+
+export function isLocalOnlyImage(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const src = value.trim();
+  if (/^(blob:|data:)/i.test(src)) return true;
+  if (/^\/(media|uploads)\//i.test(src)) return true;
+  try {
+    const url = new URL(src);
+    return /^(localhost|127\.0\.0\.1)$/i.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
