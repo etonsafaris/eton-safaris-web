@@ -6,6 +6,7 @@ import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { collectionIcon } from '@/lib/admin-icons';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -51,6 +52,14 @@ export default function AdminOverviewPage() {
     ...MAIN_COLLECTIONS.filter((item) => item.id !== 'overview'),
     ...SYSTEM_COLLECTIONS,
   ];
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <AdminLogoLoader label="Loading dashboard" />
+      </div>
+    );
+  }
 
   return (
     <div>

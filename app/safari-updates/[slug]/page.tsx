@@ -20,7 +20,6 @@ import {
 } from '@/lib/data';
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
-import { SITE_MEDIA } from '@/lib/site-media';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
