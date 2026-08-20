@@ -9,9 +9,15 @@ import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } fr
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
 
+import { loadCountryPageData } from '@/lib/load-public';
+import { isPublishedRecord } from '@/lib/data';
+
 type PageProps = {
   params: { slug: string };
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolved = resolvePublicSlug(params.slug);
@@ -46,11 +52,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function PublicCmsSlugPage({ params }: PageProps) {
+export default async function PublicCmsSlugPage({ params }: PageProps) {
   const resolved = resolvePublicSlug(params.slug);
   if (!resolved) notFound();
   const isCountryAlias = resolved.kind === 'country';
   const countrySlug = resolved.countrySlug || resolved.canonical;
+  const countryData = isCountryAlias ? await loadCountryPageData(countrySlug) : null;
+  let initialPage = null;
+  if (!isCountryAlias) {
+    const rows = await fetchCollectionRecords('pages').catch(() => []);
+    const match = matchCmsRecord(rows, resolved.canonical, pageAliases(resolved.canonical));
+    initialPage = match && isPublishedRecord(match) ? match : null;
+  }
+
   return (
     <>
       <JsonLd
@@ -61,7 +75,14 @@ export default function PublicCmsSlugPage({ params }: PageProps) {
           isCountryAlias ? 'TouristDestination' : resolved.canonical === 'about-us' ? 'AboutPage' : 'WebPage'
         }
       />
-      <CmsSlugClient />
+      <CmsSlugClient
+        initialCountry={countryData?.country || null}
+        initialPage={initialPage}
+        initialCategories={countryData?.categories || []}
+        initialTours={countryData?.tours || []}
+        initialParks={countryData?.parks || []}
+        initialPlaces={countryData?.places || []}
+      />
     </>
   );
 }

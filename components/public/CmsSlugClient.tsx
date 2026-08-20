@@ -24,7 +24,6 @@ import {
   isPublishedRecord,
   pickString,
 } from '@/lib/data';
-import { countryHeroImage } from '@/lib/country-heroes';
 import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
@@ -33,18 +32,32 @@ function paramValue(value: string | string[] | undefined) {
   return value || '';
 }
 
-export default function CmsSlugClient() {
+export default function CmsSlugClient({
+  initialCountry = null,
+  initialPage = null,
+  initialCategories = [],
+  initialTours = [],
+  initialParks = [],
+  initialPlaces = [],
+}: {
+  initialCountry?: RecordRow | null;
+  initialPage?: RecordRow | null;
+  initialCategories?: RecordRow[];
+  initialTours?: RecordRow[];
+  initialParks?: RecordRow[];
+  initialPlaces?: RecordRow[];
+}) {
   const params = useParams<{ slug?: string | string[]; category?: string | string[] }>();
   const rawSlug = paramValue(params?.slug);
   const categorySlug = paramValue(params?.category);
   const resolved = resolvePublicSlug(rawSlug);
   const live = useCmsLive();
-  const [page, setPage] = useState<RecordRow | null>(null);
-  const [country, setCountry] = useState<RecordRow | null>(null);
+  const [page, setPage] = useState<RecordRow | null>(initialPage);
+  const [country, setCountry] = useState<RecordRow | null>(initialCountry);
   const [nestedPlace, setNestedPlace] = useState<RecordRow | null>(null);
   const [nestedIsCategory, setNestedIsCategory] = useState(false);
-  const [forceCountry, setForceCountry] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [forceCountry, setForceCountry] = useState(Boolean(initialCountry && resolved?.kind === 'country'));
+  const [ready, setReady] = useState(Boolean(initialCountry || initialPage));
 
   useEffect(() => {
     let mounted = true;
@@ -131,8 +144,15 @@ export default function CmsSlugClient() {
       ...(country || {}),
       title: countryName,
       name: countryName,
-      image_url: countryHeroImage(countrySlug, country) || fallback?.image || '',
     };
+
+    if (!ready && !country) {
+      return (
+        <PublicShell>
+          <div className="py-24 text-center text-gray-500">Loading…</div>
+        </PublicShell>
+      );
+    }
 
     return (
       <PublicShell>
@@ -150,7 +170,14 @@ export default function CmsSlugClient() {
             <CategoryPageContent slug={countrySlug} country={merged} categorySlug={categorySlug} />
           )
         ) : (
-          <CountryPageContent slug={countrySlug} country={merged} />
+          <CountryPageContent
+            slug={countrySlug}
+            country={merged}
+            initialCategories={initialCategories}
+            initialTours={initialTours}
+            initialParks={initialParks}
+            initialPlaces={initialPlaces}
+          />
         )}
       </PublicShell>
     );

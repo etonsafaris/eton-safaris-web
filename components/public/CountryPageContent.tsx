@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import Carousel from '@/components/public/Carousel';
@@ -8,7 +7,7 @@ import PlaceCard from '@/components/public/PlaceCard';
 import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import PageHero from '@/components/public/PageHero';
-import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
+import { countryPlacePath } from '@/lib/cms-routes';
 import {
   categoryMatchesCountry,
   countryCategoryPath,
@@ -17,12 +16,7 @@ import {
   normalizeSlug,
 } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
-import {
-  COUNTRY_SPECIALISTS_LINE,
-  countryArticleHtml,
-  countryHeroTitle,
-  isSubstantialCountryArticle,
-} from '@/lib/country-landing-copy';
+import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import {
   fetchCollectionRecords,
@@ -35,11 +29,8 @@ import {
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PageFaqList from '@/components/public/PageFaqList';
-import SafariPlanningStrip from '@/components/public/SafariPlanningStrip';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
-import { gorillaPermitHowTo } from '@/lib/country-planning';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';
 
 type CountryPageContentProps = {
@@ -81,6 +72,15 @@ export default function CountryPageContent({
 
   useEffect(() => {
     setCountry(countryProp);
+    setCategories(initialCategories);
+    setTours(initialTours);
+    setParks(initialParks);
+    setPlaces(initialPlaces);
+  }, [countryProp, initialCategories, initialParks, initialPlaces, initialTours]);
+
+  useEffect(() => {
+    if (live === 0) return undefined;
+    let cancelled = false;
     async function load() {
       try {
         const [countryRows, allCategories, allTours, allParks, allPlaces] = await Promise.all([
@@ -90,6 +90,7 @@ export default function CountryPageContent({
           fetchCollectionRecords('national_park', ['national_parks', 'parks']),
           fetchCollectionRecords('explore'),
         ]);
+        if (cancelled) return;
         const match =
           countryRows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === slug) || null;
         if (match && isPublishedRecord(match)) setCountry(match);
@@ -102,10 +103,13 @@ export default function CountryPageContent({
       } catch (error) {
         console.error('[Supabase] Failed to load country page data:', error);
       } finally {
-        setReady(true);
+        if (!cancelled) setReady(true);
       }
     }
-    load();
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [slug, live]);
 
   const extras = parseCmsPageExtras(country, slug);
