@@ -2,11 +2,11 @@ import { supabase } from '@/lib/supabase/client';
 import { extractEmbeddedContent, recordBodyHtml, stripEmbeddedContent } from '@/lib/embedded-content';
 import { decodeHtmlEntities } from '@/lib/sanitize-html';
 import { rememberKnownColumns } from '@/lib/supabase-payload';
-import { isDeployableImageUrl } from '@/lib/public-image';
+import { isDeployableImageUrl, withImageCacheBust } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 const PAGE_SIZE = 1000;
-const FETCH_CACHE_MS = 5 * 60_000;
+const FETCH_CACHE_MS = 0;
 const recordCache = new Map<string, { expires: number; rows: RecordRow[] }>();
 const inflight = new Map<string, Promise<RecordRow[]>>();
 
@@ -36,8 +36,10 @@ export async function fetchAllRecords(tableName: string): Promise<RecordRow[]> {
 
 export async function fetchCollectionRecords(table: string, aliases: string[] = []): Promise<RecordRow[]> {
   const cacheKey = [table, ...aliases].join('|');
-  const cached = recordCache.get(cacheKey);
-  if (cached && cached.expires > Date.now()) return cached.rows;
+  if (FETCH_CACHE_MS > 0) {
+    const cached = recordCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) return cached.rows;
+  }
   const pending = inflight.get(cacheKey);
   if (pending) return pending;
 
@@ -48,7 +50,9 @@ export async function fetchCollectionRecords(table: string, aliases: string[] = 
     for (const name of names) {
       try {
         const rows = await fetchAllRecords(name);
-        recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
+        if (FETCH_CACHE_MS > 0) {
+          recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
+        }
         return rows;
       } catch (error) {
         lastError = error;
@@ -90,6 +94,10 @@ function isUsableImageUrl(value: unknown): value is string {
   return isDeployableImageUrl(value);
 }
 
+function recordStamp(record: RecordRow) {
+  return String(record.updated_at || record.updatedAt || record.modified_at || record.created_at || record.id || '');
+}
+
 export function getRecordImage(record: RecordRow): string | null {
   const preferred = [
     'image_url',
@@ -101,18 +109,30 @@ export function getRecordImage(record: RecordRow): string | null {
     'picture',
     'social_image_url',
   ];
+  let found: string | null = null;
   for (const key of preferred) {
     const value = record[key];
-    if (isUsableImageUrl(value)) return value.trim();
+    if (isUsableImageUrl(value)) {
+      found = value.trim();
+      break;
+    }
   }
-  for (const key of Object.keys(record)) {
-    if (!/image|photo|thumbnail|cover|banner|picture|avatar|featured/.test(key)) continue;
-    const value = record[key];
-    if (isUsableImageUrl(value)) return value.trim();
+  if (!found) {
+    for (const key of Object.keys(record)) {
+      if (!/image|photo|thumbnail|cover|banner|picture|avatar|featured/.test(key)) continue;
+      const value = record[key];
+      if (isUsableImageUrl(value)) {
+        found = value.trim();
+        break;
+      }
+    }
   }
-  const html = recordBodyHtml(record);
-  const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(html)?.[1]?.trim();
-  return fromHtml && isUsableImageUrl(fromHtml) ? fromHtml : null;
+  if (!found) {
+    const html = recordBodyHtml(record);
+    const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(html)?.[1]?.trim();
+    found = fromHtml && isUsableImageUrl(fromHtml) ? fromHtml : null;
+  }
+  return found ? withImageCacheBust(found, recordStamp(record)) : null;
 }
 
 export function getRecordTitle(record: RecordRow): string {

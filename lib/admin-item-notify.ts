@@ -35,11 +35,24 @@ export function adminItemSummary(item: Record<string, unknown>) {
   return { title, lines };
 }
 
+export async function publishPublicSite() {
+  if (typeof window !== 'undefined') {
+    const { bumpCmsLive } = await import('@/lib/cms-live');
+    bumpCmsLive();
+  }
+  try {
+    await fetch('/api/admin/revalidate', { method: 'POST' });
+  } catch (error) {
+    console.error('[Admin] Public revalidate failed:', error);
+  }
+}
+
 export async function notifyAdminItemSaved(input: {
   module: string;
   action: 'created' | 'updated';
   item?: Record<string, unknown>;
 }) {
+  await publishPublicSite();
   try {
     await fetch('/api/admin/item-saved', {
       method: 'POST',

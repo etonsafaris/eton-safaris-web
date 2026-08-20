@@ -61,3 +61,37 @@ export function resolvePublicImage(src?: string | null, fallback = DEFAULT_PUBLI
   }
   return fallback;
 }
+
+function imagePathname(src: string) {
+  if (src.startsWith('/') && !src.startsWith('//')) return src.split('?')[0];
+  try {
+    return new URL(src).pathname;
+  } catch {
+    return src.split('?')[0];
+  }
+}
+
+/** Admin-uploaded / CMS images that can appear on Vercel. Bundled heroes and Unsplash placeholders are not live CMS. */
+export function isLiveCmsImage(value: unknown): value is string {
+  if (!isDeployableImageUrl(value)) return false;
+  const src = value.trim();
+  const pathname = imagePathname(src);
+  if (pathname.startsWith('/heroes/')) return false;
+  if (/images\.unsplash\.com/i.test(src)) return false;
+  return true;
+}
+
+export function withImageCacheBust(src: string, stamp?: string | null) {
+  const token = String(stamp || '')
+    .trim()
+    .replace(/[^\w.:-]/g, '')
+    .slice(0, 48);
+  if (!token || src.startsWith('/')) return src;
+  try {
+    const url = new URL(src);
+    url.searchParams.set('v', token);
+    return url.toString();
+  } catch {
+    return src;
+  }
+}

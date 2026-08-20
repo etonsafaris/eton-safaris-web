@@ -1,5 +1,7 @@
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
+import { getRecordImage } from '@/lib/data';
+import { isLiveCmsImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 const FILES: Record<string, string> = {
@@ -26,8 +28,10 @@ export function bundledCountryHero(slug?: string | null) {
   return FILES[key] || DEFAULT_COUNTRY_HERO;
 }
 
-/** Always use files shipped in public/heroes so Vercel never depends on CMS or Unsplash. */
+/** Prefer the admin-uploaded country image; fall back to files in public/heroes. */
 export function countryHeroImage(slug?: string | null, record?: RecordRow | null) {
+  const fromCms = record ? getRecordImage(record) : null;
+  if (isLiveCmsImage(fromCms)) return fromCms;
   const fromRecord = record ? String(record.slug || record.name || record.title || '') : '';
   return bundledCountryHero(slug || fromRecord);
 }
