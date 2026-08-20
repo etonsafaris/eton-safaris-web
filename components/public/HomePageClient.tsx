@@ -28,30 +28,6 @@ import {
 import { countryHeroImage } from '@/lib/country-heroes';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
-import Carousel from '@/components/public/Carousel';
-import PaymentsSection from '@/components/public/PaymentsSection';
-import PublicShell from '@/components/public/PublicShell';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
-import TourSearchBar from '@/components/public/TourSearchBar';
-import SectionHeading from '@/components/public/SectionHeading';
-import TestimonialsSection from '@/components/public/TestimonialsSection';
-import TourCard from '@/components/public/TourCard';
-import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
-import { NAV_COUNTRIES, SITE } from '@/lib/collections';
-import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
-import { normalizeSlug } from '@/lib/country-utils';
-import {
-  fetchCollectionRecords,
-  getRecordImage,
-  getRecordTitle,
-  isLanguagePost,
-  isPublishedRecord,
-  pickString,
-  pickPlainText,
-} from '@/lib/data';
-import { countryHeroImage } from '@/lib/country-heroes';
-import { stripPublicMoney } from '@/lib/public-money';
-import type { RecordRow } from '@/lib/types';
 
 const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: string }> = {
   uganda: {
@@ -80,14 +56,28 @@ const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: st
   },
 };
 
-export default function HomePage() {
+type HomePageClientProps = {
+  initialCountries: RecordRow[];
+  initialTours: RecordRow[];
+  initialUpdates: RecordRow[];
+  initialParks: RecordRow[];
+  initialCategories: RecordRow[];
+};
+
+export default function HomePageClient({
+  initialCountries,
+  initialTours,
+  initialUpdates,
+  initialParks,
+  initialCategories,
+}: HomePageClientProps) {
   const live = useCmsLive();
   const [slide, setSlide] = useState(0);
-  const [tours, setTours] = useState<RecordRow[]>([]);
-  const [updates, setUpdates] = useState<RecordRow[]>([]);
-  const [countries, setCountries] = useState<RecordRow[]>([]);
-  const [parks, setParks] = useState<RecordRow[]>([]);
-  const [categories, setCategories] = useState<RecordRow[]>([]);
+  const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [updates, setUpdates] = useState<RecordRow[]>(initialUpdates);
+  const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
+  const [parks, setParks] = useState<RecordRow[]>(initialParks);
+  const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
 
   useEffect(() => {
     let cancelled = false;
@@ -177,9 +167,7 @@ export default function HomePage() {
 
   const tourItems = tours.map((tour, index) => <TourCard key={String(tour.id ?? index)} tour={tour} />);
 
-  const destinationItems = (
-    countries.length > 0 ? countries : NAV_COUNTRIES.map((item) => ({ name: item.name, slug: item.slug }))
-  ).map((country, index) => {
+  const destinationItems = countries.map((country, index) => {
     const slug =
       countrySlugFromLanding(pickString(country, ['slug', 'name'])) || NAV_COUNTRIES[index]?.slug || '';
     return (
