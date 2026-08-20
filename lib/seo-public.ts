@@ -12,6 +12,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
+import { landingConversionCopy } from '@/lib/landing-page-copy';
 import type { RecordRow } from '@/lib/types';
 
 function absoluteUrl(path: string) {
@@ -146,10 +147,14 @@ export function jsonLdFromRecord(
   }
   const title = values.seo_title || options.fallbackTitle || getRecordTitle(record as RecordRow);
   const extras = parseCmsPageExtras(record as RecordRow, options.path);
-  const description =
-    values.meta_description ||
-    extras.excerpt ||
-    pickString(record as RecordRow, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
+  const pathSlug = options.path.replace(/^\/destinations\//, '').split('/')[0];
+  const countryName = getRecordTitle(record as RecordRow);
+  const faqs =
+    extras.faqs.length > 0
+      ? extras.faqs
+      : options.schemaHint === 'TouristDestination'
+        ? landingConversionCopy(pathSlug, countryName).faqs
+        : undefined;
   const custom = values.seo_schema.trim();
   if (custom) {
     try {

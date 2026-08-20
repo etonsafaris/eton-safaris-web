@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/landing', '/login', '/agents/register', '/agents/portal', '/dashboard', '/quote'],
       },
     ],
-    sitemap: 'https://etonsafaris.com/sitemap.xml',
+    sitemap: ['https://etonsafaris.com/sitemap.xml', 'https://etonsafaris.com/safari-updates/rss.xml'],
     host: 'https://etonsafaris.com',
   };
 }

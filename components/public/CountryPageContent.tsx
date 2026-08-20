@@ -34,7 +34,13 @@ import {
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PageFaqList from '@/components/public/PageFaqList';
+import SafariPlanningStrip from '@/components/public/SafariPlanningStrip';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { landingConversionCopy } from '@/lib/landing-page-copy';
+import { gorillaPermitHowTo } from '@/lib/country-planning';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
+import { destinationPublicPath } from '@/lib/cms-routes';
+import Link from 'next/link';
 import type { RecordRow } from '@/lib/types';
 
 type CountryPageContentProps = {
@@ -99,6 +105,9 @@ export default function CountryPageContent({
   const title = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
   const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
+  const defaultFaqs = landingConversionCopy(slug, title).faqs;
+  const faqs = extras.faqs.length ? extras.faqs : defaultFaqs;
+  const relatedDestinations = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].filter((item) => item.slug !== slug);
 
   const countryHtml = toProseHtml(country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '');
   const descriptionHtml =
@@ -121,6 +130,18 @@ export default function CountryPageContent({
   return (
     <>
       <PageHero title={bannerTitle} image={countryHeroImage(slug, country)} variant="country" />
+      <SafariPlanningStrip slug={slug} countryName={title} />
+      {slug === 'uganda' || slug === 'rwanda' ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              ...gorillaPermitHowTo(title),
+            }).replace(/</g, '\\u003c'),
+          }}
+        />
+      ) : null}
 
       <section className="bg-[#f3f3f3] px-4 py-12">
         <div className="mx-auto max-w-[1200px]">
@@ -152,7 +173,7 @@ export default function CountryPageContent({
             {summaryIsDistinct ? (
               <div className="public-prose mt-8" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
             ) : null}
-            <PageFaqList faqs={extras.faqs} tone="light" />
+            <PageFaqList faqs={faqs} tone="light" />
           </div>
           <div className="md:col-span-1">
             <div className="md:sticky md:top-24">
@@ -218,6 +239,30 @@ export default function CountryPageContent({
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
               emptyMessage="No records found in this collection."
             />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-10 md:px-6">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="dav-amazing-title">
+            <h3>More safari destinations</h3>
+            <span className="dav-amazing-underline" />
+          </div>
+          <p className="mt-3 max-w-3xl text-base leading-6 text-[#222]">
+            Combine {title} with another East or Southern Africa itinerary. Eton Safaris plans cross-border trips from
+            Uganda with one local team.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {relatedDestinations.map((item) => (
+              <Link
+                key={item.slug}
+                href={destinationPublicPath(item.slug)}
+                className="rounded-full border border-[#dce6e0] bg-[#f7faf8] px-4 py-2 text-sm text-[#222] hover:border-moss hover:text-moss"
+              >
+                {item.name} safaris
+              </Link>
+            ))}
           </div>
         </div>
       </section>
