@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
+import PageFaqList from '@/components/public/PageFaqList';
 import PageHero from '@/components/public/PageHero';
 import {
   categoryMatchesCountry,
@@ -20,6 +21,7 @@ import {
   visibleRecordHtml,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -107,6 +109,7 @@ export default function CategoryPageContent({
   const descriptionHtml = toProseHtml(
     selectedCategory ? visibleRecordHtml(selectedCategory, ['description', 'content', 'about', 'summary']) : ''
   );
+  const faqs = parseCmsPageExtras(selectedCategory, categorySlug).faqs;
 
   const filteredTours = useMemo(
     () => (ready ? filterToursByCategory(tours, selectedCategory, categorySlug) : []),
@@ -127,6 +130,7 @@ export default function CategoryPageContent({
                 Discover {categoryTitle.toLowerCase()} tour packages in {countryTitle}.
               </p>
             ) : null}
+            <PageFaqList faqs={faqs} tone="light" className="mt-10" />
           </div>
           <div className="md:col-span-1">
             <div className="md:sticky md:top-24">

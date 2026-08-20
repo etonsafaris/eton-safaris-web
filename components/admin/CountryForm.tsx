@@ -3,14 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import RichTextEditor from '@/components/admin/RichTextEditor';
-import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
-import { fetchCollectionRecords, slugify } from '@/lib/data';
 import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { fetchCollectionRecords, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
@@ -80,13 +78,15 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       return;
     }
 
+    const packedFaqs = serializeFaqs(faqs);
     const payload = buildSavePayload(
       'countries',
       {
         name,
         tagline: headline,
-        description,
+        description: embedContent(description, { fields: { faqs: packedFaqs } }),
         summary,
+        faqs: packedFaqs,
         image_url: imageUrl,
         slug: seo.slug || slugify(name),
       },
@@ -165,6 +165,13 @@ export default function CountryForm({ countryId }: CountryFormProps) {
             showFooter
           />
         </div>
+
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Frequently asked questions"
+          description="These appear on this country’s public page, directly under the country description."
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">

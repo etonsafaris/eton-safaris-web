@@ -3,16 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import RichTextEditor from '@/components/admin/RichTextEditor';
-import SearchableSelect from '@/components/admin/SearchableSelect';
-import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
-import { fetchCollectionRecords, getRecordTitle, slugify } from '@/lib/data';
 import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { fetchCollectionRecords, getRecordTitle, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -58,6 +55,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [country, setCountry] = useState('');
   const [categoryImage, setCategoryImage] = useState('');
   const [countries, setCountries] = useState<RecordRow[]>([]);
@@ -78,7 +76,8 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       if (!category) return;
 
       setTitle(String(category.name || category.title || ''));
-      setDescription(String(category.description || ''));
+      setDescription(stripEmbeddedContent(String(category.description || '')));
+      setFaqs(parseCmsPageExtras(category, String(category.slug || '')).faqs);
       setCountry(String(category.country || ''));
       setCategoryImage(String(category.image_url || ''));
       setSeo(seoValuesFromRecord(category as Record<string, unknown>));
@@ -116,11 +115,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
     setSaving(true);
     setError('');
 
+    const packedFaqs = serializeFaqs(faqs);
     const payload = buildSavePayload(
       'categories',
       {
         name: title,
-        description,
+        description: embedContent(description, { fields: { faqs: packedFaqs } }),
+        faqs: packedFaqs,
         country,
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
         slug: seo.slug || slugify(title),
@@ -189,6 +190,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             showFooter
           />
         </div>
+
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Frequently asked questions"
+          description="These appear on this category’s public page, directly under the category description."
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>
