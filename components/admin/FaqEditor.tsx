@@ -25,12 +25,23 @@ export default function FaqEditor({
   }
 
   return (
-    <div className="mt-8 rounded-xl border border-[#e5e7eb] p-6">
-      <h2 className="font-serif text-2xl font-bold text-[#111827]">{title}</h2>
-      <p className="mt-1 text-sm text-[#6b7280]">{description}</p>
-      <div className="mt-4 space-y-3">
+    <section
+      id="frequently-asked-questions"
+      className="mt-8 scroll-mt-6 rounded-2xl border-2 border-[#00A651] bg-[#f0fdf4] p-6"
+    >
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#00A651]">FAQ module</p>
+          <h2 className="mt-1 font-serif text-2xl font-bold text-[#111827]">{title}</h2>
+          <p className="mt-1 text-sm text-[#166534]">{description}</p>
+        </div>
+        <span className="rounded-full bg-[#00A651] px-3 py-1 text-xs font-semibold text-white">
+          {faqs.length} added
+        </span>
+      </div>
+      <div className="space-y-3">
         {faqs.map((faq, index) => (
-          <div key={`${faq.question}-${index}`} className="rounded-xl bg-[#f8fafc] p-4">
+          <div key={`${faq.question}-${index}`} className="rounded-xl border border-[#bbf7d0] bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-[#111827]">{faq.question}</p>
@@ -47,7 +58,9 @@ export default function FaqEditor({
           </div>
         ))}
         {faqs.length === 0 ? (
-          <p className="text-sm text-[#6b7280]">No questions added yet.</p>
+          <p className="rounded-xl border border-dashed border-[#86efac] bg-white px-4 py-3 text-sm text-[#166534]">
+            No questions yet. Type a question and answer below, then click Add FAQ.
+          </p>
         ) : null}
       </div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -55,23 +68,23 @@ export default function FaqEditor({
           value={draft.question}
           onChange={(event) => setDraft({ ...draft, question: event.target.value })}
           placeholder="Question"
-          className="w-full rounded-full border-0 bg-[#f3f4f6] px-5 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#66bb9a]/20"
+          className="w-full rounded-full border border-[#bbf7d0] bg-white px-5 py-3 text-sm text-[#111827] outline-none transition focus:ring-2 focus:ring-[#00A651]/20"
         />
         <textarea
           value={draft.answer}
           onChange={(event) => setDraft({ ...draft, answer: event.target.value })}
           placeholder="Answer"
           rows={3}
-          className="w-full resize-y rounded-xl border-0 bg-[#f3f4f6] px-5 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#66bb9a]/20"
+          className="w-full resize-y rounded-xl border border-[#bbf7d0] bg-white px-5 py-3 text-sm text-[#111827] outline-none transition focus:ring-2 focus:ring-[#00A651]/20"
         />
       </div>
       <button
         type="button"
         onClick={addFaq}
-        className="mt-4 rounded-full bg-[#00A651] px-5 py-2 text-sm font-semibold text-white hover:bg-[#059669]"
+        className="mt-4 rounded-full bg-[#00A651] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#059669]"
       >
         Add FAQ
       </button>
-    </div>
+    </section>
   );
 }

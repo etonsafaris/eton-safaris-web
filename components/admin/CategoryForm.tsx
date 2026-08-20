@@ -180,6 +180,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
           />
         </div>
 
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Frequently asked questions"
+          description="These appear on this category’s public page, directly under the category description."
+        />
+
         <div className="mt-8">
           <FieldLabel>Category Description</FieldLabel>
           <RichTextEditor
@@ -190,13 +197,6 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             showFooter
           />
         </div>
-
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="Frequently asked questions"
-          description="These appear on this category’s public page, directly under the category description."
-        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>

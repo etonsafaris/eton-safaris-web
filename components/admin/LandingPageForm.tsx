@@ -290,6 +290,13 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
           />
         </div>
 
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Landing FAQ"
+          description="Appears under the country article on the public landing preview."
+        />
+
         <div className="mt-6">
           <FieldLabel>Landing article</FieldLabel>
           <RichTextEditor

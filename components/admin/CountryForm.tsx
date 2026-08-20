@@ -155,6 +155,13 @@ export default function CountryForm({ countryId }: CountryFormProps) {
           </div>
         </div>
 
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="Frequently asked questions"
+          description="These appear on this country’s public page, directly under the country description."
+        />
+
         <div className="mt-8">
           <FieldLabel>Country Description</FieldLabel>
           <RichTextEditor
@@ -165,13 +172,6 @@ export default function CountryForm({ countryId }: CountryFormProps) {
             showFooter
           />
         </div>
-
-        <FaqEditor
-          faqs={faqs}
-          onChange={setFaqs}
-          title="Frequently asked questions"
-          description="These appear on this country’s public page, directly under the country description."
-        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">

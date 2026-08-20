@@ -266,6 +266,13 @@ export default function PageForm({ pageId }: PageFormProps) {
           />
         </div>
 
+        <FaqEditor
+          faqs={faqs}
+          onChange={setFaqs}
+          title="FAQ (schema + page)"
+          description="Shown on the live page under the page content."
+        />
+
         <div className="mt-6">
           <FieldLabel>Page content</FieldLabel>
           <RichTextEditor
