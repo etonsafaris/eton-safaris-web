@@ -682,11 +682,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         <div>
           <h2 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">{config.label}</h2>
           <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">{config.subtitle}</p>
-          {usesFaqs ? (
-            <p className="mt-2 text-sm font-medium text-[#00A651]">
-              FAQ questions are on the edit form. Click the pencil on a record (or Add) — the green FAQ module is directly under the title fields.
-            </p>
-          ) : null}
         </div>
         <div className="flex items-center gap-3">
           {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments', 'registered_agents'].includes(config.id) && (
