@@ -10,14 +10,10 @@ export const SITE_MEDIA = {
   communityEducation: base44Image('1159416c5', 1020, 640),
   communityConservation: base44Image('c0ca88093', 1020, 640),
   communityEmployment: base44Image('c4601d0c3', 1020, 640),
-  gorillasForest:
-    'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?auto=format&fit=crop&w=1080&q=70',
-  wildlifeNationalPark:
-    'https://images.unsplash.com/photo-1543946207-39bd91e70ca7?auto=format&fit=crop&w=1080&q=70',
-  safariVehicle:
-    'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1080&q=70',
-  elephantSunset:
-    'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1080&q=70',
+  gorillasForest: '/heroes/rwanda.jpg',
+  wildlifeNationalPark: '/heroes/botswana.jpg',
+  safariVehicle: '/heroes/kenya.jpg',
+  elephantSunset: '/heroes/zambia.jpg',
   gorillaVideo:
     'https://videos.pexels.com/video-files/31223125/13336255_720_1280_60fps.mp4',
   gorillaVideoFallback:

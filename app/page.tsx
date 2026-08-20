@@ -14,7 +14,6 @@ import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { NAV_COUNTRIES, SITE } from '@/lib/collections';
 import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
-import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
