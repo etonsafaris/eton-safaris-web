@@ -12,7 +12,7 @@ import { countrySlugFromLanding, landingCmsSlug, landingPreviewPath } from '@/li
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { parseCmsPageExtras, type PageFaq } from '@/lib/cms-page-model';
 import { ALL_SEEDED_COUNTRIES } from '@/lib/cms-defaults';
-import { fetchCollectionRecords, getRecordTitle, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';

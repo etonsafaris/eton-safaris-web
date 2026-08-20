@@ -81,7 +81,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     label: 'Countries',
     table: 'countries',
     icon: 'globe',
-    subtitle: 'Manage destination countries and regions',
+    subtitle: 'Manage destination countries and regions. Open Edit to add FAQs under the country name.',
     view: 'grid',
     publicPath: '/destinations',
     addLabel: 'Add New Destination',

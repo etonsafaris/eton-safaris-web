@@ -20,7 +20,7 @@ import {
   type PageFaq,
 } from '@/lib/cms-page-model';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
-import { fetchCollectionRecords, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -87,7 +87,9 @@ export default function PageForm({ pageId }: PageFormProps) {
   useEffect(() => {
     if (!pageId) return;
     fetchCollectionRecords('pages').then((rows) => {
-      const page = rows.find((row) => String(row.id) === pageId);
+      const page = rows.find(
+        (row) => String(pickRecordId(row) ?? '') === String(pageId) || String(row.id) === String(pageId)
+      );
       if (!page) return;
       const extras = parseCmsPageExtras(page);
       setTitle(String(page.title || page.name || ''));
@@ -211,6 +213,9 @@ export default function PageForm({ pageId }: PageFormProps) {
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-[#6b7280]">
           Pages power About, Terms, Privacy, Agency, Community, and Contact SEO. Layout controls how the page appears on
           the live website.
+        </p>
+        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
+          The green FAQ module sits under Excerpt, before Page content — it is not inside SEO.
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">

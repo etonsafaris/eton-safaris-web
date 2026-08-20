@@ -9,7 +9,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
-import { fetchCollectionRecords, getRecordTitle, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -72,7 +72,9 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
   useEffect(() => {
     fetchCollectionRecords('categories').then((rows) => {
       if (!categoryId) return;
-      const category = rows.find((row) => String(row.id) === categoryId);
+      const category = rows.find(
+        (row) => String(pickRecordId(row) ?? '') === String(categoryId) || String(row.id) === String(categoryId)
+      );
       if (!category) return;
 
       setTitle(String(category.name || category.title || ''));
@@ -161,6 +163,9 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b]">
           {isEdit ? 'Edit Category' : 'Add New Category'}
         </h1>
+        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
+          The green FAQ module is directly under Category Title — it is not inside SEO.
+        </p>
 
         <div className="mt-8">
           <FieldLabel>Category Title</FieldLabel>

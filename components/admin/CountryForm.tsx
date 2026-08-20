@@ -8,7 +8,7 @@ import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
-import { fetchCollectionRecords, slugify } from '@/lib/data';
+import { fetchCollectionRecords, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
@@ -46,7 +46,9 @@ export default function CountryForm({ countryId }: CountryFormProps) {
   useEffect(() => {
     fetchCollectionRecords('countries').then((rows) => {
       if (!countryId) return;
-      const country = rows.find((row) => String(row.id) === countryId);
+      const country = rows.find(
+        (row) => String(pickRecordId(row) ?? '') === String(countryId) || String(row.id) === String(countryId)
+      );
       if (!country) return;
 
       setName(String(country.name || ''));
@@ -125,6 +127,9 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         <h1 className="text-center font-serif text-3xl font-bold text-[#111827]">
           {isEdit ? 'Edit Destination' : 'Add New Destination'}
         </h1>
+        <p className="mt-2 text-center text-sm font-medium text-[#00A651]">
+          The green FAQ module is directly under Country Name — it is not inside SEO.
+        </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>
