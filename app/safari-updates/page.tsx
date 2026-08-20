@@ -45,6 +45,11 @@ export default function SafariUpdatesPage() {
       />
       <ListingSection>
         <SectionHeading label="stay up to date with" title="Safari Updates" />
+        <p className="mt-2 text-center text-sm text-[#555]">
+          <a href="/safari-updates/rss.xml" className="text-moss hover:underline">
+            Subscribe by RSS
+          </a>
+        </p>
         {posts.length === 0 ? (
           <p className="mt-16 text-center text-gray-500">No records found in this collection.</p>
         ) : (

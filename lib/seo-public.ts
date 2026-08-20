@@ -149,6 +149,10 @@ export function jsonLdFromRecord(
   const extras = parseCmsPageExtras(record as RecordRow, options.path);
   const pathSlug = options.path.replace(/^\/destinations\//, '').split('/')[0];
   const countryName = getRecordTitle(record as RecordRow);
+  const description =
+    values.meta_description ||
+    extras.excerpt ||
+    pickString(record as RecordRow, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
   const faqs =
     extras.faqs.length > 0
       ? extras.faqs
@@ -163,7 +167,6 @@ export function jsonLdFromRecord(
       // fall through to generated graph
     }
   }
-  const pathSlug = options.path.replace(/^\/destinations\//, '').split('/')[0];
   const graph = buildDefaultJsonLd(values, {
     title,
     description: description.slice(0, 220),
@@ -177,7 +180,7 @@ export function jsonLdFromRecord(
     siteName: SITE.name,
     siteUrl: SITE.url,
     dateModified: extras.published_at || undefined,
-    faqs: extras.faqs,
+    faqs,
   });
   return graph;
 }

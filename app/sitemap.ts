@@ -49,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/parks', now, 0.8),
     entry('/accommodations', now, 0.8),
     entry('/safari-updates', now, 0.8),
+    entry('/safari-updates/rss.xml', now, 0.4, 'daily'),
     entry('/community-support', now, 0.8),
     entry('/contact-us', now, 0.8),
     entry('/request-a-quote', now, 0.9),

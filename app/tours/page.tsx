@@ -8,10 +8,12 @@ import PageHero from '@/components/public/PageHero';
 import TourCard from '@/components/public/TourCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
-import { NAV_COUNTRIES } from '@/lib/collections';
+import { NAV_COUNTRIES, SITE } from '@/lib/collections';
 import { useCmsLive } from '@/lib/cms-live';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
+import { publicRecordSlug } from '@/lib/data';
+import { SITE } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';
 
 function ToursList() {

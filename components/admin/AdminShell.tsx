@@ -417,6 +417,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       <ExternalLink className="h-4 w-4 shrink-0 text-[#6b7280] dark:text-gray-400" />
                       Back to Website
                     </Link>
+                    <p className="px-3 pb-2 pt-1 text-[11px] leading-4 text-[#059669]">
+                      Saves appear on the public website immediately. No rebuild needed.
+                    </p>
                   </div>
                   <div className="mx-3 my-2 border-t border-[#e5e7eb] dark:border-white/10" />
                   <button
