@@ -1,58 +1,10 @@
-'use client';
+import ParksPageClient from '@/components/public/ParksPageClient';
+import { loadPublishedRecords } from '@/lib/load-public';
 
-import { useEffect, useState } from 'react';
-import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
-import PageHero from '@/components/public/PageHero';
-import PlaceCard from '@/components/public/PlaceCard';
-import PublicShell from '@/components/public/PublicShell';
-import {
-  fetchCollectionRecords,
-  getRecordImage,
-  getRecordTitle,
-  isPublishedRecord,
-  pickPlainText,
-  pickString,
-} from '@/lib/data';
-import { SITE_MEDIA } from '@/lib/site-media';
-import { useCmsLive } from '@/lib/cms-live';
-import type { RecordRow } from '@/lib/types';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default function ParksPage() {
-  const live = useCmsLive();
-  const [parks, setParks] = useState<RecordRow[]>([]);
-
-  useEffect(() => {
-    fetchCollectionRecords('national_park', ['national_parks', 'parks'])
-      .then((rows) => setParks(rows.filter(isPublishedRecord)))
-      .catch((error) => console.error('[Supabase] Failed to load parks:', error));
-  }, [live]);
-
-  return (
-    <PublicShell>
-      <PageHero
-        title="National Parks"
-        subtitle="Wildlife reserves and parks across Africa"
-        image={getRecordImage(parks[0] || {}) || SITE_MEDIA.wildlifeNationalPark}
-      />
-      <ListingSection>
-        {parks.length === 0 ? (
-          <p className="text-center text-gray-500">No records found in this collection.</p>
-        ) : (
-          <ListingGrid>
-            {parks.map((park, index) => (
-              <PlaceCard
-                key={String(park.id ?? index)}
-                href={`/parks/${pickString(park, ['slug']) || park.id}`}
-                image={getRecordImage(park) || undefined}
-                title={getRecordTitle(park)}
-                location={pickString(park, ['location', 'country'])}
-                description={pickPlainText(park, ['description'])}
-                cta="View Park"
-              />
-            ))}
-          </ListingGrid>
-        )}
-      </ListingSection>
-    </PublicShell>
-  );
+export default async function ParksPage() {
+  const parks = await loadPublishedRecords('national_park', ['national_parks', 'parks']);
+  return <ParksPageClient initialParks={parks} />;
 }

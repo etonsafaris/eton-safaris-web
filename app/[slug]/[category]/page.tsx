@@ -65,6 +65,13 @@ export default async function CountryCategoryPage({ params }: PageProps) {
 
   const countrySlug = resolved.countrySlug || resolved.canonical;
   const countryData = await loadCountryPageData(countrySlug);
+  const category = findCategoryBySlug(countryData.categories, params.category);
+  const place =
+    !category ? findPlaceBySlug(countryData.places, params.category, countrySlug) : null;
+  if (place) {
+    table = 'explore';
+    schemaHint = 'TouristAttraction';
+  }
 
   return (
     <>
@@ -80,6 +87,8 @@ export default async function CountryCategoryPage({ params }: PageProps) {
         initialTours={countryData.tours}
         initialParks={countryData.parks}
         initialPlaces={countryData.places}
+        initialNestedPlace={place}
+        initialNestedIsCategory={Boolean(category)}
       />
     </>
   );

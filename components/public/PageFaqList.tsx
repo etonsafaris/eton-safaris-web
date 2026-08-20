@@ -4,14 +4,16 @@ import { stripPublicMoney } from '@/lib/public-money';
 export default function PageFaqList({
   faqs,
   tone = 'dark',
+  className = '',
 }: {
   faqs: PageFaq[];
   tone?: 'dark' | 'light';
+  className?: string;
 }) {
   if (!faqs.length) return null;
   const dark = tone === 'dark';
   return (
-    <section className={`mt-12 ${dark ? 'text-white' : 'text-[#222]'}`}>
+    <section className={`mt-12 ${dark ? 'text-white' : 'text-[#222]'} ${className}`}>
       <h2 className={`font-serif text-2xl italic ${dark ? 'text-white' : 'text-[#343434]'}`}>
         Frequently asked questions
       </h2>
