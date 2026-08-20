@@ -7,7 +7,7 @@ import CoverImageField from '@/components/admin/CoverImageField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
-import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordTitle, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -123,6 +123,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         name: title,
         description: embedContent(description, { fields: { faqs: packedFaqs } }),
         faqs: packedFaqs,
+        post_blocks: faqRowsForStorage(faqs),
         country,
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
         slug: seo.slug || slugify(title),

@@ -220,10 +220,7 @@ export default function RichTextEditor({
   }
 
   return (
-    <div>
-    <div className={`wysiwyg-editor-container w-full overflow-hidden border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20 ${
-      onFaqsChange ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'
-    }`}>
+    <div className="wysiwyg-editor-container w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20">
       <div className="flex w-full flex-wrap border-b border-[#e5e7eb] bg-[#f3f4f6]">
         {TABS.map((item) => (
           <button
@@ -502,9 +499,20 @@ export default function RichTextEditor({
         onInput={emit}
         onPaste={handlePaste}
         onClick={markSelectedMedia}
-        className="description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)] [&_img[data-eton-media]]:ring-2 [&_img[data-eton-media]]:ring-[#00A651] [&_video[data-eton-media]]:ring-2 [&_video[data-eton-media]]:ring-[#00A651]"
+        className={`description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)] [&_img[data-eton-media]]:ring-2 [&_img[data-eton-media]]:ring-[#00A651] [&_video[data-eton-media]]:ring-2 [&_video[data-eton-media]]:ring-[#00A651] ${
+          onFaqsChange ? 'description-box--with-faq' : ''
+        }`}
         style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
       />
+
+      {onFaqsChange ? (
+        <FaqEditor
+          faqs={faqs || []}
+          onChange={onFaqsChange}
+          title={faqTitle}
+          description={faqDescription}
+        />
+      ) : null}
 
       {showFooter && (
         <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-[#fafafa] px-4 py-2 text-xs text-[#6b7280]">
@@ -513,16 +521,6 @@ export default function RichTextEditor({
         </div>
       )}
     </div>
-    {onFaqsChange ? (
-      <div className="overflow-hidden rounded-b-lg border border-t-0 border-[#e5e7eb]">
-        <FaqEditor
-          faqs={faqs || []}
-          onChange={onFaqsChange}
-          title={faqTitle}
-          description={faqDescription}
-        />
-      </div>
-    ) : null}
     </div>
   );
 }

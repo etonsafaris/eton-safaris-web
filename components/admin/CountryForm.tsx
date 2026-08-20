@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import CoverImageField from '@/components/admin/CoverImageField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
-import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
@@ -88,6 +88,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         description: embedContent(description, { fields: { faqs: packedFaqs } }),
         summary,
         faqs: packedFaqs,
+        post_blocks: faqRowsForStorage(faqs),
         image_url: imageUrl,
         slug: seo.slug || slugify(name),
       },

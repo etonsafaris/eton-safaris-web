@@ -93,6 +93,11 @@ img {
   min-height: 14.87cm;
 }
 
+.wysiwyg-editor-container .description-box.description-box--with-faq {
+  height: 200px;
+  min-height: 200px;
+}
+
 .description-box {
   width: 100%;
   min-height: 250px;

@@ -51,14 +51,17 @@ export function inferPageLayout(slug: string): CmsPageLayout {
 }
 
 export function serializeFaqs(faqs: PageFaq[]) {
-  return JSON.stringify(
-    faqs
-      .map((faq) => ({
-        question: String(faq.question || '').trim(),
-        answer: String(faq.answer || '').trim(),
-      }))
-      .filter((faq) => faq.question && faq.answer)
-  );
+  return JSON.stringify(faqRowsForStorage(faqs));
+}
+
+export function faqRowsForStorage(faqs: PageFaq[]) {
+  return faqs
+    .map((faq) => ({
+      kind: 'faq' as const,
+      question: String(faq.question || '').trim(),
+      answer: String(faq.answer || '').trim(),
+    }))
+    .filter((faq) => faq.question && faq.answer);
 }
 
 export function parseFaqList(value: unknown): PageFaq[] {
@@ -67,6 +70,8 @@ export function parseFaqList(value: unknown): PageFaq[] {
       .map((item) => {
         if (!item || typeof item !== 'object') return null;
         const row = item as Record<string, unknown>;
+        const isFaq = row.kind === 'faq' || 'question' in row || 'answer' in row;
+        if (!isFaq) return null;
         const question = String(row.question || row.title || '').trim();
         const answer = String(row.answer || row.description || '').trim();
         if (!question || !answer) return null;
@@ -80,6 +85,14 @@ export function parseFaqList(value: unknown): PageFaq[] {
     } catch {
       return [];
     }
+  }
+  return [];
+}
+
+function firstFaqList(...values: unknown[]) {
+  for (const value of values) {
+    const parsed = parseFaqList(value);
+    if (parsed.length) return parsed;
   }
   return [];
 }
@@ -125,7 +138,7 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
     excerpt: pickString(record || {}, ['excerpt', 'summary'], fields.excerpt || fields.summary),
     video_url: pickString(record || {}, ['video_url'], fields.video_url),
     destinations: parseDestinationList(record?.destinations ?? fields.destinations),
-    faqs: parseFaqList(record?.faqs ?? fields.faqs),
+    faqs: firstFaqList(record?.faqs, fields.faqs, record?.post_blocks),
     status: statusRaw === 'draft' ? 'draft' : 'published',
     cta_label: pickString(record || {}, ['cta_label'], fields.cta_label),
     cta_href: pickString(record || {}, ['cta_href'], fields.cta_href),

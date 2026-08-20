@@ -42,7 +42,7 @@ import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-c
 import { countryCategoryPath } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
-import { parseCmsPageExtras, serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
+import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   const router = useRouter();
@@ -465,7 +465,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     const previousHtml = String(editing?.description || editing?.content || '');
     const previousEmbed = extractEmbeddedContent(previousHtml);
     const packedFaqs = usesFaqs ? serializeFaqs(faqs) : '';
-    if (usesFaqs) raw.faqs = packedFaqs;
+    if (usesFaqs) {
+      raw.faqs = packedFaqs;
+      raw.post_blocks = faqRowsForStorage(faqs);
+    }
     const embedData = usesFaqs
       ? { ...previousEmbed, fields: { ...previousEmbed.fields, faqs: packedFaqs } }
       : previousEmbed;
