@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { adminItemSummary } from '@/lib/admin-item-notify';
+import { DASHBOARD_SAVE_ALERTS_PAUSED, adminItemSummary } from '@/lib/admin-item-notify';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 
 function hasAdminSession(request: Request) {
@@ -19,6 +19,10 @@ export async function POST(request: Request) {
       action?: 'created' | 'updated';
       item?: Record<string, unknown>;
     };
+    if (DASHBOARD_SAVE_ALERTS_PAUSED) {
+      return NextResponse.json({ ok: true, recorded: false, emailed: false, paused: true });
+    }
+
     const moduleName = body.module?.trim() || 'item';
     const action = body.action === 'updated' ? 'updated' : 'created';
     const { title, lines } = adminItemSummary(body.item || {});

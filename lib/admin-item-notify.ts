@@ -47,12 +47,16 @@ export async function publishPublicSite() {
   }
 }
 
+/** Paused: dashboard create/edit/post must not write Notifications or email. Quotes, bookings, payments, and other inbound alerts still run. */
+export const DASHBOARD_SAVE_ALERTS_PAUSED = true;
+
 export async function notifyAdminItemSaved(input: {
   module: string;
   action: 'created' | 'updated';
   item?: Record<string, unknown>;
 }) {
   await publishPublicSite();
+  if (DASHBOARD_SAVE_ALERTS_PAUSED) return;
   try {
     await fetch('/api/admin/item-saved', {
       method: 'POST',
