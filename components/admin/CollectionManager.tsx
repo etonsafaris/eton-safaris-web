@@ -272,9 +272,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     if (config.id === 'notifications') {
       return [
         { label: 'Title', keys: ['title'] },
-        { label: 'Message', keys: ['message'], clamp: true },
+        { label: 'Message', keys: ['message', 'body', 'content'], clamp: true },
         { label: 'Category', keys: ['category'], badge: true },
-        { label: 'Date', keys: ['created_at'], date: true },
+        { label: 'Status', keys: ['status'], badge: true },
+        { label: 'Date', keys: ['created_at', 'created_date'], date: true },
       ];
     }
     return [
@@ -406,7 +407,22 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setModalOpen(true);
   }
 
+  async function viewNotification(record: RecordRow) {
+    setViewingNotice(record);
+    const id = pickRecordId(record);
+    if (id == null || !isUnreadNotification(record)) return;
+    await saveWithColumnFallback('notifications', markNotificationReadPayload(), id);
+    notifyAdminNotificationsChanged();
+    setRecords((current) =>
+      current.map((row) => (pickRecordId(row) === id ? { ...row, ...markNotificationReadPayload() } : row))
+    );
+  }
+
   function openEdit(record: RecordRow) {
+    if (isNotifications) {
+      void viewNotification(record);
+      return;
+    }
     const recordId = pickRecordId(record);
     if (recordId != null) {
       if (isTours) {
@@ -550,6 +566,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       return;
     }
     await publishPublicSite();
+    if (isNotifications) notifyAdminNotificationsChanged();
     await load();
   }
 
