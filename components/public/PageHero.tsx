@@ -137,25 +137,26 @@ export default function PageHero({
           </div>
         )}
       </section>
-      {isCountry && bestTime ? null : <PageBreadcrumbs currentTitle={title} />}
-      {isTour ? (
-        <div className="bg-forest text-white">
-          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
-            <ForestMetaItem icon={Clock} label="Duration" value={duration || '—'} />
-            <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-            <ForestMetaItem icon={Users} label="Group Size" value={groupSize || 'Flexible'} />
-            <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
-          </div>
-        </div>
-      ) : null}
-      {isCountry && bestTime ? (
+      {isTour || (isCountry && bestTime) ? null : <PageBreadcrumbs currentTitle={title} />}
+      {isTour || (isCountry && bestTime) ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-4 py-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:px-6">
             <PageBreadcrumbs currentTitle={title} tone="forest" />
             <div className="flex min-w-0 flex-wrap items-center gap-6 md:gap-10">
-              <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
-              <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+              {isTour ? (
+                <>
+                  <ForestMetaItem icon={Clock} label="Duration" value={duration || '—'} />
+                  <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
+                  <ForestMetaItem icon={Users} label="Group Size" value={groupSize || 'Flexible'} />
+                  <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+                </>
+              ) : (
+                <>
+                  <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
+                  <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
+                  <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+                </>
+              )}
             </div>
           </div>
         </div>
