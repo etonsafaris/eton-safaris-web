@@ -33,6 +33,7 @@ export default function PageHero({
   country,
   groupSize,
   published,
+  bestTime,
 }: PageHeroProps) {
   const src = image?.trim() || '';
   const isTour = variant === 'tour';
@@ -148,6 +149,37 @@ export default function PageHero({
                 <p className="text-sm font-bold">{formatPublishedDate(published)}</p>
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+      {isCountry && bestTime ? (
+        <div className="bg-forest text-white">
+          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <CalendarRange className="h-5 w-5 shrink-0 text-sage" />
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wide text-white/50">Best time to visit</p>
+                <p className="text-sm font-bold">{bestTime}</p>
+              </div>
+            </div>
+            {country ? (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-sage" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-white/50">Country</p>
+                  <p className="text-sm font-bold">{country}</p>
+                </div>
+              </div>
+            ) : null}
+            {published ? (
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-sage" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-white/50">Published</p>
+                  <p className="text-sm font-bold">{formatPublishedDate(published)}</p>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
