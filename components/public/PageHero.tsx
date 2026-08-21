@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, CalendarRange, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
@@ -20,6 +20,26 @@ type PageHeroProps = {
   published?: string;
   bestTime?: string;
 };
+
+function ForestMetaItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Calendar;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="h-5 w-5 shrink-0 text-sage" />
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-wide text-white/50">{label}</p>
+        <p className="text-sm font-bold text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function PageHero({
   title,
@@ -117,49 +137,23 @@ export default function PageHero({
           </div>
         )}
       </section>
-      <PageBreadcrumbs
-        currentTitle={title}
-        items={
-          isCountry
-            ? [
-                { label: 'Best time to visit', value: bestTime },
-                { label: 'Country', value: country },
-                { label: 'Published', value: published ? formatPublishedDate(published) : '' },
-              ]
-            : undefined
-        }
-      />
+      <PageBreadcrumbs currentTitle={title} />
       {isTour ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-sage" />
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/50">Duration</p>
-                <p className="text-sm font-bold">{duration || '—'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-sage" />
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/50">Country</p>
-                <p className="text-sm font-bold">{country || '—'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-sage" />
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/50">Group Size</p>
-                <p className="text-sm font-bold">{groupSize || 'Flexible'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-sage" />
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/50">Published</p>
-                <p className="text-sm font-bold">{formatPublishedDate(published)}</p>
-              </div>
-            </div>
+            <ForestMetaItem icon={Clock} label="Duration" value={duration || '—'} />
+            <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
+            <ForestMetaItem icon={Users} label="Group Size" value={groupSize || 'Flexible'} />
+            <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+          </div>
+        </div>
+      ) : null}
+      {isCountry ? (
+        <div className="bg-forest text-white">
+          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
+            <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
+            <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
+            <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
           </div>
         </div>
       ) : null}
