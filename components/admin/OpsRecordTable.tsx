@@ -38,12 +38,14 @@ export default function OpsRecordTable({
   records,
   extraActions,
   onEdit,
+  onView,
   onDelete,
 }: {
   columns: OpsColumn[];
   records: RecordRow[];
   extraActions?: (record: RecordRow) => React.ReactNode;
-  onEdit: (record: RecordRow) => void;
+  onEdit?: (record: RecordRow) => void;
+  onView?: (record: RecordRow) => void;
   onDelete: (record: RecordRow) => void;
 }) {
   return (
@@ -64,7 +66,10 @@ export default function OpsRecordTable({
             {records.map((record, index) => (
               <tr
                 key={String(record.id ?? index)}
-                className="border-t border-[#eef0f3] hover:bg-[#f9fafb] dark:border-white/5 dark:hover:bg-white/5"
+                className={`border-t border-[#eef0f3] hover:bg-[#f9fafb] dark:border-white/5 dark:hover:bg-white/5 ${
+                  onView ? 'cursor-pointer' : ''
+                }`}
+                onClick={onView ? () => onView(record) : undefined}
               >
                 {columns.map((column) => {
                   const value = cellValue(record, column);
@@ -80,17 +85,29 @@ export default function OpsRecordTable({
                     </td>
                   );
                 })}
-                <td className="whitespace-nowrap px-4 py-3 text-right">
+                <td className="whitespace-nowrap px-4 py-3 text-right" onClick={(event) => event.stopPropagation()}>
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {extraActions?.(record)}
-                    <button
-                      type="button"
-                      onClick={() => onEdit(record)}
-                      aria-label="Edit"
-                      className="rounded-lg border border-[#e5e7eb] p-1.5 text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
+                    {onView ? (
+                      <button
+                        type="button"
+                        onClick={() => onView(record)}
+                        aria-label="View"
+                        className="rounded-lg border border-[#e5e7eb] p-1.5 text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
+                    {onEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(record)}
+                        aria-label="Edit"
+                        className="rounded-lg border border-[#e5e7eb] p-1.5 text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => onDelete(record)}

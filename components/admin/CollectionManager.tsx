@@ -21,7 +21,7 @@ import {
 } from '@/lib/data';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { notifyWorkspace } from '@/lib/notify';
-import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import NotificationDetailModal from '@/components/admin/NotificationDetailModal';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import { supabase } from '@/lib/supabase/client';
@@ -41,6 +41,11 @@ import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
 import { countryCategoryPath } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
+import {
+  isUnreadNotification,
+  markNotificationReadPayload,
+  notifyAdminNotificationsChanged,
+} from '@/lib/notification-utils';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 
@@ -55,6 +60,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const isExplore = config.id === 'explore';
   const isPages = config.id === 'pages';
   const isLandingPages = config.id === 'landing_pages';
+  const isNotifications = config.id === 'notifications';
   const isOps = ['bookings', 'inquiries', 'pesapal_payments', 'registered_agents', 'notifications', 'subscribers'].includes(
     config.id
   );
@@ -78,6 +84,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<RecordRow | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<RecordRow[]>([]);
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const [viewingNotice, setViewingNotice] = useState<RecordRow | null>(null);
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
 
   async function load() {

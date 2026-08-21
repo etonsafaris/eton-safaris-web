@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Bell,
   ChevronDown,
   ExternalLink,
   LogOut,
@@ -65,9 +64,9 @@ function NavLink({
     >
       <span className="relative shrink-0">
         <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#6b7280] dark:text-gray-400'}`} />
-        {badge ? (
-          <span className={`absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none text-white ${
-            active ? 'bg-white text-[#00A651]' : 'bg-red-500'
+        {badge && collapsed ? (
+          <span className={`absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none ${
+            active ? 'bg-white text-[#00A651]' : 'bg-red-500 text-white'
           }`}>
             {badge > 99 ? '99+' : badge}
           </span>
