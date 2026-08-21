@@ -416,4 +416,4 @@ export const OTHER_DESTINATIONS = [
   { name: 'Zambia', slug: 'zambia', flag: '🇿🇲', iso: 'zm' },
 ];
 
-export const SITE_LOGO = '/eton-safaris-gorilla.png?v=charcoal';
+export const SITE_LOGO = '/eton-safaris-gorilla.png?v=green-type';
