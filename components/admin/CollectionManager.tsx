@@ -475,6 +475,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setSeo(seoValuesFromRecord(record as Record<string, unknown>));
     setSeoSaved(true);
     setFaqs(parseCmsPageExtras(record, String(record.slug || '')).faqs);
+    if (isCountries && !next.best_time_to_visit) {
+      next.best_time_to_visit = parseCmsPageExtras(record, String(record.slug || '')).best_time_to_visit;
+      setForm({ ...next });
+    }
     setModalOpen(true);
   }
 
@@ -493,8 +497,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       raw.faqs = packedFaqs;
       raw.post_blocks = faqRowsForStorage(faqs);
     }
+    const bestTime = isCountries ? String(raw.best_time_to_visit || '').trim() : '';
     const embedData = usesFaqs
-      ? { ...previousEmbed, fields: { ...previousEmbed.fields, faqs: packedFaqs } }
+      ? {
+          ...previousEmbed,
+          fields: {
+            ...previousEmbed.fields,
+            faqs: packedFaqs,
+            ...(isCountries ? { best_time_to_visit: bestTime } : {}),
+          },
+        }
       : previousEmbed;
     if (typeof raw.description === 'string') {
       raw.description = embedContent(String(raw.description), embedData);

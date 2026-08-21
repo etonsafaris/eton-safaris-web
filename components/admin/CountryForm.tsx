@@ -33,6 +33,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
 
   const [name, setName] = useState('');
   const [headline, setHeadline] = useState('');
+  const [bestTimeToVisit, setBestTimeToVisit] = useState('');
   const [description, setDescription] = useState('');
   const [summary, setSummary] = useState('');
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
@@ -52,6 +53,10 @@ export default function CountryForm({ countryId }: CountryFormProps) {
 
       setName(String(country.name || ''));
       setHeadline(String(country.tagline || country.headline || ''));
+      setBestTimeToVisit(
+        parseCmsPageExtras(country, String(country.slug || '')).best_time_to_visit ||
+          String(country.best_time_to_visit || country.best_time || '')
+      );
       setDescription(stripEmbeddedContent(String(country.description || '')));
       setSummary(String(country.summary || country.excerpt || ''));
       setFaqs(parseCmsPageExtras(country, String(country.slug || '')).faqs);
@@ -85,7 +90,10 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       {
         name,
         tagline: headline,
-        description: embedContent(description, { fields: { faqs: packedFaqs } }),
+        best_time_to_visit: bestTimeToVisit.trim(),
+        description: embedContent(description, {
+          fields: { faqs: packedFaqs, best_time_to_visit: bestTimeToVisit.trim() },
+        }),
         summary,
         faqs: packedFaqs,
         post_blocks: faqRowsForStorage(faqs),
