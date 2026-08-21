@@ -710,6 +710,12 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">{config.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
+          {isNotifications && (
+            <span className="relative inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
+              <Bell className="h-3.5 w-3.5" />
+              {records.filter(isUnreadNotification).length} unread
+            </span>
+          )}
           {['bookings', 'inquiries', 'quotations_inquiries', 'pesapal_payments', 'registered_agents'].includes(config.id) && (
             <span className="relative inline-flex items-center gap-1 rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
               <Bell className="h-3.5 w-3.5" />
@@ -818,7 +824,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           columns={opsColumns()}
           records={filtered}
           extraActions={opsActions}
-          onEdit={openEdit}
+          onEdit={isNotifications ? undefined : openEdit}
+          onView={isNotifications ? (record) => void viewNotification(record) : undefined}
           onDelete={remove}
         />
       ) : view === 'grid' ? (
@@ -1081,6 +1088,9 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           </div>
         </div>
       )}
+      {viewingNotice ? (
+        <NotificationDetailModal record={viewingNotice} onClose={() => setViewingNotice(null)} />
+      ) : null}
     </div>
   );
 }
