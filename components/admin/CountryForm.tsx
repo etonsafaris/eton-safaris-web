@@ -167,16 +167,12 @@ export default function CountryForm({ countryId }: CountryFormProps) {
 
         <div className="mt-8">
           <FieldLabel>Best Time to Visit</FieldLabel>
-          <textarea
+          <input
             value={bestTimeToVisit}
             onChange={(event) => setBestTimeToVisit(event.target.value)}
-            rows={3}
             placeholder="June–September and December–February"
-            className="w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm leading-relaxed text-[#111827] outline-none transition focus:border-[#66bb9a] focus:ring-2 focus:ring-[#66bb9a]/20"
+            className="w-full rounded-full border-0 bg-[#f3f4f6] px-5 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#66bb9a]/20"
           />
-          <p className="mt-2 text-xs text-[#6b7280]">
-            Shown at the top of the public country page with the other page details.
-          </p>
         </div>
 
         <div className="mt-8">
