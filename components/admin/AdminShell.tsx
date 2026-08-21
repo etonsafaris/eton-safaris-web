@@ -89,11 +89,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
   const { user, ready } = useAdminSession();
+  const { unread: unreadNotifications } = useAdminNotifications();
   const [dark, setDark] = useState(false);
   const [role, setRole] = useState('');
   const [allowedModules, setAllowedModules] = useState<string[]>([]);
   const [accessAlert, setAccessAlert] = useState('');
-  const [noticeCount, setNoticeCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [accessReady, setAccessReady] = useState(false);
   const [headerQuery, setHeaderQuery] = useState('');
@@ -134,20 +134,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             if ((agents || []).length > 0) router.replace('/agents/portal');
           });
       });
-
-    void Promise.all([
-      fetchAdminTable('notifications').catch(() => []),
-      fetchAdminTable('inquiries').catch(() => []),
-      fetchAdminTable('bookings').catch(() => []),
-    ]).then(([notes, inquiries, bookings]) => {
-      const pendingInquiries = inquiries.filter(
-        (row) => String(row.status || '').toLowerCase() === 'pending'
-      ).length;
-      const pendingBookings = bookings.filter(
-        (row) => String(row.status || '').toLowerCase() === 'pending'
-      ).length;
-      setNoticeCount(notes.length + pendingInquiries + pendingBookings);
-    });
   }, [user]);
 
   function toggleCollapsed() {
@@ -289,6 +275,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 iconName={item.icon}
                 active={Boolean(active)}
                 collapsed={collapsed}
+                badge={item.id === 'notifications' ? unreadNotifications : undefined}
                 onNavigate={() => setMenuOpen(false)}
                 onGuard={guard}
               />
@@ -382,12 +369,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <button type="button" onClick={toggleDark} className="rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5" aria-label="Toggle dark mode">
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Link href="/admin/notifications" className="relative rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-              {noticeCount > 0 && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-              )}
-            </Link>
+            <NotificationBell />
             <div className="relative" ref={adminMenuRef}>
               <button
                 type="button"

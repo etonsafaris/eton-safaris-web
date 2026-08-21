@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { pickDateValue, pickNumber, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
