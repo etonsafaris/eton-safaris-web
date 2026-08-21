@@ -495,7 +495,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     const packedFaqs = usesFaqs ? serializeFaqs(faqs) : '';
     if (usesFaqs) {
       raw.faqs = packedFaqs;
-      raw.post_blocks = faqRowsForStorage(faqs);
+      raw.post_blocks = packedFaqs;
     }
     const bestTime = isCountries ? String(raw.best_time_to_visit || '').trim() : '';
     const embedData = usesFaqs

@@ -113,7 +113,11 @@ export async function saveWithColumnFallback(
     return { data: null, error: { message: 'Update requires .eq(\'id\', recordId).' } };
   }
 
-  await discoverTableColumns(table, client);
+  try {
+    await discoverTableColumns(table, client);
+  } catch (error) {
+    console.error('[Supabase] Could not inspect table columns:', error);
+  }
 
   const keepId = Boolean(options.keepId) && !isUpdate;
   let current = prepareMutationPayload(table, normalizePayload(payload, keepId), {
@@ -223,6 +227,10 @@ export async function saveWithColumnFallback(
       const selectedFix = applyErrorFix(selected.error.message);
       if (selectedFix && Object.keys(selectedFix).length > 0) {
         current = selectedFix;
+        continue;
+      }
+
+      if (attempt < 2 && /failed to fetch|networkerror|load failed/i.test(selected.error.message)) {
         continue;
       }
 

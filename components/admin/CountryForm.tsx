@@ -103,23 +103,39 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       { seo }
     );
 
-    const result = await saveWithColumnFallback('countries', payload, isEdit ? countryId : undefined);
+    try {
+      const result = await saveWithColumnFallback('countries', payload, isEdit ? countryId : undefined);
 
-    if (result.error) {
-      console.error('[Supabase] Country save failed:', result.error);
-      setError(result.error.message);
+      if (result.error) {
+        console.error('[Supabase] Country save failed:', result.error);
+        setError(
+          /failed to fetch|networkerror|load failed/i.test(result.error.message)
+            ? 'Could not reach the database to save this country. Check your connection and try Update Country again.'
+            : result.error.message
+        );
+        setSaving(false);
+        return;
+      }
+
+      await notifyAdminItemSaved({
+        module: 'Destination',
+        action: isEdit ? 'updated' : 'created',
+        item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? countryId : result.data?.[0]?.id },
+      });
+
+      router.push('/admin/countries');
+      router.refresh();
+    } catch (error) {
+      console.error('[Supabase] Country save threw:', error);
+      setError(
+        error instanceof Error && /failed to fetch/i.test(error.message)
+          ? 'Could not reach the database to save this country. Check your connection and try Update Country again.'
+          : error instanceof Error
+            ? error.message
+            : 'Could not save this country.'
+      );
       setSaving(false);
-      return;
     }
-
-    await notifyAdminItemSaved({
-      module: 'Destination',
-      action: isEdit ? 'updated' : 'created',
-      item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? countryId : result.data?.[0]?.id },
-    });
-
-    router.push('/admin/countries');
-    router.refresh();
   }
 
   return (
