@@ -44,7 +44,7 @@ export default function PostMetaBar({
       <div className="flex flex-wrap items-center gap-x-8 gap-y-2 px-5 py-3 text-sm">
         {resolved.map((item) => (
           <span key={item.label} className="flex items-center gap-1.5">
-            {item.label === 'Published' ? (
+            {item.label === 'Published' || /time|visit/i.test(item.label) ? (
               <Calendar className="h-4 w-4 text-moss" />
             ) : (
               <MapPin className="h-4 w-4 text-moss" />

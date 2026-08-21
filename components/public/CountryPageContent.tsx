@@ -33,7 +33,6 @@ import PageFaqList from '@/components/public/PageFaqList';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { bestTimeToVisit } from '@/lib/country-planning';
-import { recordPublishedAt } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 type CountryPageContentProps = {
@@ -120,6 +119,7 @@ export default function CountryPageContent({
   const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
   const faqs = extras.faqs.length ? extras.faqs : landingConversionCopy(slug, title).faqs;
+  const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
 
   const countryHtml = toProseHtml(country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '');
   const descriptionHtml = countryHtml;
@@ -140,7 +140,14 @@ export default function CountryPageContent({
 
   return (
     <>
-      <PageHero title={bannerTitle} image={countryHeroImage(slug, country)} variant="country" />
+      <PageHero
+        title={bannerTitle}
+        image={countryHeroImage(slug, country)}
+        variant="country"
+        bestTime={visitTime}
+        country={title}
+        published={country ? recordPublishedAt(country) : extras.published_at}
+      />
 
       <section className="bg-[#f3f3f3] px-4 py-12">
         <div className="mx-auto max-w-[1200px]">

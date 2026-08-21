@@ -1,10 +1,18 @@
 import { CalendarRange, Clock3, MapPinned, Ticket } from 'lucide-react';
 import { countryPlanning } from '@/lib/country-planning';
 
-export default function SafariPlanningStrip({ slug, countryName }: { slug: string; countryName: string }) {
+export default function SafariPlanningStrip({
+  slug,
+  countryName,
+  bestTime,
+}: {
+  slug: string;
+  countryName: string;
+  bestTime?: string;
+}) {
   const plan = countryPlanning(slug, countryName);
   const items = [
-    { icon: CalendarRange, label: 'Best time to visit', value: plan.bestTime },
+    { icon: CalendarRange, label: 'Best time to visit', value: bestTime?.trim() || plan.bestTime },
     { icon: Clock3, label: 'Typical stay', value: plan.typicalStay },
     { icon: Ticket, label: 'Book ahead', value: plan.bookAhead },
     { icon: MapPinned, label: 'Signature experience', value: plan.signature },
