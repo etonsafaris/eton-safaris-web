@@ -7,9 +7,7 @@ import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import NotificationDetailModal from '@/components/admin/NotificationDetailModal';
 import { useAdminNotifications } from '@/components/admin/useAdminNotifications';
 import { pickRecordId } from '@/lib/data';
-import { pickRecordId } from '@/lib/data';
 import {
-  ADMIN_NOTIFICATIONS_EVENT,
   isUnreadNotification,
   markNotificationReadPayload,
   notificationCategory,
@@ -17,7 +15,6 @@ import {
   notificationMessage,
   notificationTitle,
   notifyAdminNotificationsChanged,
-  unreadNotificationCount,
 } from '@/lib/notification-utils';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
@@ -43,12 +40,9 @@ export default function NotificationBell() {
     if (id == null || !isUnreadNotification(record)) return;
     await saveWithColumnFallback('notifications', markNotificationReadPayload(), id);
     notifyAdminNotificationsChanged();
-    setRecords((current) =>
-      current.map((row) => (pickRecordId(row) === id ? { ...row, ...markNotificationReadPayload() } : row))
-    );
+    void reload();
   }
 
-  const unread = unreadNotificationCount(records);
   const preview = records.slice(0, 8);
 
   return (

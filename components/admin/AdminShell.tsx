@@ -17,13 +17,14 @@ import {
   X,
 } from 'lucide-react';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import NotificationBell from '@/components/admin/NotificationBell';
 import { useAdminSession } from '@/components/admin/useAdminSession';
+import { useAdminNotifications } from '@/components/admin/useAdminNotifications';
 import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { canAccessModule, collectionIdFromPath, parseModules } from '@/lib/admin-access';
 import { collectionIcon } from '@/lib/admin-icons';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
-import { fetchAdminTable } from '@/lib/admin-records-client';
 
 function NavLink({
   href,
@@ -31,6 +32,7 @@ function NavLink({
   iconName,
   active,
   collapsed,
+  badge,
   onNavigate,
   onGuard,
 }: {
@@ -39,6 +41,7 @@ function NavLink({
   iconName?: string;
   active: boolean;
   collapsed?: boolean;
+  badge?: number;
   onNavigate?: () => void;
   onGuard: (event: React.MouseEvent, id: string) => void;
 }) {
@@ -60,8 +63,24 @@ function NavLink({
           : 'text-[#4b5563] hover:bg-[#ecfdf3] hover:text-[#111827] dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white'
       }`}
     >
-      <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-white' : 'text-[#6b7280] dark:text-gray-400'}`} />
+      <span className="relative shrink-0">
+        <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#6b7280] dark:text-gray-400'}`} />
+        {badge ? (
+          <span className={`absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none text-white ${
+            active ? 'bg-white text-[#00A651]' : 'bg-red-500'
+          }`}>
+            {badge > 99 ? '99+' : badge}
+          </span>
+        ) : null}
+      </span>
       <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{label}</span>
+      {badge && !collapsed ? (
+        <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+          active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      ) : null}
     </Link>
   );
 }
