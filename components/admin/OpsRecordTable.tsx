@@ -14,7 +14,8 @@ export type OpsColumn = {
 
 export function statusBadgeClass(status: string) {
   const value = status.toLowerCase();
-  if (/confirm|active|paid|complete|success|quoted/.test(value)) return 'bg-green-100 text-green-800';
+  if (/unread|new/.test(value)) return 'bg-red-100 text-red-800';
+  if (/confirm|active|paid|complete|success|quoted|read/.test(value)) return 'bg-green-100 text-green-800';
   if (/pending|partial|down payment/.test(value)) return 'bg-amber-100 text-amber-800';
   if (/cancel|fail|inactive|closed|error/.test(value)) return 'bg-red-100 text-red-800';
   return 'bg-gray-100 text-gray-700';
