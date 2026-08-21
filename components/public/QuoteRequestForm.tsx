@@ -13,8 +13,8 @@ const DESTINATIONS = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ite
 
 export default function QuoteRequestForm() {
   const searchParams = useSearchParams();
-  const presetCountry = searchParams.get('country') || searchParams.get('destination') || '';
-  const presetTour = searchParams.get('tour') || '';
+  const presetCountry = searchParams?.get('country') || searchParams?.get('destination') || '';
+  const presetTour = searchParams?.get('tour') || '';
 
   const [form, setForm] = useState({
     name: '',

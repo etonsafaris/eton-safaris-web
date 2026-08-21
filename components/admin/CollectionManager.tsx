@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import AdminItemCard from '@/components/admin/AdminItemCard';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
