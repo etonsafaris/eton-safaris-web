@@ -7,7 +7,7 @@ alwaysApply: true
 
 The logo file is `public/eton-safaris-gorilla.png`. `SITE_LOGO` in `lib/collections.ts` must point at `/eton-safaris-gorilla.png`.
 
-That artwork is the brighter Dav green (`#20A048`) gorilla with grey silverback and white ETON SAFARIS lettering.
+That artwork is a deep charcoal (`#2B2B2B`) gorilla with white ETON SAFARIS lettering standing on an earthy orange (`#C45A27`) ground.
 
 Do not point the site at Base44 OvalLogo URLs. Header, footer, admin, and tab icon all use `SITE_LOGO`. Only the browser tab title may change per page.
 
