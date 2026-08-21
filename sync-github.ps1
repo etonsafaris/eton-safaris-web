@@ -4,6 +4,9 @@ $ErrorActionPreference = "Continue"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 
+if (-not $env:HOME) { $env:HOME = $env:USERPROFILE }
+if (-not $env:GIT_CONFIG_GLOBAL) { $env:GIT_CONFIG_GLOBAL = Join-Path $env:USERPROFILE ".gitconfig" }
+
 $Git = Join-Path $env:LOCALAPPDATA "Programs\MinGit\cmd\git.exe"
 if (-not (Test-Path $Git)) {
   $cmd = Get-Command git -ErrorAction SilentlyContinue

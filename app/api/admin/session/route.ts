@@ -26,10 +26,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Supabase is not configured' }, { status: 500 });
     }
 
-    const supabase = createClient(url, anon);
+    const supabase = createClient(url, anon, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data.user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return NextResponse.json({ error: error?.message || 'Invalid session' }, { status: 401 });
     }
 
     const response = NextResponse.json({ ok: true });
