@@ -49,14 +49,20 @@ while ($true) {
     & $Git -c user.name="etonsafaris" -c user.email="etonsafaris@users.noreply.github.com" commit -m "Automated update via watch script"
     if ($LASTEXITCODE -eq 0) {
       Write-WatchLog "Committed. Pushing to origin."
-      & $Git push
+      & $Git push origin HEAD
       if ($LASTEXITCODE -eq 0) {
         Write-WatchLog "Push complete."
       } else {
         Write-WatchLog "Push failed. Will retry on the next change."
       }
     } else {
-      Write-WatchLog "Commit skipped (no staged changes or commit failed)."
+      Write-WatchLog "Nothing new to commit. Pushing current branch in case GitHub is behind."
+      & $Git push origin HEAD
+      if ($LASTEXITCODE -eq 0) {
+        Write-WatchLog "Push complete (already up to date or sent)."
+      } else {
+        Write-WatchLog "Push failed. Will retry on the next change."
+      }
     }
   }
   Start-Sleep -Seconds $PollSeconds
