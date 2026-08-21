@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ItemsPerView = { sm?: number; md?: number; lg?: number };
@@ -14,6 +14,9 @@ type CarouselProps = {
   instant?: boolean;
   pauseOnHover?: boolean;
   paused?: boolean;
+  centered?: boolean;
+  itemWidth?: number;
+  gap?: number;
 };
 
 function useItemsPerView(config: ItemsPerView) {
@@ -43,13 +46,33 @@ export default function Carousel({
   instant = false,
   pauseOnHover = true,
   paused = false,
+  centered = false,
+  itemWidth = 200,
+  gap = 20,
 }: CarouselProps) {
-  const perView = useItemsPerView(itemsPerView);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const percentPerView = useItemsPerView(itemsPerView);
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(1200);
 
+  useEffect(() => {
+    if (!centered) return undefined;
+    const el = viewportRef.current;
+    if (!el) return undefined;
+    const update = () => setContainerWidth(el.clientWidth || 1200);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [centered]);
+
+  const slot = itemWidth + gap;
+  const centeredPerView = Math.max(1, Math.floor((containerWidth + gap) / slot) || 1);
+  const perView = centered ? centeredPerView : percentPerView;
+  const overflows = items.length > perView;
   const maxIndex = Math.max(0, items.length - perView);
-  const autoplayActive = !paused && !(pauseOnHover && hovering);
+  const autoplayActive = overflows && !paused && !(pauseOnHover && hovering);
 
   useEffect(() => {
     setIndex((value) => Math.min(value, maxIndex));
@@ -64,10 +87,10 @@ export default function Carousel({
   }, [maxIndex]);
 
   useEffect(() => {
-    if (items.length <= perView || autoPlayMs <= 0 || !autoplayActive) return undefined;
+    if (!overflows || autoPlayMs <= 0 || !autoplayActive) return undefined;
     const timer = setInterval(goNext, autoPlayMs);
     return () => clearInterval(timer);
-  }, [autoPlayMs, autoplayActive, goNext, items.length, perView]);
+  }, [autoPlayMs, autoplayActive, goNext, overflows]);
 
   const slideWidth = useMemo(() => `${100 / perView}%`, [perView]);
 
@@ -85,7 +108,7 @@ export default function Carousel({
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {items.length > perView && (
+      {overflows ? (
         <>
           <button
             type="button"
@@ -104,19 +127,37 @@ export default function Carousel({
             <ChevronRight className="h-5 w-5" />
           </button>
         </>
-      )}
+      ) : null}
 
-      <div className="overflow-hidden px-1">
-        <div
-          className={`flex ease-out ${instant ? '' : 'transition-transform duration-500'}`}
-          style={{ transform: `translateX(-${index * (100 / perView)}%)` }}
-        >
-          {items.map((item, itemIndex) => (
-            <div key={itemIndex} className="flex shrink-0 px-2" style={{ width: slideWidth }}>
-              {item}
-            </div>
-          ))}
-        </div>
+      <div ref={viewportRef} className="overflow-hidden px-1">
+        {centered ? (
+          <div
+            className={`flex ${overflows ? 'justify-start ease-out' : 'justify-center'} ${
+              instant || !overflows ? '' : 'transition-transform duration-500'
+            }`}
+            style={{
+              gap,
+              transform: overflows ? `translateX(-${index * slot}px)` : undefined,
+            }}
+          >
+            {items.map((item, itemIndex) => (
+              <div key={itemIndex} className="shrink-0" style={{ width: itemWidth }}>
+                {item}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            className={`flex ease-out ${instant ? '' : 'transition-transform duration-500'}`}
+            style={{ transform: `translateX(-${index * (100 / perView)}%)` }}
+          >
+            {items.map((item, itemIndex) => (
+              <div key={itemIndex} className="flex shrink-0 px-2" style={{ width: slideWidth }}>
+                {item}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

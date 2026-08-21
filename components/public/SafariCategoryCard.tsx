@@ -39,7 +39,7 @@ export default function SafariCategoryCard({
     </>
   );
 
-  const className = `block h-full overflow-hidden rounded-[15px] bg-white p-[5px] text-left transition hover:-translate-y-0.5 ${
+  const className = `block h-full w-full overflow-hidden rounded-[15px] bg-white p-2 text-left transition hover:-translate-y-0.5 ${
     active ? 'ring-2 ring-[#5bc787]/40' : ''
   }`;
 

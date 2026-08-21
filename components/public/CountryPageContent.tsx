@@ -162,8 +162,10 @@ export default function CountryPageContent({
           <div className="mt-8">
             <Carousel
               items={categoryItems}
-              itemsPerView={{ sm: 2, md: 3, lg: 4 }}
-              autoPlayMs={0}
+              centered
+              itemWidth={200}
+              gap={20}
+              autoPlayMs={4500}
               emptyMessage="No records found in this collection."
             />
           </div>
