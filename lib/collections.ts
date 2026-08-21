@@ -89,6 +89,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
       { name: 'name', label: 'Name', type: 'text', required: true },
       slugField(),
       { name: 'tagline', label: 'Headline', type: 'text' },
+      { name: 'best_time_to_visit', label: 'Best Time to Visit', type: 'textarea', placeholder: 'June–September and December–February' },
       descriptionField(),
       { name: 'summary', label: 'Summary', type: 'textarea' },
       imageField(),

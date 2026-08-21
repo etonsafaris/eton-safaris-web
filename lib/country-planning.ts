@@ -91,6 +91,11 @@ export function countryPlanning(slug: string, countryName: string): CountryPlann
   );
 }
 
+export function bestTimeToVisit(slug: string, countryName: string, stored?: string) {
+  const value = String(stored || '').trim();
+  return value || countryPlanning(slug, countryName).bestTime;
+}
+
 export function gorillaPermitHowTo(countryName: string) {
   return {
     '@type': 'HowTo',

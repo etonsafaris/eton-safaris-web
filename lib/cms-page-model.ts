@@ -37,6 +37,7 @@ export type CmsPageExtras = {
   offer_line: string;
   ready_heading: string;
   published_at: string;
+  best_time_to_visit: string;
 };
 
 const LAYOUTS = new Set<string>(PAGE_LAYOUTS.map((item) => item.value));
@@ -146,6 +147,11 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
     ready_heading: pickString(record || {}, ['ready_heading'], fields.ready_heading),
     published_at:
       pickDateValue(record || {}, ['published_at', 'updated_at', 'created_at']) || fields.published_at || '',
+    best_time_to_visit: pickString(
+      record || {},
+      ['best_time_to_visit', 'best_time'],
+      fields.best_time_to_visit || fields.best_time
+    ),
   };
 }
 
@@ -183,6 +189,7 @@ export function cmsPageFieldPack(extras: Partial<CmsPageExtras>): Record<string,
     offer_line: extras.offer_line || '',
     ready_heading: extras.ready_heading || '',
     published_at: extras.published_at || '',
+    best_time_to_visit: extras.best_time_to_visit || '',
   };
 }
 
