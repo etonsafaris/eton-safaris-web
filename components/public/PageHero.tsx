@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, CalendarRange, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
@@ -18,6 +18,7 @@ type PageHeroProps = {
   country?: string;
   groupSize?: string;
   published?: string;
+  bestTime?: string;
 };
 
 export default function PageHero({
