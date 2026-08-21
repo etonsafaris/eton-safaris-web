@@ -19,7 +19,7 @@ if (-not (Test-Path $Git)) {
 
 $staged = & $Git diff --cached --name-only
 if (-not [string]::IsNullOrWhiteSpace($staged)) {
-  & $Git commit -m "Update site from local save"
+  & $Git -c user.name="etonsafaris" -c user.email="etonsafaris@users.noreply.github.com" commit -m "Update site from local save"
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Commit failed."
     exit $LASTEXITCODE
