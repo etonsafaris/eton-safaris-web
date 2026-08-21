@@ -18,7 +18,7 @@ if (-not (Test-Path $Git)) {
 
 $Log = Join-Path $Root "git-watch.log"
 $PollSeconds = 5
-$DebounceSeconds = 30
+$DebounceSeconds = 90
 
 function Write-WatchLog([string]$Message) {
   $line = "{0} {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Message

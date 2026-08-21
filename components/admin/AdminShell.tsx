@@ -15,6 +15,7 @@ import {
   Sun,
   X,
 } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useAdminSession } from '@/components/admin/useAdminSession';

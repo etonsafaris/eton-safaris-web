@@ -15,7 +15,7 @@ fi
 
 LOG="$ROOT/git-watch.log"
 POLL_SECONDS=5
-DEBOUNCE_SECONDS=30
+DEBOUNCE_SECONDS=90
 
 log() {
   printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG"
