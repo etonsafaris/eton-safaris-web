@@ -137,7 +137,7 @@ export default function PageHero({
           </div>
         )}
       </section>
-      <PageBreadcrumbs currentTitle={title} />
+      {isCountry && bestTime ? null : <PageBreadcrumbs currentTitle={title} />}
       {isTour ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
@@ -150,10 +150,13 @@ export default function PageHero({
       ) : null}
       {isCountry && bestTime ? (
         <div className="bg-forest text-white">
-          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
-            <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
-            <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-            <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-4 py-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:px-6">
+            <PageBreadcrumbs currentTitle={title} tone="forest" />
+            <div className="flex min-w-0 flex-wrap items-center gap-6 md:gap-10">
+              <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
+              <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
+              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+            </div>
           </div>
         </div>
       ) : null}

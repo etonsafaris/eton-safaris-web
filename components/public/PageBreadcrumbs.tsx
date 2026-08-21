@@ -21,7 +21,13 @@ function labelFor(segment: string, fallback: string) {
   return LABELS[segment] || fallback.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export default function PageBreadcrumbs({ currentTitle }: { currentTitle: string }) {
+export default function PageBreadcrumbs({
+  currentTitle,
+  tone = 'light',
+}: {
+  currentTitle: string;
+  tone?: 'light' | 'forest';
+}) {
   const pathname = usePathname() || '/';
   const parts = pathname.split('/').filter(Boolean);
   if (parts.length === 0) return null;
@@ -37,31 +43,44 @@ export default function PageBreadcrumbs({ currentTitle }: { currentTitle: string
     };
   });
 
+  const forest = tone === 'forest';
+  const list = (
+    <ol
+      className={`flex min-w-0 flex-wrap items-center gap-1 text-[13px] ${
+        forest ? 'text-white/70' : 'text-[#555]'
+      }`}
+    >
+      <li>
+        <Link href="/" className={forest ? 'hover:text-white' : 'hover:text-moss'}>
+          Home
+        </Link>
+      </li>
+      {crumbs.map((crumb) => (
+        <li key={crumb.href} className="flex items-center gap-1">
+          <span className={forest ? 'text-white/35' : 'text-[#bbb]'} aria-hidden>
+            /
+          </span>
+          {crumb.last ? (
+            <span className={forest ? 'font-medium text-white' : 'font-medium text-[#222]'} aria-current="page">
+              {crumb.label}
+            </span>
+          ) : (
+            <Link href={crumb.href} className={forest ? 'hover:text-white' : 'hover:text-moss'}>
+              {crumb.label}
+            </Link>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+
+  if (forest) {
+    return <nav aria-label="Breadcrumb">{list}</nav>;
+  }
+
   return (
     <nav aria-label="Breadcrumb" className="border-b border-[#ececec] bg-white">
-      <ol className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-1 px-4 py-2.5 text-[13px] text-[#555] md:px-6">
-        <li>
-          <Link href="/" className="hover:text-moss">
-            Home
-          </Link>
-        </li>
-        {crumbs.map((crumb) => (
-          <li key={crumb.href} className="flex items-center gap-1">
-            <span className="text-[#bbb]" aria-hidden>
-              /
-            </span>
-            {crumb.last ? (
-              <span className="font-medium text-[#222]" aria-current="page">
-                {crumb.label}
-              </span>
-            ) : (
-              <Link href={crumb.href} className="hover:text-moss">
-                {crumb.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ol>
+      <div className="mx-auto max-w-[1200px] px-4 py-2.5 md:px-6">{list}</div>
     </nav>
   );
 }
