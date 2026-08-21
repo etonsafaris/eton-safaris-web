@@ -148,7 +148,7 @@ export default function PageHero({
           </div>
         </div>
       ) : null}
-      {isCountry ? (
+      {isCountry && bestTime ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-6 px-4 py-4 md:gap-10 md:px-6">
             <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime || '—'} />
