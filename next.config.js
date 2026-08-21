@@ -34,7 +34,7 @@ const nextConfig = {
       },
       {
         source: '/eton-safaris-gorilla.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' }],
       },
       {
         source: '/_next/static/:path*',
