@@ -9,12 +9,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+function supabaseFetch(input: RequestInfo | URL, init?: RequestInit) {
+  if (typeof window === 'undefined') {
+    return fetch(input, { ...init, cache: 'no-store' });
+  }
+  return fetch(input, init);
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
-    fetch: (input, init) =>
-      fetch(input, {
-        ...init,
-        cache: 'no-store',
-      }),
+    fetch: supabaseFetch,
   },
 });

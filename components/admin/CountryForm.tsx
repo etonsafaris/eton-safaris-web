@@ -96,7 +96,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         }),
         summary,
         faqs: packedFaqs,
-        post_blocks: faqRowsForStorage(faqs),
+        post_blocks: packedFaqs,
         image_url: imageUrl,
         slug: seo.slug || slugify(name),
       },

@@ -205,44 +205,52 @@ export async function saveWithColumnFallback(
   }
 
   for (let attempt = 0; attempt < 24; attempt += 1) {
-    const write = isUpdate ? client.from(table).update(current) : client.from(table).insert(current);
-    const filtered = isUpdate
-      ? options.id !== undefined && options.id !== null && options.id !== ''
-        ? write.eq('id', options.id)
-        : write.eq(options.eq!.column, options.eq!.value)
-      : write;
+    try {
+      const write = isUpdate ? client.from(table).update(current) : client.from(table).insert(current);
+      const filtered = isUpdate
+        ? options.id !== undefined && options.id !== null && options.id !== ''
+          ? write.eq('id', options.id)
+          : write.eq(options.eq!.column, options.eq!.value)
+        : write;
 
-    const selected = await filtered.select('*');
-    if (!selected.error) {
-      const rows = (selected.data as Record<string, unknown>[] | null) || [];
-      if (rows[0]) rememberKnownColumns(table, Object.keys(rows[0]));
-      return { data: rows, error: null };
+      const selected = await filtered.select('*');
+      if (!selected.error) {
+        const rows = (selected.data as Record<string, unknown>[] | null) || [];
+        if (rows[0]) rememberKnownColumns(table, Object.keys(rows[0]));
+        return { data: rows, error: null };
+      }
+
+      const selectedFix = applyErrorFix(selected.error.message);
+      if (selectedFix && Object.keys(selectedFix).length > 0) {
+        current = selectedFix;
+        continue;
+      }
+
+      const writeOnly = isUpdate
+        ? options.id !== undefined && options.id !== null && options.id !== ''
+          ? await client.from(table).update(current).eq('id', options.id)
+          : await client.from(table).update(current).eq(options.eq!.column, options.eq!.value)
+        : await client.from(table).insert(current);
+
+      if (!writeOnly.error) {
+        const rows = await refetchRow(table, options, client);
+        return { data: rows, error: null };
+      }
+
+      const writeMissingFix = applyErrorFix(writeOnly.error.message);
+      if (writeMissingFix && Object.keys(writeMissingFix).length > 0) {
+        current = writeMissingFix;
+        continue;
+      }
+
+      return { data: null, error: { message: writeOnly.error.message, code: writeOnly.error.code } };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch';
+      if (attempt < 2 && /failed to fetch|networkerror|load failed/i.test(message)) {
+        continue;
+      }
+      return { data: null, error: { message } };
     }
-
-    const selectedFix = applyErrorFix(selected.error.message);
-    if (selectedFix && Object.keys(selectedFix).length > 0) {
-      current = selectedFix;
-      continue;
-    }
-
-    const writeOnly = isUpdate
-      ? options.id !== undefined && options.id !== null && options.id !== ''
-        ? await client.from(table).update(current).eq('id', options.id)
-        : await client.from(table).update(current).eq(options.eq!.column, options.eq!.value)
-      : await client.from(table).insert(current);
-
-    if (!writeOnly.error) {
-      const rows = await refetchRow(table, options, client);
-      return { data: rows, error: null };
-    }
-
-    const writeMissingFix = applyErrorFix(writeOnly.error.message);
-    if (writeMissingFix && Object.keys(writeMissingFix).length > 0) {
-      current = writeMissingFix;
-      continue;
-    }
-
-    return { data: null, error: { message: writeOnly.error.message, code: writeOnly.error.code } };
   }
 
   return { data: null, error: { message: 'Could not save after removing unknown columns.' } };
