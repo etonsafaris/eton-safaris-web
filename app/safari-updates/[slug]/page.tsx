@@ -57,14 +57,17 @@ export default function SafariUpdateDetailPage() {
   return (
     <PublicShell>
       <PageHero
-        variant="park"
+        variant="update"
         title={post ? getRecordTitle(post) : 'Safari Update'}
         image={heroImage}
+        country={country || undefined}
+        published={recordPublishedAt(post)}
       />
       <ContentDetailLayout
         country={country}
         published={recordPublishedAt(post)}
         showLocation={false}
+        hideMeta
         sidebarTitle="Recent Updates"
         sidebarItems={related.map((item) => ({
           href: `/safari-updates/${pickString(item, ['slug']) || item.id}`,

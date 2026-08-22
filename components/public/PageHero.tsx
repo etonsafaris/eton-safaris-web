@@ -10,7 +10,7 @@ type PageHeroProps = {
   subtitle?: string;
   image?: string | null;
   showDateBar?: boolean;
-  variant?: 'default' | 'park' | 'tour' | 'country' | 'policy' | 'about';
+  variant?: 'default' | 'park' | 'tour' | 'country' | 'policy' | 'about' | 'update';
   backHref?: string;
   backLabel?: string;
   location?: string;
@@ -61,6 +61,8 @@ export default function PageHero({
   const isCountry = variant === 'country';
   const isPolicy = variant === 'policy';
   const isAbout = variant === 'about';
+  const isUpdate = variant === 'update';
+  const showForestBar = isTour || isUpdate || (isCountry && Boolean(bestTime));
 
   return (
     <>
@@ -132,8 +134,8 @@ export default function PageHero({
           </div>
         )}
       </section>
-      {isTour || (isCountry && bestTime) ? null : <PageBreadcrumbs currentTitle={title} />}
-      {isTour || (isCountry && bestTime) ? (
+      {showForestBar ? null : <PageBreadcrumbs currentTitle={title} />}
+      {showForestBar ? (
         <div className="bg-forest text-white">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-4 py-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:px-6">
             <PageBreadcrumbs currentTitle={title} tone="forest" />
@@ -143,6 +145,11 @@ export default function PageHero({
                   <ForestMetaItem icon={Clock} label="Duration" value={duration || '—'} />
                   <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
                   <ForestMetaItem icon={Users} label="Group Size" value={groupSize || 'Flexible'} />
+                  <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+                </>
+              ) : isUpdate ? (
+                <>
+                  <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
                   <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
                 </>
               ) : (
