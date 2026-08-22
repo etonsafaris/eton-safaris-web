@@ -294,9 +294,13 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     label: 'Subscribers',
     table: 'subscribers',
     icon: 'mail',
-    subtitle: 'Newsletter subscribers',
+    subtitle: 'Manage your audience and marketing outreach list.',
     view: 'table',
-    fields: [{ name: 'email', label: 'Email', type: 'email', required: true }],
+    fields: [
+      { name: 'name', label: 'Name', type: 'text' },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Phone', type: 'text' },
+    ],
   },
   {
     id: 'pages',

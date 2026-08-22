@@ -131,7 +131,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'accepted_by',
   ],
   notifications: ['title', 'message', 'category', 'body', 'content', 'status', 'read', 'seen'],
-  subscribers: ['email', 'last_digest_at'],
+  subscribers: ['email', 'name', 'phone', 'last_digest_at'],
 };
 
 const NUMERIC_FIELDS = new Set([
