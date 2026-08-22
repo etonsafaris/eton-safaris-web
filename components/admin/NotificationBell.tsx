@@ -9,7 +9,6 @@ import { useAdminNotifications } from '@/components/admin/useAdminNotifications'
 import { pickRecordId } from '@/lib/data';
 import {
   isUnreadNotification,
-  markNotificationReadPayload,
   notificationCategory,
   notificationDate,
   notificationMessage,

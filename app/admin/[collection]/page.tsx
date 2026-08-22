@@ -365,10 +365,6 @@ function UserManagement() {
       setStatus(body.error || 'Could not delete this user.');
       return;
     }
-    if (error) {
-      setStatus(error.message);
-      return;
-    }
     setStatus('User deleted.');
     await loadUsers();
   }
@@ -377,7 +373,7 @@ function UserManagement() {
     <div>
       <h2 className="font-serif text-3xl">User Management</h2>
       <p className="mt-1 text-sm text-gray-500">
-        Invite users, approve pending sign-ups, and grant module access. Restricted users see “No Access” on modules they cannot open.
+        Content Managers and Tour Operators register themselves, just like Davsafaris. Approve them here. They receive the approval email; the admin inbox does not.
       </p>
       <form onSubmit={invite} className="mt-6 rounded-xl border bg-white p-5">
         <h3 className="font-semibold">Invite New User</h3>
@@ -406,8 +402,8 @@ function UserManagement() {
         {users.map((user, index) => {
           const allowed = parseModules(user.allowed_modules);
           const isAdmin = String(user.role || '').toLowerCase().includes('admin');
-          const userStatus = String(user.status || 'Active');
-          const pending = userStatus.toLowerCase() === 'pending';
+          const userStatus = agentIsActive(user) ? 'Active' : String(user.status || 'Pending');
+          const pending = !agentIsActive(user);
           return (
             <div key={String(user.id ?? index)} className="rounded-xl border bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
