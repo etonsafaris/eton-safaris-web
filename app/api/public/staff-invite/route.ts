@@ -4,8 +4,9 @@ import { ensureConfirmedAuthUser } from '@/lib/ensure-auth-user';
 import { findAgentRecord, isStaffRole } from '@/lib/find-agent';
 import { updateAgentFields } from '@/lib/agent-row';
 import { staffRoleLabel } from '@/lib/invite-staff';
+import type { RecordRow } from '@/lib/types';
 
-function publicInvite(row: { email?: unknown; name?: unknown; role?: unknown; status?: unknown }) {
+function publicInvite(row: RecordRow) {
   return {
     email: String(row.email || ''),
     name: String(row.name || ''),
