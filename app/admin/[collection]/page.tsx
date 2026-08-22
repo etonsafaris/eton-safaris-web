@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import AgentManagement from '@/components/admin/AgentManagement';
 import CollectionManager from '@/components/admin/CollectionManager';
 import KeywordsPanel from '@/components/admin/KeywordsPanel';
 import ReviewsPanel from '@/components/admin/ReviewsPanel';
@@ -38,6 +39,7 @@ export default function AdminCollectionPage() {
   if (collection === 'keywords') return <KeywordsPanel />;
   if (collection === 'reviews') return <ReviewsPanel />;
   if (collection === 'quotations_inquiries') return <QuotationPanel />;
+  if (collection === 'registered_agents') return <AgentManagement />;
 
   return <CollectionManager key={config.id} config={config} />;
 }

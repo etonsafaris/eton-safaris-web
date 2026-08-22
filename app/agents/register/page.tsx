@@ -25,6 +25,7 @@ export default function AgentRegisterPage() {
     country: 'Uganda',
     gender: '',
     company: '',
+    company_website: '',
     address: '',
     bio: '',
     password: '',
@@ -54,6 +55,7 @@ export default function AgentRegisterPage() {
       country: form.country,
       gender: form.gender,
       company: form.company.trim(),
+      company_website: form.company_website.trim(),
       address: form.address.trim(),
       bio: form.bio.trim(),
       status: 'Pending',
@@ -141,86 +143,119 @@ export default function AgentRegisterPage() {
           </div>
         ) : (
           <>
-            <form onSubmit={submit} className="relative space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+            <form onSubmit={submit} className="relative space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-card md:p-8">
               <Honeypot value={honeypot} onChange={setHoneypot} />
-              <input
-                required
-                placeholder="Full name"
-                value={form.name}
-                onChange={(event) => update('name', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <input
-                required
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={(event) => update('email', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <input
-                required
-                placeholder="Phone (+256...)"
-                value={form.phone}
-                onChange={(event) => update('phone', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <label className="block text-sm font-medium text-gray-700">
-                Country
-                <div className="mt-1">
-                  <SearchableSelect
-                    value={form.country}
-                    onChange={(value) => update('country', value)}
-                    options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((country) => ({
-                      value: country.name,
-                      label: country.name,
-                    }))}
-                    placeholder="Select country"
+              <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                <label className="block text-xs font-bold text-gray-500">
+                  Full Name
+                  <input
+                    required
+                    placeholder="Enter full name"
+                    value={form.name}
+                    onChange={(event) => update('name', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
                   />
-                </div>
-              </label>
-              <label className="block text-sm font-medium text-gray-700">
-                Gender
-                <div className="mt-1">
-                  <SearchableSelect
-                    value={form.gender}
-                    onChange={(value) => update('gender', value)}
-                    options={[
-                      { value: 'Male', label: 'Male' },
-                      { value: 'Female', label: 'Female' },
-                      { value: 'Other', label: 'Other' },
-                    ]}
-                    placeholder="Select gender"
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Email Address
+                  <input
+                    required
+                    type="email"
+                    placeholder="Enter email"
+                    value={form.email}
+                    onChange={(event) => update('email', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
                   />
-                </div>
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Phone Number
+                  <input
+                    required
+                    placeholder="Enter phone number"
+                    value={form.phone}
+                    onChange={(event) => update('phone', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Country
+                  <div className="mt-2">
+                    <SearchableSelect
+                      value={form.country}
+                      onChange={(value) => update('country', value)}
+                      options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((country) => ({
+                        value: country.name,
+                        label: country.name,
+                      }))}
+                      placeholder="Select country"
+                    />
+                  </div>
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Company Name
+                  <input
+                    required
+                    placeholder="Enter company name"
+                    value={form.company}
+                    onChange={(event) => update('company', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Company Website
+                  <input
+                    placeholder="Enter website URL"
+                    value={form.company_website}
+                    onChange={(event) => update('company_website', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Gender
+                  <div className="mt-2">
+                    <SearchableSelect
+                      value={form.gender}
+                      onChange={(value) => update('gender', value)}
+                      options={[
+                        { value: 'Male', label: 'Male' },
+                        { value: 'Female', label: 'Female' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                      placeholder="Select gender"
+                    />
+                  </div>
+                </label>
+                <label className="block text-xs font-bold text-gray-500">
+                  Physical address
+                  <input
+                    placeholder="Enter address"
+                    value={form.address}
+                    onChange={(event) => update('address', event.target.value)}
+                    className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                  />
+                </label>
+              </div>
+              <label className="block text-xs font-bold text-gray-500">
+                Short bio and experience
+                <textarea
+                  required
+                  placeholder="Tell us about your agency and the markets you serve"
+                  value={form.bio}
+                  onChange={(event) => update('bio', event.target.value)}
+                  className="mt-2 h-32 w-full rounded-2xl border-none bg-gray-50 px-6 py-4 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                />
               </label>
-              <input
-                placeholder="Company / agency name"
-                value={form.company}
-                onChange={(event) => update('company', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <input
-                placeholder="Physical address"
-                value={form.address}
-                onChange={(event) => update('address', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <textarea
-                required
-                placeholder="Short bio and experience"
-                value={form.bio}
-                onChange={(event) => update('bio', event.target.value)}
-                className="h-32 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
-              <input
-                type="password"
-                required
-                placeholder="Create a password for the agent portal"
-                value={form.password}
-                onChange={(event) => update('password', event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
-              />
+              <label className="block text-xs font-bold text-gray-500">
+                Password for the agent portal
+                <input
+                  type="password"
+                  required
+                  placeholder="Create a password"
+                  value={form.password}
+                  onChange={(event) => update('password', event.target.value)}
+                  className="mt-2 h-14 w-full rounded-2xl border-none bg-gray-50 px-6 text-sm outline-none focus:ring-2 focus:ring-moss/20"
+                />
+              </label>
               {error && <p className="text-sm text-red-600">{error}</p>}
               {status && <p className="text-sm text-moss">{status}</p>}
               <MathCaptcha onValidChange={setCaptchaOk} />

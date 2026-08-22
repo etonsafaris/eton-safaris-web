@@ -79,7 +79,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
   ],
   landing_pages: ['published_at', 'excerpt', 'headline', 'hero_title', 'faqs', 'status', 'offer_line', 'ready_heading', 'cta_label', 'cta_href'],
   keywords: ['keywords', 'country', 'category', 'created_date', 'updated_date'],
-  registered_agents: ['status', 'company', 'address', 'bio', 'gender'],
+  registered_agents: ['status', 'company', 'address', 'bio', 'gender', 'company_website', 'companyWebsite', 'phoneNumber', 'username'],
   inquiries: [
     'name',
     'email',
