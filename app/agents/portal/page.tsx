@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { agentBookingNote, fetchBookingsForAgent } from '@/lib/agent-bookings';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
@@ -39,8 +40,12 @@ export default function AgentPortalPage() {
       const match = (agents as RecordRow[] | null)?.[0] || null;
       setAgent(match);
       if (match && String(match.status || '').toLowerCase() === 'active') {
-        const { data: bookings } = await supabase.from('bookings').select('*').eq('agent_email', email);
-        setGuests((bookings as RecordRow[]) || []);
+        try {
+          setGuests(await fetchBookingsForAgent(email));
+        } catch (error) {
+          console.error(error);
+          setGuests([]);
+        }
       }
       setReady(true);
     }
@@ -54,6 +59,7 @@ export default function AgentPortalPage() {
       ...form,
       status: editingId ? undefined : 'Pending',
       agent_email: user.email,
+      message: agentBookingNote(user.email),
     });
     const result = await saveWithColumnFallback('bookings', payload, editingId || undefined);
     if (result.error) {
@@ -82,8 +88,11 @@ export default function AgentPortalPage() {
     setStatus(editingId ? 'Guest updated.' : 'Guest recorded.');
     setEditingId(null);
     setForm({ guest_name: '', email: '', tour: '', destination: '', travel_date: '' });
-    const { data: bookings } = await supabase.from('bookings').select('*').eq('agent_email', user.email);
-    setGuests((bookings as RecordRow[]) || []);
+    try {
+      setGuests(await fetchBookingsForAgent(user.email));
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async function signOut() {

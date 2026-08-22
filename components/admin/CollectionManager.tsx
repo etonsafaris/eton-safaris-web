@@ -42,6 +42,7 @@ import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
 import { countryCategoryPath } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
+import { fetchBookingsForAgent } from '@/lib/agent-bookings';
 import {
   isUnreadNotification,
   markNotificationReadPayload,
@@ -614,17 +615,18 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setGuestLogsAgent(record);
     setGuestLogs([]);
     setGuestLogsLoading(true);
-    const email = pickString(record, ['email']);
+    setActionError('');
+    const email = pickString(record, ['email', 'Email', 'agent_email']);
     if (!email) {
       setGuestLogsLoading(false);
       return;
     }
-    const { data, error: logsError } = await supabase.from('bookings').select('*').eq('agent_email', email);
-    if (logsError) {
+    try {
+      setGuestLogs(await fetchBookingsForAgent(email));
+    } catch (logsError) {
       console.error(logsError);
-      setError(logsError.message);
+      setActionError(logsError instanceof Error ? logsError.message : 'Could not load guest logs.');
     }
-    setGuestLogs((data as RecordRow[]) || []);
     setGuestLogsLoading(false);
   }
 
