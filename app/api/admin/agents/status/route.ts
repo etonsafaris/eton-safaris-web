@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { pickRecordId } from '@/lib/data';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { findAgentRecord } from '@/lib/find-agent';
 import { requireAdminUser } from '@/lib/require-admin';
@@ -64,7 +63,6 @@ export async function POST(request: Request) {
 
     const existing = found.row;
     const agentTable = found.table;
-    const rowId = pickRecordId(existing) ?? (id || null);
     const rowEmail = asEmail(existing.email || existing.Email) || email;
     let updated = await updateAgentFields(client, agentTable, existing, {
       status,

@@ -12,7 +12,6 @@ import ReviewsPanel from '@/components/admin/ReviewsPanel';
 import QuotationPanel from '@/components/admin/QuotationPanel';
 import { getCollection, MAIN_COLLECTIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
-import { notifyWorkspace } from '@/lib/notify';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { agentDisplayName, agentIsActive, isStaffRow } from '@/lib/find-agent';
