@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase as defaultClient } from '@/lib/supabase/client';
 import {
+  CONTENT_TABLES,
   getKnownColumns,
   normalizeColumnName,
   prepareMutationPayload,
@@ -129,7 +130,11 @@ export async function saveWithColumnFallback(
     current.id = payload.id;
   }
 
-  if (!isUpdate && (current.published_at === undefined || current.published_at === null || current.published_at === '')) {
+  if (
+    !isUpdate &&
+    CONTENT_TABLES.has(table) &&
+    (current.published_at === undefined || current.published_at === null || current.published_at === '')
+  ) {
     current.published_at = new Date().toISOString();
   }
 

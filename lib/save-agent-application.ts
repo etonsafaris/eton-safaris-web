@@ -1,50 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
-import {
-  AGENT_TABLES,
-  isDuplicateEmail,
-  isDuplicateId,
-  isDuplicateKey,
-  isMissingTable,
-  normalizeAgentEmail,
-} from '@/lib/agent-tables';
-import { rememberMissingColumn } from '@/lib/supabase-payload';
-import { parseMissingColumn, type SaveResult } from '@/lib/supabase-save';
+import { AGENT_TABLES, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
+import { saveWithColumnFallback, type SaveResult } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
-
-const CORE_AGENT_COLUMNS = new Set([
-  'name',
-  'email',
-  'phone',
-  'country',
-  'company',
-  'status',
-  'username',
-  'phoneNumber',
-  'companyName',
-]);
-
-function pickExistingColumns(row: Record<string, unknown> | null) {
-  return row ? Object.keys(row) : [];
-}
-
-function filterKnownColumns(payload: Record<string, unknown>, columns: string[]) {
-  if (columns.length === 0) {
-    const core: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(payload)) {
-      if (CORE_AGENT_COLUMNS.has(key) && value != null && value !== '') core[key] = value;
-    }
-    return core;
-  }
-  const allowed = new Set(columns);
-  const next: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(payload)) {
-    if (allowed.has(key) && value != null && value !== '') next[key] = value;
-  }
-  return next;
-}
-
-type IdStrategy = 'auto' | 'integer' | 'uuid';
 
 async function tableExists(client: SupabaseClient, table: string) {
   const { error } = await client.from(table).select('id').limit(1);
@@ -56,161 +14,67 @@ async function findAgentByEmail(client: SupabaseClient, table: string, email: st
   if (!needle) return null;
   const { data, error } = await client.from(table).select('*').ilike('email', needle).limit(8);
   if (error || !data?.length) return null;
-  const match =
+  return (
     (data as RecordRow[]).find((row) => normalizeAgentEmail(row.email ?? row.Email) === normalizeAgentEmail(needle)) ||
-    (data[0] as RecordRow);
-  return match || null;
+    (data[0] as RecordRow) ||
+    null
+  );
 }
 
-async function nextIntegerId(client: SupabaseClient, table: string) {
-  const { data } = await client.from(table).select('id').order('id', { ascending: false }).limit(1);
-  const max = Number((data?.[0] as { id?: unknown } | undefined)?.id);
-  if (Number.isFinite(max) && max >= 1) return Math.min(Math.floor(max) + 1, 2147483646);
-  return Math.floor(Date.now() / 1000) % 2000000000;
-}
-
-function buildPayload(input: Record<string, unknown>) {
-  const now = new Date().toISOString();
-  const email = String(input.email || '').trim();
+function requiredPayload(input: Record<string, unknown>) {
   return {
     name: String(input.name || '').trim(),
-    email,
-    phone: String(input.phone || '').trim() || null,
-    country: String(input.country || '').trim() || null,
-    gender: String(input.gender || '').trim() || null,
-    company: String(input.company || '').trim() || null,
-    companyName: String(input.company || '').trim() || null,
-    company_website: String(input.company_website || '').trim() || null,
-    companyWebsite: String(input.company_website || '').trim() || null,
-    username: String(input.name || '').trim() || null,
-    phoneNumber: String(input.phone || '').trim() || null,
-    address: String(input.address || '').trim() || null,
-    bio: String(input.bio || '').trim() || null,
+    email: String(input.email || '').trim(),
     status: String(input.status || 'Pending').trim() || 'Pending',
-    created_date: now,
-    updated_date: now,
-    created_at: now,
-    updated_at: now,
-    created_by: email || 'agent-register',
   };
+}
+
+function extraPayload(input: Record<string, unknown>) {
+  const extras: Record<string, unknown> = {};
+  const phone = String(input.phone || '').trim();
+  const country = String(input.country || '').trim();
+  const company = String(input.company || '').trim();
+  const website = String(input.company_website || '').trim();
+  const gender = String(input.gender || '').trim();
+  const bio = String(input.bio || '').trim();
+  if (phone) extras.phone = phone;
+  if (country) extras.country = country;
+  if (company) extras.company = company;
+  if (website) extras.company_website = website;
+  if (gender) extras.gender = gender;
+  if (bio) extras.bio = bio;
+  return extras;
 }
 
 async function insertAgentRow(
   client: SupabaseClient,
   table: string,
-  payload: Record<string, unknown>
+  input: Record<string, unknown>
 ): Promise<SaveResult> {
-  const probed = await client.from(table).select('*').limit(1);
-  const known = pickExistingColumns((probed.data?.[0] as Record<string, unknown> | undefined) || null);
-  let current: Record<string, unknown> = filterKnownColumns(payload, known);
-  if (Object.keys(current).length === 0) {
-    current = { name: payload.name, email: payload.email, status: payload.status || 'Pending' };
-  }
-  let strategy: IdStrategy = 'auto';
-  let nextId = 0;
+  const required = requiredPayload(input);
+  const result = await saveWithColumnFallback(table, required, { client });
+  if (result.error) return result;
 
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const row = { ...current };
-    if (strategy === 'auto') delete row.id;
-    if (strategy === 'integer') {
-      if (!nextId) nextId = await nextIntegerId(client, table);
-      row.id = nextId + attempt;
+  const extras = extraPayload(input);
+  if (Object.keys(extras).length > 0) {
+    const saved = result.data?.[0] as RecordRow | undefined;
+    const id = saved?.id;
+    if (id != null && id !== '') {
+      await saveWithColumnFallback(table, extras, { id, client });
+    } else if (required.email) {
+      await saveWithColumnFallback(table, extras, { eq: { column: 'email', value: required.email }, client });
     }
-    if (strategy === 'uuid') row.id = crypto.randomUUID();
-
-    const written = await client.from(table).insert(row);
-    if (!written.error) {
-      const saved =
-        (await findAgentByEmail(client, table, String(payload.email || ''))) ||
-        ({ ...row, id: row.id } as RecordRow);
-      return { data: [saved], error: null };
-    }
-
-    const message = written.error.message || '';
-    console.error(`[Agent register] ${table} insert failed:`, message, { strategy, attempt, id: row.id });
-
-    const missing = parseMissingColumn(message);
-    if (missing && missing in current) {
-      rememberMissingColumn(table, missing);
-      const next = { ...current };
-      delete next[missing];
-      current = next;
-      continue;
-    }
-
-    if (isMissingTable(message)) return { data: null, error: { message } };
-
-    if (isDuplicateEmail(message) || (isDuplicateKey(message) && !isDuplicateId(message))) {
-      const existing = await findAgentByEmail(client, table, String(payload.email || ''));
-      if (existing) return { data: [existing], error: null };
-      if (isDuplicateEmail(message)) {
-        return { data: null, error: { message: 'This email is already registered as an agent.' } };
-      }
-    }
-
-    if (isDuplicateId(message)) {
-      if (strategy !== 'uuid') {
-        strategy = 'integer';
-        nextId = (await nextIntegerId(client, table)) + attempt + 1;
-      } else {
-        strategy = 'uuid';
-      }
-      continue;
-    }
-
-    if (/cannot insert a non-DEFAULT value into column ["']?id/i.test(message)) {
-      strategy = 'auto';
-      const next = { ...current };
-      delete next.id;
-      current = next;
-      continue;
-    }
-
-    if (/invalid input syntax for type uuid/i.test(message)) {
-      strategy = 'uuid';
-      continue;
-    }
-
-    if (/invalid input syntax for type (integer|bigint|numeric)/i.test(message)) {
-      if (strategy === 'uuid') {
-        const next = { ...current };
-        delete next.id;
-        current = next;
-        strategy = 'auto';
-        continue;
-      }
-      strategy = 'integer';
-      nextId = await nextIntegerId(client, table);
-      continue;
-    }
-
-    const notNull = message.match(/null value in column ["']?([a-zA-Z0-9_]+)/i);
-    if (notNull?.[1]) {
-      const column = notNull[1];
-      const next = { ...current };
-      if (column === 'id') {
-        strategy = strategy === 'uuid' ? 'uuid' : 'integer';
-        nextId = nextId || (await nextIntegerId(client, table));
-      } else if (/(_at|date)$/i.test(column)) next[column] = new Date().toISOString();
-      else if (column === 'status') next[column] = 'Pending';
-      else if (column === 'created_by') next[column] = String(payload.email || 'agent');
-      else next[column] = String(payload.name || payload.email || 'Agent');
-      current = next;
-      continue;
-    }
-
-    return { data: null, error: { message } };
   }
 
-  return { data: null, error: { message: `Could not save the agent application to ${table}.` } };
+  const existing = await findAgentByEmail(client, table, required.email);
+  return { data: existing ? [existing] : result.data, error: null };
 }
 
 export async function saveAgentApplicationOnServer(
   input: Record<string, unknown>
 ): Promise<SaveResult & { alreadyExists?: boolean; table?: string }> {
-  const payload = buildPayload(input);
-  const email = String(payload.email || '');
-  if (!email.includes('@') || !String(payload.name || '').trim()) {
+  const required = requiredPayload(input);
+  if (!required.email.includes('@') || !required.name) {
     return { data: null, error: { message: 'Name and email are required.' } };
   }
 
@@ -222,24 +86,25 @@ export async function saveAgentApplicationOnServer(
   if (tables.length === 0) {
     return {
       data: null,
-      error: {
-        message:
-          'The agent register is not available. Run scripts/fix-agent-register.sql in the Supabase SQL editor.',
-      },
+      error: { message: 'The agent register is not available. Ask an administrator to check the agents table.' },
     };
   }
 
   for (const table of tables) {
-    const existing = await findAgentByEmail(client, table, email);
+    const existing = await findAgentByEmail(client, table, required.email);
     if (existing) return { data: [existing], error: null, alreadyExists: true, table };
   }
 
   let lastError: SaveResult['error'] = { message: 'Could not save the agent application.' };
   for (const table of tables) {
-    const result = await insertAgentRow(client, table, payload);
+    const result = await insertAgentRow(client, table, input);
     if (!result.error) return { ...result, table };
     lastError = result.error;
-    if (/already registered as an agent/i.test(result.error.message)) return result;
+    if (isMissingTable(result.error.message)) continue;
+    if (/already registered|duplicate key/i.test(result.error.message) && /email/i.test(result.error.message)) {
+      const existing = await findAgentByEmail(client, table, required.email);
+      if (existing) return { data: [existing], error: null, alreadyExists: true, table };
+    }
   }
 
   return { data: null, error: lastError };

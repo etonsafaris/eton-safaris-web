@@ -31,7 +31,7 @@ const CONTENT_SEO_COLUMNS = [
   'seo_settings',
 ];
 
-const CONTENT_TABLES = new Set([
+export const CONTENT_TABLES = new Set([
   'tours',
   'safari_updates',
   'countries',
