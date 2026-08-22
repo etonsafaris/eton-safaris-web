@@ -240,6 +240,7 @@ export default function HomePageClient({
         <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
           {current.image ? (
             <ResponsiveImage
+              key={current.image}
               src={current.image}
               alt=""
               variant="hero"

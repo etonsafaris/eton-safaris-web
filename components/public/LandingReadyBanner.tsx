@@ -40,7 +40,7 @@ export default function LandingReadyBanner({
       </div>
       <div className="relative mt-6 min-h-[320px] overflow-hidden md:min-h-[420px]">
         {current ? (
-          <ResponsiveImage src={current} alt="" variant="hero" className="absolute inset-0 h-full w-full object-cover" />
+          <ResponsiveImage key={current} src={current} alt="" variant="hero" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-forest" />
         )}

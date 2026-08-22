@@ -67,11 +67,6 @@ export default function PageHero({
       <PageFavicon title={title} />
       <section
         className={`relative w-full overflow-hidden bg-[#141612] ${isPolicy ? 'h-[430px]' : 'h-[338px] md:h-[398px]'}`}
-        style={
-          src
-            ? { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : undefined
-        }
       >
         {src ? (
           <ResponsiveImage

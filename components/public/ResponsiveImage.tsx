@@ -24,13 +24,14 @@ export default function ResponsiveImage({
   if (!resolved) return null;
   const displaySrc = variant === 'hero' ? heroImageSrc(resolved) : cardImageSrc(resolved);
   const srcSet = imageSrcSet(resolved);
+  const motionClass = variant === 'hero' ? 'hero-motion' : '';
   return (
     <img
       src={displaySrc}
       srcSet={srcSet || undefined}
       sizes={sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw')}
       alt={alt}
-      className={className}
+      className={[className, motionClass].filter(Boolean).join(' ')}
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : 'low'}
       decoding={priority ? 'sync' : 'async'}
