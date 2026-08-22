@@ -189,9 +189,11 @@ export async function saveWithColumnFallback(
     if (notNull?.[1]) {
       const column = normalizeColumnName(notNull[1]);
       const next = { ...current };
-      if (column === 'featured') next[column] = true;
-      else if (column === 'id') next[column] = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 9000);
-      else if (column === 'status') next[column] = 'Published';
+      if (column === 'featured' || column === 'is_sample') next[column] = column === 'featured';
+      else if (column === 'user_id' || column === 'approval_token') next[column] = crypto.randomUUID();
+      else if (column === 'role') next[column] = 'Travel Agent';
+      else if (column === 'id') next[column] = crypto.randomUUID();
+      else if (column === 'status') next[column] = table === 'registered_agents' || table === 'Agent' ? 'Pending' : 'Published';
       else if (column === 'slug') next[column] = `item-${Date.now()}`;
       else if (/(_at|date)$/i.test(column)) next[column] = new Date().toISOString();
       else next[column] = String(next.title || next.name || 'Untitled');

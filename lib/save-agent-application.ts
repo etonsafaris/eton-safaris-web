@@ -39,7 +39,7 @@ async function createAgentLogin(
     });
     if (created.data.user) return created.data.user;
   } catch {
-    /* admin API needs the service role; fall through */
+    /* service role is optional */
   }
 
   const signedUp = await client.auth.signUp({
@@ -48,19 +48,6 @@ async function createAgentLogin(
     options: { data: { full_name: input.name.trim(), role: 'Travel Agent' } },
   });
   return signedUp.data.user || null;
-}
-
-async function saveAgentProfile(client: SupabaseClient, user: User, input: AgentApplicationInput) {
-  const row = {
-    id: user.id,
-    email: input.email.trim(),
-    full_name: input.name.trim(),
-    role: 'Travel Agent',
-    status: 'Pending',
-  };
-  const upserted = await client.from('profiles').upsert(row, { onConflict: 'id' });
-  if (!upserted.error) return;
-  await client.from('profiles').insert(row);
 }
 
 export async function saveAgentApplicationOnServer(
@@ -77,6 +64,7 @@ export async function saveAgentApplicationOnServer(
     bio: String(input.bio || '').trim(),
     address: String(input.address || '').trim(),
     password: String(input.password || '').trim(),
+    user_id: String(input.user_id || '').trim(),
   };
 
   if (!parsed.email.includes('@') || !parsed.name) {
@@ -84,24 +72,21 @@ export async function saveAgentApplicationOnServer(
   }
 
   const client = createPrivilegedClient();
+  if (parsed.password && !parsed.user_id) {
+    const user = await createAgentLogin(client, parsed);
+    if (user?.id) parsed.user_id = user.id;
+  }
+  if (!parsed.user_id) parsed.user_id = crypto.randomUUID();
+
   const tables: string[] = [];
   for (const table of AGENT_TABLES) {
     if (await tableExists(client, table)) tables.push(table);
   }
-  if (tables.length === 0) {
-    return {
-      data: null,
-      error: { message: 'The agent register is not available. Ask an administrator to check the agents table.' },
-    };
-  }
+  if (tables.length === 0) tables.push('registered_agents');
 
   for (const table of tables) {
     const existing = await findAgentByEmail(client, table, parsed.email);
     if (existing) {
-      if (parsed.password) {
-        const user = await createAgentLogin(client, parsed);
-        if (user) await saveAgentProfile(client, user, parsed);
-      }
       return { data: [existing], error: null, alreadyExists: true, table };
     }
   }
@@ -111,10 +96,6 @@ export async function saveAgentApplicationOnServer(
     const result = await insertAgentApplication(client, table, parsed);
     if (!result.error) {
       const saved = (await findAgentByEmail(client, table, parsed.email)) || (result.data?.[0] as RecordRow);
-      if (parsed.password) {
-        const user = await createAgentLogin(client, parsed);
-        if (user) await saveAgentProfile(client, user, parsed);
-      }
       return { data: saved ? [saved] : result.data, error: null, table };
     }
     lastError = result.error;

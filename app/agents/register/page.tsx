@@ -5,6 +5,7 @@ import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
+import { supabase } from '@/lib/supabase/client';
 import { agentApplicationId, saveAgentApplication } from '@/lib/agent-register';
 import { notifyWorkspace } from '@/lib/notify';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
@@ -46,22 +47,29 @@ export default function AgentRegisterPage() {
     setError('');
     setStatus('');
 
+    let userId = '';
+    if (form.password) {
+      const { data: signedUp } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: { data: { full_name: form.name.trim(), role: 'Travel Agent' } },
+      });
+      userId = signedUp?.user?.id || '';
+      await supabase.auth.signOut();
+    }
+
     const result = await saveAgentApplication({
       name: form.name.trim(),
-      username: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
-      phoneNumber: form.phone.trim(),
       country: form.country,
       gender: form.gender,
       company: form.company.trim(),
-      companyName: form.company.trim(),
       company_website: form.company_website.trim(),
-      companyWebsite: form.company_website.trim(),
       address: form.address.trim(),
       bio: form.bio.trim(),
       password: form.password,
-      isActive: false,
+      user_id: userId,
       status: 'Pending',
     });
 

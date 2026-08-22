@@ -55,16 +55,23 @@ const signed = await anon.auth.signUp({
 });
 console.log('AUTH_SIGNUP', signed.error ? signed.error.message : signed.data.user ? 'OK id=' + typeof signed.data.user.id : 'NO_USER');
 
-const fakeId = crypto.randomUUID();
-const fakeInsert = await supabase.from('registered_agents').insert({
+const live = {
   name: 'Schema Probe',
-  email: `schema-probe-fake-${Date.now()}@example.com`,
+  email: `schema-probe-live-${Date.now()}@example.com`,
+  phone: '0700000000',
+  country: 'Uganda',
+  gender: 'Male',
+  bio: 'Company: Probe\n\nProbe',
   status: 'Pending',
-  user_id: fakeId,
-});
-console.log('INSERT_FAKE_USER_ID', fakeInsert.error ? fakeInsert.error.message : 'OK');
-if (!fakeInsert.error) {
-  await supabase.from('registered_agents').delete().eq('user_id', fakeId);
+  role: 'Travel Agent',
+  user_id: crypto.randomUUID(),
+  approval_token: crypto.randomUUID(),
+  is_sample: false,
+};
+const liveInsert = await supabase.from('registered_agents').insert(live);
+console.log('INSERT_LIVE_SHAPE', liveInsert.error ? liveInsert.error.message : 'OK');
+if (!liveInsert.error) {
+  await supabase.from('registered_agents').delete().eq('email', live.email);
 }
 if (created.data.user) {
   const withUser = {

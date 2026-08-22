@@ -3,7 +3,22 @@ import { isDuplicateEmail, isDuplicateId, isMissingTable } from '@/lib/agent-tab
 import { parseMissingColumn, type SaveResult } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
 
-/** Davsafaris agent user fields, plus the snake_case names our newer table uses. */
+/** Columns that exist on the live registered_agents table. */
+export const LIVE_AGENT_COLUMNS = [
+  'name',
+  'email',
+  'phone',
+  'country',
+  'gender',
+  'bio',
+  'status',
+  'role',
+  'user_id',
+  'approval_token',
+  'photo_url',
+  'is_sample',
+] as const;
+
 const FIELD_ALIASES: Record<string, string[]> = {
   username: ['username', 'name', 'full_name', 'Name'],
   email: ['email', 'Email'],
@@ -16,6 +31,8 @@ const FIELD_ALIASES: Record<string, string[]> = {
   address: ['address'],
   isActive: ['isActive', 'is_active'],
   status: ['status'],
+  role: ['role'],
+  user_id: ['user_id', 'userId'],
 };
 
 export type AgentApplicationInput = {
@@ -29,6 +46,7 @@ export type AgentApplicationInput = {
   bio?: string;
   address?: string;
   password?: string;
+  user_id?: string;
 };
 
 function pickColumn(known: string[], aliases: string[]) {
@@ -47,117 +65,84 @@ function deleteKeyInsensitive(row: Record<string, unknown>, key: string) {
   }
 }
 
-async function discoverColumnsFromOpenApi(table: string): Promise<string[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
+export function buildLiveAgentInsert(input: AgentApplicationInput, userId?: string) {
+  const companyNote = [
+    input.company?.trim() ? `Company: ${input.company.trim()}` : '',
+    input.company_website?.trim() ? `Website: ${input.company_website.trim()}` : '',
+    input.address?.trim() ? `Address: ${input.address.trim()}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const bio = [companyNote, input.bio?.trim() || ''].filter(Boolean).join('\n\n');
 
-  try {
-    const response = await fetch(`${url.replace(/\/$/, '')}/rest/v1/`, {
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        Accept: 'application/openapi+json',
-      },
-    });
-    if (!response.ok) return [];
-    const spec = (await response.json()) as {
-      definitions?: Record<string, { properties?: Record<string, unknown> }>;
-      components?: { schemas?: Record<string, { properties?: Record<string, unknown> }> };
-    };
-    const schema = spec.definitions?.[table] || spec.components?.schemas?.[table];
-    return schema?.properties ? Object.keys(schema.properties) : [];
-  } catch {
-    return [];
-  }
+  return {
+    name: input.name.trim(),
+    email: input.email.trim(),
+    phone: input.phone?.trim() || null,
+    country: input.country?.trim() || null,
+    gender: input.gender?.trim() || null,
+    bio: bio || null,
+    status: 'Pending',
+    role: 'Travel Agent',
+    user_id: userId || input.user_id || crypto.randomUUID(),
+    approval_token: crypto.randomUUID(),
+    is_sample: false,
+  };
 }
 
 export async function discoverAgentColumns(client: SupabaseClient, table: string): Promise<string[]> {
   const { data } = await client.from(table).select('*').limit(1);
   if (data?.[0]) return Object.keys(data[0] as Record<string, unknown>);
-  return discoverColumnsFromOpenApi(table);
-}
-
-function valuesFromInput(input: AgentApplicationInput, active = false) {
-  return {
-    username: input.name.trim(),
-    email: input.email.trim(),
-    phoneNumber: input.phone?.trim() || '',
-    country: input.country?.trim() || '',
-    companyName: input.company?.trim() || '',
-    companyWebsite: input.company_website?.trim() || '',
-    gender: input.gender?.trim() || '',
-    bio: input.bio?.trim() || '',
-    address: input.address?.trim() || '',
-    isActive: active,
-    status: active ? 'Active' : 'Pending',
-  };
+  if (table === 'registered_agents') return [...LIVE_AGENT_COLUMNS];
+  return [];
 }
 
 export function buildAgentPayload(
   input: AgentApplicationInput | Record<string, unknown>,
   knownColumns: string[],
-  options?: { active?: boolean }
+  options?: { active?: boolean; userId?: string }
 ) {
-  const values = valuesFromInput(
-    {
-      name: String(input.name || input.username || '').trim(),
-      email: String(input.email || '').trim(),
-      phone: String(input.phone || input.phoneNumber || '').trim(),
-      country: String(input.country || '').trim(),
-      company: String(input.company || input.companyName || '').trim(),
-      company_website: String(input.company_website || input.companyWebsite || '').trim(),
-      gender: String(input.gender || '').trim(),
-      bio: String(input.bio || '').trim(),
-      address: String(input.address || '').trim(),
-    },
-    options?.active
-  );
+  const parsed: AgentApplicationInput = {
+    name: String(input.name || input.username || '').trim(),
+    email: String(input.email || '').trim(),
+    phone: String(input.phone || input.phoneNumber || '').trim(),
+    country: String(input.country || '').trim(),
+    company: String(input.company || input.companyName || '').trim(),
+    company_website: String(input.company_website || input.companyWebsite || '').trim(),
+    gender: String(input.gender || '').trim(),
+    bio: String(input.bio || '').trim(),
+    address: String(input.address || '').trim(),
+    user_id: String(input.user_id || options?.userId || '').trim(),
+  };
+  const live = buildLiveAgentInsert(parsed, options?.userId);
+  const values: Record<string, unknown> = {
+    username: live.name,
+    email: live.email,
+    phoneNumber: live.phone,
+    country: live.country,
+    companyName: parsed.company,
+    companyWebsite: parsed.company_website,
+    gender: live.gender,
+    bio: live.bio,
+    address: parsed.address,
+    isActive: Boolean(options?.active),
+    status: options?.active ? 'Active' : 'Pending',
+    role: 'Travel Agent',
+    user_id: live.user_id,
+  };
 
   const payload: Record<string, unknown> = {};
   for (const [logical, aliases] of Object.entries(FIELD_ALIASES)) {
     const column = pickColumn(knownColumns, aliases);
     if (!column) continue;
-    const value = values[logical as keyof typeof values];
-    if (value === '' && logical !== 'email' && logical !== 'username' && logical !== 'status') continue;
+    const value = values[logical];
+    if (value === '' || value === undefined) continue;
     payload[column] = value;
   }
+  if (!pickColumn(knownColumns, ['user_id']) && !payload.user_id) {
+    /* keep going; insert retry will add user_id if the table requires it */
+  }
   return payload;
-}
-
-function fallbackShapes(input: AgentApplicationInput): Record<string, unknown>[] {
-  const name = input.name.trim();
-  const email = input.email.trim();
-  const phone = input.phone?.trim() || '';
-  const country = input.country?.trim() || '';
-  const company = input.company?.trim() || '';
-  const website = input.company_website?.trim() || '';
-
-  return [
-    {
-      username: name,
-      email,
-      ...(phone ? { phoneNumber: phone } : {}),
-      ...(country ? { country } : {}),
-      ...(company ? { companyName: company } : {}),
-      ...(website ? { companyWebsite: website } : {}),
-      isActive: false,
-    },
-    {
-      name,
-      email,
-      ...(phone ? { phone } : {}),
-      ...(country ? { country } : {}),
-      ...(company ? { company } : {}),
-      ...(website ? { company_website: website } : {}),
-      status: 'Pending',
-    },
-    { username: name, email, isActive: false },
-    { name, email, status: 'Pending' },
-    { username: name, email },
-    { name, email },
-    { email },
-  ];
 }
 
 async function insertOnce(
@@ -187,6 +172,18 @@ async function insertWithIdRetry(
     if (isMissingTable(lastMessage)) return result;
     if (isDuplicateEmail(lastMessage)) return result;
 
+    const notNull = lastMessage.match(/null value in column ["']?([a-z0-9_]+)/i);
+    if (notNull?.[1]) {
+      const column = notNull[1];
+      if (column === 'user_id' || column === 'approval_token') current[column] = crypto.randomUUID();
+      else if (column === 'status') current[column] = 'Pending';
+      else if (column === 'role') current[column] = 'Travel Agent';
+      else if (column === 'is_sample') current[column] = false;
+      else if (column === 'id') current[column] = crypto.randomUUID();
+      else current[column] = String(current.name || current.email || 'Agent');
+      continue;
+    }
+
     const missing = parseMissingColumn(lastMessage);
     if (missing) {
       const before = Object.keys(current).length;
@@ -201,15 +198,8 @@ async function insertWithIdRetry(
     }
 
     if (isDuplicateId(lastMessage) || /invalid input syntax for type uuid/i.test(lastMessage)) {
-      current = {
-        ...current,
-        id: attempt < 3 ? crypto.randomUUID() : Math.floor(Date.now() / 1000) + attempt * 17,
-      };
-      continue;
-    }
-
-    if (/invalid input syntax for type (bigint|integer|numeric)/i.test(lastMessage) && current.id != null) {
-      current.id = Math.floor(Date.now() / 1000) + attempt * 17;
+      if (/user_id/i.test(lastMessage)) current.user_id = crypto.randomUUID();
+      else current.id = crypto.randomUUID();
       continue;
     }
 
@@ -224,8 +214,11 @@ export async function insertAgentApplication(
   table: string,
   input: AgentApplicationInput
 ): Promise<SaveResult> {
-  const known = await discoverAgentColumns(client, table);
-  const shapes = known.length > 0 ? [buildAgentPayload(input, known)] : fallbackShapes(input);
+  const liveRow = buildLiveAgentInsert(input);
+  const first = table === 'registered_agents' ? liveRow : buildAgentPayload(input, await discoverAgentColumns(client, table), {
+    userId: String(liveRow.user_id),
+  });
+  const shapes = [first, liveRow];
 
   let lastError: SaveResult['error'] = { message: 'Could not save the agent application.' };
   for (const shape of shapes) {
@@ -262,6 +255,7 @@ export async function updateAgentFields(
     bio: patch.bio,
     address: patch.address,
     status: patch.status,
+    role: patch.role,
     isActive:
       patch.isActive ??
       (typeof patch.status === 'string' ? /active/i.test(patch.status) && !/inactive/i.test(patch.status) : undefined),
