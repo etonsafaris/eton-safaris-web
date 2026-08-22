@@ -8,8 +8,41 @@ import {
   isMissingTable,
   normalizeAgentEmail,
 } from '@/lib/agent-tables';
+import { rememberMissingColumn } from '@/lib/supabase-payload';
 import { parseMissingColumn, type SaveResult } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
+
+const CORE_AGENT_COLUMNS = new Set([
+  'name',
+  'email',
+  'phone',
+  'country',
+  'company',
+  'status',
+  'username',
+  'phoneNumber',
+  'companyName',
+]);
+
+function pickExistingColumns(row: Record<string, unknown> | null) {
+  return row ? Object.keys(row) : [];
+}
+
+function filterKnownColumns(payload: Record<string, unknown>, columns: string[]) {
+  if (columns.length === 0) {
+    const core: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (CORE_AGENT_COLUMNS.has(key) && value != null && value !== '') core[key] = value;
+    }
+    return core;
+  }
+  const allowed = new Set(columns);
+  const next: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    if (allowed.has(key) && value != null && value !== '') next[key] = value;
+  }
+  return next;
+}
 
 type IdStrategy = 'auto' | 'integer' | 'uuid';
 
@@ -67,7 +100,12 @@ async function insertAgentRow(
   table: string,
   payload: Record<string, unknown>
 ): Promise<SaveResult> {
-  let current: Record<string, unknown> = { ...payload };
+  const probed = await client.from(table).select('*').limit(1);
+  const known = pickExistingColumns((probed.data?.[0] as Record<string, unknown> | undefined) || null);
+  let current: Record<string, unknown> = filterKnownColumns(payload, known);
+  if (Object.keys(current).length === 0) {
+    current = { name: payload.name, email: payload.email, status: payload.status || 'Pending' };
+  }
   let strategy: IdStrategy = 'auto';
   let nextId = 0;
 
@@ -90,6 +128,15 @@ async function insertAgentRow(
 
     const message = written.error.message || '';
     console.error(`[Agent register] ${table} insert failed:`, message, { strategy, attempt, id: row.id });
+
+    const missing = parseMissingColumn(message);
+    if (missing && missing in current) {
+      rememberMissingColumn(table, missing);
+      const next = { ...current };
+      delete next[missing];
+      current = next;
+      continue;
+    }
 
     if (isMissingTable(message)) return { data: null, error: { message } };
 
@@ -134,14 +181,6 @@ async function insertAgentRow(
       }
       strategy = 'integer';
       nextId = await nextIntegerId(client, table);
-      continue;
-    }
-
-    const missing = parseMissingColumn(message);
-    if (missing && missing in current) {
-      const next = { ...current };
-      delete next[missing];
-      current = next;
       continue;
     }
 

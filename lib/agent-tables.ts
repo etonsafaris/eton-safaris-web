@@ -1,7 +1,8 @@
 export const AGENT_TABLES = ['registered_agents', 'Agent'] as const;
 
 export function isMissingTable(message: string) {
-  return /could not find the table|schema cache|relation .* does not exist/i.test(message);
+  if (/could not find the '[^']+' column/i.test(message)) return false;
+  return /could not find the table|relation ["'].+["'] does not exist/i.test(message);
 }
 
 export function isDuplicateId(message: string) {
