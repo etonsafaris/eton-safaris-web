@@ -113,16 +113,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }, []);
 
   useEffect(() => {
-    if (!user?.email) return;
+    const email = user?.email;
+    if (!email) return;
     supabase
       .from('registered_agents')
       .select('email,role,allowed_modules,status,is_active')
-      .ilike('email', user.email)
+      .ilike('email', email)
       .limit(8)
       .then(({ data }) => {
         const rows = (data as Array<{ email?: string; role?: string; allowed_modules?: unknown }> | null) || [];
         const row =
-          rows.find((item) => String(item.email || '').toLowerCase() === user.email.toLowerCase()) || rows[0];
+          rows.find((item) => String(item.email || '').toLowerCase() === email.toLowerCase()) || rows[0];
         const nextRole = String(row?.role || user.user_metadata?.role || '');
         setRole(nextRole);
         setAllowedModules(parseModules(row?.allowed_modules));
