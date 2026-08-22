@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Eye, Pencil, Trash2, Users, X } from 'lucide-react';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
@@ -556,7 +556,7 @@ function IconButton({
 }: {
   label: string;
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button

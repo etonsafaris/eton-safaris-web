@@ -96,6 +96,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'guests',
     'message',
     'agent_email',
+    'travel_plans',
     'booking_code',
     'amount_paid',
     'remaining_balance',
