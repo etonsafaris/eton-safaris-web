@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
+import { isOwnerAdminEmail } from '@/lib/inbox';
+import { createPrivilegedClient } from '@/lib/supabase/admin';
 
 function sessionCookieOptions(maxAge = 60 * 60 * 12) {
   return {
@@ -33,6 +35,10 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data.user) {
       return NextResponse.json({ error: error?.message || 'Invalid session' }, { status: 401 });
+    }
+
+    if (isOwnerAdminEmail(data.user.email)) {
+      await ensureOwnerAdminRecord(data.user.email || '');
     }
 
     const response = NextResponse.json({ ok: true });

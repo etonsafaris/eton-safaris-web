@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { findPublicAgentByEmail } from '@/lib/agent-register';
 import { agentDisplayName, agentIsActive } from '@/lib/find-agent';
+import { isOwnerAdminEmail } from '@/lib/inbox';
 import { agentBookingNote, fetchBookingsForAgent } from '@/lib/agent-bookings';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -45,6 +46,10 @@ export default function AgentPortalPage() {
       }
       setUser(data.session.user);
       const email = data.session.user.email || '';
+      if (isOwnerAdminEmail(email)) {
+        router.replace('/admin');
+        return;
+      }
       const match = await findPublicAgentByEmail(email);
       setAgent(match);
       if (match && agentIsActive(match)) {

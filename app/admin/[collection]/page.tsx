@@ -242,11 +242,12 @@ function UserManagement() {
   const [status, setStatus] = useState('');
   const [users, setUsers] = useState<RecordRow[]>([]);
   const [viewerRole, setViewerRole] = useState('');
+  const [viewerEmail, setViewerEmail] = useState('');
   const modules = [
     ...MAIN_COLLECTIONS.filter((item) => item.id !== 'overview'),
     ...SYSTEM_COLLECTIONS.filter((item) => item.id === 'user_management'),
   ];
-  const isSuperAdmin = /admin|super|full access/i.test(viewerRole);
+  const isSuperAdmin = isFullAdmin(viewerRole, viewerEmail);
 
   async function loadUsers() {
     try {
@@ -265,8 +266,13 @@ function UserManagement() {
   useEffect(() => {
     loadUsers();
     supabase.auth.getUser().then(({ data }) => {
-      const userEmail = data.user?.email;
+      const userEmail = data.user?.email || '';
+      setViewerEmail(userEmail);
       if (!userEmail) return;
+      if (isFullAdmin(String(data.user?.user_metadata?.role || ''), userEmail)) {
+        setViewerRole('Admin');
+        return;
+      }
       supabase
         .from('registered_agents')
         .select('role')

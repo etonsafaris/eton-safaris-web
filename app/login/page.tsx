@@ -183,10 +183,11 @@ function LoginForm() {
 
     const account = await findPublicAgentByEmail(email);
     const roleValue = String(account?.role || authResult.data.user?.user_metadata?.role || '');
-    const isAgent = Boolean(account) && isTravelAgentRole(roleValue);
-    const isStaff = isStaffRole(roleValue) || (!account && /admin|full access/i.test(roleValue));
+    const ownerAdmin = isOwnerAdminEmail(email);
+    const isAgent = Boolean(account) && isTravelAgentRole(roleValue) && !ownerAdmin;
+    const isStaff = ownerAdmin || isStaffRole(roleValue) || (!account && /admin|full access/i.test(roleValue));
 
-    if (account && !agentIsActive(account) && !/admin|full access/i.test(roleValue)) {
+    if (account && !agentIsActive(account) && !ownerAdmin && !/admin|full access/i.test(roleValue)) {
       await supabase.auth.signOut();
       setError(
         isStaff
