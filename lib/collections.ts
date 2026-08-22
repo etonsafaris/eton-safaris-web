@@ -269,6 +269,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
       { name: 'country', label: 'Country', type: 'text' },
       { name: 'company', label: 'Company Name', type: 'text' },
       { name: 'company_website', label: 'Company Website', type: 'url' },
+      { name: 'address', label: 'Address', type: 'text' },
       { name: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'] },
       { name: 'bio', label: 'Bio', type: 'textarea' },
       { name: 'status', label: 'Status', type: 'select', options: ['Pending', 'Active', 'Inactive'] },

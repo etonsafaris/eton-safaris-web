@@ -6,10 +6,14 @@ import type { RecordRow } from '@/lib/types';
 /** Columns that exist on the live registered_agents table. */
 export const LIVE_AGENT_COLUMNS = [
   'name',
+  'username',
   'email',
   'phone',
   'country',
   'gender',
+  'company',
+  'company_website',
+  'address',
   'bio',
   'status',
   'role',
@@ -17,6 +21,7 @@ export const LIVE_AGENT_COLUMNS = [
   'approval_token',
   'photo_url',
   'is_sample',
+  'is_active',
 ] as const;
 
 const FIELD_ALIASES: Record<string, string[]> = {
@@ -66,27 +71,23 @@ function deleteKeyInsensitive(row: Record<string, unknown>, key: string) {
 }
 
 export function buildLiveAgentInsert(input: AgentApplicationInput, userId?: string) {
-  const companyNote = [
-    input.company?.trim() ? `Company: ${input.company.trim()}` : '',
-    input.company_website?.trim() ? `Website: ${input.company_website.trim()}` : '',
-    input.address?.trim() ? `Address: ${input.address.trim()}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
-  const bio = [companyNote, input.bio?.trim() || ''].filter(Boolean).join('\n\n');
-
   return {
     name: input.name.trim(),
+    username: input.name.trim(),
     email: input.email.trim(),
     phone: input.phone?.trim() || null,
     country: input.country?.trim() || null,
     gender: input.gender?.trim() || null,
-    bio: bio || null,
+    company: input.company?.trim() || null,
+    company_website: input.company_website?.trim() || null,
+    address: input.address?.trim() || null,
+    bio: input.bio?.trim() || null,
     status: 'Pending',
     role: 'Travel Agent',
     user_id: userId || input.user_id || crypto.randomUUID(),
     approval_token: crypto.randomUUID(),
     is_sample: false,
+    is_active: false,
   };
 }
 
