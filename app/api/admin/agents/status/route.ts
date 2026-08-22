@@ -82,26 +82,30 @@ export async function POST(request: Request) {
     }
 
     const name = String(existing.name || existing.full_name || body.name || 'Agent');
+    const role = String(existing.role || body.name || 'Travel Agent');
     const origin = (process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || '').replace(/\/$/, '');
+    const staff = /content manager|tour operator|admin|full access/i.test(role);
 
     if (status.toLowerCase() === 'active' && rowEmail) {
       await ensureConfirmedAuthUser(client, {
         email: rowEmail,
         name,
-        role: 'Travel Agent',
+        role: staff ? role : 'Travel Agent',
         userId: String(existing.user_id || ''),
       });
     }
 
     if (status.toLowerCase() === 'active' && rowEmail) {
-      const guestMessage = `Hello ${name}, your Eton Safaris agent account is now active. Sign in at ${origin}/login and open the agent portal: ${origin}/agents/portal`;
+      const destination = staff ? `${origin}/login` : `${origin}/login`;
+      const portal = staff ? `${origin}/admin` : `${origin}/agents/portal`;
+      const guestMessage = `Hello ${name}, your Eton Safaris ${staff ? role : 'agent'} account is now active. Sign in at ${destination} then open ${portal}`;
       await deliverIncomingAlert({
-        title: 'Agent account approved',
+        title: staff ? `${role} account approved` : 'Agent account approved',
         message: guestMessage,
-        category: 'agent',
+        category: staff ? 'system' : 'agent',
         guestEmail: rowEmail,
         sendToGuest: true,
-        guestTitle: 'Agent account approved',
+        guestTitle: staff ? `${role} account approved` : 'Agent account approved',
         guestMessage,
         emailAdmin: false,
         recordDashboard: false,

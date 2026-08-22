@@ -16,7 +16,7 @@ import {
   notificationTitle,
   notifyAdminNotificationsChanged,
 } from '@/lib/notification-utils';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { adminAuthHeaders } from '@/lib/admin-records-client';
 import type { RecordRow } from '@/lib/types';
 
 export default function NotificationBell() {
@@ -38,7 +38,12 @@ export default function NotificationBell() {
     setOpen(false);
     const id = pickRecordId(record);
     if (id == null || !isUnreadNotification(record)) return;
-    await saveWithColumnFallback('notifications', markNotificationReadPayload(), id);
+    await fetch('/api/admin/inbox', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ action: 'mark-read', table: 'notifications', id }),
+    });
     notifyAdminNotificationsChanged();
     void reload();
   }

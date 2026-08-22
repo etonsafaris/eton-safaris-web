@@ -14,6 +14,9 @@ import { getCollection, MAIN_COLLECTIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
 import { notifyWorkspace } from '@/lib/notify';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
+import { agentDisplayName, agentIsActive, isStaffRow } from '@/lib/find-agent';
+import { pickRecordId, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function AdminCollectionPage() {
@@ -243,17 +246,17 @@ function UserManagement() {
   const isSuperAdmin = /admin|super|full access/i.test(viewerRole);
 
   async function loadUsers() {
-    const { data, error } = await supabase.from('profiles').select('*');
-    if (error) {
-      setStatus(error.message);
-      return;
+    try {
+      const rows = (await fetchAdminTable('registered_agents')).filter(isStaffRow);
+      rows.sort((a, b) => {
+        const aPending = String(a.status || '').toLowerCase() === 'pending' ? 0 : 1;
+        const bPending = String(b.status || '').toLowerCase() === 'pending' ? 0 : 1;
+        return aPending - bPending;
+      });
+      setUsers(rows);
+    } catch (loadError) {
+      setStatus(loadError instanceof Error ? loadError.message : 'Could not load staff users.');
     }
-    const rows = ((data as RecordRow[]) || []).slice().sort((a, b) => {
-      const aPending = String(a.status || '').toLowerCase() === 'pending' ? 0 : 1;
-      const bPending = String(b.status || '').toLowerCase() === 'pending' ? 0 : 1;
-      return aPending - bPending;
-    });
-    setUsers(rows);
   }
 
   useEffect(() => {
@@ -287,16 +290,19 @@ function UserManagement() {
 
   async function invite(event: React.FormEvent) {
     event.preventDefault();
-    const { error } = await saveWithColumnFallback('profiles', {
-      email,
-      role,
-      status: 'Pending',
-      allowed_modules: JSON.stringify(['bookings', 'quotations_inquiries']),
-      must_change_password: true,
+    const response = await fetch('/api/public/agent-register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: email.split('@')[0],
+        email,
+        role,
+        status: 'Pending',
+      }),
     });
-    if (error) {
-      console.error(error);
-      setStatus(error.message);
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setStatus(body.error || 'Could not save the invite.');
       return;
     }
     setStatus('Invite saved. The user stays Pending until you activate the account.');
@@ -318,23 +324,23 @@ function UserManagement() {
   }
 
   async function setUserStatus(user: RecordRow, nextStatus: 'Active' | 'Pending') {
-    if (!user.id) return;
-    const { error } = await saveWithColumnFallback('profiles', { status: nextStatus }, user.id);
-    if (error) {
-      setStatus(error.message);
+    const response = await fetch('/api/admin/agents/status', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({
+        id: pickRecordId(user) ?? undefined,
+        status: nextStatus,
+        email: pickString(user, ['email']),
+        name: agentDisplayName(user),
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setStatus(body.error || 'Could not update this user.');
       return;
     }
-    if (nextStatus === 'Active') {
-      await saveWithColumnFallback('profiles', { must_change_password: true }, user.id);
-      await notifyWorkspace({
-        title: 'Account approved',
-        message: `Your Eton Safaris dashboard account (${String(user.email || '')}) has been approved. You can now sign in at https://etonsafaris.com/login`,
-        category: 'system',
-        guestEmail: String(user.email || ''),
-        sendToGuest: true,
-      });
-    }
-    setStatus(nextStatus === 'Active' ? 'User activated.' : 'User set back to pending.');
+    setStatus(nextStatus === 'Active' ? 'User activated. They were emailed, not the admin inbox.' : 'User set back to pending.');
     await loadUsers();
   }
 
@@ -344,7 +350,21 @@ function UserManagement() {
       return;
     }
     if (!user.id || !confirm(`Delete ${String(user.email || 'this user')}? This cannot be undone.`)) return;
-    const { error } = await supabase.from('profiles').delete().eq('id', user.id);
+    const response = await fetch('/api/admin/agents/manage', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({
+        action: 'delete',
+        id: pickRecordId(user) ?? undefined,
+        email: pickString(user, ['email']),
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setStatus(body.error || 'Could not delete this user.');
+      return;
+    }
     if (error) {
       setStatus(error.message);
       return;
@@ -392,9 +412,9 @@ function UserManagement() {
             <div key={String(user.id ?? index)} className="rounded-xl border bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold">{String(user.full_name || user.email || 'User')}</p>
-                  <p className="text-sm text-gray-500">{String(user.email || '')}</p>
-                  <p className="text-sm text-gray-500">{String(user.role || 'Limited Access (User)')}</p>
+                  <p className="font-semibold">{agentDisplayName(user)}</p>
+                  <p className="text-sm text-gray-500">{pickString(user, ['email'])}</p>
+                  <p className="text-sm text-gray-500">{String(user.role || 'Staff')}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
