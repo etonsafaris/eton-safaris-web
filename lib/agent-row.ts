@@ -106,17 +106,19 @@ export function buildAgentPayload(
   knownColumns: string[],
   options?: { active?: boolean; userId?: string }
 ) {
+  const raw = input as Record<string, unknown>;
   const parsed: AgentApplicationInput = {
-    name: String(input.name || input.username || '').trim(),
-    email: String(input.email || '').trim(),
-    phone: String(input.phone || input.phoneNumber || '').trim(),
-    country: String(input.country || '').trim(),
-    company: String(input.company || input.companyName || '').trim(),
-    company_website: String(input.company_website || input.companyWebsite || '').trim(),
-    gender: String(input.gender || '').trim(),
-    bio: String(input.bio || '').trim(),
-    address: String(input.address || '').trim(),
-    user_id: String(input.user_id || options?.userId || '').trim(),
+    name: String(raw.name || raw.username || '').trim(),
+    email: String(raw.email || '').trim(),
+    phone: String(raw.phone || raw.phoneNumber || '').trim(),
+    country: String(raw.country || '').trim(),
+    company: String(raw.company || raw.companyName || '').trim(),
+    company_website: String(raw.company_website || raw.companyWebsite || '').trim(),
+    gender: String(raw.gender || '').trim(),
+    bio: String(raw.bio || '').trim(),
+    address: String(raw.address || '').trim(),
+    user_id: String(raw.user_id || options?.userId || '').trim(),
+    role: String(raw.role || '').trim(),
   };
   const live = buildLiveAgentInsert(parsed, options?.userId);
   const values: Record<string, unknown> = {
