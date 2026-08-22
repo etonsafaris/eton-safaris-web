@@ -8,7 +8,7 @@ import { SITE } from '@/lib/collections';
 import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { findPublicAgentByEmail, saveAgentApplication } from '@/lib/agent-register';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { agentIsActive, isStaffRole, isTravelAgentRole } from '@/lib/find-agent';
 import { notifyWorkspace } from '@/lib/notify';
 
 const PRIMARY = '#00A651';
@@ -123,113 +123,79 @@ function LoginForm() {
       return;
     }
 
-    const authResult = isSignup
-      ? await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName, role } },
-        })
-      : await supabase.auth.signInWithPassword({ email, password });
-
-    if (authResult.error) {
-      setError(authResult.error.message);
-      setLoading(false);
-      return;
-    }
-
-    if (isSignup && authResult.data.user) {
-      const isTravelAgent = /travel agent/i.test(role);
-      await saveWithColumnFallback(
-        'profiles',
-        {
-          id: authResult.data.user.id,
-          email,
-          full_name: fullName,
-          role,
-          status: 'Pending',
-        },
-        { keepId: true }
-      );
-
-      if (isTravelAgent) {
-        const agentInsert = await saveAgentApplication({
-          name: fullName,
-          username: fullName,
-          email,
-          password,
-          isActive: false,
-          status: 'Pending',
-        });
-        const origin = window.location.origin;
-        const approveLink = agentInsert.data?.[0]?.id
-          ? `${origin}/api/agents/approve?id=${agentInsert.data[0].id}`
-          : `${origin}/admin/registered_agents`;
-        await notifyWorkspace({
-          title: 'New agent registration — approval required',
-          message: `${fullName} (${email}) registered as a Travel Agent from Create Account. Approval: ${approveLink}`,
-          category: 'agent',
-          guestEmail: email,
-        });
-      } else {
-        await notifyWorkspace({
-          title: 'New account request',
-          message: `${fullName} (${email}) requested ${role} access and is waiting for admin approval.`,
-          category: 'system',
-          guestEmail: email,
-        });
+    if (isSignup) {
+      const staffInsert = await saveAgentApplication({
+        name: fullName,
+        email,
+        password,
+        role,
+        status: 'Pending',
+        isActive: false,
+      });
+      if (staffInsert.error) {
+        setError(staffInsert.error.message);
+        setLoading(false);
+        return;
       }
-
+      const origin = window.location.origin;
+      await notifyWorkspace({
+        title: `New ${role} registration — approval required`,
+        message: `${fullName} (${email}) requested ${role} access. Open User Management: ${origin}/admin/user_management`,
+        category: 'system',
+        recordDashboard: true,
+        emailAdmin: true,
+      });
+      await notifyWorkspace({
+        title: `Your ${SITE.name} ${role} application is pending`,
+        message: `Hello ${fullName}, thank you for registering as a ${role}. An administrator must approve your account before you can sign in.`,
+        category: 'system',
+        guestEmail: email,
+        sendToGuest: true,
+        emailAdmin: false,
+        recordDashboard: false,
+      });
       await supabase.auth.signOut();
       setLoading(false);
       setMode('signin');
       setResetSent(false);
       setError('');
-      window.alert(
-        isTravelAgent
-          ? 'Travel agent account created. An administrator must approve it before you can sign in.'
-          : 'Account created. An administrator must approve it before you can sign in.'
-      );
+      window.alert(`${role} account created. An administrator must approve it before you can sign in.`);
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('status,role,must_change_password')
-      .eq('email', email)
-      .maybeSingle();
-    const profileRow = profileError
-      ? (await supabase.from('profiles').select('status,role').eq('email', email).maybeSingle()).data
-      : profile;
-    const profileStatus = String(profileRow?.status || '').toLowerCase();
-    if (profileStatus === 'pending' || profileStatus === 'inactive') {
-      await supabase.auth.signOut();
-      setError(
-        profileStatus === 'pending'
-          ? 'Your account is waiting for administrator approval.'
-          : 'Your account is inactive. Contact an administrator.'
-      );
+    const authResult = await supabase.auth.signInWithPassword({ email, password });
+
+    if (authResult.error) {
+      const account = await findPublicAgentByEmail(email);
+      if (account && !agentIsActive(account)) {
+        setError(
+          isStaffRole(account.role)
+            ? 'Your account is waiting for administrator approval. You will be emailed when it is activated.'
+            : 'Your agent application is waiting for administrator approval. You will be emailed when it is activated.'
+        );
+      } else {
+        setError(authResult.error.message);
+      }
       setLoading(false);
       return;
     }
 
-    const agentRow = await findPublicAgentByEmail(email);
-    const isAgent = Boolean(agentRow);
-    const agentStatus = String(agentRow?.status || '').toLowerCase();
-    const roleValue = String(profileRow?.role || authResult.data.user?.user_metadata?.role || '');
-    const isStaff =
-      /admin|full access|tour operator|content manager/i.test(roleValue) && !/travel agent/i.test(roleValue);
+    const account = await findPublicAgentByEmail(email);
+    const roleValue = String(account?.role || authResult.data.user?.user_metadata?.role || '');
+    const isAgent = Boolean(account) && isTravelAgentRole(roleValue);
+    const isStaff = isStaffRole(roleValue) || (!account && /admin|full access/i.test(roleValue));
 
-    if (isAgent && !isStaff && agentStatus !== 'active') {
+    if (account && !agentIsActive(account) && !/admin|full access/i.test(roleValue)) {
       await supabase.auth.signOut();
       setError(
-        'Your agent application is waiting for administrator approval. You will be notified by email when it is activated.'
+        isStaff
+          ? 'Your account is waiting for administrator approval. You will be emailed when it is activated.'
+          : 'Your agent application is waiting for administrator approval. You will be emailed when it is activated.'
       );
       setLoading(false);
       return;
     }
-    const mustChange =
-      Boolean(authResult.data.user?.user_metadata?.must_change_password) ||
-      Boolean((profileRow as { must_change_password?: boolean } | null)?.must_change_password);
+    const mustChange = Boolean(authResult.data.user?.user_metadata?.must_change_password);
 
     let destination = '/admin';
     if (mustChange && isStaff) destination = '/admin/change-password';

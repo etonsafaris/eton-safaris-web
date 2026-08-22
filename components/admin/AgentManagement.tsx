@@ -57,7 +57,7 @@ export default function AgentManagement() {
     setLoading(true);
     setError('');
     try {
-      setRecords(await fetchAdminTable('registered_agents'));
+      setRecords((await fetchAdminTable('registered_agents')).filter(isTravelAgentRow));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load agents.');
       setRecords([]);
@@ -105,6 +105,7 @@ export default function AgentManagement() {
       company_website: pickString(record, ['company_website', 'companyWebsite', 'website']),
       address: pickString(record, ['address']),
       bio: pickString(record, ['bio']),
+      gender: pickString(record, ['gender']),
     });
   }
 
@@ -424,6 +425,7 @@ export default function AgentManagement() {
               <Field label="Country" value={form.country} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, country: value })} />
               <Field label="Company Name" value={form.company} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, company: value })} />
               <Field label="Company Website" value={form.company_website} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, company_website: value })} />
+              <Field label="Gender" value={form.gender} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, gender: value })} />
               <Field label="Address" value={form.address} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, address: value })} />
               <Field label="Bio" value={form.bio} readOnly={mode === 'view'} onChange={(value) => setForm({ ...form, bio: value })} />
             </div>
