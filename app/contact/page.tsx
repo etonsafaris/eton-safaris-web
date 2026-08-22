@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import PublicShell from '@/components/public/PublicShell';
+import ResponsiveImage from '@/components/public/ResponsiveImage';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
+import { SITE_MEDIA } from '@/lib/site-media';
 import { notifyWorkspace } from '@/lib/notify';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -97,7 +99,14 @@ export default function ContactPage() {
   return (
     <PublicShell>
       <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
-        <div className="absolute inset-0 bg-[#5bc787]/25" />
+        <ResponsiveImage
+          src={SITE_MEDIA.talkToUsHero}
+          alt="Start planning your safari"
+          variant="hero"
+          priority
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/35" />
         <h1
           className="relative z-10 mx-auto max-w-[75%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"
           style={{ textShadow: '0 0 20px #000' }}

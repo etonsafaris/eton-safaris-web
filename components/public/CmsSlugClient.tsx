@@ -242,13 +242,13 @@ export default function CmsSlugClient({
       image={image}
       content={content}
       variant={layout}
-      subtitle={extras.subtitle || (!page ? seeded?.subtitle : '')}
-      videoUrl={extras.video_url || (!page ? seeded?.video_url : '')}
+      subtitle={view.subtitle || (!page ? seeded?.subtitle : '')}
+      videoUrl={view.videoUrl || (!page ? seeded?.video_url : '')}
       destinations={destinations}
       faqs={faqs}
       blocks={blocks}
-      ctaLabel={extras.cta_label || 'Talk to Us'}
-      ctaHref={extras.cta_href || '/contact-us'}
+      ctaLabel={view.ctaLabel || 'Talk to Us'}
+      ctaHref={view.ctaHref || '/contact-us'}
     />
   );
 }
