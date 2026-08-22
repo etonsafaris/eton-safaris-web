@@ -150,22 +150,24 @@ export default function QuotationPanel() {
   }
 
   useEffect(() => {
-    const email = searchParams.get('email') || '';
-    if (!email.includes('@') && !searchParams.get('name')) return;
+    const params = searchParams;
+    if (!params) return;
+    const email = params.get('email') || '';
+    if (!email.includes('@') && !params.get('name')) return;
     setInquiryId('');
     setSavedId('');
     setStatus('');
     setError('');
     setForm({
-      name: searchParams.get('name') || '',
+      name: params.get('name') || '',
       email,
-      guests: searchParams.get('guests') || '1',
-      travel_date: (searchParams.get('travel_date') || '').slice(0, 10),
-      message: searchParams.get('message') || '',
+      guests: params.get('guests') || '1',
+      travel_date: (params.get('travel_date') || '').slice(0, 10),
+      message: params.get('message') || '',
       agreed_price: '',
       expiration_days: '14',
     });
-    const tourName = searchParams.get('tour') || '';
+    const tourName = params.get('tour') || '';
     if (tourName && tours.length) {
       const match = tours.find((tour) => getRecordTitle(tour).toLowerCase() === tourName.toLowerCase());
       setTourId(match?.id !== undefined ? String(match.id) : '');
