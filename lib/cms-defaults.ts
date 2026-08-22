@@ -264,7 +264,7 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     title: 'Contact Us',
     slug: 'contact-us',
     layout: 'standard',
-    image_url: SITE_MEDIA.safariVehicle,
+    image_url: SITE_MEDIA.talkToUsHero,
     excerpt: `Reach Eton Safaris by phone, WhatsApp, or email. ${SITE.phoneDisplay} · ${SITE.email}`,
     content: `<p>Reach Eton Safaris by phone, WhatsApp, or email. Use Talk to Us on the website header to send an inquiry.</p>
 <p>Phone: ${SITE.phoneDisplay}<br/>Email: ${SITE.email}<br/>Address: ${SITE.address}</p>`,

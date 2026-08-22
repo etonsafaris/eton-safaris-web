@@ -16,6 +16,7 @@ import {
   pickString,
 } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
+import { SITE_MEDIA } from '@/lib/site-media';
 import type { RecordRow } from '@/lib/types';
 
 function formatJournalDate(value: string) {
@@ -45,7 +46,7 @@ export default function SafariUpdatesPageClient({ initialPosts }: { initialPosts
       <PageHero
         title="Safari Updates"
         subtitle="News, guides, and stories from across Africa."
-        image={posts[0] ? getRecordImage(posts[0]) : undefined}
+        image={SITE_MEDIA.safariUpdatesHero}
       />
       <ListingSection>
         <SectionHeading label="stay up to date with" title="Safari Updates" />
