@@ -35,14 +35,18 @@ export async function fetchBookingsForAgent(agentEmail: string): Promise<RecordR
   const bookings = (await loadTable('bookings')).filter((row) => bookingMatchesAgent(row, email));
   if (bookings.length) return bookings;
 
-  const inquiries = (await loadTable('inquiries')).filter((row) => {
-    const message = pickString(row, ['message', 'title']).toLowerCase();
-    return message.includes(email.toLowerCase()) && /agent/i.test(message + pickString(row, ['title']));
-  });
-  return inquiries.map((row) => ({
-    ...row,
-    guest_name: pickString(row, ['name', 'guest_name']) || pickString(row, ['email']),
-    tour: pickString(row, ['tour']),
-    destination: pickString(row, ['destination']),
-  }));
+  try {
+    const inquiries = (await loadTable('inquiries')).filter((row) => {
+      const haystack = `${pickString(row, ['title'])} ${pickString(row, ['message'])}`.toLowerCase();
+      return haystack.includes(email.toLowerCase()) && haystack.includes('agent');
+    });
+    return inquiries.map((row) => ({
+      ...row,
+      guest_name: pickString(row, ['name', 'guest_name']) || pickString(row, ['email']),
+      tour: pickString(row, ['tour']),
+      destination: pickString(row, ['destination']),
+    }));
+  } catch {
+    return [];
+  }
 }
