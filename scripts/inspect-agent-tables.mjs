@@ -21,7 +21,40 @@ for (const table of ['Agent', 'registered_agents', 'profiles']) {
     console.log(table, 'SELECT_ERROR', selected.error.message);
     continue;
   }
-  console.log(table, 'OK', 'rows=' + (selected.data?.length || 0), 'cols=' + Object.keys(selected.data?.[0] || {}).join('|'));
+  const row = selected.data?.[0] || {};
+  console.log(
+    table,
+    'OK',
+    'rows=' + (selected.data?.length || 0),
+    'cols=' + Object.keys(row).join('|'),
+    'idType=' + typeof row.id,
+    'status=' + String(row.status || ''),
+    'role=' + String(row.role || '')
+  );
+}
+
+const exact = {
+  name: 'Schema Probe',
+  email: `schema-probe-exact-${Date.now()}@example.com`,
+  phone: '0700000000',
+  country: 'Uganda',
+  gender: 'Male',
+  bio: 'Probe',
+  status: 'Pending',
+  role: 'Travel Agent',
+  is_sample: false,
+};
+const exactInsert = await supabase.from('registered_agents').insert(exact);
+console.log('registered_agents INSERT_EXACT', exactInsert.error ? exactInsert.error.message : 'OK');
+if (!exactInsert.error) {
+  await supabase.from('registered_agents').delete().eq('email', exact.email);
+}
+
+const minimal = { name: 'Schema Probe', email: `schema-probe-min-${Date.now()}@example.com`, status: 'Pending' };
+const minInsert = await supabase.from('registered_agents').insert(minimal);
+console.log('registered_agents INSERT_MIN', minInsert.error ? minInsert.error.message : 'OK');
+if (!minInsert.error) {
+  await supabase.from('registered_agents').delete().eq('email', minimal.email);
 }
 
 const probe = {
