@@ -22,16 +22,21 @@ function ActivateAgentForm() {
       setLoading(false);
       return;
     }
-    supabase
-      .from('registered_agents')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-      .then(({ data, error: loadError }) => {
-        if (loadError) setError(loadError.message);
-        setAgent((data as RecordRow | null) || null);
-        setLoading(false);
-      });
+    async function loadAgent() {
+      for (const table of ['registered_agents', 'Agent'] as const) {
+        const { data, error: loadError } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
+        if (!loadError && data) {
+          setAgent(data as RecordRow);
+          setLoading(false);
+          return;
+        }
+        if (loadError && !/could not find the table|schema cache/i.test(loadError.message)) {
+          setError(loadError.message);
+        }
+      }
+      setLoading(false);
+    }
+    void loadAgent();
   }, [id]);
 
   async function activate() {

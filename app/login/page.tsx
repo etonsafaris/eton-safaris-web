@@ -7,7 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { SITE } from '@/lib/collections';
 import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
-import { saveAgentApplication } from '@/lib/agent-register';
+import { findPublicAgentByEmail, saveAgentApplication } from '@/lib/agent-register';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 

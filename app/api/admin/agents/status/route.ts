@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { pickRecordId } from '@/lib/data';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
@@ -37,23 +38,25 @@ function asEmail(value: unknown) {
 async function findAgent(
   client: SupabaseClient,
   input: { id?: string; email?: string }
-): Promise<RecordRow | null> {
-  if (input.id) {
-    for (const column of ['id', 'uuid', '_id', 'agent_id']) {
-      const { data, error } = await client.from('registered_agents').select('*').eq(column, input.id).maybeSingle();
-      if (!error && data) return data as RecordRow;
+): Promise<{ row: RecordRow; table: string } | null> {
+  for (const table of AGENT_TABLES) {
+    if (input.id) {
+      for (const column of ['id', 'uuid', '_id', 'agent_id']) {
+        const { data, error } = await client.from(table).select('*').eq(column, input.id).maybeSingle();
+        if (!error && data) return { row: data as RecordRow, table };
+        if (error && isMissingTable(error.message)) break;
+      }
     }
-  }
 
-  if (input.email) {
-    const { data, error } = await client.from('registered_agents').select('*').eq('email', input.email).maybeSingle();
-    if (!error && data) return data as RecordRow;
-
-    const listed = await client.from('registered_agents').select('*');
-    const match = ((listed.data as RecordRow[] | null) || []).find(
-      (row) => asEmail(row.email || row.Email) === input.email
-    );
-    if (match) return match;
+    if (input.email) {
+      const { data, error } = await client.from(table).select('*').ilike('email', input.email).limit(8);
+      if (!error && data?.length) {
+        const match =
+          ((data as RecordRow[]) || []).find((row) => asEmail(row.email || row.Email) === input.email) ||
+          (data[0] as RecordRow);
+        if (match) return { row: match, table };
+      }
+    }
   }
 
   return null;
@@ -82,20 +85,22 @@ export async function POST(request: Request) {
     }
 
     const client = createWriteClient(bearerTokenFromRequest(request));
-    const existing = await findAgent(client, { id, email });
-    if (!existing) {
+    const found = await findAgent(client, { id, email });
+    if (!found) {
       return NextResponse.json({ error: 'Agent was not found.' }, { status: 404 });
     }
 
+    const existing = found.row;
+    const agentTable = found.table;
     const rowId = pickRecordId(existing) ?? (id || null);
     const rowEmail = asEmail(existing.email || existing.Email) || email;
     let updated = rowId
-      ? await saveWithColumnFallback('registered_agents', { status }, { id: rowId, client })
+      ? await saveWithColumnFallback(agentTable, { status }, { id: rowId, client })
       : { data: null, error: { message: 'No id column' } };
 
     if (updated.error && rowEmail) {
       updated = await saveWithColumnFallback(
-        'registered_agents',
+        agentTable,
         { status },
         { eq: { column: 'email', value: rowEmail }, client }
       );
