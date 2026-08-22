@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Eye, Pencil, Trash2, Users, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Eye, FileText, Pencil, Trash2, Users, X } from 'lucide-react';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
-import { fetchBookingsForAgent } from '@/lib/agent-bookings';
+import { fetchBookingsForAgent, guestQuoteQuery, guestRecordedFields } from '@/lib/agent-bookings';
 import { agentDisplayName, agentIsActive, agentJoinedAt, isTravelAgentRow } from '@/lib/find-agent';
 import { pickRecordId, pickString } from '@/lib/data';
 import { generateBookingCode } from '@/lib/booking-code';
@@ -29,6 +30,7 @@ function agentStatus(record: RecordRow) {
 }
 
 export default function AgentManagement() {
+  const router = useRouter();
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

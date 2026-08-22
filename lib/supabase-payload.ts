@@ -103,6 +103,9 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'guests',
     'title',
     'status',
+    'destination',
+    'agent_email',
+    'source',
   ],
   bookings: [
     'phone',
