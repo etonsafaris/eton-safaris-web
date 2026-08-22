@@ -9,6 +9,7 @@ import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { findPublicAgentByEmail, saveAgentApplication } from '@/lib/agent-register';
 import { agentIsActive, isStaffRole, isTravelAgentRole } from '@/lib/find-agent';
+import { isOwnerAdminEmail } from '@/lib/inbox';
 import { notifyWorkspace } from '@/lib/notify';
 
 const PRIMARY = '#00A651';

@@ -21,7 +21,7 @@ import NotificationBell from '@/components/admin/NotificationBell';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import { useAdminNotifications } from '@/components/admin/useAdminNotifications';
 import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
-import { canAccessModule, collectionIdFromPath, parseModules } from '@/lib/admin-access';
+import { canAccessModule, collectionIdFromPath, isOwnerAdminEmail, parseModules } from '@/lib/admin-access';
 import { collectionIcon } from '@/lib/admin-icons';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
@@ -115,6 +115,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const email = user?.email;
     if (!user || !email) return;
+    if (isOwnerAdminEmail(email)) {
+      setRole('Admin');
+      setAllowedModules([]);
+      setAccessReady(true);
+      return;
+    }
     const fallbackRole = String(user.user_metadata?.role || '');
     supabase
       .from('registered_agents')
@@ -149,7 +155,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   function canAccess(id: string) {
-    return canAccessModule(id, role || String(user?.user_metadata?.role || ''), allowedModules);
+    return canAccessModule(
+      id,
+      role || String(user?.user_metadata?.role || ''),
+      allowedModules,
+      user?.email
+    );
   }
 
   useEffect(() => {

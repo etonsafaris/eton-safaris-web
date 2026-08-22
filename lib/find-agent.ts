@@ -1,4 +1,5 @@
 import { AGENT_TABLES, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
+import { isOwnerAdminEmail } from '@/lib/inbox';
 import type { RecordRow } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -57,9 +58,11 @@ export function isStaffRole(role: unknown) {
 }
 
 export function isTravelAgentRow(row: RecordRow) {
+  if (isOwnerAdminEmail(String(row.email || row.Email || ''))) return false;
   return isTravelAgentRole(row.role);
 }
 
 export function isStaffRow(row: RecordRow) {
+  if (isOwnerAdminEmail(String(row.email || row.Email || ''))) return true;
   return isStaffRole(row.role);
 }

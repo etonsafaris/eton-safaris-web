@@ -10,7 +10,7 @@ import SubscribersModule from '@/components/admin/SubscribersModule';
 import KeywordsPanel from '@/components/admin/KeywordsPanel';
 import ReviewsPanel from '@/components/admin/ReviewsPanel';
 import QuotationPanel from '@/components/admin/QuotationPanel';
-import { parseModules } from '@/lib/admin-access';
+import { isFullAdmin, parseModules } from '@/lib/admin-access';
 import { getCollection, MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
 import { saveWithColumnFallback } from '@/lib/supabase-save';

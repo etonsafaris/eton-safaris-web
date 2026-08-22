@@ -1,3 +1,7 @@
+import { isOwnerAdminEmail } from '@/lib/inbox';
+
+export { isOwnerAdminEmail };
+
 export function parseModules(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String);
   if (typeof value === 'string' && value.trim()) {
@@ -21,8 +25,12 @@ export function isFullAdminRole(role: string) {
   return /admin|full access|super/i.test(role);
 }
 
-export function canAccessModule(id: string, role: string, allowedModules: string[]) {
-  if (isFullAdminRole(role)) return true;
+export function isFullAdmin(role: string, email?: string | null) {
+  return isOwnerAdminEmail(email) || isFullAdminRole(role);
+}
+
+export function canAccessModule(id: string, role: string, allowedModules: string[], email?: string | null) {
+  if (isFullAdmin(role, email)) return true;
   if (id === 'overview' || id === '') return true;
   if (id === 'inquiries' || id === 'quotations_inquiries') {
     return allowedModules.includes('quotations_inquiries') || allowedModules.includes('inquiries');
