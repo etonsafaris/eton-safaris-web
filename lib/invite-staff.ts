@@ -1,11 +1,10 @@
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { SITE } from '@/lib/collections';
 import { saveAgentApplicationOnServer } from '@/lib/save-agent-application';
-
-function temporaryPassword() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
+import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { updateAgentFields } from '@/lib/agent-row';
+import { findAgentRecord } from '@/lib/find-agent';
+import type { RecordRow } from '@/lib/types';
 
 export function staffRoleLabel(role: string) {
   const value = role.trim();
@@ -16,49 +15,57 @@ export function staffRoleLabel(role: string) {
   return value || 'User';
 }
 
+async function ensureInviteToken(row: RecordRow, table: string) {
+  const existing = String(row.approval_token || '').trim();
+  if (existing) return existing;
+  const token = crypto.randomUUID();
+  const client = createPrivilegedClient();
+  await updateAgentFields(client, table, row, { approval_token: token });
+  return token;
+}
+
 export async function inviteStaffUser(input: { email: string; role: string; name?: string; origin?: string }) {
   const email = input.email.trim().toLowerCase();
   const role = input.role.trim() || 'Limited Access (User)';
   const name = (input.name || email.split('@')[0] || 'there').trim();
-  const password = temporaryPassword();
   const origin = (input.origin || SITE.url).replace(/\/$/, '');
-  const loginUrl = `${origin}/login`;
   const roleLabel = staffRoleLabel(role);
 
   const saved = await saveAgentApplicationOnServer({
     name,
     email,
-    password,
     role,
     status: 'Pending',
     isActive: false,
   });
 
   if (saved.error) {
-    return { ...saved, emailed: false, password: '' };
+    return { ...saved, emailed: false };
   }
 
-  const existingNote = saved.alreadyExists
-    ? `This email is already on file. Open ${loginUrl} and use Create Account with this same email if you still need to set a password.`
-    : `Open ${loginUrl}
-Email: ${email}
-Temporary password: ${password}
-
-If that password does not work yet, use Create Account with this same email.`;
+  const client = createPrivilegedClient();
+  const found =
+    (await findAgentRecord(client, { email })) ||
+    (saved.data?.[0] ? { row: saved.data[0] as RecordRow, table: saved.table || 'registered_agents' } : null);
+  const token = found ? await ensureInviteToken(found.row, found.table) : '';
+  const completeUrl = token ? `${origin}/invite/${token}` : `${origin}/login?mode=signup&email=${encodeURIComponent(email)}`;
 
   const guestMessage = `Hello ${name}, you have been invited to ${SITE.name} as a ${roleLabel}.
 
-${existingNote}
+Complete your signup and set your name and password here:
+${completeUrl}
 
-Your account stays pending until an administrator activates it. You will receive another email when you can open the dashboard.`;
+Use this email: ${email}
+
+After you finish, you can sign in at ${origin}/login. An administrator will activate dashboard access if it is still pending.`;
 
   const delivered = await deliverIncomingAlert({
-    title: `You have been invited to ${SITE.name} as a ${roleLabel}`,
+    title: `Complete your ${SITE.name} ${roleLabel} account`,
     message: guestMessage,
     category: 'system',
     guestEmail: email,
     sendToGuest: true,
-    guestTitle: `You have been invited to ${SITE.name} as a ${roleLabel}`,
+    guestTitle: `Complete your ${SITE.name} ${roleLabel} account`,
     guestMessage,
     emailAdmin: false,
     recordDashboard: false,
@@ -67,6 +74,6 @@ Your account stays pending until an administrator activates it. You will receive
   return {
     ...saved,
     emailed: Boolean(delivered.guestEmailed),
-    password: saved.alreadyExists ? '' : password,
+    inviteUrl: completeUrl,
   };
 }

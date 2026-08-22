@@ -40,6 +40,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
   role: ['role'],
   user_id: ['user_id', 'userId'],
   allowed_modules: ['allowed_modules'],
+  approval_token: ['approval_token'],
 };
 
 export type AgentApplicationInput = {
@@ -263,6 +264,7 @@ export async function updateAgentFields(
     status: patch.status,
     role: patch.role,
     allowed_modules: patch.allowed_modules,
+    approval_token: patch.approval_token,
     isActive:
       patch.isActive ??
       (typeof patch.status === 'string' ? /active/i.test(patch.status) && !/inactive/i.test(patch.status) : undefined),

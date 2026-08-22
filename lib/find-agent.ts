@@ -5,10 +5,15 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 export async function findAgentRecord(
   client: SupabaseClient,
-  input: { id?: string; email?: string }
+  input: { id?: string; email?: string; token?: string }
 ): Promise<{ row: RecordRow; table: string } | null> {
   const email = normalizeAgentEmail(input.email);
   for (const table of AGENT_TABLES) {
+    if (input.token) {
+      const { data, error } = await client.from(table).select('*').eq('approval_token', input.token).limit(1);
+      if (!error && data?.[0]) return { row: data[0] as RecordRow, table };
+      if (error && isMissingTable(error.message)) continue;
+    }
     if (input.id) {
       for (const column of ['id', 'uuid', '_id', 'agent_id']) {
         const { data, error } = await client.from(table).select('*').eq(column, input.id).maybeSingle();
