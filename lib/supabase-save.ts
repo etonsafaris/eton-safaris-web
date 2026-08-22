@@ -139,7 +139,7 @@ export async function saveWithColumnFallback(
   }
 
   if (Object.keys(current).length === 0) {
-    return { data: null, error: { message: 'Nothing to save after removing unknown columns.' } };
+    return { data: null, error: { message: 'Could not save this record. The table is missing the fields being sent.' } };
   }
 
   const seenFixes = new Set<string>();

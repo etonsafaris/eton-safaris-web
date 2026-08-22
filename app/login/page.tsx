@@ -154,7 +154,10 @@ function LoginForm() {
       if (isTravelAgent) {
         const agentInsert = await saveAgentApplication({
           name: fullName,
+          username: fullName,
           email,
+          password,
+          isActive: false,
           status: 'Pending',
         });
         const origin = window.location.origin;

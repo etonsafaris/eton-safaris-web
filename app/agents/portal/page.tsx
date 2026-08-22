@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { findPublicAgentByEmail } from '@/lib/agent-register';
+import { agentDisplayName, agentIsActive } from '@/lib/find-agent';
 import { agentBookingNote, fetchBookingsForAgent } from '@/lib/agent-bookings';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -46,7 +47,7 @@ export default function AgentPortalPage() {
       const email = data.session.user.email || '';
       const match = await findPublicAgentByEmail(email);
       setAgent(match);
-      if (match && String(match.status || '').toLowerCase() === 'active') {
+      if (match && agentIsActive(match)) {
         try {
           setGuests(await fetchBookingsForAgent(email));
         } catch (error) {
@@ -119,8 +120,8 @@ export default function AgentPortalPage() {
     );
   }
 
-  const agentStatus = String(agent?.status || 'Pending');
-  const active = agentStatus.toLowerCase() === 'active';
+  const active = agent ? agentIsActive(agent) : false;
+  const agentStatus = active ? 'Active' : String(agent?.status || 'Pending');
   const pendingGuests = guests.filter((row) => pickString(row, ['status']).toLowerCase() !== 'confirmed').length;
 
   return (
@@ -129,7 +130,7 @@ export default function AgentPortalPage() {
         <div>
           <p className="font-serif text-xl">Agent Portal</p>
           <p className="text-xs text-white/70">
-            {String(agent?.name || agent?.company || user?.email || '')}
+            {agent ? agentDisplayName(agent) : String(user?.email || '')}
           </p>
         </div>
         <button type="button" onClick={signOut} className="rounded-lg bg-white/10 px-3 py-2 text-sm">

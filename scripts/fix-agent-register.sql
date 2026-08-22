@@ -27,6 +27,11 @@ alter table public.registered_agents add column if not exists bio text;
 alter table public.registered_agents add column if not exists status text default 'Pending';
 alter table public.registered_agents add column if not exists company_website text;
 alter table public.registered_agents add column if not exists created_at timestamptz default now();
+alter table public.registered_agents add column if not exists username text;
+alter table public.registered_agents add column if not exists "phoneNumber" text;
+alter table public.registered_agents add column if not exists "companyName" text;
+alter table public.registered_agents add column if not exists "companyWebsite" text;
+alter table public.registered_agents add column if not exists "isActive" boolean default false;
 alter table public.registered_agents enable row level security;
 
 drop policy if exists "Public insert registered_agents" on public.registered_agents;
@@ -62,6 +67,14 @@ begin
     exception when others then
       null;
     end;
+
+    alter table public."Agent" add column if not exists username text;
+    alter table public."Agent" add column if not exists email text;
+    alter table public."Agent" add column if not exists "phoneNumber" text;
+    alter table public."Agent" add column if not exists country text;
+    alter table public."Agent" add column if not exists "companyName" text;
+    alter table public."Agent" add column if not exists "companyWebsite" text;
+    alter table public."Agent" add column if not exists "isActive" boolean default false;
 
     alter table public."Agent" enable row level security;
 
