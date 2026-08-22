@@ -182,7 +182,7 @@ export async function saveWithColumnFallback(
       const column = normalizeColumnName(notNull[1]);
       const next = { ...current };
       if (column === 'featured') next[column] = true;
-      else if (column === 'id') next[column] = crypto.randomUUID();
+      else if (column === 'id') next[column] = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 9000);
       else if (column === 'status') next[column] = 'Published';
       else if (column === 'slug') next[column] = `item-${Date.now()}`;
       else if (/(_at|date)$/i.test(column)) next[column] = new Date().toISOString();
@@ -190,18 +190,29 @@ export async function saveWithColumnFallback(
       return next;
     }
 
-    if (/duplicate key value violates unique constraint/i.test(message) && /pkey|_pkey/i.test(message) && 'id' in current) {
+    if (/duplicate key value violates unique constraint/i.test(message) && /pkey|_pkey/i.test(message)) {
       const next = { ...current };
-      delete next.id;
+      next.id = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 9000);
+      return next;
+    }
+
+    if (/invalid input syntax for type uuid/i.test(message) && current.id != null) {
+      const next = { ...current };
+      next.id = crypto.randomUUID();
       return next;
     }
 
     if (/invalid input syntax for type (bigint|integer|numeric|double)/i.test(message)) {
       const next = { ...current };
+      if (typeof next.id === 'string') {
+        next.id = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 9000);
+        return next;
+      }
       let changed = false;
       for (const [key, value] of Object.entries(next)) {
-        if (typeof value === 'string' && /[0-9]/.test(value)) {
-          const parsed = Number(String(value).replace(/[^0-9.-]/g, ''));
+        if (key === 'id' || key === 'phone' || key === 'email') continue;
+        if (typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value.trim())) {
+          const parsed = Number(value);
           if (Number.isFinite(parsed)) {
             next[key] = parsed;
             changed = true;

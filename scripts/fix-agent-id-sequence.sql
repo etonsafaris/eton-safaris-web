@@ -1,34 +1,51 @@
--- The Base44 "Agent" table kept constraint Agent_pkey after rename.
--- If the id sequence lagged behind existing rows, new signups hit a duplicate key.
--- Run this in the Supabase SQL editor once.
+-- Fix Agent_pkey collisions: the Base44 Agent.id sequence lagged behind existing rows.
+-- Run once in the Supabase SQL editor.
 
 do $$
 declare
-  target_table text;
-  max_id bigint;
+  seq text;
+  tbl text;
 begin
-  select n.nspname || '.' || c.relname
-    into target_table
-  from pg_class c
-  join pg_namespace n on n.oid = c.relnamespace
-  where c.relkind in ('r', 'p')
-    and n.nspname = 'public'
-    and c.relname in ('registered_agents', 'Agent', 'agents')
-  order by case c.relname
-    when 'registered_agents' then 1
-    when 'Agent' then 2
-    else 3
-  end
-  limit 1;
+  foreach tbl in array array['public."Agent"', 'public.registered_agents', 'public.agents']
+  loop
+    begin
+      seq := pg_get_serial_sequence(replace(tbl, '"', ''), 'id');
+    exception when others then
+      seq := null;
+    end;
 
-  if target_table is null then
-    raise notice 'No agent table found';
-    return;
+    if seq is null then
+      begin
+        execute format(
+          $f$
+          select pg_get_serial_sequence(%L, 'id')
+          $f$,
+          case
+            when tbl like '%"Agent"%' then 'public.Agent'
+            else replace(tbl, 'public.', 'public.')
+          end
+        ) into seq;
+      exception when others then
+        seq := null;
+      end;
+    end if;
+  end loop;
+
+  if to_regclass('public."Agent"') is not null then
+    if pg_get_serial_sequence('public."Agent"', 'id') is not null then
+      perform setval(
+        pg_get_serial_sequence('public."Agent"', 'id'),
+        (select coalesce(max(id), 1) from public."Agent")
+      );
+    end if;
   end if;
 
-  execute format('select coalesce(max(id::bigint), 1) from %s', target_table) into max_id;
-
-  if pg_get_serial_sequence(target_table, 'id') is not null then
-    perform setval(pg_get_serial_sequence(target_table, 'id'), max_id);
+  if to_regclass('public.registered_agents') is not null then
+    if pg_get_serial_sequence('public.registered_agents', 'id') is not null then
+      perform setval(
+        pg_get_serial_sequence('public.registered_agents', 'id'),
+        (select coalesce(max(id::bigint), 1) from public.registered_agents)
+      );
+    end if;
   end if;
 end $$;
