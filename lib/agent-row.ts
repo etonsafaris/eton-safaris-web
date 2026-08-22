@@ -278,6 +278,9 @@ export async function updateAgentFields(
   if (patch.allowed_modules !== undefined) {
     payload.allowed_modules = patch.allowed_modules;
   }
+  if (patch.approval_token !== undefined) {
+    payload.approval_token = patch.approval_token;
+  }
 
   if (Object.keys(payload).length === 0) {
     return { data: null, error: { message: 'No matching agent fields to update.' } };

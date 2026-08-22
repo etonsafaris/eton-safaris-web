@@ -78,6 +78,11 @@ function LoginForm() {
   }, [isSignup]);
 
   useEffect(() => {
+    const invitedEmail = searchParams?.get('email') || '';
+    if (invitedEmail.includes('@')) setEmail(invitedEmail);
+  }, [searchParams]);
+
+  useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted || !data.session) return;

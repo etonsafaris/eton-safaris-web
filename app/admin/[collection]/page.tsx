@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import AgentManagement from '@/components/admin/AgentManagement';
@@ -43,7 +43,13 @@ export default function AdminCollectionPage() {
   if (collection === 'user_management') return <UserManagement />;
   if (collection === 'keywords') return <KeywordsPanel />;
   if (collection === 'reviews') return <ReviewsPanel />;
-  if (collection === 'quotations_inquiries') return <QuotationPanel />;
+  if (collection === 'quotations_inquiries') {
+    return (
+      <Suspense fallback={<p className="text-sm text-gray-500">Loading quotations…</p>}>
+        <QuotationPanel />
+      </Suspense>
+    );
+  }
   if (collection === 'registered_agents') return <AgentManagement />;
   if (collection === 'notifications') return <NotificationsModule />;
   if (collection === 'subscribers') return <SubscribersModule />;
@@ -387,7 +393,7 @@ function UserManagement() {
     <div>
       <h2 className="font-serif text-3xl">User Management</h2>
       <p className="mt-1 text-sm text-gray-500">
-        Activate Content Managers and Tour Operators, then tick the modules they may open. Unticked modules stay hidden from them.
+        Invite a Tour Operator, Content Manager, or User. They receive an email, complete signup with their name and password, then you activate access and tick the modules they may open.
       </p>
       <form onSubmit={invite} className="mt-6 rounded-xl border bg-white p-5">
         <h3 className="font-semibold">Invite New User</h3>
