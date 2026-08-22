@@ -46,16 +46,6 @@ export async function saveAgentApplicationOnServer(
   }
 
   const client = createPrivilegedClient();
-  const authUser = await ensureConfirmedAuthUser(client, {
-    email: parsed.email,
-    password: parsed.password,
-    name: parsed.name,
-    role: parsed.role,
-    userId: parsed.user_id,
-  });
-  if (authUser?.id) parsed.user_id = authUser.id;
-  if (!parsed.user_id) parsed.user_id = crypto.randomUUID();
-
   const tables: string[] = [];
   for (const table of AGENT_TABLES) {
     if (await tableExists(client, table)) tables.push(table);
@@ -68,6 +58,16 @@ export async function saveAgentApplicationOnServer(
       return { data: [existing], error: null, alreadyExists: true, table };
     }
   }
+
+  const authUser = await ensureConfirmedAuthUser(client, {
+    email: parsed.email,
+    password: parsed.password,
+    name: parsed.name,
+    role: parsed.role,
+    userId: parsed.user_id,
+  });
+  if (authUser?.id) parsed.user_id = authUser.id;
+  if (!parsed.user_id) parsed.user_id = crypto.randomUUID();
 
   let lastError: SaveResult['error'] = { message: 'Could not save the agent application.' };
   for (const table of tables) {

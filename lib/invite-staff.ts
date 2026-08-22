@@ -39,10 +39,12 @@ export async function inviteStaffUser(input: { email: string; role: string; name
   }
 
   const existingNote = saved.alreadyExists
-    ? `This email is already on file. Use Create Account at ${loginUrl} with this same email if you still need to set a password.`
-    : `Sign in at ${loginUrl}
+    ? `This email is already on file. Open ${loginUrl} and use Create Account with this same email if you still need to set a password.`
+    : `Open ${loginUrl}
 Email: ${email}
-Temporary password: ${password}`;
+Temporary password: ${password}
+
+If that password does not work yet, use Create Account with this same email.`;
 
   const guestMessage = `Hello ${name}, you have been invited to ${SITE.name} as a ${roleLabel}.
 
