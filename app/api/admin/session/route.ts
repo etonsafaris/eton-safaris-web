@@ -4,6 +4,21 @@ import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 
+async function ensureOwnerAdminRecord(email: string) {
+  try {
+    const client = createPrivilegedClient();
+    const { data: rows } = await client.from('registered_agents').select('id').ilike('email', email).limit(1);
+    const id = rows?.[0]?.id;
+    if (!id) return;
+    await client
+      .from('registered_agents')
+      .update({ role: 'Admin', status: 'Active', is_active: true })
+      .eq('id', id);
+  } catch (error) {
+    console.warn('[Admin session] Could not mark owner as Admin:', error);
+  }
+}
+
 function sessionCookieOptions(maxAge = 60 * 60 * 12) {
   return {
     httpOnly: true,
