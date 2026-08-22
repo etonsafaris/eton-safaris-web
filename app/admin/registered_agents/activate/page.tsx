@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { adminAuthHeaders } from '@/lib/admin-records-client';
+import { AGENT_TABLES } from '@/lib/agent-tables';
+import { agentDisplayName, agentIsActive } from '@/lib/find-agent';
 import { supabase } from '@/lib/supabase/client';
 import type { RecordRow } from '@/lib/types';
 
@@ -23,7 +25,7 @@ function ActivateAgentForm() {
       return;
     }
     async function loadAgent() {
-      for (const table of ['registered_agents', 'Agent'] as const) {
+      for (const table of AGENT_TABLES) {
         const { data, error: loadError } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
         if (!loadError && data) {
           setAgent(data as RecordRow);
@@ -57,7 +59,7 @@ function ActivateAgentForm() {
         id: agentId || undefined,
         status: 'Active',
         email,
-        name: String(agent.name || agent.full_name || ''),
+        name: agentDisplayName(agent),
       }),
     });
     const body = (await response.json().catch(() => ({}))) as { error?: string };
@@ -85,12 +87,12 @@ function ActivateAgentForm() {
     );
   }
 
-  const alreadyActive = String(agent.status || '').toLowerCase() === 'active';
+  const alreadyActive = agentIsActive(agent);
 
   return (
     <div className="max-w-xl rounded-2xl border bg-white p-6 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#00A651]">Agent approval</p>
-      <h1 className="mt-1 font-serif text-3xl text-[#111827]">{String(agent.name || 'Agent')}</h1>
+      <h1 className="mt-1 font-serif text-3xl text-[#111827]">{agentDisplayName(agent)}</h1>
       <p className="mt-2 text-sm text-gray-500">Review this application, then click Activate to grant portal access.</p>
       <dl className="mt-6 space-y-2 text-sm">
         <div className="flex justify-between gap-4 border-b border-gray-100 py-2">
@@ -99,7 +101,7 @@ function ActivateAgentForm() {
         </div>
         <div className="flex justify-between gap-4 border-b border-gray-100 py-2">
           <dt className="text-gray-500">Phone</dt>
-          <dd className="font-medium">{String(agent.phone || '—')}</dd>
+          <dd className="font-medium">{String(agent.phone || agent.phoneNumber || '—')}</dd>
         </div>
         <div className="flex justify-between gap-4 border-b border-gray-100 py-2">
           <dt className="text-gray-500">Country</dt>
@@ -107,7 +109,7 @@ function ActivateAgentForm() {
         </div>
         <div className="flex justify-between gap-4 border-b border-gray-100 py-2">
           <dt className="text-gray-500">Company</dt>
-          <dd className="font-medium">{String(agent.company || '—')}</dd>
+          <dd className="font-medium">{String(agent.company || agent.companyName || '—')}</dd>
         </div>
         <div className="flex justify-between gap-4 py-2">
           <dt className="text-gray-500">Status</dt>
