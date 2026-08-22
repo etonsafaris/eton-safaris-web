@@ -286,22 +286,26 @@ function UserManagement() {
 
   async function invite(event: React.FormEvent) {
     event.preventDefault();
-    const response = await fetch('/api/public/agent-register', {
+    const response = await fetch('/api/admin/users/invite', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({
         name: email.split('@')[0],
         email,
         role,
-        status: 'Pending',
       }),
     });
-    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    const body = (await response.json().catch(() => ({}))) as { error?: string; emailed?: boolean };
     if (!response.ok) {
-      setStatus(body.error || 'Could not save the invite.');
+      setStatus(body.error || 'Could not send the invite.');
       return;
     }
-    setStatus('Invite saved. The user stays Pending until you activate the account.');
+    setStatus(
+      body.emailed
+        ? `Invite emailed to ${email}. They stay Pending until you activate the account.`
+        : `Invite saved for ${email}, but the email could not be sent. Check Resend, then activate after they can sign in.`
+    );
     setEmail('');
     await loadUsers();
   }

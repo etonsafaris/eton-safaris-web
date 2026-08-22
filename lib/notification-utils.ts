@@ -1,12 +1,25 @@
 import { pickDateValue, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
+function isFlagTrue(value: unknown) {
+  if (value === true || value === 1) return true;
+  if (typeof value === 'string') return /^(true|1|yes|t|on|read|seen)$/i.test(value.trim());
+  return false;
+}
+
+function isFlagFalse(value: unknown) {
+  if (value === false || value === 0) return true;
+  if (typeof value === 'string') return /^(false|0|no|f|off|unread)$/i.test(value.trim());
+  return false;
+}
+
 export function isUnreadNotification(record: RecordRow) {
-  if (record.read === true || record.seen === true) return false;
+  const readValue = record.read ?? record.seen ?? record.is_read ?? record.isRead;
+  if (isFlagTrue(readValue) || record.read_at || record.seen_at) return false;
   const status = pickString(record, ['status']).toLowerCase();
-  if (status === 'read' || status === 'seen') return false;
-  if (record.read === false || record.seen === false) return true;
-  return status === 'unread' || status === 'new' || status === 'notice' || status === '';
+  if (/^(read|seen|archived|done|closed)$/.test(status)) return false;
+  if (isFlagFalse(readValue)) return true;
+  return /^(unread|new|notice)$/.test(status);
 }
 
 export function unreadNotificationCount(records: RecordRow[]) {

@@ -54,7 +54,7 @@ export function isTravelAgentRole(role: unknown) {
 }
 
 export function isStaffRole(role: unknown) {
-  return /content manager|tour operator|admin|full access/i.test(String(role || ''));
+  return /content manager|tour operator|admin|full access|limited access|\(user\)|^user$/i.test(String(role || ''));
 }
 
 export function isTravelAgentRow(row: RecordRow) {

@@ -135,7 +135,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         setRole(nextRole);
         setAllowedModules(parseModules(row?.allowed_modules));
         setAccessReady(true);
-        const isStaff = /admin|full access|tour operator|content manager/i.test(nextRole);
+        const isStaff = /admin|full access|tour operator|content manager|limited access|\(user\)|^user$/i.test(nextRole);
         if (isStaff) return;
         if (row) router.replace('/agents/portal');
       });
@@ -286,7 +286,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 iconName={item.icon}
                 active={Boolean(active)}
                 collapsed={collapsed}
-                badge={item.id === 'notifications' ? unreadNotifications : undefined}
+                badge={item.id === 'notifications' && unreadNotifications > 0 ? unreadNotifications : undefined}
                 onNavigate={() => setMenuOpen(false)}
                 onGuard={guard}
               />

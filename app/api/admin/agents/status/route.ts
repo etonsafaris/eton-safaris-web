@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
-import { findAgentRecord } from '@/lib/find-agent';
+import { findAgentRecord, isStaffRole } from '@/lib/find-agent';
 import { requireAdminUser } from '@/lib/require-admin';
 import {
   bearerTokenFromRequest,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     const name = String(existing.name || existing.full_name || body.name || 'Agent');
     const role = String(existing.role || body.name || 'Travel Agent');
     const origin = (process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || '').replace(/\/$/, '');
-    const staff = /content manager|tour operator|admin|full access/i.test(role);
+    const staff = isStaffRole(role);
 
     if (status.toLowerCase() === 'active' && rowEmail) {
       await ensureConfirmedAuthUser(client, {
