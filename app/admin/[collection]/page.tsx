@@ -278,19 +278,6 @@ function UserManagement() {
     });
   }, []);
 
-  function parseModules(value: unknown): string[] {
-    if (Array.isArray(value)) return value.map(String);
-    if (typeof value === 'string' && value.trim()) {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) return parsed.map(String);
-      } catch {
-        return value.split(',').map((item) => item.trim()).filter(Boolean);
-      }
-    }
-    return [];
-  }
-
   async function invite(event: React.FormEvent) {
     event.preventDefault();
     const response = await fetch('/api/public/agent-register', {
@@ -318,12 +305,26 @@ function UserManagement() {
     const next = current.includes(moduleId)
       ? current.filter((item) => item !== moduleId)
       : [...current, moduleId];
-    const { error } = await saveWithColumnFallback('profiles', { allowed_modules: JSON.stringify(next) }, user.id);
-    if (error) {
-      setStatus(error.message);
+    const response = await fetch('/api/admin/agents/manage', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({
+        action: 'update',
+        id: pickRecordId(user) ?? undefined,
+        email: pickString(user, ['email']),
+        allowed_modules: next,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setStatus(body.error || 'Could not save module access. Run scripts/add-allowed-modules.sql in Supabase.');
       return;
     }
-    await loadUsers();
+    setUsers((rows) =>
+      rows.map((row) => (pickRecordId(row) === pickRecordId(user) ? { ...row, allowed_modules: JSON.stringify(next) } : row))
+    );
+    setStatus(`Saved modules for ${agentDisplayName(user)}. They will only see the checked items.`);
   }
 
   async function setUserStatus(user: RecordRow, nextStatus: 'Active' | 'Pending') {
@@ -376,7 +377,7 @@ function UserManagement() {
     <div>
       <h2 className="font-serif text-3xl">User Management</h2>
       <p className="mt-1 text-sm text-gray-500">
-        Content Managers and Tour Operators register themselves, just like Davsafaris. Approve them here. They receive the approval email; the admin inbox does not.
+        Activate Content Managers and Tour Operators, then tick the modules they may open. Unticked modules stay hidden from them.
       </p>
       <form onSubmit={invite} className="mt-6 rounded-xl border bg-white p-5">
         <h3 className="font-semibold">Invite New User</h3>
@@ -452,17 +453,20 @@ function UserManagement() {
                 </div>
               </div>
               {!isAdmin && (
-                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {modules.map((moduleId) => (
-                    <label key={moduleId} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={allowed.includes(moduleId)}
-                        onChange={() => toggleModule(user, moduleId)}
-                      />
-                      {moduleId.replace(/_/g, ' ')}
-                    </label>
-                  ))}
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Visible modules</p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {modules.map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={allowed.includes(item.id)}
+                          onChange={() => void toggleModule(user, item.id)}
+                        />
+                        {item.label}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
