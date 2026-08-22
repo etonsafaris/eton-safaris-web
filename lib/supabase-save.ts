@@ -142,6 +142,9 @@ export async function saveWithColumnFallback(
     return { data: null, error: { message: 'Nothing to save after removing unknown columns.' } };
   }
 
+  const seenFixes = new Set<string>();
+  let lastWriteError = '';
+
   function applyErrorFix(message: string): Record<string, unknown> | null {
     const missing = parseMissingColumn(message);
     if (missing && missing in current) {
@@ -246,8 +249,11 @@ export async function saveWithColumnFallback(
         return { data: rows, error: null };
       }
 
+      lastWriteError = selected.error.message;
       const selectedFix = applyErrorFix(selected.error.message);
-      if (selectedFix && Object.keys(selectedFix).length > 0) {
+      const selectedKey = selectedFix ? `${selected.error.message}|${Object.keys(selectedFix).sort().join(',')}|${String(selectedFix.id ?? '')}` : '';
+      if (selectedFix && Object.keys(selectedFix).length > 0 && selectedKey && !seenFixes.has(selectedKey)) {
+        seenFixes.add(selectedKey);
         current = selectedFix;
         continue;
       }
@@ -267,8 +273,13 @@ export async function saveWithColumnFallback(
         return { data: rows, error: null };
       }
 
+      lastWriteError = writeOnly.error.message;
       const writeMissingFix = applyErrorFix(writeOnly.error.message);
-      if (writeMissingFix && Object.keys(writeMissingFix).length > 0) {
+      const writeKey = writeMissingFix
+        ? `${writeOnly.error.message}|${Object.keys(writeMissingFix).sort().join(',')}|${String(writeMissingFix.id ?? '')}`
+        : '';
+      if (writeMissingFix && Object.keys(writeMissingFix).length > 0 && writeKey && !seenFixes.has(writeKey)) {
+        seenFixes.add(writeKey);
         current = writeMissingFix;
         continue;
       }
@@ -283,5 +294,5 @@ export async function saveWithColumnFallback(
     }
   }
 
-  return { data: null, error: { message: 'Could not save after removing unknown columns.' } };
+  return { data: null, error: { message: lastWriteError || 'Could not save this record.' } };
 }

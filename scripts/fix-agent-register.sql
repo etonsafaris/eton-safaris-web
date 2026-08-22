@@ -16,7 +16,17 @@ create table if not exists public.registered_agents (
   created_at timestamptz default now()
 );
 
+alter table public.registered_agents add column if not exists name text;
+alter table public.registered_agents add column if not exists email text;
+alter table public.registered_agents add column if not exists phone text;
+alter table public.registered_agents add column if not exists country text;
+alter table public.registered_agents add column if not exists gender text;
+alter table public.registered_agents add column if not exists company text;
+alter table public.registered_agents add column if not exists address text;
+alter table public.registered_agents add column if not exists bio text;
+alter table public.registered_agents add column if not exists status text default 'Pending';
 alter table public.registered_agents add column if not exists company_website text;
+alter table public.registered_agents add column if not exists created_at timestamptz default now();
 alter table public.registered_agents enable row level security;
 
 drop policy if exists "Public insert registered_agents" on public.registered_agents;
