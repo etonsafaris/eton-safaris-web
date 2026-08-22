@@ -114,7 +114,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const email = user?.email;
-    if (!email) return;
+    if (!user || !email) return;
+    const fallbackRole = String(user.user_metadata?.role || '');
     supabase
       .from('registered_agents')
       .select('email,role,allowed_modules,status,is_active')
@@ -124,7 +125,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         const rows = (data as Array<{ email?: string; role?: string; allowed_modules?: unknown }> | null) || [];
         const row =
           rows.find((item) => String(item.email || '').toLowerCase() === email.toLowerCase()) || rows[0];
-        const nextRole = String(row?.role || user.user_metadata?.role || '');
+        const nextRole = String(row?.role || fallbackRole);
         setRole(nextRole);
         setAllowedModules(parseModules(row?.allowed_modules));
         setAccessReady(true);
