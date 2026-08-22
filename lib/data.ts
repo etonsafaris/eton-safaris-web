@@ -290,6 +290,7 @@ export function parseContentBlocks(value: unknown): { title: string; description
     for (const item of value) {
       if (!item || typeof item !== 'object') continue;
       const row = item as Record<string, unknown>;
+      if (row.kind === 'faq' || (row.question && !row.title && !row.description)) continue;
       const title = String(row.title || '');
       const description = String(row.description || '');
       const image_url = String(row.image_url || row.image || '');

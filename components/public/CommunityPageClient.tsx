@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import CmsPageView from '@/components/public/CmsPageView';
-import { inferPageLayout, parseCmsBlocks, parseCmsPageExtras } from '@/lib/cms-page-model';
+import { inferPageLayout } from '@/lib/cms-page-model';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
+import { fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
+import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -30,27 +31,23 @@ export default function CommunityPageClient({ initialPage = null }: { initialPag
       .finally(() => setReady(true));
   }, [live]);
 
-  const extras = parseCmsPageExtras(page, SLUG);
-  const title = extras.hero_title || (page ? getRecordTitle(page) : '') || 'Our Community';
-  const content = page ? pickString(page, ['content', 'description', 'body']) : '';
-  const image = page ? getRecordImage(page) || undefined : undefined;
-  const blocks = parseCmsBlocks(page);
+  const view = hydratePublicCmsPage(page, SLUG);
 
-  if (!ready && !page) {
+  if (!ready && !page && !view.content) {
     return <div className="py-24 text-center text-gray-500">Loading…</div>;
   }
 
   return (
     <CmsPageView
-      title={title}
-      image={image}
-      content={content}
-      variant={extras.layout !== 'standard' ? extras.layout : inferPageLayout(SLUG)}
-      subtitle={extras.subtitle}
-      faqs={extras.faqs}
-      blocks={blocks}
-      ctaLabel={extras.cta_label || 'Plan Your Safari'}
-      ctaHref={extras.cta_href || '/contact-us'}
+      title={view.title || 'Our Community'}
+      image={view.image}
+      content={view.content}
+      variant={view.layout !== 'standard' ? view.layout : inferPageLayout(SLUG)}
+      subtitle={view.subtitle}
+      faqs={view.faqs}
+      blocks={view.blocks}
+      ctaLabel={view.ctaLabel || 'Plan Your Safari'}
+      ctaHref={view.ctaHref}
     />
   );
 }

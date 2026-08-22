@@ -35,6 +35,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
   if (!src || src === 'null' || src === 'undefined') return false;
   if (src.startsWith('{') || src.startsWith('[')) return false;
   if (/^(blob:|data:)/i.test(src)) return false;
+  if (/media\.base44\.com/i.test(src)) return false;
   if (/\/object\/authenticated\//i.test(src) || /\/object\/sign\//i.test(src)) return false;
 
   if (src.startsWith('/') && !src.startsWith('//')) {

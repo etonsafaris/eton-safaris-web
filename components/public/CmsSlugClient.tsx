@@ -16,10 +16,10 @@ import {
 } from '@/lib/cms-routes';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
-import { parseCmsBlocks, parseCmsPageExtras, inferPageLayout } from '@/lib/cms-page-model';
+import { inferPageLayout } from '@/lib/cms-page-model';
+import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import {
   fetchCollectionRecords,
-  getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickString,
@@ -215,20 +215,18 @@ export default function CmsSlugClient({
     );
   }
 
-  const extras = parseCmsPageExtras(page, resolved.canonical);
-  const layout = extras.layout && extras.layout !== 'standard' ? extras.layout : inferPageLayout(resolved.canonical);
+  const view = hydratePublicCmsPage(page, resolved.canonical);
+  const layout = view.layout && view.layout !== 'standard' ? view.layout : inferPageLayout(resolved.canonical);
   const isPolicy = layout === 'policy';
-  const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
   const title =
-    extras.hero_title ||
-    (page ? getRecordTitle(page) : '') ||
+    view.title ||
     (isPolicy ? fallback?.title : '') ||
     resolved.canonical.replace(/-/g, ' ');
-  const content = cmsContent || (!page && isPolicy ? fallback?.content || '' : '');
-  const image = page ? getRecordImage(page) || undefined : undefined;
-  const blocks = parseCmsBlocks(page);
-  const faqs = extras.faqs;
-  const destinations = extras.destinations;
+  const content = view.content || (!page && isPolicy ? fallback?.content || '' : '');
+  const image = view.image || undefined;
+  const blocks = view.blocks;
+  const faqs = view.faqs;
+  const destinations = view.destinations;
 
   if (!ready && !page) {
     return (
