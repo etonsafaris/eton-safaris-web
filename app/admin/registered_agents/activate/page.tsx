@@ -30,7 +30,7 @@ function ActivateAgentForm() {
           setLoading(false);
           return;
         }
-        if (loadError && !/could not find the table|schema cache/i.test(loadError.message)) {
+        if (loadError && !/could not find the table/i.test(loadError.message) && !/could not find the '[^']+' column/i.test(loadError.message)) {
           setError(loadError.message);
         }
       }

@@ -79,7 +79,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
   ],
   landing_pages: ['published_at', 'excerpt', 'headline', 'hero_title', 'faqs', 'status', 'offer_line', 'ready_heading', 'cta_label', 'cta_href'],
   keywords: ['keywords', 'country', 'category', 'created_date', 'updated_date'],
-  registered_agents: ['status', 'company', 'address', 'bio', 'gender', 'company_website', 'companyWebsite', 'phoneNumber', 'username'],
+  registered_agents: ['status', 'company', 'bio', 'gender', 'company_website', 'companyWebsite', 'phoneNumber', 'username'],
   inquiries: [
     'name',
     'email',
@@ -169,6 +169,10 @@ export function rememberMissingColumn(table: string, column: string) {
   const known = knownColumnsByTable.get(table);
   known?.delete(name);
 }
+
+['registered_agents', 'Agent'].forEach((table) => {
+  rememberMissingColumn(table, 'address');
+});
 
 export function getMissingColumns(table: string): Set<string> {
   return new Set(missingSet(table));
