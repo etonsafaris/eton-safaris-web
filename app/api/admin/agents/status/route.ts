@@ -10,6 +10,7 @@ import {
   isRlsError,
   rlsHelpMessage,
 } from '@/lib/supabase/request-client';
+import { updateAgentFields } from '@/lib/agent-row';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
 async function allowAdmin(request: Request) {
@@ -65,16 +66,16 @@ export async function POST(request: Request) {
     const agentTable = found.table;
     const rowId = pickRecordId(existing) ?? (id || null);
     const rowEmail = asEmail(existing.email || existing.Email) || email;
-    let updated = rowId
-      ? await saveWithColumnFallback(agentTable, { status }, { id: rowId, client })
-      : { data: null, error: { message: 'No id column' } };
+    let updated = await updateAgentFields(client, agentTable, existing, {
+      status,
+      isActive: status.toLowerCase() === 'active',
+    });
 
     if (updated.error && rowEmail) {
-      updated = await saveWithColumnFallback(
-        agentTable,
-        { status },
-        { eq: { column: 'email', value: rowEmail }, client }
-      );
+      updated = await updateAgentFields(client, agentTable, { ...existing, email: rowEmail }, {
+        status,
+        isActive: status.toLowerCase() === 'active',
+      });
     }
     if (updated.error) {
       return NextResponse.json({ error: statusError(updated.error.message) }, { status: 400 });

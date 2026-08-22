@@ -9,7 +9,7 @@ import {
   isRlsError,
   rlsHelpMessage,
 } from '@/lib/supabase/request-client';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { updateAgentFields } from '@/lib/agent-row';
 
 async function allowAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || '';
@@ -82,15 +82,7 @@ export async function POST(request: Request) {
       status: body.status?.trim() || undefined,
     };
 
-    let updated = rowId
-      ? await saveWithColumnFallback(found.table, payload, { id: rowId, client })
-      : { data: null, error: { message: 'No id column' } };
-    if (updated.error && email.includes('@')) {
-      updated = await saveWithColumnFallback(found.table, payload, {
-        eq: { column: 'email', value: email },
-        client,
-      });
-    }
+    const updated = await updateAgentFields(client, found.table, found.row, payload);
     if (updated.error) return fail(updated.error.message);
     return NextResponse.json({ ok: true, data: updated.data });
   } catch (error) {

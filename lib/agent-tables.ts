@@ -1,4 +1,4 @@
-export const AGENT_TABLES = ['registered_agents', 'Agent'] as const;
+export const AGENT_TABLES = ['Agent', 'registered_agents'] as const;
 
 export function isMissingTable(message: string) {
   if (/could not find the '[^']+' column/i.test(message)) return false;

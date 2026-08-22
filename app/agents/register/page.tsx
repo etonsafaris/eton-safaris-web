@@ -5,9 +5,7 @@ import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { supabase } from '@/lib/supabase/client';
 import { agentApplicationId, saveAgentApplication } from '@/lib/agent-register';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
@@ -50,14 +48,20 @@ export default function AgentRegisterPage() {
 
     const result = await saveAgentApplication({
       name: form.name.trim(),
+      username: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
+      phoneNumber: form.phone.trim(),
       country: form.country,
       gender: form.gender,
       company: form.company.trim(),
+      companyName: form.company.trim(),
       company_website: form.company_website.trim(),
+      companyWebsite: form.company_website.trim(),
       address: form.address.trim(),
       bio: form.bio.trim(),
+      password: form.password,
+      isActive: false,
       status: 'Pending',
     });
 
@@ -69,28 +73,6 @@ export default function AgentRegisterPage() {
     }
 
     const agentId = agentApplicationId(result);
-
-    if (form.password) {
-      const { data: signedUp } = await supabase.auth.signUp({
-        email: form.email.trim(),
-        password: form.password,
-        options: { data: { full_name: form.name.trim(), role: 'Travel Agent' } },
-      });
-      if (signedUp?.user?.id) {
-        await saveWithColumnFallback(
-          'profiles',
-          {
-            id: signedUp.user.id,
-            email: form.email.trim(),
-            full_name: form.name.trim(),
-            role: 'Travel Agent',
-            status: 'Pending',
-          },
-          { keepId: true }
-        );
-      }
-      await supabase.auth.signOut();
-    }
 
     const origin = window.location.origin.replace(/\/$/, '');
     const activateLink = agentId
