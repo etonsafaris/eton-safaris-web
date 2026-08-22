@@ -68,8 +68,8 @@ export default function AgentPortalPage() {
     }
     if (!editingId) {
       await saveWithColumnFallback(
-        'inquiries',
-        buildSavePayload('inquiries', {
+        'quotations_inquiries',
+        buildSavePayload('quotations_inquiries', {
           title: 'Agents Inquiry',
           name: form.guest_name,
           email: form.email,

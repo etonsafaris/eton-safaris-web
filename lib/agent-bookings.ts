@@ -24,7 +24,7 @@ export function agentBookingNote(agentEmail: string) {
 
 async function loadTable(table: string) {
   const { data, error } = await supabase.from(table).select('*');
-  if (error) throw new Error(error.message);
+  if (error) return [] as RecordRow[];
   return (data as RecordRow[]) || [];
 }
 
@@ -35,18 +35,14 @@ export async function fetchBookingsForAgent(agentEmail: string): Promise<RecordR
   const bookings = (await loadTable('bookings')).filter((row) => bookingMatchesAgent(row, email));
   if (bookings.length) return bookings;
 
-  try {
-    const inquiries = (await loadTable('inquiries')).filter((row) => {
-      const haystack = `${pickString(row, ['title'])} ${pickString(row, ['message'])}`.toLowerCase();
-      return haystack.includes(email.toLowerCase()) && haystack.includes('agent');
-    });
-    return inquiries.map((row) => ({
-      ...row,
-      guest_name: pickString(row, ['name', 'guest_name']) || pickString(row, ['email']),
-      tour: pickString(row, ['tour']),
-      destination: pickString(row, ['destination']),
-    }));
-  } catch {
-    return [];
-  }
+  const quotes = (await loadTable('quotations_inquiries')).filter((row) => {
+    const haystack = `${pickString(row, ['title'])} ${pickString(row, ['message'])}`.toLowerCase();
+    return haystack.includes(email.toLowerCase()) && haystack.includes('agent');
+  });
+  return quotes.map((row) => ({
+    ...row,
+    guest_name: pickString(row, ['name', 'guest_name']) || pickString(row, ['email']),
+    tour: pickString(row, ['tour']),
+    destination: pickString(row, ['destination']),
+  }));
 }
