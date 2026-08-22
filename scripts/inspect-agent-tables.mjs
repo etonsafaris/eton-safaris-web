@@ -13,7 +13,7 @@ const env = Object.fromEntries(
 
 const hasService = Boolean(env.SUPABASE_SERVICE_ROLE_KEY);
 const keyKind = hasService ? 'service' : 'anon';
-console.log('KEY_KIND', keyKind, 'SERVICE_LEN', hasService ? env.SUPABASE_SERVICE_ROLE_KEY.length : 0);
+console.log('KEY_KIND', keyKind);
 
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
