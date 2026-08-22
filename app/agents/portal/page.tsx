@@ -82,23 +82,49 @@ export default function AgentPortalPage() {
       return;
     }
     if (!editingId) {
-      await saveWithColumnFallback(
-        'quotations_inquiries',
-        buildSavePayload('quotations_inquiries', {
-          title: 'Agents Inquiry',
-          name: form.guest_name,
-          email: form.email,
-          phone: form.phone,
-          tour: form.tour,
-          message: `Agents Inquiry recorded by ${user.email}. Destination: ${form.destination || '—'}. Travel date: ${form.travel_date || '—'}. Travel plans: ${form.travel_plans || '—'}`,
-          status: 'Pending',
-        })
-      );
+      const agentLabel = agent ? agentDisplayName(agent) : user.email;
+      const inquiryMessage = [
+        `Inquiry from the agent ${agentLabel} (${user.email}).`,
+        `Guest: ${form.guest_name}`,
+        `Email: ${form.email}`,
+        `Phone: ${form.phone || '—'}`,
+        `Guests: ${form.guests || '—'}`,
+        `Tour: ${form.tour || '—'}`,
+        `Destination: ${form.destination || '—'}`,
+        `Travel date: ${form.travel_date || '—'}`,
+        `Travel plans: ${form.travel_plans || '—'}`,
+      ].join('\n');
+      const inquiry = {
+        title: 'Inquiry from the agent',
+        name: form.guest_name,
+        email: form.email,
+        phone: form.phone,
+        tour: form.tour || form.destination,
+        destination: form.destination,
+        guests: form.guests,
+        travel_date: form.travel_date,
+        agent_email: user.email,
+        source: 'agent',
+        message: inquiryMessage,
+        status: 'Pending',
+      };
+      let inquiryResult = await saveWithColumnFallback('inquiries', buildSavePayload('inquiries', inquiry));
+      if (inquiryResult.error) {
+        inquiryResult = await saveWithColumnFallback(
+          'quotations_inquiries',
+          buildSavePayload('quotations_inquiries', inquiry)
+        );
+      } else {
+        await saveWithColumnFallback('quotations_inquiries', buildSavePayload('quotations_inquiries', inquiry));
+      }
       await notifyWorkspace({
-        title: 'Agents Inquiry',
-        message: `${form.guest_name} (${form.email}) was recorded by agent ${user.email} for ${form.tour || form.destination || 'a safari'}. Quotation should be emailed to the guest.`,
+        title: 'Inquiry from the agent',
+        message: inquiryMessage,
         category: 'inquiry',
         guestEmail: form.email,
+        emailAdmin: true,
+        recordDashboard: true,
+        sendToGuest: false,
       });
     }
     setStatus(editingId ? 'Guest updated.' : 'Guest recorded.');

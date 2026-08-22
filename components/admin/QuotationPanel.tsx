@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FileText, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { SITE } from '@/lib/collections';
@@ -59,6 +60,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function QuotationPanel() {
+  const searchParams = useSearchParams();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [rows, setRows] = useState<RecordRow[]>([]);
   const [inquiries, setInquiries] = useState<RecordRow[]>([]);
@@ -99,10 +101,28 @@ export default function QuotationPanel() {
     [tourId, tours]
   );
 
-  const pendingInquiries = inquiries.filter((row) => {
-    const value = inquiryStatus(row).toLowerCase();
-    return value === 'pending' || value === '';
-  });
+  const pendingInquiries = useMemo(() => {
+    const fromInquiries = inquiries.filter((row) => {
+      const value = inquiryStatus(row).toLowerCase();
+      return value === 'pending' || value === '' || value === 'inquiry';
+    });
+    const fromQuotes = rows.filter((row) => {
+      const value = inquiryStatus(row).toLowerCase();
+      const title = `${pickString(row, ['title', 'source', 'message'])}`.toLowerCase();
+      const pending = value === 'pending' || value === '' || value === 'inquiry';
+      return pending && (title.includes('agent') || title.includes('inquiry'));
+    });
+    const seen = new Set(fromInquiries.map((row) => String(row.id ?? pickString(row, ['email']))));
+    return [
+      ...fromInquiries,
+      ...fromQuotes.filter((row) => {
+        const key = String(row.id ?? pickString(row, ['email']));
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }),
+    ];
+  }, [inquiries, rows]);
   const quotedRows = rows.filter((row) => /quoted|quote sent|accepted/i.test(pickString(row, ['status']) || 'Quoted'));
 
   function fillFromInquiry(row: RecordRow) {
@@ -128,6 +148,30 @@ export default function QuotationPanel() {
     }
     setComposerOpen(true);
   }
+
+  useEffect(() => {
+    const email = searchParams.get('email') || '';
+    if (!email.includes('@') && !searchParams.get('name')) return;
+    setInquiryId('');
+    setSavedId('');
+    setStatus('');
+    setError('');
+    setForm({
+      name: searchParams.get('name') || '',
+      email,
+      guests: searchParams.get('guests') || '1',
+      travel_date: (searchParams.get('travel_date') || '').slice(0, 10),
+      message: searchParams.get('message') || '',
+      agreed_price: '',
+      expiration_days: '14',
+    });
+    const tourName = searchParams.get('tour') || '';
+    if (tourName && tours.length) {
+      const match = tours.find((tour) => getRecordTitle(tour).toLowerCase() === tourName.toLowerCase());
+      setTourId(match?.id !== undefined ? String(match.id) : '');
+    }
+    setComposerOpen(true);
+  }, [searchParams, tours]);
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -256,6 +300,11 @@ export default function QuotationPanel() {
                     <h3 className="text-lg font-bold text-[#111827]">
                       {pickString(row, ['name', 'guest_name']) || 'Guest'}
                     </h3>
+                    {/agent/i.test(pickString(row, ['title', 'source', 'message'])) ? (
+                      <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-800">
+                        From agent
+                      </span>
+                    ) : null}
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         pending ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'

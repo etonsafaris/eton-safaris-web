@@ -511,9 +511,12 @@ export default function AgentManagement() {
 
       {guestLogsAgent && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#161b22]">
+          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#161b22]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-serif text-2xl dark:text-white">Guest logs · {agentDisplayName(guestLogsAgent)}</h3>
+              <div>
+                <h3 className="font-serif text-2xl dark:text-white">Guest logs · {agentDisplayName(guestLogsAgent)}</h3>
+                <p className="mt-1 text-sm text-gray-500">Everything this agent recorded about each guest.</p>
+              </div>
               <button type="button" onClick={() => setGuestLogsAgent(null)} aria-label="Close guest logs">
                 <X />
               </button>
@@ -523,28 +526,60 @@ export default function AgentManagement() {
             ) : guestLogs.length === 0 ? (
               <p className="text-sm text-gray-500">No guests recorded by this agent yet.</p>
             ) : (
-              <div className="space-y-3">
-                {guestLogs.map((guest, index) => (
-                  <article key={String(guest.id ?? index)} className="rounded-lg border border-gray-200 px-4 py-3 text-sm dark:border-white/10">
-                    <p className="font-semibold dark:text-white">
-                      {pickString(guest, ['guest_name', 'name']) || pickString(guest, ['email'])}
-                    </p>
-                    <p className="text-gray-500">{pickString(guest, ['email'])}</p>
-                    <p className="mt-1 text-gray-600">
-                      {pickString(guest, ['tour', 'travel_plans']) || 'Tour not set'} · {pickString(guest, ['destination'])} ·{' '}
-                      {pickString(guest, ['status']) || 'Pending'}
-                    </p>
-                    {pickString(guest, ['status']).toLowerCase() !== 'confirmed' && (
-                      <button
-                        type="button"
-                        onClick={() => void confirmGuest(guest)}
-                        className="mt-3 rounded-md bg-[#00A651] px-3 py-1.5 text-xs font-semibold text-white"
-                      >
-                        Confirm Guest
-                      </button>
-                    )}
-                  </article>
-                ))}
+              <div className="space-y-4">
+                {guestLogs.map((guest, index) => {
+                  const details = guestRecordedFields(guest, pickString(guestLogsAgent, ['email']));
+                  const confirmed = pickString(guest, ['status']).toLowerCase() === 'confirmed';
+                  return (
+                    <article key={String(guest.id ?? index)} className="rounded-xl border border-gray-200 p-4 text-sm dark:border-white/10">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-lg font-semibold dark:text-white">
+                            {pickString(guest, ['guest_name', 'name']) || pickString(guest, ['email']) || 'Guest'}
+                          </p>
+                          <p className="text-gray-500">{pickString(guest, ['email']) || 'No email'}</p>
+                        </div>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${
+                            confirmed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {pickString(guest, ['status']) || 'Pending'}
+                        </span>
+                      </div>
+                      <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {details.map(([label, value]) => (
+                          <div key={label} className={label === 'Travel plans' || label === 'Notes' ? 'sm:col-span-2' : ''}>
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</dt>
+                            <dd className="mt-0.5 whitespace-pre-wrap text-[#111827] dark:text-gray-200">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuestLogsAgent(null);
+                            router.push(guestQuoteQuery(guest));
+                          }}
+                          className="inline-flex items-center gap-2 rounded-md bg-[#00A651] px-3 py-1.5 text-xs font-semibold text-white"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Send quotation
+                        </button>
+                        {!confirmed && (
+                          <button
+                            type="button"
+                            onClick={() => void confirmGuest(guest)}
+                            className="rounded-md border px-3 py-1.5 text-xs font-semibold"
+                          >
+                            Confirm guest
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
