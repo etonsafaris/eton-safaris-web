@@ -206,6 +206,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     SYSTEM_COLLECTIONS.find((item) => pathname?.startsWith(`/admin/${item.id}`));
   const searchHits = headerQuery.trim()
     ? [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter((item) => {
+        if (!canAccess(item.id)) return false;
         const needle = headerQuery.trim().toLowerCase();
         return item.label.toLowerCase().includes(needle) || item.id.replace(/_/g, ' ').includes(needle);
       }).slice(0, 8)
@@ -259,7 +260,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
 
         <nav className={`min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-4 ${collapsed ? 'lg:px-2' : ''}`}>
-          {MAIN_COLLECTIONS.map((item) => {
+          {MAIN_COLLECTIONS.filter((item) => canAccess(item.id)).map((item) => {
             const href = item.id === 'overview' ? '/admin' : `/admin/${item.id}`;
             const active = pathname === href || (item.id !== 'overview' && pathname?.startsWith(`${href}/`));
             return (
@@ -364,7 +365,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <button type="button" onClick={toggleDark} className="rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5" aria-label="Toggle dark mode">
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <NotificationBell />
+            {canAccess('notifications') ? <NotificationBell /> : null}
             <div className="relative" ref={adminMenuRef}>
               <button
                 type="button"
@@ -388,7 +389,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     System
                   </p>
                   <div className="space-y-0.5 px-1">
-                    {SYSTEM_COLLECTIONS.map((item) => {
+                    {SYSTEM_COLLECTIONS.filter((item) => canAccess(item.id)).map((item) => {
                       const href = `/admin/${item.id}`;
                       const active = pathname === href || pathname?.startsWith(`${href}/`);
                       return (

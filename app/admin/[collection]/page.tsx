@@ -10,7 +10,8 @@ import SubscribersModule from '@/components/admin/SubscribersModule';
 import KeywordsPanel from '@/components/admin/KeywordsPanel';
 import ReviewsPanel from '@/components/admin/ReviewsPanel';
 import QuotationPanel from '@/components/admin/QuotationPanel';
-import { getCollection, MAIN_COLLECTIONS } from '@/lib/collections';
+import { parseModules } from '@/lib/admin-access';
+import { getCollection, MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
@@ -241,7 +242,10 @@ function UserManagement() {
   const [status, setStatus] = useState('');
   const [users, setUsers] = useState<RecordRow[]>([]);
   const [viewerRole, setViewerRole] = useState('');
-  const modules = MAIN_COLLECTIONS.filter((item) => item.id !== 'overview').map((item) => item.id);
+  const modules = [
+    ...MAIN_COLLECTIONS.filter((item) => item.id !== 'overview'),
+    ...SYSTEM_COLLECTIONS.filter((item) => item.id === 'user_management'),
+  ];
   const isSuperAdmin = /admin|super|full access/i.test(viewerRole);
 
   async function loadUsers() {
@@ -264,12 +268,12 @@ function UserManagement() {
       const userEmail = data.user?.email;
       if (!userEmail) return;
       supabase
-        .from('profiles')
+        .from('registered_agents')
         .select('role')
-        .eq('email', userEmail)
-        .maybeSingle()
-        .then(({ data: profile }) => {
-          setViewerRole(String(profile?.role || data.user?.user_metadata?.role || ''));
+        .ilike('email', userEmail)
+        .limit(1)
+        .then(({ data: rows }) => {
+          setViewerRole(String(rows?.[0]?.role || data.user?.user_metadata?.role || ''));
         });
     });
   }, []);

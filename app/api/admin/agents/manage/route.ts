@@ -81,6 +81,12 @@ export async function POST(request: Request) {
       bio: body.bio?.trim() || undefined,
       gender: body.gender?.trim() || undefined,
       status: body.status?.trim() || undefined,
+      allowed_modules:
+        body.allowed_modules === undefined
+          ? undefined
+          : Array.isArray(body.allowed_modules)
+            ? JSON.stringify(body.allowed_modules)
+            : String(body.allowed_modules),
     };
 
     const updated = await updateAgentFields(client, found.table, found.row, payload);
