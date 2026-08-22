@@ -281,7 +281,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     table: 'notifications',
     aliases: ['notification', 'alerts'],
     icon: 'bell',
-    subtitle: 'Inquiries, bookings, subscribers, reviews, and agent alerts',
+    subtitle: 'Stay updated with your latest alerts and activities',
     view: 'table',
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },

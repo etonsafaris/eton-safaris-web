@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import AgentManagement from '@/components/admin/AgentManagement';
 import CollectionManager from '@/components/admin/CollectionManager';
+import NotificationsModule from '@/components/admin/NotificationsModule';
+import SubscribersModule from '@/components/admin/SubscribersModule';
 import KeywordsPanel from '@/components/admin/KeywordsPanel';
 import ReviewsPanel from '@/components/admin/ReviewsPanel';
 import QuotationPanel from '@/components/admin/QuotationPanel';
@@ -40,6 +42,8 @@ export default function AdminCollectionPage() {
   if (collection === 'reviews') return <ReviewsPanel />;
   if (collection === 'quotations_inquiries') return <QuotationPanel />;
   if (collection === 'registered_agents') return <AgentManagement />;
+  if (collection === 'notifications') return <NotificationsModule />;
+  if (collection === 'subscribers') return <SubscribersModule />;
 
   return <CollectionManager key={config.id} config={config} />;
 }
