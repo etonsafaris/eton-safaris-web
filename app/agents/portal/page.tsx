@@ -37,8 +37,7 @@ export default function AgentPortalPage() {
       }
       setUser(data.session.user);
       const email = data.session.user.email || '';
-      const { data: agents } = await supabase.from('registered_agents').select('*').eq('email', email);
-      const match = (agents as RecordRow[] | null)?.[0] || null;
+      const match = await findPublicAgentByEmail(email);
       setAgent(match);
       if (match && String(match.status || '').toLowerCase() === 'active') {
         try {

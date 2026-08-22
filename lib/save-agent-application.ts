@@ -195,7 +195,7 @@ export async function saveAgentApplicationOnServer(
     const result = await insertAgentRow(client, table, payload);
     if (!result.error) return { ...result, table };
     lastError = result.error;
-    if (isMissingTable(result.error.message)) continue;
+    if (/already registered as an agent/i.test(result.error.message)) return result;
   }
 
   return { data: null, error: lastError };

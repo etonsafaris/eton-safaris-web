@@ -209,8 +209,7 @@ function LoginForm() {
       return;
     }
 
-    const { data: agents } = await supabase.from('registered_agents').select('id,status').eq('email', email);
-    const agentRow = (agents || [])[0] as { id?: string; status?: string } | undefined;
+    const agentRow = await findPublicAgentByEmail(email);
     const isAgent = Boolean(agentRow);
     const agentStatus = String(agentRow?.status || '').toLowerCase();
     const roleValue = String(profileRow?.role || authResult.data.user?.user_metadata?.role || '');
