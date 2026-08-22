@@ -11,25 +11,34 @@ export type IncomingAlert = {
   guestMessage?: string;
   html?: string;
   replyTo?: string;
+  /** Dashboard Notifications module. Default true. */
+  recordDashboard?: boolean;
+  /** Email etonsafaris@gmail.com. Default true. */
+  emailAdmin?: boolean;
 };
 
-/** Always writes the Notifications module and emails etonsafaris@gmail.com. Guest email is extra and cannot block the admin copy. */
 export async function deliverIncomingAlert(input: IncomingAlert) {
   const title = input.title.trim() || 'Eton Safaris notification';
   const message = input.message.trim();
   const category = input.category || 'system';
   const guestEmail = input.guestEmail?.trim();
+  const recordDashboard = input.recordDashboard !== false;
+  const emailAdmin = input.emailAdmin !== false;
 
-  const recorded = await recordDashboardNotice({ title, message, category });
+  const recorded = recordDashboard
+    ? await recordDashboardNotice({ title, message, category })
+    : { data: null, error: null };
 
-  const adminResult = await sendEmail({
-    title,
-    message,
-    html: input.html,
-    category,
-    replyTo: input.replyTo || guestEmail || adminInbox(),
-    to: [adminInbox()],
-  });
+  const adminResult = emailAdmin
+    ? await sendEmail({
+        title,
+        message,
+        html: input.html,
+        category,
+        replyTo: input.replyTo || guestEmail || adminInbox(),
+        to: [adminInbox()],
+      })
+    : { ok: true, emailed: false, from: '', to: [] as string[] };
 
   let guestResult: Awaited<ReturnType<typeof sendEmail>> | undefined;
   if (input.sendToGuest && guestEmail?.includes('@')) {

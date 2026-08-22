@@ -2,12 +2,11 @@ import { pickDateValue, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export function isUnreadNotification(record: RecordRow) {
+  if (record.read === true || record.seen === true) return false;
   const status = pickString(record, ['status']).toLowerCase();
   if (status === 'read' || status === 'seen') return false;
-  if (record.read === true || record.seen === true) return false;
   if (record.read === false || record.seen === false) return true;
-  if (status === 'unread' || status === '') return true;
-  return !status || status === 'new' || status === 'notice';
+  return status === 'unread' || status === 'new' || status === 'notice' || status === '';
 }
 
 export function unreadNotificationCount(records: RecordRow[]) {

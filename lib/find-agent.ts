@@ -45,3 +45,21 @@ export function agentIsActive(row: RecordRow) {
 export function agentJoinedAt(row: RecordRow) {
   return String(row.created_at || row.createdAt || row.created_date || row.joined_at || '');
 }
+
+export function isTravelAgentRole(role: unknown) {
+  const value = String(role || '').trim();
+  if (!value) return true;
+  return /travel agent|^agent$/i.test(value) && !/content manager|tour operator|admin|full access/i.test(value);
+}
+
+export function isStaffRole(role: unknown) {
+  return /content manager|tour operator|admin|full access/i.test(String(role || ''));
+}
+
+export function isTravelAgentRow(row: RecordRow) {
+  return isTravelAgentRole(row.role);
+}
+
+export function isStaffRow(row: RecordRow) {
+  return isStaffRole(row.role);
+}

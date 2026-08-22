@@ -10,6 +10,10 @@ export async function POST(request: Request) {
       category?: string;
       honeypot?: string;
       sendToGuest?: boolean;
+      guestTitle?: string;
+      guestMessage?: string;
+      recordDashboard?: boolean;
+      emailAdmin?: boolean;
     };
     if (body.honeypot?.trim()) {
       return NextResponse.json({ ok: true, emailed: false, recorded: false });
@@ -21,6 +25,10 @@ export async function POST(request: Request) {
       category: body.category || 'system',
       guestEmail: body.guestEmail?.trim(),
       sendToGuest: Boolean(body.sendToGuest),
+      guestTitle: body.guestTitle,
+      guestMessage: body.guestMessage,
+      recordDashboard: body.recordDashboard,
+      emailAdmin: body.emailAdmin,
     });
 
     return NextResponse.json(result);

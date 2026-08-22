@@ -90,16 +90,20 @@ export default function AgentRegisterPage() {
 
     await notifyWorkspace({
       title: 'New agent registration — approval required',
-      message: `${form.name} (${form.email}, ${form.phone}, ${form.country}) applied as an agent and is waiting for approval. Click this link then press Activate: ${approveLink} — or open the Agents module: ${origin}/admin/registered_agents`,
+      message: `${form.name} (${form.email}, ${form.phone}, ${form.country}) applied as an agent and is waiting for approval. Open Agents: ${origin}/admin/registered_agents`,
       category: 'agent',
+      recordDashboard: true,
+      emailAdmin: true,
     });
 
     await notifyWorkspace({
       title: 'Your Eton Safaris agent application is pending',
       message: `Hello ${form.name}, thank you for registering as an Eton Safaris agent. Your application is waiting for administrator approval. You will receive another email when your account is activated. Please wait before signing in to the agent portal.`,
-      category: 'system',
+      category: 'agent',
       guestEmail: form.email.trim(),
       sendToGuest: true,
+      emailAdmin: false,
+      recordDashboard: false,
     });
 
     setSaving(false);

@@ -6,6 +6,10 @@ export type NotifyInput = {
   category: 'subscriber' | 'inquiry' | 'booking' | 'system' | 'review' | 'agent';
   guestEmail?: string;
   sendToGuest?: boolean;
+  guestTitle?: string;
+  guestMessage?: string;
+  recordDashboard?: boolean;
+  emailAdmin?: boolean;
 };
 
 export async function notifyWorkspace(input: NotifyInput) {
@@ -14,7 +18,17 @@ export async function notifyWorkspace(input: NotifyInput) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        title: input.title,
+        message: input.message,
+        category: input.category,
+        guestEmail: input.guestEmail,
+        sendToGuest: input.sendToGuest,
+        guestTitle: input.guestTitle,
+        guestMessage: input.guestMessage,
+        recordDashboard: input.recordDashboard,
+        emailAdmin: input.emailAdmin,
+      }),
     });
     const body = (await response.json().catch(() => ({}))) as {
       emailed?: boolean;

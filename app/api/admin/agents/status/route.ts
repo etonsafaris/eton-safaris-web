@@ -85,33 +85,29 @@ export async function POST(request: Request) {
     const origin = (process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || '').replace(/\/$/, '');
 
     if (status.toLowerCase() === 'active' && rowEmail) {
-      await saveWithColumnFallback(
-        'profiles',
-        { status: 'Active' },
-        { eq: { column: 'email', value: rowEmail }, client }
-      ).catch(() => undefined);
+      const { ensureConfirmedAuthUser } = await import('@/lib/ensure-auth-user');
+      await ensureConfirmedAuthUser(client, {
+        email: rowEmail,
+        name,
+        role: 'Travel Agent',
+        userId: String(existing.user_id || ''),
+      });
     }
 
-    const noticeTitle = status.toLowerCase() === 'active' ? 'Agent activated' : `Agent ${status}`;
-    const noticeMessage =
-      status.toLowerCase() === 'active'
-        ? `${name} (${rowEmail || 'no email'}) was activated in the Agents module.`
-        : `${name} (${rowEmail || 'no email'}) is now ${status}.`;
-
-    const guestMessage =
-      status.toLowerCase() === 'active' && rowEmail
-        ? `Hello ${name}, your Eton Safaris agent account is now active. Sign in at ${origin}/login and open the agent portal: ${origin}/agents/portal`
-        : undefined;
-
-    await deliverIncomingAlert({
-      title: noticeTitle,
-      message: noticeMessage,
-      category: 'agent',
-      guestEmail: rowEmail,
-      sendToGuest: Boolean(guestMessage),
-      guestTitle: guestMessage ? 'Agent account approved' : undefined,
-      guestMessage,
-    });
+    if (status.toLowerCase() === 'active' && rowEmail) {
+      const guestMessage = `Hello ${name}, your Eton Safaris agent account is now active. Sign in at ${origin}/login and open the agent portal: ${origin}/agents/portal`;
+      await deliverIncomingAlert({
+        title: 'Agent account approved',
+        message: guestMessage,
+        category: 'agent',
+        guestEmail: rowEmail,
+        sendToGuest: true,
+        guestTitle: 'Agent account approved',
+        guestMessage,
+        emailAdmin: false,
+        recordDashboard: false,
+      });
+    }
 
     return NextResponse.json({ ok: true, status });
   } catch (error) {

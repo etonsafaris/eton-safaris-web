@@ -2,6 +2,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { AGENT_TABLES, isDuplicateEmail, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
 import { insertAgentApplication, type AgentApplicationInput } from '@/lib/agent-row';
+import { ensureConfirmedAuthUser } from '@/lib/ensure-auth-user';
 import type { SaveResult } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
 
@@ -72,10 +73,14 @@ export async function saveAgentApplicationOnServer(
   }
 
   const client = createPrivilegedClient();
-  if (parsed.password && !parsed.user_id) {
-    const user = await createAgentLogin(client, parsed);
-    if (user?.id) parsed.user_id = user.id;
-  }
+  const authUser = await ensureConfirmedAuthUser(client, {
+    email: parsed.email,
+    password: parsed.password,
+    name: parsed.name,
+    role: 'Travel Agent',
+    userId: parsed.user_id,
+  });
+  if (authUser?.id) parsed.user_id = authUser.id;
   if (!parsed.user_id) parsed.user_id = crypto.randomUUID();
 
   const tables: string[] = [];
