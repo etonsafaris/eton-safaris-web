@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Eye, Pencil, Trash2, Users, X } from 'lucide-react';
 import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
-import { agentDisplayName, agentIsActive, agentJoinedAt } from '@/lib/find-agent';
+import { agentDisplayName, agentIsActive, agentJoinedAt, isTravelAgentRow } from '@/lib/find-agent';
 import { pickRecordId, pickString } from '@/lib/data';
 import { generateBookingCode } from '@/lib/booking-code';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -45,6 +45,7 @@ export default function AgentManagement() {
     company_website: '',
     address: '',
     bio: '',
+    gender: '',
   });
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState<RecordRow | null>(null);

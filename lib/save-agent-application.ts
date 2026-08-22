@@ -1,4 +1,4 @@
-import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { AGENT_TABLES, isDuplicateEmail, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
 import { insertAgentApplication, type AgentApplicationInput } from '@/lib/agent-row';
@@ -23,34 +23,6 @@ async function findAgentByEmail(client: SupabaseClient, table: string, email: st
   );
 }
 
-async function createAgentLogin(
-  client: SupabaseClient,
-  input: AgentApplicationInput
-): Promise<User | null> {
-  const email = input.email.trim();
-  const password = input.password?.trim() || '';
-  if (!email.includes('@') || password.length < 6) return null;
-
-  try {
-    const created = await client.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: input.name.trim(), role: 'Travel Agent' },
-    });
-    if (created.data.user) return created.data.user;
-  } catch {
-    /* service role is optional */
-  }
-
-  const signedUp = await client.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: input.name.trim(), role: 'Travel Agent' } },
-  });
-  return signedUp.data.user || null;
-}
-
 export async function saveAgentApplicationOnServer(
   input: Record<string, unknown>
 ): Promise<SaveResult & { alreadyExists?: boolean; table?: string }> {
@@ -66,6 +38,7 @@ export async function saveAgentApplicationOnServer(
     address: String(input.address || '').trim(),
     password: String(input.password || '').trim(),
     user_id: String(input.user_id || '').trim(),
+    role: String(input.role || 'Travel Agent').trim() || 'Travel Agent',
   };
 
   if (!parsed.email.includes('@') || !parsed.name) {
@@ -77,7 +50,7 @@ export async function saveAgentApplicationOnServer(
     email: parsed.email,
     password: parsed.password,
     name: parsed.name,
-    role: 'Travel Agent',
+    role: parsed.role,
     userId: parsed.user_id,
   });
   if (authUser?.id) parsed.user_id = authUser.id;

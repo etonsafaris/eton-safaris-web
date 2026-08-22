@@ -52,6 +52,7 @@ export type AgentApplicationInput = {
   address?: string;
   password?: string;
   user_id?: string;
+  role?: string;
 };
 
 function pickColumn(known: string[], aliases: string[]) {
@@ -83,7 +84,7 @@ export function buildLiveAgentInsert(input: AgentApplicationInput, userId?: stri
     address: input.address?.trim() || null,
     bio: input.bio?.trim() || null,
     status: 'Pending',
-    role: 'Travel Agent',
+    role: input.role?.trim() || 'Travel Agent',
     user_id: userId || input.user_id || crypto.randomUUID(),
     approval_token: crypto.randomUUID(),
     is_sample: false,

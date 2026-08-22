@@ -11,7 +11,7 @@ import {
   rlsHelpMessage,
 } from '@/lib/supabase/request-client';
 import { updateAgentFields } from '@/lib/agent-row';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { ensureConfirmedAuthUser } from '@/lib/ensure-auth-user';
 
 async function allowAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || '';
@@ -85,7 +85,6 @@ export async function POST(request: Request) {
     const origin = (process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || '').replace(/\/$/, '');
 
     if (status.toLowerCase() === 'active' && rowEmail) {
-      const { ensureConfirmedAuthUser } = await import('@/lib/ensure-auth-user');
       await ensureConfirmedAuthUser(client, {
         email: rowEmail,
         name,
