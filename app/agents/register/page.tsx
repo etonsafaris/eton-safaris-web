@@ -6,7 +6,7 @@ import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
-import { buildSavePayload } from '@/lib/supabase-payload';
+import { agentApplicationId, saveAgentApplication } from '@/lib/agent-register';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
@@ -47,33 +47,26 @@ export default function AgentRegisterPage() {
     setError('');
     setStatus('');
 
-    const payload = buildSavePayload('registered_agents', {
+    const result = await saveAgentApplication({
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
       country: form.country,
       gender: form.gender,
-    });
-
-    const result = await saveWithColumnFallback('registered_agents', {
-      ...payload,
+      company: form.company.trim(),
+      address: form.address.trim(),
+      bio: form.bio.trim(),
       status: 'Pending',
-      company: form.company.trim() || null,
-      address: form.address.trim() || null,
-      bio: form.bio.trim() || null,
     });
 
-    let agentId = result.data?.[0]?.id;
     if (result.error) {
-      const fallback = await saveWithColumnFallback('registered_agents', payload);
-      if (fallback.error) {
-        console.error('[Supabase] Agent registration failed:', fallback.error);
-        setError(fallback.error.message);
-        setSaving(false);
-        return;
-      }
-      agentId = fallback.data?.[0]?.id;
+      console.error('[Supabase] Agent registration failed:', result.error);
+      setError(result.error.message);
+      setSaving(false);
+      return;
     }
+
+    const agentId = agentApplicationId(result);
 
     if (form.password) {
       const { data: signedUp } = await supabase.auth.signUp({

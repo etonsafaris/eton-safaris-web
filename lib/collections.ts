@@ -258,7 +258,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     id: 'registered_agents',
     label: 'Registered Agents',
     table: 'registered_agents',
-    aliases: ['agents'],
+    aliases: ['agents', 'Agent'],
     icon: 'users',
     subtitle: 'Travel agents and partners',
     view: 'table',

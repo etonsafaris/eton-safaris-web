@@ -190,6 +190,12 @@ export async function saveWithColumnFallback(
       return next;
     }
 
+    if (/duplicate key value violates unique constraint/i.test(message) && /pkey|_pkey/i.test(message) && 'id' in current) {
+      const next = { ...current };
+      delete next.id;
+      return next;
+    }
+
     if (/invalid input syntax for type (bigint|integer|numeric|double)/i.test(message)) {
       const next = { ...current };
       let changed = false;
