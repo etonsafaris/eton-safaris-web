@@ -17,10 +17,13 @@ export function collectionIdFromPath(pathname: string) {
   return parts[1] || 'overview';
 }
 
+export function isFullAdminRole(role: string) {
+  return /admin|full access|super/i.test(role);
+}
+
 export function canAccessModule(id: string, role: string, allowedModules: string[]) {
-  if (/admin|full access|super/i.test(role)) return true;
-  if (['profile', 'settings', 'overview', ''].includes(id)) return true;
-  if (!role && allowedModules.length === 0) return true;
+  if (isFullAdminRole(role)) return true;
+  if (id === 'overview' || id === '') return true;
   if (id === 'inquiries' || id === 'quotations_inquiries') {
     return allowedModules.includes('quotations_inquiries') || allowedModules.includes('inquiries');
   }

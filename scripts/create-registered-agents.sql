@@ -22,6 +22,7 @@ create table public.registered_agents (
   role text not null default 'Travel Agent',
   status text not null default 'Pending',
   is_active boolean not null default false,
+  allowed_modules text,
   approval_token uuid not null default gen_random_uuid(),
   is_sample boolean not null default false,
   created_at timestamptz not null default now(),

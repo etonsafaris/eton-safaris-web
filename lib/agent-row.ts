@@ -22,6 +22,7 @@ export const LIVE_AGENT_COLUMNS = [
   'photo_url',
   'is_sample',
   'is_active',
+  'allowed_modules',
 ] as const;
 
 const FIELD_ALIASES: Record<string, string[]> = {
@@ -38,6 +39,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
   status: ['status'],
   role: ['role'],
   user_id: ['user_id', 'userId'],
+  allowed_modules: ['allowed_modules'],
 };
 
 export type AgentApplicationInput = {
@@ -258,6 +260,7 @@ export async function updateAgentFields(
     address: patch.address,
     status: patch.status,
     role: patch.role,
+    allowed_modules: patch.allowed_modules,
     isActive:
       patch.isActive ??
       (typeof patch.status === 'string' ? /active/i.test(patch.status) && !/inactive/i.test(patch.status) : undefined),
@@ -267,6 +270,9 @@ export async function updateAgentFields(
     if (value === undefined) continue;
     const column = pickColumn(columns, FIELD_ALIASES[key] || [key]);
     if (column) payload[column] = value;
+  }
+  if (patch.allowed_modules !== undefined) {
+    payload.allowed_modules = patch.allowed_modules;
   }
 
   if (Object.keys(payload).length === 0) {

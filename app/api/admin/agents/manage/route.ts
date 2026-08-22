@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       bio?: string;
       gender?: string;
       status?: string;
+      allowed_modules?: string[] | string;
     };
     const id = String(body.id ?? '').trim();
     const email = String(body.email || '').trim();

@@ -115,24 +115,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!user?.email) return;
     supabase
-      .from('profiles')
-      .select('role,allowed_modules')
-      .eq('email', user.email)
-      .maybeSingle()
+      .from('registered_agents')
+      .select('role,allowed_modules,status,is_active')
+      .ilike('email', user.email)
+      .limit(8)
       .then(({ data }) => {
-        const nextRole = String(data?.role || user.user_metadata?.role || '');
+        const row = (data || []).find((item) => String(item.email || '').toLowerCase() === user.email.toLowerCase()) || data?.[0];
+        const nextRole = String(row?.role || user.user_metadata?.role || '');
         setRole(nextRole);
-        setAllowedModules(parseModules(data?.allowed_modules));
+        setAllowedModules(parseModules(row?.allowed_modules));
         setAccessReady(true);
         const isStaff = /admin|full access|tour operator|content manager/i.test(nextRole);
         if (isStaff) return;
-        void supabase
-          .from('registered_agents')
-          .select('id')
-          .eq('email', user.email)
-          .then(({ data: agents }) => {
-            if ((agents || []).length > 0) router.replace('/agents/portal');
-          });
+        if (row) router.replace('/agents/portal');
       });
   }, [user]);
 

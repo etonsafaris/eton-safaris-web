@@ -91,6 +91,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'user_id',
     'is_active',
     'approval_token',
+    'allowed_modules',
   ],
   inquiries: [
     'name',
