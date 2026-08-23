@@ -55,7 +55,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
         ) : (
           <ListingGrid>
             {items.map((country, index) => {
-              const slug = pickString(country, ['slug', 'name']) || String(country.id || index);
+              const slug = publicCountrySlug(country) || pickString(country, ['slug', 'name']) || String(country.id || index);
               return (
                 <PlaceCard
                   key={String(country.id ?? slug ?? index)}
