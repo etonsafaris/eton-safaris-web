@@ -9,6 +9,27 @@ const EXTRA_ISO: Record<string, string> = {
   mozambique: 'mz',
   morocco: 'ma',
   zanzibar: 'tz',
+  ghana: 'gh',
+  nigeria: 'ng',
+  senegal: 'sn',
+  ivory-coast: 'ci',
+  'cote-divoire': 'ci',
+  cameroon: 'cm',
+  gabon: 'ga',
+  angola: 'ao',
+  lesotho: 'ls',
+  eswatini: 'sz',
+  swaziland: 'sz',
+  'cape-verde': 'cv',
+  mauritius: 'mu',
+  reunion: 're',
+  sudan: 'sd',
+  'south-sudan': 'ss',
+  eritrea: 'er',
+  djibouti: 'dj',
+  somalia: 'so',
+  burundi: 'bi',
+  'sao-tome-and-principe': 'st',
 };
 
 export const ABOUT_DESTINATION_CHIPS = [
@@ -39,10 +60,7 @@ export function destinationIso(name: string): string {
 
 export function destinationHref(name: string): string {
   const slug = normalizeSlug(name);
-  if (ALL_DESTINATIONS.some((item) => item.slug === slug || normalizeSlug(item.name) === slug)) {
-    return destinationPublicPath(slug);
-  }
-  return `/tours`;
+  return slug ? destinationPublicPath(slug) : '/destinations';
 }
 
 export function destinationFlagUrl(name: string, width = 80) {
