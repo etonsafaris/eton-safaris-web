@@ -203,7 +203,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
             faqs={faqs}
             onFaqsChange={setFaqs}
             faqTitle="Country FAQ"
-            faqDescription="Appears under the country description. Add a new question below, or edit a saved question in place."
+            faqDescription="These are the same country FAQs shown on the public destination page. Edit them here — they stay on the website."
           />
         </div>
 

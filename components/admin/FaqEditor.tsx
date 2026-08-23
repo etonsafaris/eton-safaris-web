@@ -7,7 +7,7 @@ export default function FaqEditor({
   faqs,
   onChange,
   title = 'FAQ',
-  description = 'Appears under the description on the public page. You can add new questions and edit saved ones here.',
+  description = 'These are the FAQs shown on the public page. Edit them here — they stay on the website.',
 }: {
   faqs: PageFaq[];
   onChange: (faqs: PageFaq[]) => void;

@@ -476,7 +476,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setForm(next);
     setSeo(seoValuesFromRecord(record as Record<string, unknown>));
     setSeoSaved(true);
-    setFaqs(parseCmsPageExtras(record, String(record.slug || '')).faqs);
+    setFaqs(faqsForEditor(record, config.id));
     if (isCountries && !next.best_time_to_visit) {
       next.best_time_to_visit = parseCmsPageExtras(record, String(record.slug || '')).best_time_to_visit;
       setForm({ ...next });
@@ -926,7 +926,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                                   ? 'Landing FAQ'
                                   : 'Page FAQ'
                           }
-                          faqDescription="Add a new question below, or edit a saved question in place."
+                          faqDescription="These are the same FAQs shown on the public page. Edit them here — they stay on the website."
                         />
                       </>
                     ) : field.type === 'textarea' ? (

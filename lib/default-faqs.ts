@@ -43,13 +43,7 @@ export function defaultPublicFaqs(input: {
   }
 
   const page = DEFAULT_CMS_PAGES.find((item) => item.slug === slug);
-  if (page?.faqs.length) return page.faqs;
-
-  if (slug) {
-    return landingConversionCopy(countryKey(slug), title).faqs;
-  }
-
-  return [];
+  return page?.faqs.length ? page.faqs : [];
 }
 
 export function faqsForEditor(record: RecordRow | null | undefined, collection: string): PageFaq[] {
