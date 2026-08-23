@@ -50,6 +50,7 @@ import {
 } from '@/lib/notification-utils';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
+import { faqsForEditor } from '@/lib/default-faqs';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   const router = useRouter();

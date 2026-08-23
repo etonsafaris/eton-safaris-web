@@ -8,6 +8,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
+import { faqsForEditor } from '@/lib/default-faqs';
 import { fetchCollectionRecords, getRecordTitle, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -78,7 +79,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
 
       setTitle(String(category.name || category.title || ''));
       setDescription(stripEmbeddedContent(String(category.description || '')));
-      setFaqs(parseCmsPageExtras(category, String(category.slug || '')).faqs);
+      setFaqs(faqsForEditor(category, 'categories'));
       setCountry(String(category.country || ''));
       setCategoryImage(String(category.image_url || ''));
       setSeo(seoValuesFromRecord(category as Record<string, unknown>));

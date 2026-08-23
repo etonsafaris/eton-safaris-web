@@ -19,6 +19,7 @@ import {
   type CmsPageLayout,
   type PageFaq,
 } from '@/lib/cms-page-model';
+import { faqsForEditor } from '@/lib/default-faqs';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';

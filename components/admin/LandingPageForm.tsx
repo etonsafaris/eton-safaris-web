@@ -11,6 +11,7 @@ import SeoPanel from '@/components/admin/SeoPanel';
 import { countrySlugFromLanding, landingCmsSlug, landingPreviewPath } from '@/lib/cms-routes';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { parseCmsPageExtras, type PageFaq } from '@/lib/cms-page-model';
+import { faqsForEditor } from '@/lib/default-faqs';
 import { ALL_SEEDED_COUNTRIES } from '@/lib/cms-defaults';
 import { fetchCollectionRecords, getRecordTitle, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -94,7 +95,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
       setContent(stripEmbeddedContent(String(landing.content || landing.description || '')));
       setFeaturedImage(String(landing.image_url || ''));
       setStatus(extras.status);
-      setFaqs(extras.faqs);
+      setFaqs(faqsForEditor(landing, 'landing_pages'));
       setSeo(seoValuesFromRecord(landing as Record<string, unknown>));
       setPublishedAt(pickDateValue(landing, ['published_at', 'created_at']) || extras.published_at);
     });
@@ -122,6 +123,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
     if (!headline) setHeadline(copy.h1);
     if (!offerLine) setOfferLine(copy.offerLine);
     if (!readyHeading) setReadyHeading(copy.readyHeading);
+    setFaqs((current) => (current.length ? current : copy.faqs));
   }
 
   async function handleSubmit(event: React.FormEvent) {
