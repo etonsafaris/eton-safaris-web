@@ -5,10 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
+import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import type { PublicDestination } from '@/lib/public-destinations';
 
 function Flag({ iso, name, large }: { iso: string; name: string; large?: boolean }) {
+  if (!iso) return null;
   return (
     <img
       src={`https://flagcdn.com/w40/${iso}.png`}
@@ -23,9 +25,23 @@ function navClass(active: boolean) {
   return `site-nav-item${active ? ' is-active' : ''}`;
 }
 
+function destinationActive(pathname: string, destination: PublicDestination) {
+  const href = destinationPublicPath(destination.slug);
+  const countryAlias = `/${destination.slug}-safaris`;
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    pathname === countryAlias ||
+    pathname.startsWith(`${countryAlias}/`) ||
+    pathname === `/country/${destination.slug}` ||
+    pathname === `/${destination.slug}`
+  );
+}
+
 export default function SiteHeader() {
   const pathname = usePathname() || '';
   const [open, setOpen] = useState(false);
+  const { primary, more } = usePublicDestinations();
   const homeActive = pathname === '/';
 
   return (
@@ -38,36 +54,30 @@ export default function SiteHeader() {
         <Link href="/" className={navClass(homeActive)}>
           Home
         </Link>
-        {NAV_COUNTRIES.map((country) => {
+        {primary.map((country) => {
           const href = destinationPublicPath(country.slug);
-          const countryAlias = `/${country.slug}-safaris`;
-          const active =
-            pathname === href ||
-            pathname.startsWith(`${href}/`) ||
-            pathname === countryAlias ||
-            pathname.startsWith(`${countryAlias}/`) ||
-            pathname === `/country/${country.slug}` ||
-            pathname === `/${country.slug}`;
           return (
-            <Link key={country.slug} href={href} className={navClass(active)}>
+            <Link key={country.slug} href={href} className={navClass(destinationActive(pathname, country))}>
               <Flag iso={country.iso} name={country.name} /> {country.name}
             </Link>
           );
         })}
-        <div className="site-nav-item">
-          Other Destinations
-          <div className="site-nav-dropdown">
-            {OTHER_DESTINATIONS.map((destination) => (
-            <Link
-              key={destination.slug}
-              href={destinationPublicPath(destination.slug)}
-              className="site-nav-dropdown-item"
-            >
-                <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
-              </Link>
-            ))}
+        {more.length > 0 ? (
+          <div className="site-nav-item">
+            Other Destinations
+            <div className="site-nav-dropdown">
+              {more.map((destination) => (
+                <Link
+                  key={destination.slug}
+                  href={destinationPublicPath(destination.slug)}
+                  className="site-nav-dropdown-item"
+                >
+                  <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
         <Link href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
           Safari Updates
         </Link>
@@ -93,7 +103,7 @@ export default function SiteHeader() {
           <Link href="/" className="block py-2" onClick={() => setOpen(false)}>
             Home
           </Link>
-          {NAV_COUNTRIES.map((country) => (
+          {primary.map((country) => (
             <Link
               key={country.slug}
               href={destinationPublicPath(country.slug)}
@@ -103,8 +113,8 @@ export default function SiteHeader() {
               <Flag iso={country.iso} name={country.name} /> {country.name}
             </Link>
           ))}
-          <p className="pt-2 text-base">Other Destinations</p>
-          {OTHER_DESTINATIONS.map((destination) => (
+          {more.length > 0 ? <p className="pt-2 text-base">Other Destinations</p> : null}
+          {more.map((destination) => (
             <Link
               key={destination.slug}
               href={destinationPublicPath(destination.slug)}

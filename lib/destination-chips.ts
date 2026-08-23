@@ -12,7 +12,7 @@ const EXTRA_ISO: Record<string, string> = {
   ghana: 'gh',
   nigeria: 'ng',
   senegal: 'sn',
-  ivory-coast: 'ci',
+  'ivory-coast': 'ci',
   'cote-divoire': 'ci',
   cameroon: 'cm',
   gabon: 'ga',
