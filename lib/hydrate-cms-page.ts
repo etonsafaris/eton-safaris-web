@@ -1,5 +1,6 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
+import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { resolvePublicImage } from '@/lib/public-image';

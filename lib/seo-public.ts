@@ -155,10 +155,10 @@ export function jsonLdFromRecord(
     extras.excerpt ||
     pickString(record as RecordRow, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
   const faqs =
-    extras.faqs.length > 0
-      ? extras.faqs
-      : options.schemaHint === 'TouristDestination'
-        ? landingConversionCopy(pathSlug, countryName).faqs
+    options.schemaHint === 'TouristDestination'
+      ? mergeFaqs(extras.faqs, landingConversionCopy(pathSlug, countryName).faqs)
+      : extras.faqs.length > 0
+        ? extras.faqs
         : undefined;
   const custom = values.seo_schema.trim();
   if (custom) {

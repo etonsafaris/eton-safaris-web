@@ -87,7 +87,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
       ? extras.cta_href
       : quoteRequestPath({ country: countryName });
   const image = getRecordImage(landing || {}) || countryHeroImage(slug, country);
-  const faqs = extras.faqs.length ? extras.faqs : copy.faqs;
+  const faqs = mergeFaqs(extras.faqs, copy.faqs);
   const excerptText = extras.excerpt.replace(/<[^>]+>/g, ' ').trim();
   const articleHtml = toProseHtml(excerptText.length >= 40 && excerptText.length < 700 ? extras.excerpt : copy.seoIntro);
   const path = destinationPublicPath(slug);
