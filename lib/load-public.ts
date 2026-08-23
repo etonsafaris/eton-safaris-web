@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
-import { categoryMatchesCountry, matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
+import { categoryMatchesCountry, matchesCategoryValue, matchesCountry, recordMatchesCountrySlug } from '@/lib/country-utils';
 import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickString } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
@@ -16,10 +16,7 @@ export async function loadPublishedRecords(table: string, aliases: string[] = []
 }
 
 export function findCountryRecord(rows: RecordRow[], slug: string) {
-  const needle = normalizeSlug(slug);
-  return (
-    rows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === needle) || null
-  );
+  return rows.find((row) => recordMatchesCountrySlug(row, slug)) || null;
 }
 
 export function findRecordBySlug(rows: RecordRow[], slug: string) {

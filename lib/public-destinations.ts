@@ -1,6 +1,6 @@
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { destinationIso } from '@/lib/destination-chips';
+import { publicCountrySlug } from '@/lib/country-utils';
 import { getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -24,9 +24,7 @@ export function seededDestinations(): PublicDestination[] {
 
 export function publicDestinationFromRecord(row: RecordRow): PublicDestination | null {
   const name = getRecordTitle(row);
-  const slug =
-    countrySlugFromLanding(pickString(row, ['slug', 'name', 'title']) || name) ||
-    pickString(row, ['slug']);
+  const slug = publicCountrySlug(row);
   if (!name || !slug) return null;
   const iso =
     pickString(row, ['iso', 'iso_code', 'country_code']).toLowerCase() || destinationIso(name) || '';

@@ -36,6 +36,27 @@ export function canonicalCountrySlug(value: string): string {
   return COUNTRY_ALIASES[slug] || slug;
 }
 
+export function countryRecordSlugs(record: RecordRow): string[] {
+  const fromName = canonicalCountrySlug(pickString(record, ['name', 'title']));
+  const stored = canonicalCountrySlug(pickString(record, ['slug']));
+  const slugs: string[] = [];
+  if (fromName) slugs.push(fromName);
+  if (stored && stored !== fromName && (stored.length >= 3 || !fromName)) slugs.push(stored);
+  return slugs;
+}
+
+export function publicCountrySlug(record: RecordRow): string {
+  return countryRecordSlugs(record)[0] || '';
+}
+
+export function recordMatchesCountrySlug(record: RecordRow, countrySlug: string): boolean {
+  const target = canonicalCountrySlug(countrySlug);
+  if (!target) return false;
+  if (countryRecordSlugs(record).includes(target)) return true;
+  const stored = canonicalCountrySlug(pickString(record, ['slug']));
+  return Boolean(stored && stored === target);
+}
+
 function splitAssignedCountries(raw: string): string[] {
   return raw
     .split(/[,|/;&]+|\s+and\s+/i)

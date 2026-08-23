@@ -94,8 +94,7 @@ export default function CountryPageContent({
           fetchCollectionRecords('explore'),
         ]);
         if (cancelled) return;
-        const match =
-          countryRows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === slug) || null;
+        const match = countryRows.find((row) => recordMatchesCountrySlug(row, slug)) || null;
         if (match && isPublishedRecord(match)) setCountry(match);
         setCategories(
           allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
