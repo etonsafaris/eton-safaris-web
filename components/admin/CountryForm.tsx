@@ -100,6 +100,8 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         post_blocks: packedFaqs,
         image_url: imageUrl,
         slug: seo.slug || slugify(name),
+        status: 'Published',
+        published_at: new Date().toISOString(),
       },
       { seo }
     );

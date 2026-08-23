@@ -41,7 +41,6 @@ function ToursList({
   }, [initialTours, initialCategories, initialCountries]);
 
   useEffect(() => {
-    if (live === 0) return undefined;
     Promise.all([
       fetchCollectionRecords('tours').then((rows) => rows.filter(isPublishedRecord)),
       fetchCollectionRecords('categories').catch(() => []),

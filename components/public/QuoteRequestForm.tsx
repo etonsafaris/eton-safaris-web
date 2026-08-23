@@ -4,17 +4,16 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
+import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { notifyWorkspace } from '@/lib/notify';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
-
-const DESTINATIONS = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => item.name);
 
 export default function QuoteRequestForm() {
   const searchParams = useSearchParams();
   const presetCountry = searchParams?.get('country') || searchParams?.get('destination') || '';
   const presetTour = searchParams?.get('tour') || '';
+  const { destinations } = usePublicDestinations();
 
   const [form, setForm] = useState({
     name: '',

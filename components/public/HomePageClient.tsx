@@ -88,7 +88,6 @@ export default function HomePageClient({
   }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
 
   useEffect(() => {
-    if (live === 0) return undefined;
     let cancelled = false;
 
     async function loadHero() {

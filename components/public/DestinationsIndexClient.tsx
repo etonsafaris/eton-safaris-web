@@ -26,7 +26,6 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
   }, [initialCountries]);
 
   useEffect(() => {
-    if (live === 0) return;
     fetchCollectionRecords('countries')
       .then((rows) => setCountries(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
