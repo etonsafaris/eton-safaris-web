@@ -74,3 +74,10 @@ export function splitNavDestinations(all: PublicDestination[]) {
 export function publicDestinationNames(all: PublicDestination[]): string[] {
   return all.map((item) => item.name);
 }
+
+export function destinationListingRows(records: RecordRow[]): RecordRow[] {
+  return mergePublicDestinations(records).map((dest) => {
+    const match = records.find((row) => publicDestinationFromRecord(row)?.slug === dest.slug);
+    return match || { name: dest.name, title: dest.name, slug: dest.slug };
+  });
+}

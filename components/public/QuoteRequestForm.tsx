@@ -160,9 +160,9 @@ export default function QuoteRequestForm() {
           aria-label="Safari destination"
         >
           <option value="">Safari destination</option>
-          {DESTINATIONS.map((name) => (
-            <option key={name} value={name}>
-              {name}
+          {destinations.map((destination) => (
+            <option key={destination.slug} value={destination.name}>
+              {destination.name}
             </option>
           ))}
         </select>

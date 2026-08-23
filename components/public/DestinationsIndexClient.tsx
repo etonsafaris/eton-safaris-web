@@ -31,7 +31,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
   }, [live]);
 
-  const items = countries;
+  const items = destinationListingRows(countries);
 
   return (
     <PublicShell>

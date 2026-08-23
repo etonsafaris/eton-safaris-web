@@ -26,6 +26,7 @@ import {
   pickPlainText,
 } from '@/lib/data';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { destinationListingRows, publicDestinationNames, mergePublicDestinations } from '@/lib/public-destinations';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
