@@ -7,6 +7,7 @@ import CoverImageField from '@/components/admin/CoverImageField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
+import { faqsForEditor } from '@/lib/default-faqs';
 import { fetchCollectionRecords, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
@@ -59,7 +60,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       );
       setDescription(stripEmbeddedContent(String(country.description || '')));
       setSummary(String(country.summary || country.excerpt || ''));
-      setFaqs(parseCmsPageExtras(country, String(country.slug || '')).faqs);
+      setFaqs(faqsForEditor(country, 'countries'));
       setFeaturedImage(String(country.image_url || ''));
       setSeo(seoValuesFromRecord(country as Record<string, unknown>));
     });

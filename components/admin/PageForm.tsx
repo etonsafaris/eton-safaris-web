@@ -105,7 +105,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
       setBlocks(parseCmsBlocks(page));
-      setFaqs(extras.faqs);
+      setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
       setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
     });
