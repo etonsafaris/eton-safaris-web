@@ -273,7 +273,7 @@ export default function PageForm({ pageId }: PageFormProps) {
           faqs={faqs}
           onChange={setFaqs}
           title="Page FAQ"
-          description="Appears under the page content and is added to FAQ structured data for ranking."
+          description="These are the same FAQs shown on the public page. Edit them here — they stay on the website."
         />
 
         <div className="mt-6">

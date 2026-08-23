@@ -194,7 +194,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             faqs={faqs}
             onFaqsChange={setFaqs}
             faqTitle="Category FAQ"
-            faqDescription="Appears under the category description. Add a new question below, or edit a saved question in place."
+            faqDescription="These are the FAQs shown on the public category page. Edit them here — they stay on the website."
           />
         </div>
 

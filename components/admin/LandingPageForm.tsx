@@ -298,7 +298,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
           faqs={faqs}
           onChange={setFaqs}
           title="Landing FAQ"
-          description="Appears under the country article and is added to FAQ structured data for ranking."
+          description="These are the same FAQs shown on the public page. Edit them here — they stay on the website."
         />
 
         <div className="mt-6">
