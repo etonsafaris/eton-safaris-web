@@ -114,6 +114,11 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!country.trim()) {
+      setError('Select the country this category belongs to.');
+      return;
+    }
+
     setSaving(true);
     setError('');
 
@@ -200,7 +205,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div>
-            <FieldLabel>Country</FieldLabel>
+            <FieldLabel>Country *</FieldLabel>
             <CountrySelect
               value={country}
               onChange={setCountry}

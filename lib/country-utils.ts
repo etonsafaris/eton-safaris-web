@@ -1,5 +1,26 @@
+import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';
 import { getRecordTitle, pickString, slugify } from '@/lib/data';
+
+const COUNTRY_ASSIGNMENT_KEYS = ['country', 'destination', 'country_slug', 'nation', 'countries'];
+
+const COUNTRY_ALIASES: Record<string, string> = {
+  'republic-of-uganda': 'uganda',
+  'republic-of-kenya': 'kenya',
+  'united-republic-of-tanzania': 'tanzania',
+  'republic-of-tanzania': 'tanzania',
+  'republic-of-rwanda': 'rwanda',
+  'democratic-republic-of-the-congo': 'dr-congo',
+  'democratic-republic-of-congo': 'dr-congo',
+  drc: 'dr-congo',
+  congo: 'dr-congo',
+  drcongo: 'dr-congo',
+  southafrica: 'south-africa',
+  rsa: 'south-africa',
+  'republic-of-south-africa': 'south-africa',
+};
+
+const KNOWN_COUNTRY_SLUGS = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => item.slug);
 
 export function normalizeSlug(value: string): string {
   return value
@@ -7,6 +28,46 @@ export function normalizeSlug(value: string): string {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
+}
+
+export function canonicalCountrySlug(value: string): string {
+  const slug = normalizeSlug(value).replace(/-safaris$/, '');
+  if (!slug) return '';
+  return COUNTRY_ALIASES[slug] || slug;
+}
+
+function splitAssignedCountries(raw: string): string[] {
+  return raw
+    .split(/[,|/;&]+|\s+and\s+/i)
+    .map((part) => canonicalCountrySlug(part.trim()))
+    .filter(Boolean);
+}
+
+export function recordCountryValues(record: RecordRow): string[] {
+  const values = COUNTRY_ASSIGNMENT_KEYS.flatMap((key) => {
+    const raw = pickString(record, [key]);
+    return raw ? splitAssignedCountries(raw) : [];
+  });
+  return Array.from(new Set(values));
+}
+
+function knownCountriesNamedIn(value: string): string[] {
+  const slug = normalizeSlug(value).replace(/-safaris$/, '');
+  if (!slug) return [];
+  const padded = `-${slug}-`;
+  const found: string[] = [];
+
+  for (const country of KNOWN_COUNTRY_SLUGS) {
+    if (slug === country || padded.includes(`-${country}-`)) found.push(country);
+  }
+
+  for (const [alias, canon] of Object.entries(COUNTRY_ALIASES)) {
+    if ((slug === alias || padded.includes(`-${alias}-`)) && !found.includes(canon)) {
+      found.push(canon);
+    }
+  }
+
+  return found;
 }
 
 export function countryLabelFromSlug(slug: string): string {
@@ -113,7 +174,16 @@ export function filterToursByCategory(
 }
 
 export function categoryMatchesCountry(category: RecordRow, countrySlug: string): boolean {
-  return matchesCountry(category, countrySlug);
+  const target = canonicalCountrySlug(countrySlug);
+  if (!target) return false;
+
+  const assigned = recordCountryValues(category);
+  if (assigned.length) return assigned.includes(target);
+
+  const named = [pickString(category, ['name', 'title']), pickString(category, ['slug'])]
+    .filter(Boolean)
+    .flatMap(knownCountriesNamedIn);
+  return named.includes(target);
 }
 
 export function getCategoryKey(record: RecordRow): string {
