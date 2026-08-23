@@ -14,6 +14,7 @@ import {
   pickString,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import { publicCountrySlug } from '@/lib/country-utils';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { mergePublicDestinations, publicDestinationFromRecord } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
