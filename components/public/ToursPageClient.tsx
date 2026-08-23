@@ -8,7 +8,8 @@ import PageHero from '@/components/public/PageHero';
 import TourCard from '@/components/public/TourCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
-import { NAV_COUNTRIES, SITE } from '@/lib/collections';
+import { SITE } from '@/lib/collections';
+import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsLive } from '@/lib/cms-live';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
@@ -55,10 +56,7 @@ function ToursList({
     return undefined;
   }, [live]);
 
-  const destinationOptions = useMemo(() => {
-    if (countries.length > 0) return countries.map((country) => getRecordTitle(country));
-    return NAV_COUNTRIES.map((country) => country.name);
-  }, [countries]);
+  const destinationOptions = useMemo(() => publicDestinationNames(mergePublicDestinations(countries)), [countries]);
 
   const filtered = useMemo(
     () => searchPublishedTours(tours, q, destination, category, days),
