@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCmsLive } from '@/lib/cms-live';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
@@ -9,13 +9,21 @@ import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
   getRecordTitle,
+  isPublishedRecord,
   pickPlainText,
   pickString,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { mergePublicDestinations } from '@/lib/public-destinations';
+import { mergePublicDestinations, publicDestinationFromRecord } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
+
+function destinationListingRows(records: RecordRow[]): RecordRow[] {
+  return mergePublicDestinations(records).map((dest) => {
+    const match = records.find((row) => publicDestinationFromRecord(row)?.slug === dest.slug);
+    return match || { name: dest.name, title: dest.name, slug: dest.slug };
+  });
+}
 
 export default function DestinationsIndexClient({ initialCountries }: { initialCountries: RecordRow[] }) {
   const live = useCmsLive();
@@ -31,7 +39,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
   }, [live]);
 
-  const items = destinationListingRows(countries);
+  const items = useMemo(() => destinationListingRows(countries), [countries]);
 
   return (
     <PublicShell>

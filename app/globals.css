@@ -543,6 +543,8 @@ article > .content-subheading:first-child {
   z-index: 40;
   min-width: 225px;
   max-width: 350px;
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
   margin-top: 8px;
   padding: 8px;
   color: #202020;
