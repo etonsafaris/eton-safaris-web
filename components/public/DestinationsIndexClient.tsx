@@ -9,12 +9,12 @@ import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
   getRecordTitle,
-  isPublishedRecord,
   pickPlainText,
   pickString,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { mergePublicDestinations } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
 export default function DestinationsIndexClient({ initialCountries }: { initialCountries: RecordRow[] }) {
