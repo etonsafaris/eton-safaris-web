@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { CORE_PAGE_SLUGS, countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import { countryCategoryPath } from '@/lib/country-utils';
 import { fetchCollectionRecords, pickDateValue, pickString, publicRecordSlug } from '@/lib/data';
+import { mergePublicDestinations } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
 function entry(
@@ -33,7 +33,7 @@ function recordDate(row: RecordRow) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const [tours, parks, stays, posts, places, pages, categories] = await Promise.all([
+  const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
     fetchCollectionRecords('tours').catch(() => []),
     fetchCollectionRecords('national_park', ['national_parks', 'parks']).catch(() => []),
     fetchCollectionRecords('accommodations').catch(() => []),
@@ -41,7 +41,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchCollectionRecords('explore').catch(() => []),
     fetchCollectionRecords('pages').catch(() => []),
     fetchCollectionRecords('categories').catch(() => []),
+    fetchCollectionRecords('countries').catch(() => []),
   ]);
+  const publicDestinations = mergePublicDestinations(countries);
 
   const staticEntries = [
     entry('', now, 1, 'daily'),

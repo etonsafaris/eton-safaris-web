@@ -14,9 +14,9 @@ const SEEDED = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS];
 
 export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);
+  if (!slug) notFound();
   const data = await loadCountryPageData(slug);
   const seeded = SEEDED.find((item) => item.slug === slug);
-  if (!data.country && !seeded) notFound();
 
   const country = data.country ||
     (seeded

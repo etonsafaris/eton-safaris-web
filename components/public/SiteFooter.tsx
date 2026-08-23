@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SOCIAL_LINKS } from '@/lib/collections';
+import { usePublicDestinations } from '@/components/public/usePublicDestinations';
+import { SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 
@@ -60,6 +61,7 @@ export default function SiteFooter() {
   const [email, setEmail] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState('');
+  const { destinations } = usePublicDestinations();
 
   async function subscribe(event: React.FormEvent) {
     event.preventDefault();
@@ -78,11 +80,6 @@ export default function SiteFooter() {
     setEmail('');
     setStatus('Subscribed. Thank you!');
   }
-
-  const destinations = [
-    ...NAV_COUNTRIES.map((item) => ({ name: item.name, slug: item.slug })),
-    ...OTHER_DESTINATIONS.map((item) => ({ name: item.name, slug: item.slug })),
-  ];
 
   const socialItems = [
     { href: SOCIAL_LINKS.facebook, label: 'Facebook', icon: FacebookIcon },
