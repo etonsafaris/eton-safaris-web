@@ -13,6 +13,7 @@ import {
 } from '@/lib/seo';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
+import { mergeFaqs } from '@/lib/default-faqs';
 import type { RecordRow } from '@/lib/types';
 
 function absoluteUrl(path: string) {

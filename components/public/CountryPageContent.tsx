@@ -18,6 +18,7 @@ import {
 import { useCmsLive } from '@/lib/cms-live';
 import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
+import { mergeFaqs } from '@/lib/default-faqs';
 import {
   fetchCollectionRecords,
   getRecordImage,
@@ -118,7 +119,7 @@ export default function CountryPageContent({
   const title = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
   const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
-  const faqs = extras.faqs.length ? extras.faqs : landingConversionCopy(slug, title).faqs;
+  const faqs = mergeFaqs(extras.faqs, landingConversionCopy(slug, title).faqs);
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
 
   const countryHtml = toProseHtml(country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '');

@@ -25,6 +25,11 @@ const DEFAULTS: Record<string, LandingConversionCopy> = {
           'Eton Safaris reserves Uganda Wildlife Authority gorilla permits for Bwindi and Mgahinga against your confirmed dates. Permits are limited, so early booking is recommended — especially for June–September and December–February.',
       },
       {
+        question: 'Is Uganda good for first-time gorilla trekking?',
+        answer:
+          'Yes. Uganda holds more than half of the world’s remaining mountain gorillas, with trekking in Bwindi and Mgahinga plus chimpanzee tracking in Kibale.',
+      },
+      {
         question: 'How many days do I need for a Uganda gorilla safari?',
         answer:
           'A focused gorilla trek can work in 3–4 days from Kampala or Kigali. Combining chimps, the Nile, and classic parks typically needs 7–12 days.',

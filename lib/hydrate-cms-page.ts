@@ -40,7 +40,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
       image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
     };
   });
-  const faqs: PageFaq[] = extras.faqs.length ? extras.faqs : seeded?.faqs || [];
+  const faqs: PageFaq[] = mergeFaqs(extras.faqs, seeded?.faqs || []);
 
   return {
     title: extras.hero_title || (page ? getRecordTitle(page) : '') || seeded?.hero_title || seeded?.title || '',

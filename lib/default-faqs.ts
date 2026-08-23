@@ -46,13 +46,22 @@ export function defaultPublicFaqs(input: {
   return page?.faqs.length ? page.faqs : [];
 }
 
+export function mergeFaqs(stored: PageFaq[], defaults: PageFaq[]) {
+  if (!defaults.length) return stored;
+  const seen = new Set(stored.map((faq) => faq.question.trim().toLowerCase()));
+  const missing = defaults.filter((faq) => !seen.has(faq.question.trim().toLowerCase()));
+  return [...stored, ...missing];
+}
+
 export function faqsForEditor(record: RecordRow | null | undefined, collection: string): PageFaq[] {
   const extras = parseCmsPageExtras(record, pickString(record || {}, ['slug']));
-  if (extras.faqs.length) return extras.faqs;
-  return defaultPublicFaqs({
-    collection,
-    slug: pickString(record || {}, ['slug']),
-    title: record ? getRecordTitle(record) : '',
-    country: pickString(record || {}, ['country', 'name']),
-  });
+  return mergeFaqs(
+    extras.faqs,
+    defaultPublicFaqs({
+      collection,
+      slug: pickString(record || {}, ['slug']),
+      title: record ? getRecordTitle(record) : '',
+      country: pickString(record || {}, ['country', 'name']),
+    })
+  );
 }

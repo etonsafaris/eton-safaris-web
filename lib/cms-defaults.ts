@@ -286,14 +286,24 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
 const CORE_LANDING_FAQS: Record<string, PageFaq[]> = {
   uganda: [
     {
+      question: 'How do I book a gorilla trekking permit in Uganda?',
+      answer:
+        'Eton Safaris reserves Uganda Wildlife Authority gorilla permits for Bwindi and Mgahinga against your confirmed dates. Permits are limited, so early booking is recommended — especially for June–September and December–February.',
+    },
+    {
       question: 'Is Uganda good for first-time gorilla trekking?',
       answer:
         'Yes. Uganda holds more than half of the world’s remaining mountain gorillas, with trekking in Bwindi and Mgahinga plus chimpanzee tracking in Kibale.',
     },
     {
-      question: 'How many days do I need for a Uganda safari?',
+      question: 'How many days do I need for a Uganda gorilla safari?',
       answer:
-        'A focused gorilla trek can work in 3–4 days. Wildlife, the Nile, and chimps typically need 7–12 days depending on parks.',
+        'A focused gorilla trek can work in 3–4 days from Kampala or Kigali. Combining chimps, the Nile, and classic parks typically needs 7–12 days.',
+    },
+    {
+      question: 'Is Eton Safaris a local Uganda safari operator?',
+      answer:
+        'Yes. Eton Safaris is a licensed tours and travel company based in Wakiso, Uganda, with guides and a private safari fleet for gorilla trekking and wildlife itineraries.',
     },
   ],
   kenya: [

@@ -9,6 +9,7 @@ import PageFaqList from '@/components/public/PageFaqList';
 import SafariTourReviews from '@/components/public/SafariTourReviews';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
+import { mergeFaqs } from '@/lib/default-faqs';
 import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import { SITE } from '@/lib/collections';
 import { countryHeroImage } from '@/lib/country-heroes';
