@@ -36,17 +36,35 @@ export function canonicalCountrySlug(value: string): string {
   return COUNTRY_ALIASES[slug] || slug;
 }
 
+const MIN_PUBLIC_COUNTRY_SLUG = 3;
+
+function countryNameSlug(record: RecordRow): string {
+  return canonicalCountrySlug(pickString(record, ['name', 'title', 'label']));
+}
+
+function countryStoredSlug(record: RecordRow): string {
+  return canonicalCountrySlug(pickString(record, ['slug', 'seo_slug']));
+}
+
+/** Prefer a usable public slug: never let a 1–2 char stored slug hide a real destination name. */
 export function countryRecordSlugs(record: RecordRow): string[] {
-  const fromName = canonicalCountrySlug(pickString(record, ['name', 'title']));
-  const stored = canonicalCountrySlug(pickString(record, ['slug']));
+  const fromName = countryNameSlug(record);
+  const stored = countryStoredSlug(record);
   const slugs: string[] = [];
   if (fromName) slugs.push(fromName);
-  if (stored && stored !== fromName && (stored.length >= 3 || !fromName)) slugs.push(stored);
+  if (stored && stored !== fromName) slugs.push(stored);
   return slugs;
 }
 
 export function publicCountrySlug(record: RecordRow): string {
-  return countryRecordSlugs(record)[0] || '';
+  const fromName = countryNameSlug(record);
+  const stored = countryStoredSlug(record);
+
+  if (fromName && fromName.length >= MIN_PUBLIC_COUNTRY_SLUG) return fromName;
+  if (stored && stored.length >= MIN_PUBLIC_COUNTRY_SLUG) return stored;
+  if (fromName) return fromName;
+  if (stored) return stored;
+  return '';
 }
 
 export function recordMatchesCountrySlug(record: RecordRow, countrySlug: string): boolean {

@@ -99,7 +99,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         faqs: packedFaqs,
         post_blocks: packedFaqs,
         image_url: imageUrl,
-        slug: seo.slug || slugify(name),
+        slug: (seo.slug && slugify(seo.slug).length >= 3 ? slugify(seo.slug) : '') || slugify(name),
         status: 'Published',
         published_at: new Date().toISOString(),
       },

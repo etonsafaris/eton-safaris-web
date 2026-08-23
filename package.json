@@ -11,7 +11,16 @@
     "start": "next start",
     "lint": "next lint",
     "seed:admin": "node scripts/seed-admin.mjs",
-    "seed:content": "node scripts/seed-sample-content.mjs"
+    "seed:content": "node scripts/seed-sample-content.mjs",
+    "seed:uganda-gorilla-keywords": "node scripts/seed-uganda-gorilla-keywords.mjs",
+    "seed:uganda-wildlife-keywords": "node scripts/seed-uganda-wildlife-keywords.mjs",
+    "seed:rwanda-gorilla-keywords": "node scripts/seed-rwanda-gorilla-keywords.mjs",
+    "seed:rwanda-wildlife-keywords": "node scripts/seed-rwanda-wildlife-keywords.mjs",
+    "seed:tanzania-beach-keywords": "node scripts/seed-tanzania-beach-keywords.mjs",
+    "seed:tanzania-climb-keywords": "node scripts/seed-tanzania-climb-keywords.mjs",
+    "seed:tanzania-wildlife-keywords": "node scripts/seed-tanzania-wildlife-keywords.mjs",
+    "seed:kenya-wildlife-keywords": "node scripts/seed-kenya-wildlife-keywords.mjs",
+    "seed:morocco-tours-keywords": "node scripts/seed-morocco-tours-keywords.mjs"
   },
   "dependencies": {
     "@react-email/render": "^2.1.0",

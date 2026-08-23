@@ -14,8 +14,13 @@ import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { NAV_COUNTRIES, SITE } from '@/lib/collections';
-import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
-import { normalizeSlug } from '@/lib/country-utils';
+import { destinationPublicPath } from '@/lib/cms-routes';
+import { canonicalCountrySlug, publicCountrySlug, recordMatchesCountrySlug } from '@/lib/country-utils';
+import {
+  destinationListingRows,
+  mergePublicDestinations,
+  publicDestinationNames,
+} from '@/lib/public-destinations';
 import {
   fetchCollectionRecords,
   getRecordImage,
@@ -26,7 +31,6 @@ import {
   pickPlainText,
 } from '@/lib/data';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { destinationListingRows, publicDestinationNames, mergePublicDestinations } from '@/lib/public-destinations';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -93,7 +97,7 @@ export default function HomePageClient({
 
     async function loadHero() {
       try {
-        const rows = (await fetchCollectionRecords('countries')).filter(isPublishedRecord);
+        const rows = await fetchCollectionRecords('countries');
         if (!cancelled) setCountries(rows);
       } catch (error) {
         console.error('[Supabase] Failed to load countries:', error);
@@ -135,7 +139,7 @@ export default function HomePageClient({
 
   const heroSlides = useMemo(() => {
     return NAV_COUNTRIES.map(({ slug, name }) => {
-      const dbCountry = countries.find((row) => normalizeSlug(pickString(row, ['slug', 'name'])) === slug);
+      const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
       const defaults = HERO_DEFAULTS[slug] || {
         title: `Discover ${name}`,
         subtitle: `Discover unforgettable safari experiences in ${name}.`,
@@ -165,22 +169,25 @@ export default function HomePageClient({
     setSlide(((next % heroSlides.length) + heroSlides.length) % heroSlides.length);
   }
 
-  const destinationOptions = useMemo(() => {
-    if (countries.length > 0) {
-      return countries.map((country) => getRecordTitle(country));
-    }
-    return NAV_COUNTRIES.map((country) => country.name);
-  }, [countries]);
+  const destinationOptions = useMemo(
+    () => publicDestinationNames(mergePublicDestinations(countries)),
+    [countries]
+  );
 
   const current = heroSlides[slide] || heroSlides[0];
 
   const tourItems = tours.map((tour, index) => <TourCard key={String(tour.id ?? index)} tour={tour} />);
 
-  const destinationItems = countries.map((country, index) => {
+  const destinationRows = useMemo(() => destinationListingRows(countries), [countries]);
+
+  const destinationItems = destinationRows.map((country, index) => {
     const slug =
-      countrySlugFromLanding(pickString(country, ['slug', 'name'])) || NAV_COUNTRIES[index]?.slug || '';
+      publicCountrySlug(country) ||
+      pickString(country, ['slug', 'name']) ||
+      canonicalCountrySlug(getRecordTitle(country)) ||
+      '';
     return (
-      <Link key={slug || index} href={destinationPublicPath(slug)} className="group block h-full">
+      <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">
           {countryHeroImage(slug, country as RecordRow) ? (
             <ResponsiveImage
@@ -193,7 +200,9 @@ export default function HomePageClient({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#141612]/80 via-[#141612]/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
-            <h4 className="mb-1 font-serif text-2xl font-bold text-white">{getRecordTitle(country)}</h4>
+            <h4 className="mb-1 font-serif text-2xl font-bold text-white">
+              {pickString(country, ['name']) || getRecordTitle(country)}
+            </h4>
             <p className="text-xs font-semibold uppercase tracking-widest text-sage">
               {pickString(country, ['tagline', 'subtitle'])}
             </p>

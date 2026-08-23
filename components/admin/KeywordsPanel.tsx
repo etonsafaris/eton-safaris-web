@@ -9,6 +9,7 @@ import {
   uniqueKeywords,
 } from '@/lib/keywords';
 import { clearCollectionCache, fetchCollectionRecords, pickString } from '@/lib/data';
+import { mergePublicDestinations } from '@/lib/public-destinations';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
@@ -16,7 +17,7 @@ import KeywordTagBox from '@/components/admin/KeywordTagBox';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 
-const COUNTRIES = [
+const SEEDED_COUNTRIES = [
   ...NAV_COUNTRIES.map((item) => item.name),
   ...OTHER_DESTINATIONS.map((item) => item.name),
 ];
@@ -25,6 +26,7 @@ export default function KeywordsPanel() {
   const [country, setCountry] = useState('Uganda');
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState<RecordRow[]>([]);
+  const [countryOptions, setCountryOptions] = useState<string[]>(SEEDED_COUNTRIES);
   const [draft, setDraft] = useState('');
   const [rows, setRows] = useState<RecordRow[]>([]);
   const [chips, setChips] = useState<string[]>([]);
@@ -50,6 +52,12 @@ export default function KeywordsPanel() {
   useEffect(() => {
     load();
     fetchCollectionRecords('categories').then(setCategories).catch((loadError) => console.error(loadError));
+    fetchCollectionRecords('countries')
+      .then((rows) => {
+        const names = mergePublicDestinations(rows).map((item) => item.name);
+        setCountryOptions(names.length ? names : SEEDED_COUNTRIES);
+      })
+      .catch(() => setCountryOptions(SEEDED_COUNTRIES));
   }, []);
 
   const countryCategories = useMemo(
@@ -253,7 +261,7 @@ export default function KeywordsPanel() {
                 setCountry(value);
                 setCategory('');
               }}
-              options={COUNTRIES.map((item) => ({ value: item, label: item }))}
+              options={countryOptions.map((item) => ({ value: item, label: item }))}
               placeholder="Select country"
             />
           </div>
@@ -315,11 +323,13 @@ export default function KeywordsPanel() {
         <SavedBlocksGrid
           heading="Saved Keywords"
           className="mt-10"
-          lineClamp={0}
-          blocks={savedSets.map((set) => ({
-            title: `${set.country} · ${set.category}`,
-            description: set.keywords.join(', '),
-          }))}
+          blocks={savedSets.map((set) => {
+            const count = set.keywords.length;
+            return {
+              title: `${set.country} · ${set.category}`,
+              description: `${count} keyword${count === 1 ? '' : 's'}`,
+            };
+          })}
           onEdit={editSet}
           onDelete={deleteSet}
         />

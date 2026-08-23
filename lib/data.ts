@@ -264,8 +264,13 @@ export function pickPlainText(record: RecordRow, keys: string[], fallback = ''):
 }
 
 export function isPublishedRecord(record: RecordRow): boolean {
-  const status = pickString(record, ['status', 'visibility', 'publish_status']).toLowerCase();
-  if (!status) return true;
+  const status = pickString(record, ['status', 'visibility', 'publish_status']).toLowerCase().trim();
+  if (!status || status === 'null' || status === 'undefined' || status === 'none' || status === '-') return true;
+  if (
+    ['published', 'publish', 'live', 'public', 'active', 'visible', 'released'].includes(status)
+  ) {
+    return true;
+  }
   return !['draft', 'unpublished', 'deleted', 'archived', 'private', 'admin-only', 'admin only', 'hidden'].includes(
     status
   );

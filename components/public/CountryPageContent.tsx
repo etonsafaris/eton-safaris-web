@@ -13,7 +13,6 @@ import {
   countryCategoryPath,
   countryLabelFromSlug,
   matchesCountry,
-  normalizeSlug,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';

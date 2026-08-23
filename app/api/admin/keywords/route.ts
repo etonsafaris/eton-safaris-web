@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { chipsFromKeywordRows, keywordRowMatchesScope, parseKeywordList } from '@/lib/keywords';
+import { importKeywordsForScope } from '@/lib/keyword-import';
+import { chipsFromKeywordRows } from '@/lib/keywords';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdminUser } from '@/lib/require-admin';
 
@@ -50,10 +51,12 @@ export async function POST(request: Request) {
       country?: string;
       category?: string;
       keywords?: unknown;
+      merge?: unknown;
+      import?: unknown;
     };
     const country = String(body.country || '').trim();
     const category = String(body.category || '').trim();
-    const keywords = parseKeywordList(body.keywords);
+    const merge = body.merge === true || body.import === true;
 
     if (!country) {
       return NextResponse.json({ error: 'Select a country first.' }, { status: 400 });
@@ -63,27 +66,12 @@ export async function POST(request: Request) {
     }
 
     const client = createAdminClient();
-    const { data: existing, error: loadError } = await client.from('keywords').select('*');
-    if (loadError) {
-      return NextResponse.json({ error: loadError.message }, { status: 500 });
-    }
-
-    const scoped = ((existing as Record<string, unknown>[]) || []).filter((row) =>
-      keywordRowMatchesScope(row, country, category)
-    );
-    const payload = { country, category, keywords };
-    const existingId = scoped[0]?.id;
-
-    const write = existingId
-      ? await client.from('keywords').update(payload).eq('id', existingId).select('*')
-      : await client
-          .from('keywords')
-          .insert({ id: crypto.randomUUID(), ...payload })
-          .select('*');
-
-    if (write.error) {
-      return NextResponse.json({ error: write.error.message }, { status: 500 });
-    }
+    const result = await importKeywordsForScope(client, {
+      country,
+      category,
+      keywords: body.keywords,
+      merge,
+    });
 
     const { data: refreshed } = await client.from('keywords').select('*');
     return NextResponse.json({
@@ -91,6 +79,7 @@ export async function POST(request: Request) {
       rows: refreshed || [],
       chips: chipsFromKeywordRows((refreshed as Record<string, unknown>[]) || []),
       table: 'keywords',
+      imported: result,
     });
   } catch (error) {
     console.error('[Keywords] Save failed:', error);

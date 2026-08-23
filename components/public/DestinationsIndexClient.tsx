@@ -9,22 +9,14 @@ import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
   getRecordTitle,
-  isPublishedRecord,
   pickPlainText,
   pickString,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicCountrySlug } from '@/lib/country-utils';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { mergePublicDestinations, publicDestinationFromRecord } from '@/lib/public-destinations';
+import { destinationListingRows } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
-
-function destinationListingRows(records: RecordRow[]): RecordRow[] {
-  return mergePublicDestinations(records).map((dest) => {
-    const match = records.find((row) => publicDestinationFromRecord(row)?.slug === dest.slug);
-    return match || { name: dest.name, title: dest.name, slug: dest.slug };
-  });
-}
 
 export default function DestinationsIndexClient({ initialCountries }: { initialCountries: RecordRow[] }) {
   const live = useCmsLive();
@@ -36,7 +28,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
 
   useEffect(() => {
     fetchCollectionRecords('countries')
-      .then((rows) => setCountries(rows.filter(isPublishedRecord)))
+      .then((rows) => setCountries(rows))
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
   }, [live]);
 
@@ -55,13 +47,17 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
         ) : (
           <ListingGrid>
             {items.map((country, index) => {
-              const slug = publicCountrySlug(country) || pickString(country, ['slug', 'name']) || String(country.id || index);
+              const slug =
+                publicCountrySlug(country) ||
+                pickString(country, ['slug', 'name']) ||
+                String(country.id || index);
+              const title = pickString(country, ['name']) || getRecordTitle(country);
               return (
                 <PlaceCard
                   key={String(country.id ?? slug ?? index)}
                   href={destinationPublicPath(String(slug))}
                   image={countryHeroImage(String(slug), country)}
-                  title={getRecordTitle(country)}
+                  title={title}
                   location={pickString(country, ['tagline', 'subtitle', 'headline'])}
                   description={pickPlainText(country, ['summary', 'description', 'excerpt'])}
                   cta="Explore"

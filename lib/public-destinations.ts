@@ -1,7 +1,7 @@
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { destinationIso } from '@/lib/destination-chips';
-import { publicCountrySlug } from '@/lib/country-utils';
-import { getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
+import { canonicalCountrySlug, publicCountrySlug } from '@/lib/country-utils';
+import { isPublishedRecord, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export type PublicDestination = {
@@ -22,20 +22,33 @@ export function seededDestinations(): PublicDestination[] {
   return SEEDED_DESTINATIONS.map((item) => ({ ...item }));
 }
 
+function countryDisplayName(row: RecordRow): string {
+  return pickString(row, ['name']) || pickString(row, ['title']) || '';
+}
+
 export function publicDestinationFromRecord(row: RecordRow): PublicDestination | null {
-  const name = getRecordTitle(row);
-  const slug = publicCountrySlug(row);
+  const name = countryDisplayName(row);
+  let slug = publicCountrySlug(row);
+  if (!slug && name) slug = canonicalCountrySlug(name);
   if (!name || !slug) return null;
   const iso =
-    pickString(row, ['iso', 'iso_code', 'country_code']).toLowerCase() || destinationIso(name) || '';
+    pickString(row, ['iso', 'iso_code', 'country_code']).toLowerCase() || destinationIso(name) || destinationIso(slug) || '';
   return { name, slug, iso };
 }
 
+/** CMS + seeded destinations for header, footer, index, and home carousel. */
 export function mergePublicDestinations(records: RecordRow[]): PublicDestination[] {
   const cms = new Map<string, PublicDestination>();
   for (const row of records.filter(isPublishedRecord)) {
     const dest = publicDestinationFromRecord(row);
-    if (dest) cms.set(dest.slug, dest);
+    if (!dest) continue;
+    // Prefer the first solid match; later rows with the same slug only fill missing iso.
+    const existing = cms.get(dest.slug);
+    if (!existing) {
+      cms.set(dest.slug, dest);
+    } else if (!existing.iso && dest.iso) {
+      cms.set(dest.slug, { ...existing, iso: dest.iso });
+    }
   }
 
   const used = new Set<string>();
@@ -46,6 +59,7 @@ export function mergePublicDestinations(records: RecordRow[]): PublicDestination
     used.add(item.slug);
   }
 
+  // All remaining CMS countries (Morocco, Seychelles, Mozambique, …) then seeded "other".
   const more: PublicDestination[] = [];
   for (const dest of cms.values()) {
     if (used.has(dest.slug)) continue;
@@ -75,7 +89,10 @@ export function publicDestinationNames(all: PublicDestination[]): string[] {
 
 export function destinationListingRows(records: RecordRow[]): RecordRow[] {
   return mergePublicDestinations(records).map((dest) => {
-    const match = records.find((row) => publicDestinationFromRecord(row)?.slug === dest.slug);
+    const match = records.find((row) => {
+      if (!isPublishedRecord(row)) return false;
+      return publicDestinationFromRecord(row)?.slug === dest.slug;
+    });
     return match || { name: dest.name, title: dest.name, slug: dest.slug };
   });
 }
