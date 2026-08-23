@@ -60,8 +60,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...CORE_PAGE_SLUGS.map((slug) =>
       entry(`/${slug}`, now, slug === 'about-us' ? 0.9 : 0.8)
     ),
-    ...NAV_COUNTRIES.map((item) => entry(destinationPublicPath(item.slug), now, 0.9)),
-    ...OTHER_DESTINATIONS.map((item) => entry(destinationPublicPath(item.slug), now, 0.85)),
+    ...publicDestinations.map((item) =>
+      entry(destinationPublicPath(item.slug), now, item.slug === 'uganda' ? 0.9 : 0.85)
+    ),
   ];
 
   const dynamicEntries = [
