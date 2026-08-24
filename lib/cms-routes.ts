@@ -31,6 +31,9 @@ const PAGE_ALIASES: Record<string, string> = {
   agency: 'tours-and-travel-agency',
   'travel-agency': 'tours-and-travel-agency',
   'tours-and-travel-agency': 'tours-and-travel-agency',
+  home: 'home-page',
+  homepage: 'home-page',
+  'home-page': 'home-page',
 };
 
 export const CORE_PAGE_SLUGS = [

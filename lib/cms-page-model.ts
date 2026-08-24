@@ -3,6 +3,7 @@ import { parseContentBlocks, pickDateValue, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export const PAGE_LAYOUTS = [
+  { value: 'home', label: 'Home Page (homepage editor)' },
   { value: 'about', label: 'About (boxed hero, dark story)' },
   { value: 'policy', label: 'Policy (Terms / Privacy)' },
   { value: 'community', label: 'Community support' },
@@ -45,6 +46,7 @@ const LAYOUTS = new Set<string>(PAGE_LAYOUTS.map((item) => item.value));
 
 export function inferPageLayout(slug: string): CmsPageLayout {
   const key = slug.toLowerCase().replace(/^\/+/, '');
+  if (key === 'home' || key.includes('home-page') || key === 'homepage') return 'home';
   if (key.includes('privacy') || key.includes('terms')) return 'policy';
   if (key.includes('community')) return 'community';
   if (key.includes('agency') || key.includes('travel-agency')) return 'agency';

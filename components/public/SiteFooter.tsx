@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
@@ -62,6 +63,7 @@ export default function SiteFooter() {
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState('');
   const { destinations } = usePublicDestinations();
+  const home = useHomePageContent();
 
   async function subscribe(event: React.FormEvent) {
     event.preventDefault();
@@ -119,7 +121,7 @@ export default function SiteFooter() {
           <BrandLogo light size={72} />
           <h4 className="site-footer-title">About Us</h4>
           <p className="mt-1 text-base leading-relaxed text-white">
-            Eton Safaris is a premier tours and travel agency based in Uganda, offering gorilla trekking, wildlife safaris, and cultural experiences across Africa. Tailor-made luxury expeditions for every clientele.
+            {home.footerAbout}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {socialItems.map(({ href, label, icon: Icon }) => (

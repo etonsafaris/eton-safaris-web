@@ -13,6 +13,7 @@ import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { NAV_COUNTRIES, SITE } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { canonicalCountrySlug, publicCountrySlug, recordMatchesCountrySlug } from '@/lib/country-utils';
@@ -68,6 +69,26 @@ type HomePageClientProps = {
   initialParks: RecordRow[];
   initialCategories: RecordRow[];
 };
+
+function HomeBrandAndFeatures() {
+  const home = useHomePageContent();
+  return (
+    <>
+      <section className="px-[30px] py-16 text-center">
+        <h2 className="mb-2 font-serif text-[44px] font-normal uppercase leading-[1.2] text-[#588048] md:text-[70px] md:leading-[84px]">
+          {home.brandTitle}
+        </h2>
+        <p className="text-justify text-base leading-6 text-[#222]">{home.brandDescription}</p>
+      </section>
+      <WhatSetsUsApartSection
+        heading={home.setsApartHeading}
+        intro={home.setsApartIntro}
+        features={home.features}
+        videos={home.videos}
+      />
+    </>
+  );
+}
 
 export default function HomePageClient({
   initialCountries,
@@ -312,14 +333,7 @@ export default function HomePageClient({
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
 
-      <section className="px-[30px] py-16 text-center">
-        <h2 className="mb-2 font-serif text-[44px] font-normal uppercase leading-[1.2] text-[#588048] md:text-[70px] md:leading-[84px]">{SITE.name}</h2>
-        <p className="text-justify text-base leading-6 text-[#222]">
-          {SITE.about}
-        </p>
-      </section>
-
-      <WhatSetsUsApartSection />
+      <HomeBrandAndFeatures />
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">

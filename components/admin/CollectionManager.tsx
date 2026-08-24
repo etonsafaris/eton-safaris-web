@@ -183,7 +183,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       pickString(record, ['slug']) ||
       (record.id !== undefined && record.id !== null ? String(record.id) : '') ||
       slugify(getRecordTitle(record));
-    if (config.id === 'pages' && slug) return pagePublicPath(slug);
+    if (config.id === 'pages' && slug) {
+      if (slug === 'home-page' || slug === 'home' || slug === 'homepage') return '/';
+      return pagePublicPath(slug);
+    }
     if (config.id === 'landing_pages') {
       const landingSlug = pickString(record, ['slug', 'seo_slug']) || pickString(record, ['country']);
       return landingSlug ? landingPreviewPath(landingSlug) : null;

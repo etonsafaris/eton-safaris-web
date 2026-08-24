@@ -11,6 +11,13 @@ function hasAdminSession(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname === '/home-page' || pathname === '/homepage' || pathname === '/home') {
+    const home = request.nextUrl.clone();
+    home.pathname = '/';
+    home.search = '';
+    return NextResponse.redirect(home);
+  }
+
   if (pathname === '/landing' || pathname.startsWith('/landing/')) {
     if (!hasAdminSession(request)) {
       const segment = pathname.split('/').filter(Boolean)[1] || '';

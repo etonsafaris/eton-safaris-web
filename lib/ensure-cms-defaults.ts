@@ -4,6 +4,7 @@ import { cmsPageFieldPack, inferPageLayout } from '@/lib/cms-page-model';
 import { destinationPublicPath, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecords } from '@/lib/data';
 import { embedContent } from '@/lib/embedded-content';
+import { DEFAULT_HOME_PAGE_CONTENT, homePageFieldPack, HOME_PAGE_SLUG } from '@/lib/home-page-content';
 import { defaultSeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -34,6 +35,8 @@ function pagePayload(page: (typeof DEFAULT_CMS_PAGES)[number]) {
     cta_href: '/contact-us',
     published_at: new Date().toISOString(),
   });
+  const homeFields =
+    page.slug === HOME_PAGE_SLUG || page.layout === 'home' ? homePageFieldPack(DEFAULT_HOME_PAGE_CONTENT) : {};
 
   return buildSavePayload(
     'pages',
@@ -45,7 +48,7 @@ function pagePayload(page: (typeof DEFAULT_CMS_PAGES)[number]) {
       layout: extras.layout,
       hero_title: extras.hero_title,
       subtitle: extras.subtitle,
-      video_url: extras.video_url,
+      video_url: extras.video_url || homeFields.video_url || '',
       destinations: extras.destinations,
       faqs: extras.faqs,
       status: 'published',
@@ -53,7 +56,7 @@ function pagePayload(page: (typeof DEFAULT_CMS_PAGES)[number]) {
       published_at: extras.published_at,
       content: embedContent(page.content, {
         blocks: page.blocks || [],
-        fields: extras,
+        fields: { ...extras, ...homeFields },
       }),
     },
     { seo }

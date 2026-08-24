@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import CoverImageField from '@/components/admin/CoverImageField';
 import FaqEditor from '@/components/admin/FaqEditor';
+import HomePageFields from '@/components/admin/HomePageFields';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
@@ -24,6 +25,15 @@ import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import {
+  DEFAULT_HOME_FEATURES,
+  DEFAULT_HOME_PAGE_CONTENT,
+  HOME_PAGE_SLUG,
+  homeFeatureBlocks,
+  homePageFieldPack,
+  parseHomePageContent,
+  type HomeFeaturePoint,
+} from '@/lib/home-page-content';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -85,6 +95,13 @@ export default function PageForm({ pageId }: PageFormProps) {
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState('');
+  const [brandTitle, setBrandTitle] = useState(DEFAULT_HOME_PAGE_CONTENT.brandTitle);
+  const [brandDescription, setBrandDescription] = useState(DEFAULT_HOME_PAGE_CONTENT.brandDescription);
+  const [setsApartHeading, setSetsApartHeading] = useState(DEFAULT_HOME_PAGE_CONTENT.setsApartHeading);
+  const [setsApartIntro, setSetsApartIntro] = useState(DEFAULT_HOME_PAGE_CONTENT.setsApartIntro);
+  const [homeFeatures, setHomeFeatures] = useState<HomeFeaturePoint[]>(DEFAULT_HOME_FEATURES);
+  const [homeVideos, setHomeVideos] = useState<string[]>(DEFAULT_HOME_PAGE_CONTENT.videos);
+  const [footerAbout, setFooterAbout] = useState(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
 
   useEffect(() => {
     if (!pageId) return;
@@ -107,25 +124,37 @@ export default function PageForm({ pageId }: PageFormProps) {
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
       const pageSlug = String(page.slug || extras.layout || '');
-      const isEditableStoryPage =
-        extras.layout === 'community' ||
-        extras.layout === 'about' ||
-        extras.layout === 'agency' ||
-        /community|about-us|travel-agency|agency/i.test(pageSlug) ||
-        /community|about/i.test(String(page.title || ''));
-      setBlocks(
-        isEditableStoryPage
-          ? hydratePublicCmsPage(
-              page,
-              pageSlug ||
-                (extras.layout === 'about'
-                  ? 'about-us'
-                  : extras.layout === 'agency'
-                    ? 'tours-and-travel-agency'
-                    : 'community-support')
-            ).blocks
-          : parseCmsBlocks(page)
-      );
+      if (extras.layout === 'home' || pageSlug === HOME_PAGE_SLUG || /home/i.test(pageSlug)) {
+        const home = parseHomePageContent(page);
+        setBrandTitle(home.brandTitle);
+        setBrandDescription(home.brandDescription);
+        setSetsApartHeading(home.setsApartHeading);
+        setSetsApartIntro(home.setsApartIntro);
+        setHomeFeatures(home.features);
+        setHomeVideos(home.videos);
+        setFooterAbout(home.footerAbout);
+        setBlocks(homeFeatureBlocks(home.features));
+      } else {
+        const isEditableStoryPage =
+          extras.layout === 'community' ||
+          extras.layout === 'about' ||
+          extras.layout === 'agency' ||
+          /community|about-us|travel-agency|agency/i.test(pageSlug) ||
+          /community|about/i.test(String(page.title || ''));
+        setBlocks(
+          isEditableStoryPage
+            ? hydratePublicCmsPage(
+                page,
+                pageSlug ||
+                  (extras.layout === 'about'
+                    ? 'about-us'
+                    : extras.layout === 'agency'
+                      ? 'tours-and-travel-agency'
+                      : 'community-support')
+              ).blocks
+            : parseCmsBlocks(page)
+        );
+      }
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
       setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
@@ -150,13 +179,28 @@ export default function PageForm({ pageId }: PageFormProps) {
     setError('');
 
     const stamp = publishedAt || new Date().toISOString();
-    const slug = seo.slug || slugify(title);
+    const slug =
+      layout === 'home'
+        ? HOME_PAGE_SLUG
+        : seo.slug || slugify(title) || (layout === 'home' ? HOME_PAGE_SLUG : '');
+    const homePack =
+      layout === 'home'
+        ? homePageFieldPack({
+            brandTitle,
+            brandDescription,
+            setsApartHeading,
+            setsApartIntro,
+            features: homeFeatures,
+            videos: homeVideos,
+            footerAbout,
+          })
+        : null;
     const extras = cmsPageFieldPack({
       layout: layout || inferPageLayout(slug),
-      hero_title: heroTitle || title,
-      subtitle,
-      excerpt,
-      video_url: videoUrl,
+      hero_title: homePack?.hero_title || heroTitle || title,
+      subtitle: homePack?.subtitle || subtitle,
+      excerpt: homePack?.excerpt || excerpt,
+      video_url: homePack?.video_url || videoUrl,
       destinations: destinations.split(',').map((item) => item.trim()).filter(Boolean),
       faqs,
       status,
@@ -165,14 +209,14 @@ export default function PageForm({ pageId }: PageFormProps) {
       published_at: stamp,
     });
 
-    const pageBlocks = blocks;
+    const pageBlocks = layout === 'home' ? homeFeatureBlocks(homeFeatures) : blocks;
     const payload = buildSavePayload(
       'pages',
       {
-        title,
+        title: layout === 'home' ? 'Home Page' : title,
         slug,
         image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
-        excerpt,
+        excerpt: extras.excerpt,
         layout: extras.layout,
         hero_title: extras.hero_title,
         subtitle: extras.subtitle,
@@ -184,9 +228,9 @@ export default function PageForm({ pageId }: PageFormProps) {
         cta_href: extras.cta_href,
         page_blocks: JSON.stringify(pageBlocks),
         published_at: stamp,
-        content: embedContent(content, {
+        content: embedContent(layout === 'home' ? `<p>${brandDescription}</p>` : content, {
           blocks: pageBlocks,
-          fields: extras,
+          fields: homePack ? { ...extras, ...homePack } : extras,
         }),
       },
       { seo: { ...seo, slug, social_image_url: seo.social_image_url || featuredImage } }
@@ -220,8 +264,8 @@ export default function PageForm({ pageId }: PageFormProps) {
           {isEdit ? 'Edit Page' : 'Add New Page'}
         </h1>
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-[#6b7280]">
-          Pages power About, Terms, Privacy, Agency, Community, and Contact SEO. Layout controls how the page appears on
-          the live website.
+          Pages power Home, About, Terms, Privacy, Agency, Community, and Contact. Layout controls what you can edit and
+          how it appears on the live website.
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -251,6 +295,17 @@ export default function PageForm({ pageId }: PageFormProps) {
               onChange={(value) => {
                 const next = (value as CmsPageLayout) || 'standard';
                 setLayout(next);
+                if (next === 'home') {
+                  setTitle('Home Page');
+                  setSeo((current) => ({ ...current, slug: HOME_PAGE_SLUG, breadcrumb_title: 'Home Page' }));
+                  setBrandTitle(DEFAULT_HOME_PAGE_CONTENT.brandTitle);
+                  setBrandDescription(DEFAULT_HOME_PAGE_CONTENT.brandDescription);
+                  setSetsApartHeading(DEFAULT_HOME_PAGE_CONTENT.setsApartHeading);
+                  setSetsApartIntro(DEFAULT_HOME_PAGE_CONTENT.setsApartIntro);
+                  setHomeFeatures(DEFAULT_HOME_FEATURES.map((item) => ({ ...item })));
+                  setHomeVideos([...DEFAULT_HOME_PAGE_CONTENT.videos]);
+                  setFooterAbout(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
+                }
                 if (next === 'community') {
                   setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
                 }
@@ -271,6 +326,39 @@ export default function PageForm({ pageId }: PageFormProps) {
           </div>
         </div>
 
+        {layout === 'home' ? (
+          <>
+            <HomePageFields
+              brandTitle={brandTitle}
+              brandDescription={brandDescription}
+              setsApartHeading={setsApartHeading}
+              setsApartIntro={setsApartIntro}
+              features={homeFeatures}
+              videos={homeVideos}
+              footerAbout={footerAbout}
+              onBrandTitle={setBrandTitle}
+              onBrandDescription={setBrandDescription}
+              onSetsApartHeading={setSetsApartHeading}
+              onSetsApartIntro={setSetsApartIntro}
+              onFeatures={setHomeFeatures}
+              onVideos={setHomeVideos}
+              onFooterAbout={setFooterAbout}
+            />
+            <div className="mt-8 max-w-sm">
+              <FieldLabel>Status</FieldLabel>
+              <SearchableSelect
+                value={status}
+                onChange={(value) => setStatus(value === 'draft' ? 'draft' : 'published')}
+                options={[
+                  { value: 'published', label: 'Published' },
+                  { value: 'draft', label: 'Draft' },
+                ]}
+                placeholder="Status"
+              />
+            </div>
+          </>
+        ) : (
+          <>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div>
             <FieldLabel>Hero title</FieldLabel>
@@ -472,6 +560,8 @@ export default function PageForm({ pageId }: PageFormProps) {
             </button>
           </div>
         </div>
+          </>
+        )}
 
         {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 
@@ -492,7 +582,13 @@ export default function PageForm({ pageId }: PageFormProps) {
         onChange={setSeo}
         pageTitle={title}
         coverImageUrl={featuredImage.startsWith('blob:') ? '' : featuredImage}
-        contentForReadability={`${excerpt}\n${content}\n${blocks.map((block) => block.description).join('\n')}`}
+        contentForReadability={
+          layout === 'home'
+            ? `${brandTitle}\n${brandDescription}\n${setsApartHeading}\n${setsApartIntro}\n${homeFeatures
+                .map((item) => `${item.title}\n${item.description}`)
+                .join('\n')}\n${footerAbout}`
+            : `${excerpt}\n${content}\n${blocks.map((block) => block.description).join('\n')}`
+        }
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="page"

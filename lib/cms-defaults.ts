@@ -4,6 +4,12 @@ import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { landingSlugForCountry } from '@/lib/cms-routes';
 import type { CmsPageLayout, PageFaq } from '@/lib/cms-page-model';
 import { COMMUNITY_INITIATIVES } from '@/lib/community-initiatives';
+import {
+  DEFAULT_HOME_FEATURES,
+  DEFAULT_HOME_PAGE_CONTENT,
+  HOME_PAGE_SLUG,
+  homeFeatureBlocks,
+} from '@/lib/home-page-content';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 
@@ -56,6 +62,24 @@ const ABOUT_WHAT = `<p>Tours and Travel Agency based in Uganda rendering mountai
 <p>Eton Safaris partners with accommodation countrywide at every level: bed space, tented camps, homestays, lodges, cottages, hotels, and motels for budget, mid-range, and luxury guests.</p>`;
 
 export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
+  {
+    title: 'Home Page',
+    slug: HOME_PAGE_SLUG,
+    layout: 'home',
+    image_url: SITE_MEDIA.safariVehicle,
+    video_url: DEFAULT_HOME_PAGE_CONTENT.videos[0] || SITE_MEDIA.gorillaVideo,
+    hero_title: DEFAULT_HOME_PAGE_CONTENT.brandTitle,
+    subtitle: DEFAULT_HOME_PAGE_CONTENT.setsApartIntro,
+    excerpt: DEFAULT_HOME_PAGE_CONTENT.brandDescription.slice(0, 220),
+    content: `<p>${DEFAULT_HOME_PAGE_CONTENT.brandDescription}</p>`,
+    faqs: [],
+    seo_title: seoTitle('Home Page'),
+    meta_description: DEFAULT_HOME_PAGE_CONTENT.brandDescription.slice(0, 155),
+    focus_keyphrase: 'Eton Safaris home page',
+    schema_type: 'WebPage',
+    breadcrumb_title: 'Home Page',
+    blocks: homeFeatureBlocks(DEFAULT_HOME_FEATURES),
+  },
   {
     title: 'About Us',
     slug: 'about-us',
