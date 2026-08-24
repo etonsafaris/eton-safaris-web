@@ -327,9 +327,14 @@ export function isLanguagePost(record: RecordRow): boolean {
   return String(record.post_type || '').toLowerCase().includes('language');
 }
 
-export function parseContentBlocks(value: unknown): { title: string; description: string; image_url?: string }[] {
+export function parseContentBlocks(value: unknown): {
+  title: string;
+  description: string;
+  image_url?: string;
+  caption?: string;
+}[] {
   if (Array.isArray(value)) {
-    const blocks: { title: string; description: string; image_url?: string }[] = [];
+    const blocks: { title: string; description: string; image_url?: string; caption?: string }[] = [];
     for (const item of value) {
       if (!item || typeof item !== 'object') continue;
       const row = item as Record<string, unknown>;
@@ -337,8 +342,9 @@ export function parseContentBlocks(value: unknown): { title: string; description
       const title = String(row.title || '');
       const description = String(row.description || '');
       const image_url = String(row.image_url || row.image || '');
-      if (!title && !description && !image_url) continue;
-      blocks.push({ title, description, image_url });
+      const caption = String(row.caption || '');
+      if (!title && !description && !image_url && !caption) continue;
+      blocks.push({ title, description, image_url, caption });
     }
     return blocks;
   }

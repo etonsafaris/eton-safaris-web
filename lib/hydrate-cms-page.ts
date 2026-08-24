@@ -28,6 +28,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     title: block.title,
     description: block.description,
     image_url: block.image_url || '',
+    caption: block.caption || '',
   }));
   const cmsBlocks = parseCmsBlocks(page);
   const sourceBlocks =
@@ -45,6 +46,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
       title: block.title,
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description,
       image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
+      caption: String(block.caption || '').trim(),
     };
   });
   const faqs: PageFaq[] = mergeFaqs(extras.faqs, seeded?.faqs || []);

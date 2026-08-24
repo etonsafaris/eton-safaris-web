@@ -375,6 +375,20 @@ export default function PageForm({ pageId }: PageFormProps) {
                       });
                     }}
                   />
+                  <div className="mt-4">
+                    <FieldLabel>Image caption</FieldLabel>
+                    <PillInput
+                      value={block.caption || ''}
+                      onChange={(value) => {
+                        setBlocks((current) => {
+                          const next = mergeCommunityInitiativeBlocks(current);
+                          next[index] = { ...next[index], caption: value };
+                          return next;
+                        });
+                      }}
+                      placeholder="Short caption under this image"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

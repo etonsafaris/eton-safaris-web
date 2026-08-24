@@ -21,6 +21,7 @@ export type CmsContentBlock = {
   title: string;
   description: string;
   image_url?: string;
+  caption?: string;
 };
 
 export type CmsPageExtras = {
@@ -162,6 +163,7 @@ export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContent
       title: block.title,
       description: block.description,
       image_url: block.image_url || '',
+      caption: block.caption || '',
     }));
   }
   const embedded = extractEmbeddedContent(pickString(record || {}, ['content', 'description', 'body']));
@@ -169,6 +171,7 @@ export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContent
     title: block.title,
     description: block.description,
     image_url: 'image_url' in block ? String((block as CmsContentBlock).image_url || '') : '',
+    caption: 'caption' in block ? String((block as CmsContentBlock).caption || '') : '',
   }));
 }
 

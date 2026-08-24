@@ -5,6 +5,7 @@ export type ContentBlock = {
   title: string;
   description: string;
   image_url?: string;
+  caption?: string;
 };
 
 export type EmbeddedItineraryDay = {
@@ -71,7 +72,11 @@ export function embedContent(html: string, data: EmbeddedContent): string {
   const payload: EmbeddedContent = {
     blocks:
       data.blocks?.filter(
-        (block) => block.title.trim() || block.description.trim() || String(block.image_url || '').trim()
+        (block) =>
+          block.title.trim() ||
+          block.description.trim() ||
+          String(block.image_url || '').trim() ||
+          String(block.caption || '').trim()
       ) || [],
     itineraries:
       data.itineraries?.filter(

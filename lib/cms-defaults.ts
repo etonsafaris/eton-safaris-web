@@ -24,7 +24,7 @@ export type DefaultCmsPage = {
   focus_keyphrase: string;
   schema_type: string;
   breadcrumb_title: string;
-  blocks?: { title: string; description: string; image_url?: string }[];
+  blocks?: { title: string; description: string; image_url?: string; caption?: string }[];
 };
 
 export type DefaultLandingPage = {
