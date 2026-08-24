@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import PageHero from '@/components/public/PageHero';
-import PostMetaBar, { formatPublishedDate } from '@/components/public/PostMetaBar';
+import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import RelatedSidebar from '@/components/public/RelatedSidebar';
 import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
 import { countryLabelFromSlug, findPlaceBySlug, matchesCountry } from '@/lib/country-utils';
+import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
   fetchCollectionRecords,
@@ -118,10 +119,11 @@ export default function PlacePageContent({
       <PageHero
         title={placeTitle}
         image={heroImage}
-        variant="country"
+        variant="park"
         location={metaLocation || undefined}
+        country={metaCountry || undefined}
+        published={metaPublished}
       />
-      <PostMetaBar country={metaCountry} location={metaLocation} published={metaPublished} />
 
       <section className="bg-white px-4 py-10 md:px-6">
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3">

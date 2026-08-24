@@ -328,7 +328,7 @@ export default function KeywordsPanel() {
             const count = set.keywords.length;
             return {
               title: `${set.country} · ${set.category}`,
-              description: `${count} keyword${count === 1 ? '' : 's'}`,
+              description: `${count} keyword${count === 1 ? '' : 's'} — click Edit to view`,
             };
           })}
           onEdit={editSet}

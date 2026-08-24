@@ -96,6 +96,13 @@ export function bestTimeToVisit(slug: string, countryName: string, stored?: stri
   return value || countryPlanning(slug, countryName).bestTime;
 }
 
+export function bestTimeForCountryLabel(countryName: string, stored?: string) {
+  const name = String(countryName || '').trim();
+  if (!name) return '';
+  const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/-safaris$/, '');
+  return bestTimeToVisit(slug, name, stored);
+}
+
 export function gorillaPermitHowTo(countryName: string) {
   return {
     '@type': 'HowTo',

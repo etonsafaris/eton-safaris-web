@@ -53,18 +53,17 @@ export default function AccommodationDetailPage() {
       <PageHero
         variant="park"
         title={getRecordTitle(item)}
-        location={pickString(item, ['location']) || undefined}
         image={getRecordImage(item)}
-      />
-      <ContentDetailLayout
-        country={pickString(item, ['country'])}
-        published={recordPublishedAt(item)}
-        items={[
+        metaItems={[
           { label: 'Country', value: pickString(item, ['country']) },
           { label: 'National Park', value: pickStoredString(item, ['national_park', 'park', 'park_name']) },
           { label: 'Type', value: pickStoredString(item, ['type']) },
-          { label: 'Published', value: formatPublishedDate(recordPublishedAt(item)) },
+          { label: 'Published', value: recordPublishedAt(item) },
         ]}
+      />
+      <ContentDetailLayout
+        hideMeta
+        country={pickString(item, ['country'])}
         sidebarTitle="Other Accommodations"
         sidebarItems={others.map((row) => ({
           href: `/accommodations/${pickString(row, ['slug']) || row.id}`,

@@ -282,6 +282,8 @@ export async function runKeywordScopeSeed(options) {
       slug: categorySlug,
       country: countryName,
       description: categoryDescription || '',
+      status: 'published',
+      published_at: new Date().toISOString(),
     });
     if (inserted.error) {
       throw new Error(
@@ -290,6 +292,33 @@ export async function runKeywordScopeSeed(options) {
     }
     categoryMatch = inserted.data;
     categoryCreated = true;
+  } else {
+    const statusToken = String(categoryMatch.status || categoryMatch.publish_status || '')
+      .trim()
+      .toLowerCase();
+    const needsPublish =
+      statusToken === 'draft' ||
+      statusToken === 'unpublished' ||
+      categoryMatch.published === false ||
+      categoryMatch.is_published === false;
+    const currentSlug = String(categoryMatch.slug || '').trim();
+    const needsSlugFix = Boolean(categorySlug) && currentSlug !== categorySlug;
+    if (needsPublish || needsSlugFix) {
+      const patch = {};
+      if (needsPublish) {
+        patch.status = 'published';
+        patch.published_at = new Date().toISOString();
+        patch.published = true;
+        patch.is_published = true;
+      }
+      if (needsSlugFix) {
+        patch.slug = categorySlug;
+      }
+      const updated = await saveRow(supabase, 'categories', patch, categoryMatch.id);
+      if (!updated.error && updated.data) {
+        categoryMatch = updated.data;
+      }
+    }
   }
   const categoryName = pickName(categoryMatch, ['name', 'title', 'category']) || TARGET_CATEGORY;
 

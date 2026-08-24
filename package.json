@@ -20,7 +20,10 @@
     "seed:tanzania-climb-keywords": "node scripts/seed-tanzania-climb-keywords.mjs",
     "seed:tanzania-wildlife-keywords": "node scripts/seed-tanzania-wildlife-keywords.mjs",
     "seed:kenya-wildlife-keywords": "node scripts/seed-kenya-wildlife-keywords.mjs",
-    "seed:morocco-tours-keywords": "node scripts/seed-morocco-tours-keywords.mjs"
+    "seed:morocco-tours-keywords": "node scripts/seed-morocco-tours-keywords.mjs",
+    "seed:south-africa-wildlife-keywords": "node scripts/seed-south-africa-wildlife-keywords.mjs",
+    "seed:malawi-wildlife-keywords": "node scripts/seed-malawi-wildlife-keywords.mjs",
+    "seed:egypt-tours-keywords": "node scripts/seed-egypt-tours-keywords.mjs"
   },
   "dependencies": {
     "@react-email/render": "^2.1.0",

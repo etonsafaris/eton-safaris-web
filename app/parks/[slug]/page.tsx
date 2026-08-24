@@ -95,12 +95,13 @@ export default function ParkDetailPage() {
         variant="park"
         title={parkName}
         location={pickString(park, ['location']) || undefined}
+        country={pickString(park, ['country']) || undefined}
+        published={recordPublishedAt(park)}
         image={getRecordImage(park)}
       />
       <ContentDetailLayout
+        hideMeta
         country={pickString(park, ['country'])}
-        location={pickString(park, ['location'])}
-        published={recordPublishedAt(park)}
         sidebarTitle="Other Parks"
         sidebarItems={others.map((item) => ({
           href: `/parks/${pickString(item, ['slug']) || item.id}`,
