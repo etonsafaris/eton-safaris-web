@@ -107,11 +107,23 @@ export default function PageForm({ pageId }: PageFormProps) {
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
       const pageSlug = String(page.slug || extras.layout || '');
-      const isCommunity =
-        extras.layout === 'community' || /community/i.test(pageSlug) || /community/i.test(String(page.title || ''));
+      const isEditableStoryPage =
+        extras.layout === 'community' ||
+        extras.layout === 'about' ||
+        extras.layout === 'agency' ||
+        /community|about-us|travel-agency|agency/i.test(pageSlug) ||
+        /community|about/i.test(String(page.title || ''));
       setBlocks(
-        isCommunity
-          ? hydratePublicCmsPage(page, pageSlug || 'community-support').blocks
+        isEditableStoryPage
+          ? hydratePublicCmsPage(
+              page,
+              pageSlug ||
+                (extras.layout === 'about'
+                  ? 'about-us'
+                  : extras.layout === 'agency'
+                    ? 'tours-and-travel-agency'
+                    : 'community-support')
+            ).blocks
           : parseCmsBlocks(page)
       );
       setFaqs(faqsForEditor(page, 'pages'));
@@ -242,6 +254,16 @@ export default function PageForm({ pageId }: PageFormProps) {
                 if (next === 'community') {
                   setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
                 }
+                if (next === 'about' || next === 'agency') {
+                  setBlocks((current) =>
+                    current.length
+                      ? current
+                      : hydratePublicCmsPage(
+                          null,
+                          next === 'about' ? 'about-us' : 'tours-and-travel-agency'
+                        ).blocks
+                  );
+                }
               }}
               options={PAGE_LAYOUTS.map((item) => ({ value: item.value, label: item.label }))}
               placeholder="Select layout"
@@ -342,7 +364,13 @@ export default function PageForm({ pageId }: PageFormProps) {
 
         <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6">
           <SavedBlocksGrid
-            heading={layout === 'community' ? 'Community initiatives' : 'Page blocks'}
+            heading={
+              layout === 'community'
+                ? 'Community initiatives'
+                : layout === 'about' || layout === 'agency'
+                  ? 'About sections'
+                  : 'Page blocks'
+            }
             blocks={blocks}
             onEdit={(index) => {
               const block = blocks[index];
@@ -362,40 +390,72 @@ export default function PageForm({ pageId }: PageFormProps) {
             {editingIndex !== null
               ? layout === 'community'
                 ? 'Edit initiative'
-                : 'Edit block'
+                : layout === 'about' || layout === 'agency'
+                  ? 'Edit section'
+                  : 'Edit block'
               : layout === 'community'
                 ? 'Add initiative'
-                : 'New block'}
+                : layout === 'about' || layout === 'agency'
+                  ? 'Add section'
+                  : 'New block'}
           </h2>
           <p className="mt-1 text-sm text-[#6b7280]">
             {layout === 'community'
               ? 'Saved initiatives appear above with their public images. Click a card to edit it, or fill the form below and press ADD for a new one.'
-              : 'About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).'}
+              : layout === 'about' || layout === 'agency'
+                ? 'These are the same story sections shown on the public page (for example Who We are and What We do). Click a card to edit title, image, and text.'
+                : 'About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).'}
           </p>
           <div className="mt-6 space-y-6">
             <div>
-              <FieldLabel>{layout === 'community' ? 'Initiative title' : 'Block title'}</FieldLabel>
+              <FieldLabel>
+                {layout === 'community'
+                  ? 'Initiative title'
+                  : layout === 'about' || layout === 'agency'
+                    ? 'Section title'
+                    : 'Block title'}
+              </FieldLabel>
               <PillInput
                 value={draftBlock.title}
                 onChange={(value) => setDraftBlock({ ...draftBlock, title: value })}
-                placeholder={layout === 'community' ? 'Community-Based Tourism' : 'Who We are'}
+                placeholder={
+                  layout === 'community'
+                    ? 'Community-Based Tourism'
+                    : layout === 'about' || layout === 'agency'
+                      ? 'Who We are'
+                      : 'Who We are'
+                }
               />
             </div>
             <CoverImageField
-              label={layout === 'community' ? 'Initiative image' : 'Block image'}
+              label={
+                layout === 'community'
+                  ? 'Initiative image'
+                  : layout === 'about' || layout === 'agency'
+                    ? 'Section image'
+                    : 'Block image'
+              }
               folder="pages"
               value={draftBlock.image_url || ''}
               onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
             />
             <div>
-              <FieldLabel>{layout === 'community' ? 'Description' : 'Block description'}</FieldLabel>
+              <FieldLabel>
+                {layout === 'community'
+                  ? 'Description'
+                  : layout === 'about' || layout === 'agency'
+                    ? 'Section text'
+                    : 'Block description'}
+              </FieldLabel>
               <RichTextEditor
                 value={draftBlock.description}
                 onChange={(value) => setDraftBlock({ ...draftBlock, description: value })}
                 placeholder={
                   layout === 'community'
                     ? 'Write the text shown with this initiative on the public Community page'
-                    : 'Block copy...'
+                    : layout === 'about' || layout === 'agency'
+                      ? 'Write the text shown in this About section on the public website'
+                      : 'Block copy...'
                 }
                 minHeight={180}
                 showFooter

@@ -19,6 +19,20 @@ export function seededCmsPage(slug: string) {
   return DEFAULT_CMS_PAGES.find((item) => item.slug === slug);
 }
 
+function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBlock[]): CmsContentBlock[] {
+  if (!existing.length) return seeded.map((block) => ({ ...block }));
+  return existing.map((block, index) => {
+    const match =
+      seeded.find((item) => item.title.trim().toLowerCase() === String(block.title || '').trim().toLowerCase()) ||
+      seeded[index];
+    return {
+      title: String(block.title || '').trim() || match?.title || '',
+      description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description || '',
+      image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
+    };
+  });
+}
+
 export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: string) {
   const seeded = seededCmsPage(slug);
   const extras = parseCmsPageExtras(page, slug);
@@ -36,13 +50,22 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
       (hasVisibleCopy(block.description) || resolvePublicImage(block.image_url))
   );
   const isCommunity = extras.layout === 'community' || /community/i.test(slug);
-  const sourceBlocks = isCommunity
-    ? usableCmsBlocks.length
+  const isStoryPage =
+    extras.layout === 'about' ||
+    extras.layout === 'agency' ||
+    /about-us|travel-agency|agency/i.test(slug);
+
+  let sourceBlocks: CmsContentBlock[];
+  if (isCommunity) {
+    sourceBlocks = usableCmsBlocks.length
       ? mergeCommunityInitiativeBlocks(usableCmsBlocks)
-      : mergeCommunityInitiativeBlocks(seededBlocks)
-    : usableCmsBlocks.length
-      ? usableCmsBlocks
-      : seededBlocks;
+      : mergeCommunityInitiativeBlocks(seededBlocks);
+  } else if (isStoryPage) {
+    sourceBlocks = mergeWithSeededBlocks(usableCmsBlocks, seededBlocks);
+  } else {
+    sourceBlocks = usableCmsBlocks.length ? usableCmsBlocks : seededBlocks;
+  }
+
   const blocks: CmsContentBlock[] = sourceBlocks.map((block) => {
     const match = seededBlocks.find((item) => item.title.toLowerCase() === block.title.toLowerCase());
     return {
