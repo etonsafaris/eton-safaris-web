@@ -23,14 +23,23 @@ export function seededDestinations(): PublicDestination[] {
 }
 
 function countryDisplayName(row: RecordRow): string {
-  return pickString(row, ['name']) || pickString(row, ['title']) || '';
+  return (
+    pickString(row, ['name']) ||
+    pickString(row, ['title', 'label', 'country', 'destination']) ||
+    ''
+  );
 }
 
 export function publicDestinationFromRecord(row: RecordRow): PublicDestination | null {
   const name = countryDisplayName(row);
   let slug = publicCountrySlug(row);
   if (!slug && name) slug = canonicalCountrySlug(name);
-  if (!name || !slug) return null;
+  // Never publish ultra-short junk slugs when a usable name slug exists.
+  if (slug && slug.length < 3 && name) {
+    const fromName = canonicalCountrySlug(name);
+    if (fromName.length >= 3) slug = fromName;
+  }
+  if (!name || !slug || slug.length < 2) return null;
   const iso =
     pickString(row, ['iso', 'iso_code', 'country_code']).toLowerCase() || destinationIso(name) || destinationIso(slug) || '';
   return { name, slug, iso };

@@ -37,13 +37,13 @@ export default function SavedBlocksGrid({
       <h2 className="font-serif text-2xl font-bold text-[#1e293b]">
         {heading} ({blocks.length})
       </h2>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {blocks.map((block, index) => {
           const preview = previewText(block.description);
           return (
             <article
               key={`${block.title}-${index}`}
-              className="flex flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm"
+              className="flex min-w-0 max-w-full flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm"
             >
               <div className="flex items-start gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d1fae5] text-xs font-bold text-[#047857]">

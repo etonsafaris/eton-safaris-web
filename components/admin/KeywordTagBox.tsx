@@ -21,7 +21,7 @@ export function KeywordChip({
     >
       <button
         type="button"
-        className="min-w-0 text-left break-words"
+        className="min-w-0 max-w-[14rem] text-left break-words [overflow-wrap:anywhere]"
         onClick={(event) => {
           event.stopPropagation();
           onEdit?.();
@@ -71,9 +71,9 @@ export default function KeywordTagBox({
     <div
       role="group"
       onClick={() => inputRef.current?.focus()}
-      className={`${minHeightClass} w-full cursor-text rounded-lg border border-[#d1d5db] bg-white p-3 text-left transition focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/15`}
+      className={`${minHeightClass} w-full max-w-full cursor-text overflow-hidden rounded-lg border border-[#d1d5db] bg-white p-3 text-left transition focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/15`}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex max-w-full flex-wrap items-center gap-2">
         {tags.map((tag) => (
           <KeywordChip
             key={tag}
@@ -94,7 +94,7 @@ export default function KeywordTagBox({
             onAdd();
           }}
           placeholder={placeholder}
-          className="min-h-[34px] min-w-[160px] flex-1 border-0 bg-transparent py-1 text-sm text-[#111827] outline-none placeholder:text-[#9ca3af] disabled:cursor-not-allowed"
+          className="min-h-[34px] min-w-[8rem] max-w-full flex-1 border-0 bg-transparent py-1 text-sm text-[#111827] outline-none placeholder:text-[#9ca3af] disabled:cursor-not-allowed"
         />
       </div>
     </div>

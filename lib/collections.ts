@@ -419,6 +419,11 @@ export const OTHER_DESTINATIONS = [
   { name: 'Ethiopia', slug: 'ethiopia', flag: '🇪🇹', iso: 'et' },
   { name: 'Malawi', slug: 'malawi', flag: '🇲🇼', iso: 'mw' },
   { name: 'Zambia', slug: 'zambia', flag: '🇿🇲', iso: 'zm' },
+  { name: 'Morocco', slug: 'morocco', flag: '🇲🇦', iso: 'ma' },
+  { name: 'Seychelles', slug: 'seychelles', flag: '🇸🇨', iso: 'sc' },
+  { name: 'Mozambique', slug: 'mozambique', flag: '🇲🇿', iso: 'mz' },
+  { name: 'Madagascar', slug: 'madagascar', flag: '🇲🇬', iso: 'mg' },
+  { name: 'Zimbabwe', slug: 'zimbabwe', flag: '🇿🇼', iso: 'zw' },
 ];
 
 export const SITE_LOGO = '/eton-safaris-gorilla.png?v=green-type';

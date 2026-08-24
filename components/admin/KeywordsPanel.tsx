@@ -248,10 +248,10 @@ export default function KeywordsPanel() {
   }
 
   return (
-    <form onSubmit={saveKeywords} className="mx-auto w-full max-w-5xl">
+    <form onSubmit={saveKeywords} className="mx-auto w-full max-w-3xl">
       <h2 className="text-center font-serif text-3xl font-bold text-gray-900">Add Keyword</h2>
 
-      <div className="mx-auto mt-8 max-w-xl space-y-4">
+      <div className="mx-auto mt-8 max-w-md space-y-4">
         <label className="block text-sm font-semibold text-gray-700">
           Country
           <div className="mt-2">
@@ -283,7 +283,7 @@ export default function KeywordsPanel() {
         </label>
       </div>
 
-      <div className="mt-8">
+      <div className="mx-auto mt-8 max-w-xl overflow-hidden">
         <KeywordTagBox
           tags={chips}
           draft={draft}
@@ -303,11 +303,11 @@ export default function KeywordsPanel() {
           }}
           placeholder={category ? 'Type a keyword and press Enter' : 'Select a category first'}
           disabled={!category}
-          minHeightClass="min-h-[220px]"
+          minHeightClass="min-h-[160px]"
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mx-auto mt-4 flex max-w-xl flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={saving}
@@ -322,7 +322,8 @@ export default function KeywordsPanel() {
       {savedSets.length > 0 ? (
         <SavedBlocksGrid
           heading="Saved Keywords"
-          className="mt-10"
+          className="mx-auto mt-10 max-w-3xl"
+          lineClamp={1}
           blocks={savedSets.map((set) => {
             const count = set.keywords.length;
             return {
@@ -334,7 +335,7 @@ export default function KeywordsPanel() {
           onDelete={deleteSet}
         />
       ) : (
-        <p className="mt-10 text-sm text-[#6b7280]">
+        <p className="mx-auto mt-10 max-w-3xl text-sm text-[#6b7280]">
           Saved keywords for each country and category will appear here in one block after you click Save.
         </p>
       )}

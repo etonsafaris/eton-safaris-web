@@ -263,17 +263,55 @@ export function pickPlainText(record: RecordRow, keys: string[], fallback = ''):
   return stripHtml(pickString(record, keys, fallback));
 }
 
+const PUBLISHED_STATUSES = new Set([
+  'published',
+  'publish',
+  'live',
+  'public',
+  'active',
+  'visible',
+  'released',
+]);
+
+const UNPUBLISHED_STATUSES = new Set([
+  'draft',
+  'unpublished',
+  'deleted',
+  'archived',
+  'private',
+  'admin-only',
+  'admin only',
+  'hidden',
+]);
+
+function normalizePublishToken(value: string): string {
+  return value.toLowerCase().trim();
+}
+
+function isBlankPublishToken(value: string): boolean {
+  return !value || value === 'null' || value === 'undefined' || value === 'none' || value === '-';
+}
+
+/** Empty / missing status counts as published. Prefer status over visibility so Base44 visibility defaults do not hide CMS countries. */
 export function isPublishedRecord(record: RecordRow): boolean {
-  const status = pickString(record, ['status', 'visibility', 'publish_status']).toLowerCase().trim();
-  if (!status || status === 'null' || status === 'undefined' || status === 'none' || status === '-') return true;
-  if (
-    ['published', 'publish', 'live', 'public', 'active', 'visible', 'released'].includes(status)
-  ) {
-    return true;
+  for (const key of ['published', 'is_published', 'isPublished'] as const) {
+    const flag = record[key];
+    if (typeof flag === 'boolean') return flag;
   }
-  return !['draft', 'unpublished', 'deleted', 'archived', 'private', 'admin-only', 'admin only', 'hidden'].includes(
-    status
-  );
+
+  const status = normalizePublishToken(pickString(record, ['status', 'publish_status']));
+  if (!isBlankPublishToken(status)) {
+    if (PUBLISHED_STATUSES.has(status)) return true;
+    if (UNPUBLISHED_STATUSES.has(status)) return false;
+  }
+
+  const visibility = normalizePublishToken(pickString(record, ['visibility']));
+  if (!isBlankPublishToken(visibility)) {
+    if (PUBLISHED_STATUSES.has(visibility)) return true;
+    if (UNPUBLISHED_STATUSES.has(visibility)) return false;
+  }
+
+  return true;
 }
 
 export function pickNumber(record: RecordRow, keys: string[], fallback = 0): number {
