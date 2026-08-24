@@ -1,7 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+
+function uniqueVideos(videos: string[]) {
+  const seen = new Set<string>();
+  return (videos || [])
+    .map((item) => String(item || '').trim())
+    .filter((item) => {
+      if (!item || seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+}
 
 export default function HomeVideoCarousel({
   videos,
@@ -12,19 +23,25 @@ export default function HomeVideoCarousel({
   poster?: string;
   className?: string;
 }) {
-  const sources = (videos || []).map((item) => String(item || '').trim()).filter(Boolean);
+  const sourceKey = (videos || []).map((item) => String(item || '').trim()).filter(Boolean).join('|');
+  const sources = useMemo(() => uniqueVideos(videos), [sourceKey]);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const [active, setActive] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const safeIndex = sources.length ? index % sources.length : 0;
   const current = sources[safeIndex] || '';
-  const showControls = sources.length > 1;
+  const hasPlaylist = sources.length > 1;
 
   useEffect(() => {
-    setIndex(0);
-  }, [sources.join('|')]);
+    setIndex((currentIndex) => {
+      if (!sources.length) return 0;
+      const url = sources[currentIndex % sources.length];
+      const match = sources.indexOf(url);
+      return match >= 0 ? match : 0;
+    });
+  }, [sourceKey]);
 
   useEffect(() => {
     const node = wrapRef.current;
@@ -45,26 +62,24 @@ export default function HomeVideoCarousel({
   useEffect(() => {
     const node = videoRef.current;
     if (!node || !active || !current) return;
+    node.loop = false;
     node.muted = muted;
     const play = node.play();
     if (play && typeof play.catch === 'function') play.catch(() => undefined);
   }, [index, muted, active, current]);
 
   function goTo(next: number) {
-    if (!showControls) return;
+    if (!sources.length) return;
     setIndex((next + sources.length) % sources.length);
   }
 
   function handleEnded() {
-    if (!showControls) {
-      const node = videoRef.current;
-      if (!node) return;
-      node.currentTime = 0;
-      const play = node.play();
-      if (play && typeof play.catch === 'function') play.catch(() => undefined);
+    if (sources.length > 1) {
+      setIndex((currentIndex) => (currentIndex + 1) % sources.length);
       return;
     }
-    setIndex((currentIndex) => (currentIndex + 1) % sources.length);
+    const node = videoRef.current;
+    if (node) node.pause();
   }
 
   return (
@@ -80,12 +95,13 @@ export default function HomeVideoCarousel({
           muted={muted}
           playsInline
           preload="metadata"
+          loop={false}
           onEnded={handleEnded}
         />
       ) : poster ? (
         <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : null}
-      {showControls ? (
+      {hasPlaylist ? (
         <>
           <button
             type="button"
@@ -116,7 +132,7 @@ export default function HomeVideoCarousel({
           {muted ? 'Unmute' : 'Mute'}
         </button>
       ) : null}
-      {showControls ? (
+      {hasPlaylist ? (
         <div className="absolute bottom-3 left-3 z-10 flex gap-1.5">
           {sources.map((src, itemIndex) => (
             <button
