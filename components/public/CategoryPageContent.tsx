@@ -18,6 +18,7 @@ import {
   getRecordTitle,
   isPublishedRecord,
   pickString,
+  recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -52,6 +53,15 @@ function titleFromSlug(value: string) {
     .join(' ');
 }
 
+function recordKey(record: RecordRow) {
+  return String(record.id ?? record.slug ?? record.title ?? '');
+}
+
+function sameRecordList(current: RecordRow[], next: RecordRow[]) {
+  if (current.length !== next.length) return false;
+  return current.every((row, index) => recordKey(row) === recordKey(next[index]));
+}
+
 export default function CategoryPageContent({
   slug,
   country,
@@ -79,14 +89,14 @@ export default function CategoryPageContent({
           fetchCollectionRecords('tours'),
         ]);
         if (!mounted) return;
-        setCategories(
-          allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
-        );
-        setTours(allTours.filter(isPublishedRecord).filter((tour) => matchesCountry(tour, slug)));
+        const nextCategories = allCategories
+          .filter(isPublishedRecord)
+          .filter((category) => categoryMatchesCountry(category, slug));
+        const nextTours = allTours.filter(isPublishedRecord).filter((tour) => matchesCountry(tour, slug));
+        setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
+        setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
       } catch (error) {
         console.error('[Supabase] Failed to load category page data:', error);
-      } finally {
-        if (mounted) setReady(true);
       }
     }
     void load();
@@ -136,7 +146,17 @@ export default function CategoryPageContent({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, '\\u003c') }}
         />
       ) : null}
-      <PageHero title={categoryTitle} image={heroImage} variant="country" />
+      <PageHero
+        title={categoryTitle}
+        image={heroImage}
+        variant="country"
+        country={countryTitle}
+        published={selectedCategory ? recordPublishedAt(selectedCategory) : undefined}
+        metaItems={[
+          { label: 'Country', value: countryTitle },
+          { label: 'Published', value: selectedCategory ? recordPublishedAt(selectedCategory) : '' },
+        ]}
+      />
 
       <section className="bg-white px-4 py-10 md:px-6">
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3">

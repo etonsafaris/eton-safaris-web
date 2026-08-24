@@ -65,17 +65,17 @@ export default function CmsSlugClient({
 
   useEffect(() => {
     let mounted = true;
-    if (
-      live === 0 &&
-      (initialCountry || initialPage) &&
-      (!categorySlug || initialNestedPlace || initialNestedIsCategory)
-    ) {
+    const hasNested = Boolean(initialNestedPlace || initialNestedIsCategory);
+    const hasFirstPaint =
+      Boolean(initialCountry || initialPage) && (!categorySlug || hasNested);
+
+    if (hasFirstPaint) {
       setCountry(initialCountry);
       setPage(initialPage);
       setNestedPlace(initialNestedPlace);
       setNestedIsCategory(initialNestedIsCategory);
       setReady(true);
-      return undefined;
+      if (live === 0) return undefined;
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {
@@ -111,7 +111,7 @@ export default function CmsSlugClient({
         setReady(true);
         return;
       }
-      if (categorySlug) setReady(false);
+      if (categorySlug && !hasFirstPaint) setReady(false);
       try {
         if (resolved.kind === 'country') {
           await loadCountry(resolved.canonical, resolved.countrySlug || countrySlugFromLanding(resolved.canonical));
@@ -173,9 +173,7 @@ export default function CmsSlugClient({
     return (
       <PublicShell>
         {categorySlug ? (
-          !ready ? (
-            <div className="py-24 text-center text-gray-500">Loading…</div>
-          ) : nestedPlace && !nestedIsCategory ? (
+          nestedPlace && !nestedIsCategory ? (
             <PlacePageContent
               slug={countrySlug}
               country={merged}
