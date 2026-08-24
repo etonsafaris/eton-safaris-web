@@ -180,9 +180,7 @@ export default function PageForm({ pageId }: PageFormProps) {
 
     const stamp = publishedAt || new Date().toISOString();
     const slug =
-      layout === 'home'
-        ? HOME_PAGE_SLUG
-        : seo.slug || slugify(title) || (layout === 'home' ? HOME_PAGE_SLUG : '');
+      layout === 'home' ? HOME_PAGE_SLUG : seo.slug || slugify(title) || '';
     const homePack =
       layout === 'home'
         ? homePageFieldPack({
