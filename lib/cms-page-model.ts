@@ -103,7 +103,12 @@ function firstFaqList(...values: unknown[]) {
 
 export function parseDestinationList(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item || '').trim()).filter(Boolean);
+    const items = value.map((item) => String(item || '').trim()).filter(Boolean);
+    // Guard against string-index bugs that turn "Madagascar" into ["M","a","d",…].
+    if (items.length > 2 && items.every((item) => item.length === 1)) {
+      return parseDestinationList(items.join(''));
+    }
+    return items;
   }
   if (typeof value === 'string' && value.trim()) {
     if (value.trim().startsWith('[')) {
@@ -116,7 +121,7 @@ export function parseDestinationList(value: unknown): string[] {
     return value
       .split(/[,|\n]/)
       .map((item) => item.trim())
-      .filter(Boolean);
+      .filter((item) => item.length > 1);
   }
   return [];
 }
@@ -149,7 +154,26 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
     offer_line: pickString(record || {}, ['offer_line', 'subtitle'], fields.offer_line),
     ready_heading: pickString(record || {}, ['ready_heading'], fields.ready_heading),
     published_at:
-      pickDateValue(record || {}, ['published_at', 'updated_at', 'created_at']) || fields.published_at || '',
+      pickDateValue(record || {}, [
+        'published_at',
+        'publishedAt',
+        'publish_date',
+        'published_date',
+        'created_at',
+        'createdAt',
+        'created_date',
+        'updated_at',
+        'updatedAt',
+        'updated_date',
+        'modified_at',
+      ]) ||
+      fields.published_at ||
+      fields.publish_date ||
+      fields.created_at ||
+      fields.created_date ||
+      fields.updated_at ||
+      fields.updated_date ||
+      '',
     best_time_to_visit: pickString(
       record || {},
       ['best_time_to_visit', 'best_time'],

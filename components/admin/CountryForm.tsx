@@ -8,7 +8,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
+import { fetchCollectionRecords, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
@@ -63,7 +63,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       setSummary(String(country.summary || country.excerpt || ''));
       setFaqs(faqsForEditor(country, 'countries'));
       setFeaturedImage(String(country.image_url || ''));
-      setPublishedAt(pickDateValue(country, ['published_at', 'created_at']) || '');
+      setPublishedAt(recordPublishedAt(country));
       setSeo(seoValuesFromRecord(country as Record<string, unknown>));
     });
   }, [countryId]);
@@ -104,7 +104,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         slug: (seo.slug && slugify(seo.slug).length >= 3 ? slugify(seo.slug) : '') || slugify(name),
         status: 'Published',
         // Keep the original publish date on edits; only stamp new countries.
-        published_at: publishedAt || (isEdit ? undefined : new Date().toISOString()),
+        published_at: publishStampForSave(publishedAt, isEdit),
       },
       { seo }
     );

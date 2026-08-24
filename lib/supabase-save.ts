@@ -138,6 +138,11 @@ export async function saveWithColumnFallback(
     current.published_at = new Date().toISOString();
   }
 
+  // Never blank out an existing publish date on edit.
+  if (isUpdate && (current.published_at === null || current.published_at === '')) {
+    delete current.published_at;
+  }
+
   if (Object.keys(current).length === 0) {
     return { data: null, error: { message: 'Could not save this record. The table is missing the fields being sent.' } };
   }

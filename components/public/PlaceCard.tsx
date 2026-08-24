@@ -35,7 +35,7 @@ export default function PlaceCard({
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        {date ? (
+        {date && date !== '—' ? (
           <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{date}</p>
         ) : null}
         <h2 className="text-[15px] font-bold leading-snug text-[#111]">{title}</h2>

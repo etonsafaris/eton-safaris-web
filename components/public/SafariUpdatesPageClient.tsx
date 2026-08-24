@@ -14,17 +14,12 @@ import {
   isPublishedRecord,
   pickPlainText,
   pickString,
+  recordPublishedAt,
 } from '@/lib/data';
+import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
 import { SITE_MEDIA } from '@/lib/site-media';
 import type { RecordRow } from '@/lib/types';
-
-function formatJournalDate(value: string) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
-  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
-}
 
 export default function SafariUpdatesPageClient({ initialPosts }: { initialPosts: RecordRow[] }) {
   const live = useCmsLive();
@@ -66,7 +61,9 @@ export default function SafariUpdatesPageClient({ initialPosts }: { initialPosts
                   href={`/safari-updates/${pickString(post, ['slug']) || post.id}`}
                   image={getRecordImage(post) || undefined}
                   title={getRecordTitle(post)}
-                  date={formatJournalDate(pickString(post, ['published_at', 'created_at']))}
+                  date={
+                    recordPublishedAt(post) ? formatPublishedDate(recordPublishedAt(post)) : undefined
+                  }
                   description={pickPlainText(post, ['excerpt', 'description', 'content'])}
                   cta="Read More"
                 />

@@ -13,7 +13,7 @@ import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { parseCmsPageExtras, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
 import { ALL_SEEDED_COUNTRIES } from '@/lib/cms-defaults';
-import { fetchCollectionRecords, getRecordTitle, pickDateValue, pickRecordId, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -97,7 +97,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
       setStatus(extras.status);
       setFaqs(faqsForEditor(landing, 'landing_pages'));
       setSeo(seoValuesFromRecord(landing as Record<string, unknown>));
-      setPublishedAt(pickDateValue(landing, ['published_at', 'created_at']) || extras.published_at);
+      setPublishedAt(recordPublishedAt(landing) || extras.published_at);
     });
   }, [landingId]);
 
@@ -131,7 +131,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const slug = seo.slug || landingCmsSlug(country || title) || slugify(title);
 
     const payload = buildSavePayload(
@@ -162,7 +162,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
             cta_href: '/request-a-quote',
             faqs: JSON.stringify(faqs),
             status,
-            published_at: stamp,
+            ...(stamp ? { published_at: stamp } : {}),
           },
         }),
       },

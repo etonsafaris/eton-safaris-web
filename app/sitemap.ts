@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { CORE_PAGE_SLUGS, countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
-import { countryCategoryPath } from '@/lib/country-utils';
-import { fetchCollectionRecords, pickDateValue, pickString, publicRecordSlug } from '@/lib/data';
+import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
+import { fetchCollectionRecords, pickString, publicRecordSlug, recordPublishedAt } from '@/lib/data';
 import { mergePublicDestinations } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
@@ -26,7 +26,7 @@ function recordPath(base: string, row: RecordRow) {
 }
 
 function recordDate(row: RecordRow) {
-  const raw = pickDateValue(row, ['published_at', 'updated_at', 'created_at']);
+  const raw = recordPublishedAt(row);
   const date = raw ? new Date(raw) : new Date();
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
@@ -83,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return path ? entry(path, recordDate(row), 0.6, 'weekly') : null;
     }),
     ...places.map((row) => {
-      const country = pickString(row, ['country']);
+      const country = canonicalCountrySlug(pickString(row, ['country']));
       const path = country ? countryPlacePath(country, row) : recordPath('/explore', row);
       return path ? entry(path, recordDate(row), 0.6) : null;
     }),
@@ -92,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return slug ? entry(`/${slug.replace(/^\//, '')}`, recordDate(row), 0.8) : null;
     }),
     ...categories.map((row) => {
-      const country = pickString(row, ['country']);
+      const country = canonicalCountrySlug(pickString(row, ['country']));
       const path = country ? countryCategoryPath(country, row) : null;
       return path ? entry(path, recordDate(row), 0.7) : null;
     }),

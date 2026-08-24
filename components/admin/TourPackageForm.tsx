@@ -26,7 +26,7 @@ import {
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { fetchCollectionRecords, getRecordTitle, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
 import type { RecordRow } from '@/lib/types';
@@ -188,9 +188,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
       if (!tour) return;
       setSchemaColumns(Object.keys(tour));
       const embedded = extractEmbeddedContent(String(tour.description || ''));
-      setPublishedAt(
-        pickDateValue(tour, ['published_at', 'created_at']) || embedded.fields?.published_at || ''
-      );
+      setPublishedAt(recordPublishedAt(tour));
       setForm({
         title: String(tour.title || ''),
         description: stripEmbeddedContent(String(tour.description || '')),
@@ -227,10 +225,10 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
 
   const countryOptions = useMemo(
     () =>
-      countries.map((country) => ({
-        value: getRecordTitle(country),
-        label: getRecordTitle(country),
-      })),
+      countries.map((country) => {
+        const label = publicCountryLabel(country);
+        return { value: label, label };
+      }),
     [countries]
   );
 
@@ -295,7 +293,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const payload = buildSavePayload(
       'tours',
       {
@@ -308,7 +306,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
             highlights: form.highlights,
             price_includes: form.price_includes,
             price_excludes: form.price_excludes,
-            published_at: stamp,
+            ...(stamp ? { published_at: stamp } : {}),
           },
         }),
         duration_days: form.duration_days ? Number(form.duration_days) : null,

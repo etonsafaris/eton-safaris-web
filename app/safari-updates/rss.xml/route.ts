@@ -22,7 +22,7 @@ export async function GET() {
       const title = xmlEscape(getRecordTitle(post));
       const description = xmlEscape(pickPlainText(post, ['excerpt', 'description', 'content']).slice(0, 280));
       const link = `${SITE.url}/safari-updates/${slug}`;
-      const date = pickString(post, ['published_at', 'updated_at', 'created_at']);
+      const date = pickString(post, ['published_at', 'updated_at', 'created_at', 'createdAt', 'updatedAt']);
       return `<item>
         <title>${title}</title>
         <link>${link}</link>

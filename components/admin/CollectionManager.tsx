@@ -16,6 +16,7 @@ import {
   pickString,
   pickNumber,
   pickRecordId,
+  recordPublishedAt,
   slugify,
   isLanguagePost,
   clearCollectionCache,
@@ -40,7 +41,7 @@ import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
-import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
+import { countryCategoryPath, canonicalCountrySlug, publicCountrySlug } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
 import {
@@ -175,10 +176,14 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   function publicHref(record: RecordRow): string | null {
     if (config.id === 'categories') {
       const country = pickString(record, ['country']);
-      const countryKey = canonicalCountrySlug(country) || country;
+      const countryKey = canonicalCountrySlug(country) || publicCountrySlug({ name: country, slug: country });
       if (countryKey) return countryCategoryPath(countryKey, record);
       const value = pickString(record, ['slug', 'name', 'title']);
       return value ? `/tours?category=${encodeURIComponent(value)}` : null;
+    }
+    if (config.id === 'countries') {
+      const slug = publicCountrySlug(record) || slugify(getRecordTitle(record));
+      return slug ? destinationPublicPath(slug) : null;
     }
     const slug =
       pickString(record, ['slug']) ||
@@ -192,7 +197,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       const landingSlug = pickString(record, ['slug', 'seo_slug']) || pickString(record, ['country']);
       return landingSlug ? landingPreviewPath(landingSlug) : null;
     }
-    if (config.id === 'countries' && slug) return destinationPublicPath(slug);
     if (!config.publicPath) return null;
     if (!slug) return null;
     return `${config.publicPath.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`;
@@ -220,7 +224,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   }
 
   function cardDate(record: RecordRow) {
-    const raw = pickString(record, ['published_at', 'created_at', 'travel_date', 'updated_at']);
+    const raw = recordPublishedAt(record) || pickString(record, ['travel_date']);
     if (!raw) return '';
     const date = new Date(raw);
     if (Number.isNaN(date.getTime())) return raw;

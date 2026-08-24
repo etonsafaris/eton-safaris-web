@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -110,7 +110,7 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
       setCountry(String(park.country || ''));
       setFeaturedImage(String(park.image_url || ''));
       setSeo(seoValuesFromRecord(park as Record<string, unknown>));
-      setPublishedAt(pickDateValue(park, ['published_at', 'created_at']) || '');
+      setPublishedAt(recordPublishedAt(park));
       setBlocks(parseBlocksFromRecord(park));
     });
   }, [parkId]);
@@ -175,7 +175,7 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const payload = buildSavePayload(
       'national_park',
       {
@@ -188,7 +188,7 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
             description_title: descriptionTitle,
             location,
             country,
-            published_at: stamp,
+            ...(stamp ? { published_at: stamp } : {}),
           },
         }),
         country,

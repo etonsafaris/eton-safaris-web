@@ -10,7 +10,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -77,7 +77,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
       setContent(stripEmbeddedContent(String(post.content || post.description || '')));
       setPostType(isLanguagePost(post) ? 'Language Posts' : 'Standard Posts');
       setSeo(seoValuesFromRecord(post as Record<string, unknown>));
-      setPublishedAt(pickDateValue(post, ['published_at', 'created_at']) || '');
+      setPublishedAt(recordPublishedAt(post));
       setBlocks(parseBlocksFromRecord(post));
     });
   }, [postId]);
@@ -141,7 +141,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const payload = buildSavePayload(
       'safari_updates',
       {
@@ -150,7 +150,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
           blocks,
           fields: {
             country,
-            published_at: stamp,
+            ...(stamp ? { published_at: stamp } : {}),
           },
         }),
         excerpt: content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180),

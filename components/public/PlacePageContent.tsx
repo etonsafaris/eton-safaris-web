@@ -7,7 +7,7 @@ import PageHero from '@/components/public/PageHero';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import RelatedSidebar from '@/components/public/RelatedSidebar';
 import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
-import { countryLabelFromSlug, findPlaceBySlug, matchesCountry } from '@/lib/country-utils';
+import { findPlaceBySlug, matchesCountry, publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
@@ -99,8 +99,7 @@ export default function PlacePageContent({
 
   const placeTitle = place ? getRecordTitle(place) : placeSlug.replace(/-/g, ' ');
   const countryTitle =
-    (country && getRecordTitle(country)) ||
-    (countrySlugProp ? countryLabelFromSlug(countrySlugProp.replace(/-safaris$/, '')) : '') ||
+    publicCountryLabel(country, countrySlugProp?.replace(/-safaris$/, '') || '') ||
     pickStoredString(place, ['country']) ||
     'this destination';
   const heroImage = (place && getRecordImage(place)) || countryHeroImage(countrySlugProp, country);

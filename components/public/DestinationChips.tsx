@@ -1,12 +1,17 @@
 import Link from 'next/link';
-import { destinationFlagUrl, destinationHref } from '@/lib/destination-chips';
+import { destinationDisplayName, destinationFlagUrl, destinationHref } from '@/lib/destination-chips';
 
 export default function DestinationChips({ names, tone = 'dark' }: { names: string[]; tone?: 'dark' | 'light' }) {
-  if (!names.length) return null;
+  const list = Array.isArray(names)
+    ? names
+        .map((name) => destinationDisplayName(String(name || '').trim()))
+        .filter((name) => name.length > 1)
+    : [];
+  if (!list.length) return null;
   const light = tone === 'light';
   return (
     <div className="mt-10 flex flex-wrap justify-center gap-3">
-      {names.map((name) => {
+      {list.map((name) => {
         const flag = destinationFlagUrl(name, 80);
         return (
           <Link

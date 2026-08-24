@@ -32,7 +32,11 @@ export default function PostMetaBar({
 }: PostMetaBarProps) {
   const resolved: MetaItem[] =
     items && items.length > 0
-      ? items
+      ? items.map((item) =>
+          item.label === 'Published'
+            ? { ...item, value: formatPublishedDate(item.value) }
+            : item
+        )
       : [
           { label: 'Country', value: country },
           ...(showLocation ? [{ label: 'Location', value: location }] : []),

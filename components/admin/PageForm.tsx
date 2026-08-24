@@ -23,7 +23,7 @@ import {
 import { faqsForEditor } from '@/lib/default-faqs';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
-import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
+import { fetchCollectionRecords, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   DEFAULT_HOME_FEATURES,
@@ -157,7 +157,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       }
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
-      setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
+      setPublishedAt(recordPublishedAt(page) || extras.published_at);
     });
   }, [pageId]);
 
@@ -178,7 +178,7 @@ export default function PageForm({ pageId }: PageFormProps) {
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const slug =
       layout === 'home' ? HOME_PAGE_SLUG : seo.slug || slugify(title) || '';
     const homePack =
@@ -204,7 +204,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       status,
       cta_label: ctaLabel,
       cta_href: ctaHref,
-      published_at: stamp,
+      ...(stamp ? { published_at: stamp } : {}),
     });
 
     const pageBlocks = layout === 'home' ? homeFeatureBlocks(homeFeatures) : blocks;

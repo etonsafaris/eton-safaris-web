@@ -23,11 +23,11 @@ export function seededDestinations(): PublicDestination[] {
 }
 
 function countryDisplayName(row: RecordRow): string {
-  return (
-    pickString(row, ['name']) ||
-    pickString(row, ['title', 'label', 'country', 'destination']) ||
-    ''
-  );
+  const name = pickString(row, ['name']);
+  if (name.length >= 2) return name;
+  const title = pickString(row, ['title', 'label', 'country', 'destination']);
+  if (title.length >= 3) return title;
+  return name || title;
 }
 
 export function publicDestinationFromRecord(row: RecordRow): PublicDestination | null {

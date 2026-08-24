@@ -110,10 +110,29 @@ function knownCountriesNamedIn(value: string): string[] {
 }
 
 export function countryLabelFromSlug(slug: string): string {
-  return slug
+  const key = canonicalCountrySlug(slug);
+  if (!key) return '';
+  const known = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].find((item) => item.slug === key);
+  if (known) return known.name;
+  return key
     .split('-')
+    .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+/** Full destination label for public links — never a 1-letter slug fragment. */
+export function publicCountryLabel(record: RecordRow | null | undefined, slugFallback = ''): string {
+  if (record) {
+    const name = pickString(record, ['name']);
+    if (name.length >= 2) return name;
+    const title = pickString(record, ['title', 'label', 'country', 'destination']);
+    if (title.length >= 3) return title;
+    if (name) return name;
+    if (title) return title;
+  }
+  const fromSlug = countryLabelFromSlug(slugFallback || publicCountrySlug(record || {}));
+  return fromSlug || 'Destination';
 }
 
 export function matchesCountry(record: RecordRow, countrySlug: string): boolean {
@@ -246,13 +265,21 @@ export function getCategoryKey(record: RecordRow): string {
 }
 
 export function categoryPublicSlug(category: RecordRow): string {
-  return normalizeSlug(pickString(category, ['slug']) || pickString(category, ['title', 'name']));
+  const fromSlug = normalizeSlug(pickString(category, ['slug']));
+  const fromName = normalizeSlug(pickString(category, ['title', 'name']));
+  if (fromSlug && fromSlug.length >= MIN_PUBLIC_COUNTRY_SLUG) return fromSlug;
+  if (fromName) return fromName;
+  return fromSlug || fromName;
 }
 
 export function countryCategoryPath(countrySlug: string, category: RecordRow): string {
   const country =
-    canonicalCountrySlug(countrySlug) || normalizeSlug(countrySlug).replace(/-safaris$/, '');
-  return `/${country}-safaris/${categoryPublicSlug(category)}`;
+    canonicalCountrySlug(countrySlug) ||
+    normalizeSlug(countrySlug).replace(/-safaris$/, '') ||
+    publicCountrySlug({ name: countrySlug, slug: countrySlug } as RecordRow);
+  const categorySlug = categoryPublicSlug(category);
+  if (!country || !categorySlug) return country ? `/${country}-safaris` : '/tours';
+  return `/${country}-safaris/${categorySlug}`;
 }
 
 function getRecordTitleFallback(record: RecordRow): string {

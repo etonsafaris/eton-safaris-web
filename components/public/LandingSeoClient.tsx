@@ -11,10 +11,9 @@ import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import {
   fetchCollectionRecords,
   getRecordImage,
-  getRecordTitle,
   pickString,
 } from '@/lib/data';
-import { countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
+import { countryLabelFromSlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -36,7 +35,7 @@ export default function LandingSeoClient({ slug }: { slug: string }) {
         const landingMatch =
           matchCmsRecord(landingRows, canonical, [countrySlug, canonical.replace(/-safaris$/, '')]) || null;
         const countryMatch =
-          countryRows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === countrySlug) || null;
+          countryRows.find((row) => recordMatchesCountrySlug(row, countrySlug)) || null;
         if (mounted) {
           setLanding(landingMatch);
           setCountry(countryMatch);
@@ -54,7 +53,7 @@ export default function LandingSeoClient({ slug }: { slug: string }) {
   const seeded = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].find((item) => item.slug === countrySlug);
   const fallback = LANDING_PAGE_DEFAULTS[canonical];
   const countryName =
-    (country && getRecordTitle(country)) ||
+    publicCountryLabel(country, countrySlug) ||
     pickString(landing || {}, ['country']) ||
     fallback?.country ||
     seeded?.name ||

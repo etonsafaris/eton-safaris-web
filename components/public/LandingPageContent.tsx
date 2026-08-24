@@ -24,7 +24,7 @@ import {
   publicRecordSlug,
 } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
-import { countryLabelFromSlug, matchesCountry } from '@/lib/country-utils';
+import { matchesCountry, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -75,7 +75,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
     load();
   }, [slug, live]);
 
-  const countryName = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
+  const countryName = publicCountryLabel(country, slug);
   const copy = landingConversionCopy(slug, countryName);
   const extras = parseCmsPageExtras(landing, slug);
   const h1 = landingVisibleH1(slug, countryName, extras.hero_title || heroTitle || '');

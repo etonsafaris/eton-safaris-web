@@ -7,10 +7,10 @@ import PageFaqList from '@/components/public/PageFaqList';
 import PageHero from '@/components/public/PageHero';
 import {
   categoryMatchesCountry,
-  countryLabelFromSlug,
   filterToursByCategory,
   findCategoryBySlug,
   matchesCountry,
+  publicCountryLabel,
 } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
@@ -113,7 +113,7 @@ export default function CategoryPageContent({
   const categoryTitle = selectedCategory
     ? getRecordTitle(selectedCategory)
     : titleFromSlug(categorySlug) || 'Safari Category';
-  const countryTitle = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
+  const countryTitle = publicCountryLabel(country, slug);
   const heroImage =
     (selectedCategory && getRecordImage(selectedCategory)) || countryHeroImage(slug, country);
   const descriptionHtml = toProseHtml(

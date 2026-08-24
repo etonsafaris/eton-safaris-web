@@ -1,6 +1,6 @@
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { normalizeSlug } from '@/lib/country-utils';
+import { canonicalCountrySlug, countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 
 const EXTRA_ISO: Record<string, string> = {
   zimbabwe: 'zw',
@@ -59,8 +59,22 @@ export function destinationIso(name: string): string {
 }
 
 export function destinationHref(name: string): string {
-  const slug = normalizeSlug(name);
-  return slug ? destinationPublicPath(slug) : '/destinations';
+  const raw = String(name || '').trim();
+  if (!raw || raw.length < 2) return '/destinations';
+  const known = ALL_DESTINATIONS.find(
+    (item) => item.slug === normalizeSlug(raw) || normalizeSlug(item.name) === normalizeSlug(raw)
+  );
+  const slug = known?.slug || canonicalCountrySlug(raw) || normalizeSlug(raw);
+  return slug && slug.length >= 2 ? destinationPublicPath(slug) : '/destinations';
+}
+
+export function destinationDisplayName(name: string): string {
+  const raw = String(name || '').trim();
+  if (!raw || raw.length < 2) return '';
+  const known = ALL_DESTINATIONS.find(
+    (item) => item.slug === normalizeSlug(raw) || normalizeSlug(item.name) === normalizeSlug(raw)
+  );
+  return known?.name || countryLabelFromSlug(canonicalCountrySlug(raw) || normalizeSlug(raw)) || raw;
 }
 
 export function destinationFlagUrl(name: string, width = 80) {

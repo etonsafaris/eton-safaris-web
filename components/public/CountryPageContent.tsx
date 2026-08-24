@@ -11,8 +11,8 @@ import { countryPlacePath } from '@/lib/cms-routes';
 import {
   categoryMatchesCountry,
   countryCategoryPath,
-  countryLabelFromSlug,
   matchesCountry,
+  publicCountryLabel,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
@@ -115,7 +115,7 @@ export default function CountryPageContent({
   }, [slug, live]);
 
   const extras = parseCmsPageExtras(country, slug);
-  const title = country ? getRecordTitle(country) : countryLabelFromSlug(slug);
+  const title = publicCountryLabel(country, slug);
   const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
   const faqs = mergeFaqs(extras.faqs, landingConversionCopy(slug, title).faqs);

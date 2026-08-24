@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, pickDateValue, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -132,7 +132,7 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
       setNationalPark(String(accommodation.national_park || accommodation.park || accommodation.park_name || ''));
       setFeaturedImage(String(accommodation.image_url || ''));
       setSeo(seoValuesFromRecord(accommodation as Record<string, unknown>));
-      setPublishedAt(pickDateValue(accommodation, ['published_at', 'created_at']) || '');
+      setPublishedAt(recordPublishedAt(accommodation));
       setBlocks(parseBlocksFromRecord(accommodation));
     });
   }, [accommodationId]);
@@ -217,7 +217,7 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
     setSaving(true);
     setError('');
 
-    const stamp = publishedAt || new Date().toISOString();
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const payload = buildSavePayload(
       'accommodations',
       {
@@ -232,7 +232,7 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
             national_park: nationalPark,
             location,
             country,
-            published_at: stamp,
+            ...(stamp ? { published_at: stamp } : {}),
           },
         }),
         type: accommodationType,

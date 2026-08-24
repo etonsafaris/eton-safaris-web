@@ -135,14 +135,35 @@ export function getRecordImage(record: RecordRow): string | null {
   return found ? withImageCacheBust(found, recordStamp(record)) : null;
 }
 
+function readableFieldValue(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  // Postgres/json arrays: use the first non-empty string entry — never index a string as [0].
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (typeof item === 'string' && item.trim()) return item.trim();
+      if (typeof item === 'number' && Number.isFinite(item)) return String(item);
+    }
+  }
+  return '';
+}
+
+/** Prefer a real label over a 1–2 character junk title/slug fragment (e.g. "M" vs "Madagascar"). */
 export function getRecordTitle(record: RecordRow): string {
   const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'author', 'email'];
-  for (const key of preferred) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) return value;
+  const candidates = preferred
+    .map((key) => readableFieldValue(record[key]))
+    .filter(Boolean);
+  const solid = candidates.find((value) => value.length >= 3);
+  if (solid) return solid;
+  if (candidates[0]) return candidates[0];
+
+  for (const key of Object.keys(record)) {
+    if (preferred.includes(key) || key === 'slug' || key === 'seo_slug') continue;
+    const value = readableFieldValue(record[key]);
+    if (value.length >= 3) return value;
   }
-  const firstString = Object.keys(record).find((key) => typeof record[key] === 'string' && String(record[key]).length > 0);
-  return firstString ? String(record[firstString]) : 'Untitled';
+  return 'Untitled';
 }
 
 export function getRecordSlug(record: RecordRow): string | null {
@@ -207,9 +228,8 @@ function asRecordId(value: unknown): string | number | null {
 
 export function pickString(record: RecordRow, keys: string[], fallback = ''): string {
   for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) return value;
-    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+    const value = readableFieldValue(record[key]);
+    if (value) return value;
   }
   return fallback;
 }
@@ -226,24 +246,68 @@ export function pickStoredString(record: RecordRow | null | undefined, keys: str
   return fallback;
 }
 
+/** Prefer publish stamp, then create, then last update. Never invent "today". */
+export const RECORD_DATE_KEYS = [
+  'published_at',
+  'publishedAt',
+  'publish_date',
+  'published_date',
+  'date_published',
+  'created_at',
+  'createdAt',
+  'created_date',
+  'createdDate',
+  'updated_at',
+  'updatedAt',
+  'updated_date',
+  'updatedDate',
+  'modified_at',
+  'modifiedAt',
+] as const;
+
+function coerceDateString(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const trimmed = value.trim();
+    if (/^(null|undefined|—|-)$/i.test(trimmed)) return '';
+    return trimmed;
+  }
+  return '';
+}
+
 export function pickDateValue(record: RecordRow | null | undefined, keys: string[]): string {
   if (!record) return '';
   for (const key of keys) {
-    const value = record[key];
-    if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
-    if (typeof value === 'number' && Number.isFinite(value)) return new Date(value).toISOString();
-    if (typeof value === 'string' && value.trim()) return value.trim();
+    const coerced = coerceDateString(record[key]);
+    if (coerced) return coerced;
   }
   return '';
 }
 
 export function recordPublishedAt(record: RecordRow | null | undefined): string {
+  if (!record) return '';
   // Prefer the original publish stamp, then create, then last update — never invent "today".
-  const fromColumns = pickDateValue(record, ['published_at', 'created_at', 'updated_at']);
+  const fromColumns = pickDateValue(record, [...RECORD_DATE_KEYS]);
   if (fromColumns) return fromColumns;
-  const fromEmbed = extractEmbeddedContent(recordBodyHtml(record)).fields?.published_at;
-  if (fromEmbed?.trim()) return fromEmbed.trim();
+
+  const fields = extractEmbeddedContent(recordBodyHtml(record)).fields || {};
+  for (const key of RECORD_DATE_KEYS) {
+    const coerced = coerceDateString(fields[key]);
+    if (coerced) return coerced;
+  }
   return '';
+}
+
+/** Keep an existing publish stamp on edit; stamp new records once at create time. */
+export function publishStampForSave(existing: string | undefined, isEdit: boolean): string | undefined {
+  const trimmed = (existing || '').trim();
+  if (trimmed) return trimmed;
+  if (isEdit) return undefined;
+  return new Date().toISOString();
 }
 
 export function stripHtml(value: string): string {

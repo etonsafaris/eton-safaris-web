@@ -16,7 +16,7 @@ import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { canonicalCountrySlug, publicCountrySlug, recordMatchesCountrySlug } from '@/lib/country-utils';
+import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
 import {
   destinationListingRows,
   mergePublicDestinations,
@@ -30,7 +30,9 @@ import {
   isPublishedRecord,
   pickString,
   pickPlainText,
+  recordPublishedAt,
 } from '@/lib/data';
+import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
@@ -166,7 +168,7 @@ export default function HomePageClient({
         subtitle: `Discover unforgettable safari experiences in ${name}.`,
         image: '/heroes/kenya.jpg',
       };
-      const label = dbCountry ? getRecordTitle(dbCountry) : name;
+      const label = dbCountry ? publicCountryLabel(dbCountry, slug) : name;
       return {
         title:
           (dbCountry ? pickString(dbCountry, ['hero_title', 'headline', 'banner_title']) : '') || defaults.title,
@@ -222,7 +224,7 @@ export default function HomePageClient({
           <div className="absolute inset-0 bg-gradient-to-t from-[#141612]/80 via-[#141612]/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
             <h4 className="mb-1 font-serif text-2xl font-bold text-white">
-              {pickString(country, ['name']) || getRecordTitle(country)}
+              {publicCountryLabel(country as RecordRow, slug)}
             </h4>
             <p className="text-xs font-semibold uppercase tracking-widest text-sage">
               {pickString(country, ['tagline', 'subtitle'])}
@@ -400,7 +402,9 @@ export default function HomePageClient({
                   </div>
                 )}
                 <div className="p-4">
-                  <p className="text-xs text-gray-400">{pickString(post, ['published_at', 'created_at']).slice(0, 10)}</p>
+                  {recordPublishedAt(post) ? (
+                    <p className="text-xs text-gray-400">{formatPublishedDate(recordPublishedAt(post))}</p>
+                  ) : null}
                   <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{getRecordTitle(post)}</h4>
                   <p className="mt-2 line-clamp-2 text-sm text-[#666]">
                     {stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content']))}

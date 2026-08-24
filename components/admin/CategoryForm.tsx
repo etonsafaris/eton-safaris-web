@@ -9,7 +9,14 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { fetchCollectionRecords, getRecordTitle, pickDateValue, pickRecordId, slugify } from '@/lib/data';
+import {
+  fetchCollectionRecords,
+  getRecordTitle,
+  pickRecordId,
+  publishStampForSave,
+  recordPublishedAt,
+  slugify,
+} from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -83,7 +90,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       setFaqs(faqsForEditor(category, 'categories'));
       setCountry(String(category.country || ''));
       setCategoryImage(String(category.image_url || ''));
-      setPublishedAt(pickDateValue(category, ['published_at', 'created_at']) || '');
+      setPublishedAt(recordPublishedAt(category));
       setSeo(seoValuesFromRecord(category as Record<string, unknown>));
     });
   }, [categoryId]);
@@ -136,7 +143,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
         slug: seo.slug || slugify(title),
         // Keep the original publish date on edits; only stamp new categories.
-        published_at: publishedAt || (isEdit ? undefined : new Date().toISOString()),
+        published_at: publishStampForSave(publishedAt, isEdit),
       },
       { seo }
     );

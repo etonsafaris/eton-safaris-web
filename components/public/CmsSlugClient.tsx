@@ -20,11 +20,10 @@ import { inferPageLayout } from '@/lib/cms-page-model';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import {
   fetchCollectionRecords,
-  getRecordTitle,
+  getRecordImage,
   isPublishedRecord,
-  pickString,
 } from '@/lib/data';
-import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, normalizeSlug } from '@/lib/country-utils';
+import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
 function paramValue(value: string | string[] | undefined) {
@@ -91,9 +90,9 @@ export default function CmsSlugClient({
         categorySlug ? fetchCollectionRecords('explore') : Promise.resolve([]),
       ]);
       const countryMatch =
-        countryRows.find((row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === countrySlug) ||
-        countryRows.find(
-          (row) => normalizeSlug(pickString(row, ['slug', 'name', 'title'])) === countrySlugFromLanding(canonical)
+        countryRows.find((row) => recordMatchesCountrySlug(row, countrySlug)) ||
+        countryRows.find((row) =>
+          recordMatchesCountrySlug(row, countrySlugFromLanding(canonical))
         ) ||
         null;
       const categoryMatch = categorySlug
@@ -159,7 +158,7 @@ export default function CmsSlugClient({
     const countrySlug = resolved.countrySlug || countrySlugFromLanding(resolved.canonical);
     const fallback = LANDING_PAGE_DEFAULTS[resolved.canonical] || LANDING_PAGE_DEFAULTS[`${countrySlug}-safaris`];
     const countryName =
-      (country && getRecordTitle(country)) ||
+      publicCountryLabel(country, countrySlug) ||
       fallback?.country ||
       countryLabelFromSlug(countrySlug);
     const merged: RecordRow = {
