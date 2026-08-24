@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
-import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickPlainText, pickString } from '@/lib/data';
+import {
+  fetchCollectionRecords,
+  getRecordTitle,
+  isLanguagePost,
+  isPublishedRecord,
+  pickPlainText,
+  pickString,
+  recordPublishedAt,
+} from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,7 +30,7 @@ export async function GET() {
       const title = xmlEscape(getRecordTitle(post));
       const description = xmlEscape(pickPlainText(post, ['excerpt', 'description', 'content']).slice(0, 280));
       const link = `${SITE.url}/safari-updates/${slug}`;
-      const date = pickString(post, ['published_at', 'updated_at', 'created_at', 'createdAt', 'updatedAt']);
+      const date = recordPublishedAt(post);
       return `<item>
         <title>${title}</title>
         <link>${link}</link>

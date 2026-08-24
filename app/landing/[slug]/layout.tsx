@@ -8,7 +8,8 @@ import {
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
 import { DEFAULT_LANDING_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage } from '@/lib/data';
+import { publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo } from '@/lib/seo-public';
 
@@ -27,14 +28,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       fetchCollectionRecords('countries'),
     ]);
     const landing = matchCmsRecord(landingRows, canonical, [countrySlug]);
-    const country =
-      countryRows.find((row) => {
-        const slug = pickString(row, ['slug', 'name']).toLowerCase().replace(/\s+/g, '-');
-        return slug === countrySlug || `${slug}-safaris` === canonical;
-      }) || null;
+    const country = countryRows.find((row) => recordMatchesCountrySlug(row, countrySlug)) || null;
     const extras = parseCmsPageExtras(landing, canonical);
     const values = seoValuesFromRecord((landing || country || {}) as Record<string, unknown>);
-    const countryName = (country && getRecordTitle(country)) || seeded?.country || countrySlug;
+    const countryName =
+      publicCountryLabel(country, countrySlug) || seeded?.country || countrySlug;
     const copy = landingConversionCopy(countrySlug, countryName);
     const h1 = landingVisibleH1(countrySlug, countryName, extras.hero_title);
     if (!values.focus_keywords?.length) {
