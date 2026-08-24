@@ -362,19 +362,34 @@ export default function PageForm({ pageId }: PageFormProps) {
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               {mergeCommunityInitiativeBlocks(blocks).map((block, index) => (
                 <div key={`${block.title}-${index}`} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
-                  <FieldLabel>{block.title}</FieldLabel>
-                  <CoverImageField
-                    label="Initiative image"
-                    folder="pages"
-                    value={block.image_url || ''}
-                    onChange={(url) => {
-                      setBlocks((current) => {
-                        const next = mergeCommunityInitiativeBlocks(current);
-                        next[index] = { ...next[index], image_url: url };
-                        return next;
-                      });
-                    }}
-                  />
+                  <div>
+                    <FieldLabel>Section title</FieldLabel>
+                    <PillInput
+                      value={block.title}
+                      onChange={(value) => {
+                        setBlocks((current) => {
+                          const next = mergeCommunityInitiativeBlocks(current);
+                          next[index] = { ...next[index], title: value };
+                          return next;
+                        });
+                      }}
+                      placeholder="Community-Based Tourism"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <CoverImageField
+                      label="Initiative image"
+                      folder="pages"
+                      value={block.image_url || ''}
+                      onChange={(url) => {
+                        setBlocks((current) => {
+                          const next = mergeCommunityInitiativeBlocks(current);
+                          next[index] = { ...next[index], image_url: url };
+                          return next;
+                        });
+                      }}
+                    />
+                  </div>
                   <div className="mt-4">
                     <FieldLabel>Image caption</FieldLabel>
                     <PillInput
@@ -387,6 +402,22 @@ export default function PageForm({ pageId }: PageFormProps) {
                         });
                       }}
                       placeholder="Short caption under this image"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <FieldLabel>Section text</FieldLabel>
+                    <RichTextEditor
+                      value={block.description || ''}
+                      onChange={(value) => {
+                        setBlocks((current) => {
+                          const next = mergeCommunityInitiativeBlocks(current);
+                          next[index] = { ...next[index], description: value };
+                          return next;
+                        });
+                      }}
+                      placeholder="Write the text shown under this initiative on the public Community page"
+                      minHeight={160}
+                      showFooter
                     />
                   </div>
                 </div>
