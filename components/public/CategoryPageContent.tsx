@@ -106,8 +106,8 @@ export default function CategoryPageContent({
   }, [slug, live]);
 
   const selectedCategory = useMemo(
-    () => findCategoryBySlug(categories, categorySlug),
-    [categories, categorySlug]
+    () => findCategoryBySlug(categories, categorySlug, slug),
+    [categories, categorySlug, slug]
   );
 
   const categoryTitle = selectedCategory
@@ -172,7 +172,7 @@ export default function CategoryPageContent({
           </div>
           <div className="md:col-span-1">
             <div className="md:sticky md:top-24">
-              <SpeakToExpertCard variant="country" countryName={categoryTitle} />
+              <SpeakToExpertCard variant="country" countryName={countryTitle} />
             </div>
           </div>
         </div>

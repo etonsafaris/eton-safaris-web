@@ -8,7 +8,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { fetchCollectionRecords, pickRecordId, slugify } from '@/lib/data';
+import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
@@ -39,6 +39,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
   const [summary, setSummary] = useState('');
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [featuredImage, setFeaturedImage] = useState('');
+  const [publishedAt, setPublishedAt] = useState('');
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('country'));
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
@@ -62,6 +63,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
       setSummary(String(country.summary || country.excerpt || ''));
       setFaqs(faqsForEditor(country, 'countries'));
       setFeaturedImage(String(country.image_url || ''));
+      setPublishedAt(pickDateValue(country, ['published_at', 'created_at']) || '');
       setSeo(seoValuesFromRecord(country as Record<string, unknown>));
     });
   }, [countryId]);
@@ -101,7 +103,8 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         image_url: imageUrl,
         slug: (seo.slug && slugify(seo.slug).length >= 3 ? slugify(seo.slug) : '') || slugify(name),
         status: 'Published',
-        published_at: new Date().toISOString(),
+        // Keep the original publish date on edits; only stamp new countries.
+        published_at: publishedAt || (isEdit ? undefined : new Date().toISOString()),
       },
       { seo }
     );

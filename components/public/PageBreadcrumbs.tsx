@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { destinationPublicPath } from '@/lib/cms-routes';
+import { countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
 
 const LABELS: Record<string, string> = {
   destinations: 'Destinations',
@@ -21,6 +23,11 @@ function labelFor(segment: string, fallback: string) {
   return LABELS[segment] || fallback.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function countryFromSafarisSegment(segment: string) {
+  const match = normalizeSlug(segment).match(/^([a-z0-9-]+)-safaris$/);
+  return match?.[1] || '';
+}
+
 export default function PageBreadcrumbs({
   currentTitle,
   tone = 'light',
@@ -36,6 +43,21 @@ export default function PageBreadcrumbs({
   const crumbs = parts.map((part, index) => {
     href += `/${part}`;
     const last = index === parts.length - 1;
+    const countrySlug = countryFromSafarisSegment(part);
+    if (countrySlug) {
+      return {
+        href: destinationPublicPath(countrySlug),
+        label: countryLabelFromSlug(countrySlug),
+        last,
+      };
+    }
+    if (parts[0] === 'destinations' && index === 1 && !last) {
+      return {
+        href: destinationPublicPath(part),
+        label: countryLabelFromSlug(normalizeSlug(part)),
+        last,
+      };
+    }
     return {
       href,
       label: last ? currentTitle : labelFor(part, part),
@@ -56,7 +78,7 @@ export default function PageBreadcrumbs({
         </Link>
       </li>
       {crumbs.map((crumb) => (
-        <li key={crumb.href} className="flex items-center gap-1">
+        <li key={`${crumb.href}-${crumb.label}`} className="flex items-center gap-1">
           <span className={forest ? 'text-white/35' : 'text-[#bbb]'} aria-hidden>
             /
           </span>

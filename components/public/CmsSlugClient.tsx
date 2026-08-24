@@ -74,8 +74,14 @@ export default function CmsSlugClient({
       setPage(initialPage);
       setNestedPlace(initialNestedPlace);
       setNestedIsCategory(initialNestedIsCategory);
+      setForceCountry(Boolean(initialCountry && resolved?.kind === 'country'));
       setReady(true);
       if (live === 0) return undefined;
+    } else {
+      // Drop the previous destination immediately so Rwanda never stays on a Madagascar route.
+      setCountry(null);
+      setNestedPlace(null);
+      setNestedIsCategory(false);
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {
@@ -91,7 +97,7 @@ export default function CmsSlugClient({
         ) ||
         null;
       const categoryMatch = categorySlug
-        ? findCategoryBySlug(categoryRows.filter(isPublishedRecord), categorySlug)
+        ? findCategoryBySlug(categoryRows.filter(isPublishedRecord), categorySlug, countrySlug)
         : null;
       const placeMatch =
         categorySlug && !categoryMatch

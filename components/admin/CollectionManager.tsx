@@ -40,7 +40,7 @@ import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
-import { countryCategoryPath } from '@/lib/country-utils';
+import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
 import {
@@ -175,7 +175,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   function publicHref(record: RecordRow): string | null {
     if (config.id === 'categories') {
       const country = pickString(record, ['country']);
-      if (country) return countryCategoryPath(country, record);
+      const countryKey = canonicalCountrySlug(country) || country;
+      if (countryKey) return countryCategoryPath(countryKey, record);
       const value = pickString(record, ['slug', 'name', 'title']);
       return value ? `/tours?category=${encodeURIComponent(value)}` : null;
     }

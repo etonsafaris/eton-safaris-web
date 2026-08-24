@@ -9,7 +9,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { fetchCollectionRecords, getRecordTitle, pickRecordId, slugify } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -58,6 +58,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [country, setCountry] = useState('');
   const [categoryImage, setCategoryImage] = useState('');
+  const [publishedAt, setPublishedAt] = useState('');
   const [countries, setCountries] = useState<RecordRow[]>([]);
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('category'));
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       setFaqs(faqsForEditor(category, 'categories'));
       setCountry(String(category.country || ''));
       setCategoryImage(String(category.image_url || ''));
+      setPublishedAt(pickDateValue(category, ['published_at', 'created_at']) || '');
       setSeo(seoValuesFromRecord(category as Record<string, unknown>));
     });
   }, [categoryId]);
@@ -133,6 +135,8 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         country,
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
         slug: seo.slug || slugify(title),
+        // Keep the original publish date on edits; only stamp new categories.
+        published_at: publishedAt || (isEdit ? undefined : new Date().toISOString()),
       },
       { seo }
     );

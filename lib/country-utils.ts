@@ -117,17 +117,14 @@ export function countryLabelFromSlug(slug: string): string {
 }
 
 export function matchesCountry(record: RecordRow, countrySlug: string): boolean {
-  const slug = normalizeSlug(countrySlug);
+  const target = canonicalCountrySlug(countrySlug);
+  if (!target) return false;
   const candidates = [
-    pickString(record, ['country', 'destination', 'country_slug', 'nation']),
-    pickString(record, ['slug']),
-    pickString(record, ['name']),
+    ...recordCountryValues(record),
+    canonicalCountrySlug(pickString(record, ['slug'])),
+    ...knownCountriesNamedIn(pickString(record, ['name', 'title'])),
   ].filter(Boolean);
-
-  return candidates.some((value) => {
-    const normalized = normalizeSlug(value);
-    return normalized === slug || normalized.includes(slug) || slug.includes(normalized);
-  });
+  return candidates.includes(target);
 }
 
 export function categoryMatchTokens(category: RecordRow): string[] {
@@ -173,9 +170,28 @@ export function matchesCategory(record: RecordRow, category: RecordRow | null): 
   return recordTokens.some((token) => categoryTokens.includes(token));
 }
 
-export function findCategoryBySlug(categories: RecordRow[], slug: string): RecordRow | null {
+export function findCategoryBySlug(
+  categories: RecordRow[],
+  slug: string,
+  countrySlug = ''
+): RecordRow | null {
   const target = normalizeSlug(slug);
   if (!target) return null;
+
+  const country = canonicalCountrySlug(countrySlug);
+  const pool = country
+    ? categories.filter((category) => categoryMatchesCountry(category, country))
+    : categories;
+
+  const exact = pool.find((category) => categoryPublicSlug(category) === target);
+  if (exact) return exact;
+
+  const soft = pool.find((category) => categoryMatchTokens(category).includes(target));
+  if (soft) return soft;
+
+  // Never fall back to another country's category when a country root was requested.
+  if (country) return null;
+
   return (
     categories.find((category) => categoryPublicSlug(category) === target) ||
     categories.find((category) => categoryMatchTokens(category).includes(target)) ||
@@ -234,7 +250,8 @@ export function categoryPublicSlug(category: RecordRow): string {
 }
 
 export function countryCategoryPath(countrySlug: string, category: RecordRow): string {
-  const country = normalizeSlug(countrySlug).replace(/-safaris$/, '');
+  const country =
+    canonicalCountrySlug(countrySlug) || normalizeSlug(countrySlug).replace(/-safaris$/, '');
   return `/${country}-safaris/${categoryPublicSlug(category)}`;
 }
 

@@ -238,11 +238,12 @@ export function pickDateValue(record: RecordRow | null | undefined, keys: string
 }
 
 export function recordPublishedAt(record: RecordRow | null | undefined): string {
+  // Prefer the original publish stamp, then create, then last update — never invent "today".
   const fromColumns = pickDateValue(record, ['published_at', 'created_at', 'updated_at']);
   if (fromColumns) return fromColumns;
   const fromEmbed = extractEmbeddedContent(recordBodyHtml(record)).fields?.published_at;
   if (fromEmbed?.trim()) return fromEmbed.trim();
-  return new Date().toISOString();
+  return '';
 }
 
 export function stripHtml(value: string): string {

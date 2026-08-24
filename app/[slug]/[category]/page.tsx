@@ -25,8 +25,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       fetchCollectionRecords('categories'),
       fetchCollectionRecords('explore'),
     ]);
+    const countryKey = resolved?.countrySlug || params.slug;
     const row =
-      findCategoryBySlug(categories, params.category) ||
+      findCategoryBySlug(categories, params.category, countryKey) ||
       findPlaceBySlug(places, params.category, resolved?.countrySlug || params.slug);
     const values = seoValuesFromRecord((row || {}) as Record<string, unknown>);
     const title = values.seo_title || (row && getRecordTitle(row)) || params.category;
@@ -54,7 +55,7 @@ export default async function CountryCategoryPage({ params }: PageProps) {
       fetchCollectionRecords('categories'),
       fetchCollectionRecords('explore'),
     ]);
-    const category = findCategoryBySlug(categories, params.category);
+    const category = findCategoryBySlug(categories, params.category, resolved.countrySlug);
     if (!category && findPlaceBySlug(places, params.category, resolved.countrySlug)) {
       table = 'explore';
       schemaHint = 'TouristAttraction';
@@ -65,7 +66,7 @@ export default async function CountryCategoryPage({ params }: PageProps) {
 
   const countrySlug = resolved.countrySlug || resolved.canonical;
   const countryData = await loadCountryPageData(countrySlug);
-  const category = findCategoryBySlug(countryData.categories, params.category);
+  const category = findCategoryBySlug(countryData.categories, params.category, countrySlug);
   const place =
     !category ? findPlaceBySlug(countryData.places, params.category, countrySlug) : null;
   if (place) {
