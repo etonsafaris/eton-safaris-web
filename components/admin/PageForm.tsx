@@ -20,6 +20,7 @@ import {
   type PageFaq,
 } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
+import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -105,7 +106,10 @@ export default function PageForm({ pageId }: PageFormProps) {
       setStatus(extras.status);
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
-      setBlocks(parseCmsBlocks(page));
+      const loadedBlocks = parseCmsBlocks(page);
+      setBlocks(
+        extras.layout === 'community' ? mergeCommunityInitiativeBlocks(loadedBlocks) : loadedBlocks
+      );
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
       setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
@@ -158,6 +162,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       published_at: stamp,
     });
 
+    const pageBlocks = layout === 'community' ? mergeCommunityInitiativeBlocks(blocks) : blocks;
     const payload = buildSavePayload(
       'pages',
       {
@@ -174,10 +179,10 @@ export default function PageForm({ pageId }: PageFormProps) {
         status,
         cta_label: extras.cta_label,
         cta_href: extras.cta_href,
-        page_blocks: JSON.stringify(blocks),
+        page_blocks: JSON.stringify(pageBlocks),
         published_at: stamp,
         content: embedContent(content, {
-          blocks,
+          blocks: pageBlocks,
           fields: extras,
         }),
       },
@@ -230,7 +235,13 @@ export default function PageForm({ pageId }: PageFormProps) {
                   breadcrumb_title: current.breadcrumb_title || value,
                 }));
                 if (!heroTitle) setHeroTitle(value);
-                if (!pageId) setLayout(inferPageLayout(slugify(value)));
+                if (!pageId) {
+                  const inferred = inferPageLayout(slugify(value));
+                  setLayout(inferred);
+                  if (inferred === 'community') {
+                    setBlocks((current) => mergeCommunityInitiativeBlocks(current));
+                  }
+                }
               }}
               required
               placeholder="About Us"
@@ -240,7 +251,11 @@ export default function PageForm({ pageId }: PageFormProps) {
             <FieldLabel>Layout</FieldLabel>
             <SearchableSelect
               value={layout}
-              onChange={(value) => setLayout((value as CmsPageLayout) || 'standard')}
+              onChange={(value) => {
+                const next = (value as CmsPageLayout) || 'standard';
+                setLayout(next);
+                if (next === 'community') setBlocks((current) => mergeCommunityInitiativeBlocks(current));
+              }}
               options={PAGE_LAYOUTS.map((item) => ({ value: item.value, label: item.label }))}
               placeholder="Select layout"
             />
@@ -338,6 +353,33 @@ export default function PageForm({ pageId }: PageFormProps) {
           />
         </div>
 
+        {layout === 'community' ? (
+          <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6">
+            <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Community initiatives</h2>
+            <p className="mt-1 text-sm text-[#6b7280]">
+              Upload the four images shown under Our Community Initiatives on the public Community page.
+            </p>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              {mergeCommunityInitiativeBlocks(blocks).map((block, index) => (
+                <div key={`${block.title}-${index}`} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+                  <FieldLabel>{block.title}</FieldLabel>
+                  <CoverImageField
+                    label="Initiative image"
+                    folder="pages"
+                    value={block.image_url || ''}
+                    onChange={(url) => {
+                      setBlocks((current) => {
+                        const next = mergeCommunityInitiativeBlocks(current);
+                        next[index] = { ...next[index], image_url: url };
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
         <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6">
           <SavedBlocksGrid
             heading="Page blocks"
@@ -401,6 +443,7 @@ export default function PageForm({ pageId }: PageFormProps) {
             </button>
           </div>
         </div>
+        )}
 
         {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 

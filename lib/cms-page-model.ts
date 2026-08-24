@@ -156,9 +156,7 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
 }
 
 export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContentBlock[] {
-  const fromColumns = parseContentBlocks(
-    record?.page_blocks || record?.blocks || record?.place_blocks || record?.post_blocks
-  ) as CmsContentBlock[];
+  const fromColumns = parseContentBlocks(record?.page_blocks || record?.blocks) as CmsContentBlock[];
   if (fromColumns.length > 0) {
     return fromColumns.map((block) => ({
       title: block.title,

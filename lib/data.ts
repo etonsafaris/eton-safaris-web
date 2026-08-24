@@ -337,7 +337,7 @@ export function parseContentBlocks(value: unknown): { title: string; description
       const title = String(row.title || '');
       const description = String(row.description || '');
       const image_url = String(row.image_url || row.image || '');
-      if (!title && !description) continue;
+      if (!title && !description && !image_url) continue;
       blocks.push({ title, description, image_url });
     }
     return blocks;

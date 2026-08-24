@@ -69,7 +69,10 @@ export function embedContent(html: string, data: EmbeddedContent): string {
   const clean = stripEmbeddedContent(html);
   if (!hasEmbeddedData(data)) return clean;
   const payload: EmbeddedContent = {
-    blocks: data.blocks?.filter((block) => block.title.trim() || block.description.trim()) || [],
+    blocks:
+      data.blocks?.filter(
+        (block) => block.title.trim() || block.description.trim() || String(block.image_url || '').trim()
+      ) || [],
     itineraries:
       data.itineraries?.filter(
         (day) =>

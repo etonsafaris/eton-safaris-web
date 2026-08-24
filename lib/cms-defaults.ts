@@ -3,6 +3,7 @@ import { COUNTRY_ARTICLE_HTML, COUNTRY_HERO_TITLES } from '@/lib/country-landing
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { landingSlugForCountry } from '@/lib/cms-routes';
 import type { CmsPageLayout, PageFaq } from '@/lib/cms-page-model';
+import { COMMUNITY_INITIATIVES } from '@/lib/community-initiatives';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 
@@ -233,32 +234,7 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     focus_keyphrase: 'Eton Safaris community support',
     schema_type: 'WebPage',
     breadcrumb_title: 'Community Support',
-    blocks: [
-      {
-        title: 'Community-Based Tourism',
-        description:
-          '<p>We partner with local villages to create authentic cultural experiences where travellers engage with communities, learn traditional crafts, and participate in daily life — keeping tourism revenue in the community.</p>',
-        image_url: SITE_MEDIA.communityTourism,
-      },
-      {
-        title: 'Education Support',
-        description:
-          '<p>A portion of every safari booking goes toward supporting local schools in rural Uganda, Kenya, Tanzania, and Rwanda — funding supplies, infrastructure, and scholarships for children in safari-adjacent communities.</p>',
-        image_url: SITE_MEDIA.communityEducation,
-      },
-      {
-        title: 'Conservation Efforts',
-        description:
-          '<p>We support anti-poaching and habitat restoration. Guests can visit conservation centres and learn about wildlife protection firsthand.</p>',
-        image_url: SITE_MEDIA.communityConservation,
-      },
-      {
-        title: 'Local Employment',
-        description:
-          '<p>We hire locally — safari guides, camp staff, drivers, and translators — creating sustainable jobs and authentic local knowledge on every itinerary.</p>',
-        image_url: SITE_MEDIA.communityEmployment,
-      },
-    ],
+    blocks: COMMUNITY_INITIATIVES,
   },
   {
     title: 'Contact Us',
