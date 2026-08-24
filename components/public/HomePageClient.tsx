@@ -14,7 +14,7 @@ import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { NAV_COUNTRIES, SITE } from '@/lib/collections';
+import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { canonicalCountrySlug, publicCountrySlug, recordMatchesCountrySlug } from '@/lib/country-utils';
 import {
