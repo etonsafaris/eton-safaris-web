@@ -20,7 +20,6 @@ import {
   type PageFaq,
 } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -28,7 +27,6 @@ import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { uploadOptimizedImage } from '@/lib/upload-media';
 
 type PageFormProps = {
   pageId?: string;
@@ -106,10 +104,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       setStatus(extras.status);
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
-      const loadedBlocks = parseCmsBlocks(page);
-      setBlocks(
-        extras.layout === 'community' ? mergeCommunityInitiativeBlocks(loadedBlocks) : loadedBlocks
-      );
+      setBlocks(parseCmsBlocks(page));
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
       setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
@@ -126,19 +121,6 @@ export default function PageForm({ pageId }: PageFormProps) {
     });
     setDraftBlock({ title: '', description: '', image_url: '' });
     setEditingIndex(null);
-  }
-
-  async function handleBlockImage(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const url = await uploadOptimizedImage(file, 'pages');
-      setDraftBlock((current) => ({ ...current, image_url: url }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Block image upload failed.');
-    } finally {
-      event.target.value = '';
-    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -162,7 +144,7 @@ export default function PageForm({ pageId }: PageFormProps) {
       published_at: stamp,
     });
 
-    const pageBlocks = layout === 'community' ? mergeCommunityInitiativeBlocks(blocks) : blocks;
+    const pageBlocks = blocks;
     const payload = buildSavePayload(
       'pages',
       {
@@ -235,13 +217,7 @@ export default function PageForm({ pageId }: PageFormProps) {
                   breadcrumb_title: current.breadcrumb_title || value,
                 }));
                 if (!heroTitle) setHeroTitle(value);
-                if (!pageId) {
-                  const inferred = inferPageLayout(slugify(value));
-                  setLayout(inferred);
-                  if (inferred === 'community') {
-                    setBlocks((current) => mergeCommunityInitiativeBlocks(current));
-                  }
-                }
+                if (!pageId) setLayout(inferPageLayout(slugify(value)));
               }}
               required
               placeholder="About Us"
@@ -251,11 +227,7 @@ export default function PageForm({ pageId }: PageFormProps) {
             <FieldLabel>Layout</FieldLabel>
             <SearchableSelect
               value={layout}
-              onChange={(value) => {
-                const next = (value as CmsPageLayout) || 'standard';
-                setLayout(next);
-                if (next === 'community') setBlocks((current) => mergeCommunityInitiativeBlocks(current));
-              }}
+              onChange={(value) => setLayout((value as CmsPageLayout) || 'standard')}
               options={PAGE_LAYOUTS.map((item) => ({ value: item.value, label: item.label }))}
               placeholder="Select layout"
             />
@@ -353,86 +325,14 @@ export default function PageForm({ pageId }: PageFormProps) {
           />
         </div>
 
-        {layout === 'community' ? (
-          <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6">
-            <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Community initiatives</h2>
-            <p className="mt-1 text-sm text-[#6b7280]">
-              Upload the four images shown under Our Community Initiatives on the public Community page.
-            </p>
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              {mergeCommunityInitiativeBlocks(blocks).map((block, index) => (
-                <div key={`${block.title}-${index}`} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
-                  <div>
-                    <FieldLabel>Section title</FieldLabel>
-                    <PillInput
-                      value={block.title}
-                      onChange={(value) => {
-                        setBlocks((current) => {
-                          const next = mergeCommunityInitiativeBlocks(current);
-                          next[index] = { ...next[index], title: value };
-                          return next;
-                        });
-                      }}
-                      placeholder="Community-Based Tourism"
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <CoverImageField
-                      label="Initiative image"
-                      folder="pages"
-                      value={block.image_url || ''}
-                      onChange={(url) => {
-                        setBlocks((current) => {
-                          const next = mergeCommunityInitiativeBlocks(current);
-                          next[index] = { ...next[index], image_url: url };
-                          return next;
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <FieldLabel>Image caption</FieldLabel>
-                    <PillInput
-                      value={block.caption || ''}
-                      onChange={(value) => {
-                        setBlocks((current) => {
-                          const next = mergeCommunityInitiativeBlocks(current);
-                          next[index] = { ...next[index], caption: value };
-                          return next;
-                        });
-                      }}
-                      placeholder="Short caption under this image"
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <FieldLabel>Section text</FieldLabel>
-                    <RichTextEditor
-                      value={block.description || ''}
-                      onChange={(value) => {
-                        setBlocks((current) => {
-                          const next = mergeCommunityInitiativeBlocks(current);
-                          next[index] = { ...next[index], description: value };
-                          return next;
-                        });
-                      }}
-                      placeholder="Write the text shown under this initiative on the public Community page"
-                      minHeight={160}
-                      showFooter
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
         <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6">
           <SavedBlocksGrid
-            heading="Page blocks"
+            heading={layout === 'community' ? 'Community initiatives' : 'Page blocks'}
             blocks={blocks}
             onEdit={(index) => {
               const block = blocks[index];
               if (!block) return;
-              setDraftBlock(block);
+              setDraftBlock({ title: block.title, description: block.description, image_url: block.image_url || '' });
               setEditingIndex(index);
             }}
             onDelete={(index) => {
@@ -444,51 +344,59 @@ export default function PageForm({ pageId }: PageFormProps) {
             }}
           />
           <h2 className={`font-serif text-2xl font-bold italic text-[#374151] ${blocks.length > 0 ? 'mt-2' : ''}`}>
-            {editingIndex !== null ? 'Edit block' : 'New block'}
+            {editingIndex !== null
+              ? layout === 'community'
+                ? 'Edit initiative'
+                : 'Edit block'
+              : layout === 'community'
+                ? 'Add initiative'
+                : 'New block'}
           </h2>
           <p className="mt-1 text-sm text-[#6b7280]">
-            About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).
+            {layout === 'community'
+              ? 'Add one initiative at a time. Click ADD to save it above, then add the next image and text.'
+              : 'About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).'}
           </p>
           <div className="mt-6 space-y-6">
             <div>
-              <FieldLabel>Block title</FieldLabel>
+              <FieldLabel>{layout === 'community' ? 'Initiative title' : 'Block title'}</FieldLabel>
               <PillInput
                 value={draftBlock.title}
                 onChange={(value) => setDraftBlock({ ...draftBlock, title: value })}
-                placeholder="Who We are"
+                placeholder={layout === 'community' ? 'Community-Based Tourism' : 'Who We are'}
               />
             </div>
+            <CoverImageField
+              label={layout === 'community' ? 'Initiative image' : 'Block image'}
+              folder="pages"
+              value={draftBlock.image_url || ''}
+              onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
+            />
             <div>
-              <FieldLabel>Block description</FieldLabel>
+              <FieldLabel>{layout === 'community' ? 'Description' : 'Block description'}</FieldLabel>
               <RichTextEditor
                 value={draftBlock.description}
                 onChange={(value) => setDraftBlock({ ...draftBlock, description: value })}
-                placeholder="Block copy..."
+                placeholder={
+                  layout === 'community'
+                    ? 'Write the text shown with this initiative on the public Community page'
+                    : 'Block copy...'
+                }
                 minHeight={180}
                 showFooter
               />
-            </div>
-            <div>
-              <FieldLabel>Block image</FieldLabel>
-              <div className="flex items-center gap-3">
-                <input type="file" accept="image/*" onChange={handleBlockImage} className="text-sm" />
-                {draftBlock.image_url ? (
-                  <span className="truncate text-xs text-[#6b7280]">{draftBlock.image_url}</span>
-                ) : null}
-              </div>
             </div>
           </div>
           <div className="mt-4 flex justify-end rounded-b-xl bg-[#eceff1] px-4 py-3">
             <button
               type="button"
               onClick={addBlock}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#10b981] text-xs font-bold text-white hover:bg-[#059669]"
+              className="rounded-full bg-[#10b981] px-5 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-[#059669]"
             >
-              {editingIndex !== null ? 'OK' : 'ADD'}
+              {editingIndex !== null ? 'Update' : 'ADD'}
             </button>
           </div>
         </div>
-        )}
 
         {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 

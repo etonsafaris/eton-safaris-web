@@ -138,20 +138,10 @@ export default function CmsPageView({
                 {blocks.map((block) => (
                   <article key={block.title} className="overflow-hidden bg-white shadow-sm">
                     {block.image_url ? (
-                      <ResponsiveImage
-                        src={block.image_url}
-                        alt={block.caption || block.title}
-                        variant="card"
-                        className="h-56 w-full object-cover"
-                      />
+                      <ResponsiveImage src={block.image_url} alt={block.title} variant="card" className="h-56 w-full object-cover" />
                     ) : (
                       <div className="h-56 w-full bg-[#e8ece9]" />
                     )}
-                    {block.caption?.trim() ? (
-                      <p className="border-b border-[#ececec] bg-[#fafafa] px-6 py-2 text-sm italic text-[#666]">
-                        {block.caption.trim()}
-                      </p>
-                    ) : null}
                     <div className="p-6">
                       <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
                       <div

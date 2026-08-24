@@ -1,5 +1,4 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
-import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
@@ -28,25 +27,18 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     title: block.title,
     description: block.description,
     image_url: block.image_url || '',
-    caption: block.caption || '',
   }));
-  const cmsBlocks = parseCmsBlocks(page);
-  const sourceBlocks =
-    extras.layout === 'community' || slug.includes('community')
-      ? mergeCommunityInitiativeBlocks(cmsBlocks)
-      : (() => {
-          const usableCmsBlocks = cmsBlocks.filter(
-            (block) => hasVisibleCopy(block.description) || resolvePublicImage(block.image_url)
-          );
-          return usableCmsBlocks.length ? usableCmsBlocks : seededBlocks;
-        })();
+  const cmsBlocks = parseCmsBlocks(page).filter((block) => String(block.title || '').trim());
+  const usableCmsBlocks = cmsBlocks.filter(
+    (block) => hasVisibleCopy(block.description) || resolvePublicImage(block.image_url)
+  );
+  const sourceBlocks = usableCmsBlocks.length ? usableCmsBlocks : seededBlocks;
   const blocks: CmsContentBlock[] = sourceBlocks.map((block) => {
     const match = seededBlocks.find((item) => item.title.toLowerCase() === block.title.toLowerCase());
     return {
       title: block.title,
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description,
       image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
-      caption: String(block.caption || '').trim(),
     };
   });
   const faqs: PageFaq[] = mergeFaqs(extras.faqs, seeded?.faqs || []);
