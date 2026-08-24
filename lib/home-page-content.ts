@@ -50,16 +50,30 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   setsApartIntro:
     'Our passionate and experienced African team combines local knowledge, professional expertise, and genuine hospitality to create meaningful journeys filled with discovery, comfort, and unforgettable memories.',
   features: DEFAULT_HOME_FEATURES,
-  videos: [SITE_MEDIA.gorillaVideo, SITE_MEDIA.gorillaVideoFallback].filter(Boolean),
+  videos: [],
   footerAbout:
     'Eton Safaris is a premier tours and travel agency based in Uganda, offering gorilla trekking, wildlife safaris, and cultural experiences across Africa. Tailor-made luxury expeditions for every clientele.',
 };
 
 export const HOME_PAGE_SLUG = 'home-page';
 
+/** Old hard-coded demo clips — never show these on the public home video section. */
+const LEGACY_HOME_VIDEO_URLS = new Set(
+  [SITE_MEDIA.gorillaVideo, SITE_MEDIA.gorillaVideoFallback].filter(Boolean)
+);
+
+function isLegacyHomeVideo(url: string) {
+  const value = String(url || '').trim();
+  if (!value) return true;
+  if (LEGACY_HOME_VIDEO_URLS.has(value)) return true;
+  return /videos\.pexels\.com/i.test(value);
+}
+
 function parseVideoList(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item || '').trim()).filter(Boolean);
+    return value
+      .map((item) => String(item || '').trim())
+      .filter((item) => item && !isLegacyHomeVideo(item));
   }
   if (typeof value === 'string' && value.trim()) {
     const raw = value.trim();
@@ -73,7 +87,7 @@ function parseVideoList(value: unknown): string[] {
     return raw
       .split(/[\n,|]+/)
       .map((item) => item.trim())
-      .filter(Boolean);
+      .filter((item) => item && !isLegacyHomeVideo(item));
   }
   return [];
 }
@@ -137,7 +151,7 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
     setsApartHeading,
     setsApartIntro,
     features: featuresFromBlocks(parseCmsBlocks(record)),
-    videos: videos.length ? videos : DEFAULT_HOME_PAGE_CONTENT.videos,
+    videos,
     footerAbout,
   };
 }

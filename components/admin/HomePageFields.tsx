@@ -42,6 +42,7 @@ export default function HomePageFields({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [uploadError, setUploadError] = useState('');
 
   function updateFeature(index: number, patch: Partial<HomeFeaturePoint>) {
@@ -53,13 +54,15 @@ export default function HomePageFields({
     if (!file) return;
     setUploading(true);
     setUploadError('');
+    setUploadStatus('Compressing video for faster loading…');
     try {
-      const url = await uploadMediaFile(file, 'home-videos');
+      const url = await uploadMediaFile(file, 'home-videos', { onStatus: setUploadStatus });
       onVideos([...videos, url]);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : 'Video upload failed.');
     } finally {
       setUploading(false);
+      setUploadStatus('');
       event.target.value = '';
     }
   }
@@ -142,7 +145,9 @@ export default function HomePageFields({
       <section className="rounded-xl border border-[#e5e7eb] bg-[#f8faf9] p-6">
         <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Home video clip</h2>
         <p className="mt-1 text-sm text-[#6b7280]">
-          Upload one or more videos. On the public home page they rotate every 5 seconds in a loop. Visitors can mute or unmute sound.
+          Upload one or more videos. Each clip is compressed to 720p MP4 before it is saved, so the home page stays fast.
+          On the public site a clip plays through, then the next one starts. Arrows skip only when a visitor clicks them.
+          Visitors can mute or unmute sound.
         </p>
         <div className="mt-5 space-y-3">
           {videos.map((url, index) => (
@@ -167,7 +172,7 @@ export default function HomePageFields({
               className="inline-flex items-center gap-2 rounded-full bg-[#10b981] px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-[#059669] disabled:opacity-60"
             >
               <Upload className="h-4 w-4" />
-              {uploading ? 'Uploading…' : 'Upload video'}
+              {uploading ? uploadStatus || 'Uploading…' : 'Upload video'}
             </button>
             <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
             <input

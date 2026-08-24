@@ -84,7 +84,7 @@ function HomeBrandAndFeatures() {
         heading={home.setsApartHeading}
         intro={home.setsApartIntro}
         features={home.features}
-        videos={home.videos}
+        videos={home.ready ? home.videos : []}
       />
     </>
   );

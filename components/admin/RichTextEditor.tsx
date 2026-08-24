@@ -173,9 +173,11 @@ export default function RichTextEditor({
 
   async function handleMediaFile(file: File | undefined, kind: 'image' | 'video') {
     if (!file) return;
-    setMediaStatus(kind === 'image' ? 'Uploading image…' : 'Uploading video…');
+    setMediaStatus(kind === 'image' ? 'Uploading image…' : 'Compressing video for faster loading…');
     try {
-      const url = await uploadMediaFile(file, 'editor');
+      const url = await uploadMediaFile(file, 'editor', {
+        onStatus: kind === 'video' ? setMediaStatus : undefined,
+      });
       const editor = editorRef.current;
       const selected = editor?.querySelector(kind === 'image' ? 'img[data-eton-media]' : 'video[data-eton-media]');
       if (selected) {

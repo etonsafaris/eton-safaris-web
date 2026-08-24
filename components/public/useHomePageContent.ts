@@ -11,12 +11,19 @@ import {
   type HomePageContent,
 } from '@/lib/home-page-content';
 
+const EMPTY_UNTIL_LOADED: HomePageContent = {
+  ...DEFAULT_HOME_PAGE_CONTENT,
+  videos: [],
+};
+
 export function useHomePageContent() {
   const live = useCmsLive();
-  const [content, setContent] = useState<HomePageContent>(DEFAULT_HOME_PAGE_CONTENT);
+  const [content, setContent] = useState<HomePageContent>(EMPTY_UNTIL_LOADED);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    setReady(false);
     fetchCollectionRecords('pages')
       .then((rows) => {
         if (cancelled) return;
@@ -27,16 +34,21 @@ export function useHomePageContent() {
         if (match && isPublishedRecord(match)) {
           setContent(parseHomePageContent(match));
         } else {
-          setContent(DEFAULT_HOME_PAGE_CONTENT);
+          setContent(EMPTY_UNTIL_LOADED);
         }
+        setReady(true);
       })
       .catch((error) => {
         console.error('[CMS] Home page content load failed:', error);
+        if (!cancelled) {
+          setContent(EMPTY_UNTIL_LOADED);
+          setReady(true);
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [live]);
 
-  return content;
+  return { ...content, ready };
 }

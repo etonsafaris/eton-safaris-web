@@ -7,7 +7,6 @@ import {
   DEFAULT_HOME_PAGE_CONTENT,
   type HomeFeaturePoint,
 } from '@/lib/home-page-content';
-import { SITE_MEDIA } from '@/lib/site-media';
 
 const ICONS = [CalendarCheck, Lightbulb, ShieldCheck, Award];
 
@@ -15,7 +14,7 @@ export default function WhatSetsUsApartSection({
   heading = DEFAULT_HOME_PAGE_CONTENT.setsApartHeading,
   intro = DEFAULT_HOME_PAGE_CONTENT.setsApartIntro,
   features = DEFAULT_HOME_FEATURES,
-  videos = DEFAULT_HOME_PAGE_CONTENT.videos,
+  videos = [],
 }: {
   heading?: string;
   intro?: string;
@@ -49,7 +48,7 @@ export default function WhatSetsUsApartSection({
           })}
         </div>
 
-        <HomeVideoCarousel videos={videos} poster={SITE_MEDIA.gorillasForest} />
+        <HomeVideoCarousel videos={videos} />
       </div>
     </section>
   );

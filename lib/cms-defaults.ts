@@ -67,7 +67,7 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     slug: HOME_PAGE_SLUG,
     layout: 'home',
     image_url: SITE_MEDIA.safariVehicle,
-    video_url: DEFAULT_HOME_PAGE_CONTENT.videos[0] || SITE_MEDIA.gorillaVideo,
+    video_url: '',
     hero_title: DEFAULT_HOME_PAGE_CONTENT.brandTitle,
     subtitle: DEFAULT_HOME_PAGE_CONTENT.setsApartIntro,
     excerpt: DEFAULT_HOME_PAGE_CONTENT.brandDescription.slice(0, 220),

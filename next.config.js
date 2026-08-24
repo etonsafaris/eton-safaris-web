@@ -40,7 +40,7 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|woff2)',
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|woff2|mp4|webm|mov)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
       },
     ];

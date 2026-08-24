@@ -45,9 +45,21 @@ async function uploadViaApi(file: File, folder: string) {
   return payload.url;
 }
 
-export async function uploadMediaFile(file: File, folder: string): Promise<string> {
+export async function uploadMediaFile(
+  file: File,
+  folder: string,
+  options?: { onStatus?: (status: string) => void }
+): Promise<string> {
   if (file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(file.name)) {
-    return uploadViaApi(file, folder);
+    options?.onStatus?.('Compressing video for faster loading…');
+    const { optimizeVideoFile } = await import('@/lib/video-optimize');
+    const compressed = await optimizeVideoFile(file, { onStatus: options?.onStatus }).catch((error) => {
+      console.error('[Upload] Video compression failed, uploading original:', error);
+      options?.onStatus?.('Compression skipped. Uploading original…');
+      return file;
+    });
+    options?.onStatus?.('Uploading video…');
+    return uploadViaApi(compressed, folder);
   }
   return uploadOptimizedImage(file, folder);
 }

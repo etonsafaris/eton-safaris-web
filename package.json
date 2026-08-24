@@ -26,6 +26,8 @@
     "seed:egypt-tours-keywords": "node scripts/seed-egypt-tours-keywords.mjs"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@react-email/render": "^2.1.0",
     "@supabase/supabase-js": "^2.49.1",
     "lucide-react": "^1.31.0",
