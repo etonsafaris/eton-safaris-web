@@ -20,9 +20,11 @@ import {
   type PageFaq,
 } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
+import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { fetchCollectionRecords, pickDateValue, pickRecordId, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -104,7 +106,14 @@ export default function PageForm({ pageId }: PageFormProps) {
       setStatus(extras.status);
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
-      setBlocks(parseCmsBlocks(page));
+      const pageSlug = String(page.slug || extras.layout || '');
+      const isCommunity =
+        extras.layout === 'community' || /community/i.test(pageSlug) || /community/i.test(String(page.title || ''));
+      setBlocks(
+        isCommunity
+          ? hydratePublicCmsPage(page, pageSlug || 'community-support').blocks
+          : parseCmsBlocks(page)
+      );
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
       setPublishedAt(pickDateValue(page, ['published_at', 'created_at']) || extras.published_at);
@@ -227,7 +236,13 @@ export default function PageForm({ pageId }: PageFormProps) {
             <FieldLabel>Layout</FieldLabel>
             <SearchableSelect
               value={layout}
-              onChange={(value) => setLayout((value as CmsPageLayout) || 'standard')}
+              onChange={(value) => {
+                const next = (value as CmsPageLayout) || 'standard';
+                setLayout(next);
+                if (next === 'community') {
+                  setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
+                }
+              }}
               options={PAGE_LAYOUTS.map((item) => ({ value: item.value, label: item.label }))}
               placeholder="Select layout"
             />
@@ -354,7 +369,7 @@ export default function PageForm({ pageId }: PageFormProps) {
           </h2>
           <p className="mt-1 text-sm text-[#6b7280]">
             {layout === 'community'
-              ? 'Add one initiative at a time. Click ADD to save it above, then add the next image and text.'
+              ? 'Saved initiatives appear above with their public images. Click a card to edit it, or fill the form below and press ADD for a new one.'
               : 'About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).'}
           </p>
           <div className="mt-6 space-y-6">

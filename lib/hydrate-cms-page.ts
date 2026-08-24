@@ -1,4 +1,5 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
+import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
@@ -28,11 +29,20 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     description: block.description,
     image_url: block.image_url || '',
   }));
-  const cmsBlocks = parseCmsBlocks(page).filter((block) => String(block.title || '').trim());
+  const cmsBlocks = parseCmsBlocks(page);
   const usableCmsBlocks = cmsBlocks.filter(
-    (block) => hasVisibleCopy(block.description) || resolvePublicImage(block.image_url)
+    (block) =>
+      Boolean(String(block.title || '').trim()) &&
+      (hasVisibleCopy(block.description) || resolvePublicImage(block.image_url))
   );
-  const sourceBlocks = usableCmsBlocks.length ? usableCmsBlocks : seededBlocks;
+  const isCommunity = extras.layout === 'community' || /community/i.test(slug);
+  const sourceBlocks = isCommunity
+    ? usableCmsBlocks.length
+      ? mergeCommunityInitiativeBlocks(usableCmsBlocks)
+      : mergeCommunityInitiativeBlocks(seededBlocks)
+    : usableCmsBlocks.length
+      ? usableCmsBlocks
+      : seededBlocks;
   const blocks: CmsContentBlock[] = sourceBlocks.map((block) => {
     const match = seededBlocks.find((item) => item.title.toLowerCase() === block.title.toLowerCase());
     return {

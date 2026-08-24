@@ -5,6 +5,7 @@ import { SquarePen, Trash2 } from 'lucide-react';
 export type ContentBlock = {
   title: string;
   description: string;
+  image_url?: string;
 };
 
 function previewText(value: string) {
@@ -40,46 +41,76 @@ export default function SavedBlocksGrid({
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {blocks.map((block, index) => {
           const preview = previewText(block.description);
+          const image = String(block.image_url || '').trim();
           return (
             <article
               key={`${block.title}-${index}`}
-              className="flex min-w-0 max-w-full flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm"
+              role="button"
+              tabIndex={0}
+              onClick={() => onEdit(index)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onEdit(index);
+                }
+              }}
+              className="flex min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:border-[#66bb9a] hover:shadow-md"
             >
-              <div className="flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d1fae5] text-xs font-bold text-[#047857]">
-                  {index + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-serif text-base font-bold leading-snug text-[#1e293b]">
-                    {block.title || 'Untitled block'}
-                  </h3>
-                  {preview && (
-                    <p
-                      className="mt-1 text-sm leading-relaxed text-[#6b7280]"
-                      style={lineClamp > 0 ? { display: '-webkit-box', WebkitLineClamp: lineClamp, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
-                    >
-                      {preview}
-                    </p>
-                  )}
+              {image ? (
+                <img src={image} alt="" className="h-36 w-full object-cover" />
+              ) : null}
+              <div className="flex flex-1 flex-col p-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d1fae5] text-xs font-bold text-[#047857]">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-serif text-base font-bold leading-snug text-[#1e293b]">
+                      {block.title || 'Untitled block'}
+                    </h3>
+                    {preview && (
+                      <p
+                        className="mt-1 text-sm leading-relaxed text-[#6b7280]"
+                        style={
+                          lineClamp > 0
+                            ? {
+                                display: '-webkit-box',
+                                WebkitLineClamp: lineClamp,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                              }
+                            : undefined
+                        }
+                      >
+                        {preview}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#f3f4f6] pt-3">
-                <button
-                  type="button"
-                  onClick={() => onEdit(index)}
-                  className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]"
-                  aria-label={`Edit block ${index + 1}`}
-                >
-                  <SquarePen className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(index)}
-                  className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50"
-                  aria-label={`Delete block ${index + 1}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#f3f4f6] pt-3">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onEdit(index);
+                    }}
+                    className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]"
+                    aria-label={`Edit block ${index + 1}`}
+                  >
+                    <SquarePen className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(index);
+                    }}
+                    className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50"
+                    aria-label={`Delete block ${index + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </article>
           );
