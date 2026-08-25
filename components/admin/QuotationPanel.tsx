@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FileText, X } from 'lucide-react';
+import { FileText, Trash2, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SITE_LOGO } from '@/lib/collections';
-import { fetchAdminTable } from '@/lib/admin-records-client';
+import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
 import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
@@ -40,6 +40,37 @@ function isPendingStatus(value: string) {
 
 function isQuotedStatus(value: string) {
   return /quoted|quote sent|accepted/i.test(value.trim());
+}
+
+/** Format created/quoted stamps as local date + time for admin cards. */
+function formatDateTime(value: string) {
+  const raw = value.trim();
+  if (!raw) return '';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function recordReceivedAt(row: RecordRow) {
+  return (
+    pickString(row, ['created_at', 'createdAt', 'created_date', 'createdDate']) ||
+    pickString(row, ['published_at', 'updated_at'])
+  );
+}
+
+function recordQuotedAt(row: RecordRow) {
+  return (
+    pickString(row, ['quoted_at', 'quotedAt']) ||
+    (isQuotedStatus(pickString(row, ['status']))
+      ? pickString(row, ['updated_at', 'updatedAt', 'updated_date'])
+      : '')
+  );
 }
 
 async function loadOpsTable(table: string, aliases: string[] = []): Promise<RecordRow[]> {
@@ -111,6 +142,7 @@ export default function QuotationPanel() {
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState('');
 
   async function load() {
     setLoading(true);
@@ -351,6 +383,7 @@ export default function QuotationPanel() {
       title: `Quotation: ${tourTitle}`,
       source: 'quotation',
       status: 'Quoted',
+      quoted_at: new Date().toISOString(),
       inquiry_id: inquirySource === 'inquiries' ? inquiryId || null : null,
     };
 
@@ -451,6 +484,46 @@ export default function QuotationPanel() {
     popup.print();
   }
 
+  async function removeItem(row: RecordRow, sourceHint?: InquirySource) {
+    const id = row.id;
+    if (id === undefined || id === null || id === '') {
+      setError('This item has no id and cannot be deleted.');
+      return;
+    }
+    const label = pickString(row, ['name', 'guest_name', 'email']) || 'this item';
+    if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+
+    setDeletingId(String(id));
+    setError('');
+    const source =
+      sourceHint ||
+      ((row as InquiryCard)._source as InquirySource | undefined) ||
+      'quotations_inquiries';
+    const tables =
+      source === 'inquiries'
+        ? (['inquiries', 'contact_inquiries', 'quotations_inquiries'] as const)
+        : (['quotations_inquiries', 'quotations', 'inquiries'] as const);
+
+    let lastError = '';
+    let deleted = false;
+    for (const table of tables) {
+      try {
+        await deleteAdminRecord(table, id);
+        deleted = true;
+        break;
+      } catch (deleteError) {
+        lastError = deleteError instanceof Error ? deleteError.message : 'Delete failed';
+      }
+    }
+
+    setDeletingId('');
+    if (!deleted) {
+      setError(lastError || 'Could not delete this item.');
+      return;
+    }
+    await load();
+  }
+
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: 'inquiry', label: 'Inquiry', count: inquiryCards.length },
     { id: 'quoted', label: 'Quoted', count: quotedRows.length },
@@ -520,47 +593,72 @@ export default function QuotationPanel() {
             const pending = tab === 'inquiry';
             const badge = pending ? inquiryStatus(row) : pickString(row, ['status']) || 'Quoted';
             const source = sourceBadge(row);
+            const receivedLabel = formatDateTime(recordReceivedAt(row));
+            const quotedLabel = formatDateTime(recordQuotedAt(row));
+            const sourceTable =
+              pending && (row as InquiryCard)._source
+                ? (row as InquiryCard)._source
+                : ('quotations_inquiries' as InquirySource);
             return (
               <article
                 key={`${pending ? (row as InquiryCard)._source : 'q'}-${String(row.id ?? index)}`}
                 className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-bold text-[#111827]">
-                      {pickString(row, ['name', 'guest_name']) || 'Guest'}
-                    </h3>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${source.className}`}>
-                      {source.label}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        pending ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
-                      }`}
-                    >
-                      {badge}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-bold text-[#111827]">
+                        {pickString(row, ['name', 'guest_name']) || 'Guest'}
+                      </h3>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${source.className}`}>
+                        {source.label}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          pending ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {badge}
+                      </span>
+                    </div>
+                    <div className="mt-2 space-y-0.5 text-xs font-medium text-[#6b7280]">
+                      {receivedLabel ? <p>Inquiry received: {receivedLabel}</p> : null}
+                      {quotedLabel ? <p>Quotation sent: {quotedLabel}</p> : null}
+                      {!receivedLabel && !quotedLabel ? <p>Date/time unavailable</p> : null}
+                    </div>
                   </div>
-                  {pending ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pending ? (
+                      <button
+                        type="button"
+                        onClick={() => fillFromInquiry(row as InquiryCard)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#6b7c3a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5c6b32]"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Send Quotation
+                      </button>
+                    ) : (
+                      row.id !== undefined && (
+                        <Link
+                          href={`/quote/${row.id}`}
+                          target="_blank"
+                          className="inline-flex items-center gap-2 rounded-lg border border-[#6b7c3a] px-4 py-2 text-sm font-semibold text-[#6b7c3a]"
+                        >
+                          Guest view
+                        </Link>
+                      )
+                    )}
                     <button
                       type="button"
-                      onClick={() => fillFromInquiry(row as InquiryCard)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#6b7c3a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5c6b32]"
+                      onClick={() => void removeItem(row, sourceTable)}
+                      disabled={deletingId === String(row.id)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+                      aria-label="Delete item"
                     >
-                      <FileText className="h-4 w-4" />
-                      Send Quotation
+                      <Trash2 className="h-4 w-4" />
+                      {deletingId === String(row.id) ? 'Deleting…' : 'Delete'}
                     </button>
-                  ) : (
-                    row.id !== undefined && (
-                      <Link
-                        href={`/quote/${row.id}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-2 rounded-lg border border-[#6b7c3a] px-4 py-2 text-sm font-semibold text-[#6b7c3a]"
-                      >
-                        Guest view
-                      </Link>
-                    )
-                  )}
+                  </div>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">

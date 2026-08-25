@@ -105,3 +105,54 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  if (!(await allowAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const table = url.searchParams.get('table')?.trim() || '';
+  const id = url.searchParams.get('id')?.trim() || '';
+  if (!ALLOWED_TABLES.has(table)) {
+    return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
+  }
+  if (!id) {
+    return NextResponse.json({ error: 'Record id is required' }, { status: 400 });
+  }
+
+  try {
+    const client = createWriteClient(bearerTokenFromRequest(request));
+    const names = TABLE_ALIASES[table] || [table];
+    let lastMessage = '';
+
+    for (const name of names) {
+      const removed = await client.from(name).delete().eq('id', id);
+      if (!removed.error) {
+        return NextResponse.json({ ok: true, table: name, id });
+      }
+      // Some tables use uuid/text ids — retry as-is already; try numeric only if it parses.
+      const asNumber = Number(id);
+      if (Number.isFinite(asNumber) && String(asNumber) === id) {
+        const numeric = await client.from(name).delete().eq('id', asNumber);
+        if (!numeric.error) {
+          return NextResponse.json({ ok: true, table: name, id });
+        }
+        lastMessage = isRlsError(numeric.error.message)
+          ? rlsHelpMessage(`Deleting from ${name}`)
+          : numeric.error.message;
+      } else {
+        lastMessage = isRlsError(removed.error.message)
+          ? rlsHelpMessage(`Deleting from ${name}`)
+          : removed.error.message;
+      }
+    }
+
+    return NextResponse.json({ error: lastMessage || `Could not delete from ${table}` }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Could not delete record' },
+      { status: 500 }
+    );
+  }
+}

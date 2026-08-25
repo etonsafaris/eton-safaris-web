@@ -149,6 +149,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'destination',
     'agent_email',
     'source',
+    'quoted_at',
   ],
   notifications: ['title', 'message', 'category', 'body', 'content', 'status', 'read', 'seen'],
   subscribers: ['email', 'name', 'phone', 'last_digest_at'],
