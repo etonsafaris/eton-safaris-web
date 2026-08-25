@@ -1,6 +1,6 @@
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { destinationIso } from '@/lib/destination-chips';
-import { canonicalCountrySlug, publicCountrySlug } from '@/lib/country-utils';
+import { canonicalCountrySlug, countryLabelFromSlug, publicCountrySlug } from '@/lib/country-utils';
 import { isPublishedRecord, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -22,24 +22,27 @@ export function seededDestinations(): PublicDestination[] {
   return SEEDED_DESTINATIONS.map((item) => ({ ...item }));
 }
 
-function countryDisplayName(row: RecordRow): string {
+function countryDisplayName(row: RecordRow, slugFallback = ''): string {
   const name = pickString(row, ['name']);
   if (name.length >= 2) return name;
   const title = pickString(row, ['title', 'label', 'country', 'destination']);
   if (title.length >= 3) return title;
-  return name || title;
+  const fromSlug = countryLabelFromSlug(slugFallback || publicCountrySlug(row));
+  if (fromSlug.length >= 2) return fromSlug;
+  return name || title || fromSlug;
 }
 
 export function publicDestinationFromRecord(row: RecordRow): PublicDestination | null {
-  const name = countryDisplayName(row);
   let slug = publicCountrySlug(row);
-  if (!slug && name) slug = canonicalCountrySlug(name);
+  const provisionalName = pickString(row, ['name', 'title', 'label']);
+  if (!slug && provisionalName) slug = canonicalCountrySlug(provisionalName);
   // Never publish ultra-short junk slugs when a usable name slug exists.
-  if (slug && slug.length < 3 && name) {
-    const fromName = canonicalCountrySlug(name);
+  if (slug && slug.length < 3 && provisionalName) {
+    const fromName = canonicalCountrySlug(provisionalName);
     if (fromName.length >= 3) slug = fromName;
   }
-  if (!name || !slug || slug.length < 2) return null;
+  const name = countryDisplayName(row, slug);
+  if (!name || !slug || slug.length < 2 || name.length < 2) return null;
   const iso =
     pickString(row, ['iso', 'iso_code', 'country_code']).toLowerCase() || destinationIso(name) || destinationIso(slug) || '';
   return { name, slug, iso };

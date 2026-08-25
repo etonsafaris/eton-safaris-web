@@ -206,8 +206,7 @@ export default function HomePageClient({
   const destinationItems = destinationRows.map((country, index) => {
     const slug =
       publicCountrySlug(country) ||
-      pickString(country, ['slug', 'name']) ||
-      canonicalCountrySlug(getRecordTitle(country)) ||
+      canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||
       '';
     return (
       <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">

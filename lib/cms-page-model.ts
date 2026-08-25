@@ -102,14 +102,7 @@ function firstFaqList(...values: unknown[]) {
 }
 
 export function parseDestinationList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    const items = value.map((item) => String(item || '').trim()).filter(Boolean);
-    // Guard against string-index bugs that turn "Madagascar" into ["M","a","d",…].
-    if (items.length > 2 && items.every((item) => item.length === 1)) {
-      return parseDestinationList(items.join(''));
-    }
-    return items;
-  }
+  // Accidental string iteration (…value / Array.from(string)) yields one letter per entry.
   if (typeof value === 'string' && value.trim()) {
     if (value.trim().startsWith('[')) {
       try {
@@ -122,6 +115,14 @@ export function parseDestinationList(value: unknown): string[] {
       .split(/[,|\n]/)
       .map((item) => item.trim())
       .filter((item) => item.length > 1);
+  }
+  if (Array.isArray(value)) {
+    const items = value.map((item) => String(item || '').trim()).filter(Boolean);
+    // Guard against string-index bugs that turn "Madagascar" into ["M","a","d",…].
+    if (items.length > 2 && items.every((item) => item.length === 1)) {
+      return parseDestinationList(items.join(''));
+    }
+    return items.filter((item) => item.length > 1);
   }
   return [];
 }

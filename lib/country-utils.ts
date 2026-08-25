@@ -128,10 +128,15 @@ export function publicCountryLabel(record: RecordRow | null | undefined, slugFal
     if (name.length >= 2) return name;
     const title = pickString(record, ['title', 'label', 'country', 'destination']);
     if (title.length >= 3) return title;
-    if (name) return name;
-    if (title) return title;
   }
   const fromSlug = countryLabelFromSlug(slugFallback || publicCountrySlug(record || {}));
+  if (fromSlug.length >= 2) return fromSlug;
+  if (record) {
+    const name = pickString(record, ['name']);
+    if (name) return name;
+    const title = pickString(record, ['title', 'label', 'country', 'destination']);
+    if (title) return title;
+  }
   return fromSlug || 'Destination';
 }
 

@@ -1,12 +1,32 @@
 import Link from 'next/link';
 import { destinationDisplayName, destinationFlagUrl, destinationHref } from '@/lib/destination-chips';
 
-export default function DestinationChips({ names, tone = 'dark' }: { names: string[]; tone?: 'dark' | 'light' }) {
-  const list = Array.isArray(names)
-    ? names
-        .map((name) => destinationDisplayName(String(name || '').trim()))
-        .filter((name) => name.length > 1)
-    : [];
+/** Normalize CMS destination lists — including string→char-array bugs ("Madagascar" → ["M","a",…]). */
+function normalizeChipNames(names: string[] | string | null | undefined): string[] {
+  if (typeof names === 'string') {
+    return names
+      .split(/[,|\n]/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 1);
+  }
+  if (!Array.isArray(names) || !names.length) return [];
+  const items = names.map((item) => String(item || '').trim()).filter(Boolean);
+  if (items.length > 2 && items.every((item) => item.length === 1)) {
+    return normalizeChipNames(items.join(''));
+  }
+  return items;
+}
+
+export default function DestinationChips({
+  names,
+  tone = 'dark',
+}: {
+  names: string[] | string;
+  tone?: 'dark' | 'light';
+}) {
+  const list = normalizeChipNames(names)
+    .map((name) => destinationDisplayName(name))
+    .filter((name) => name.length > 1);
   if (!list.length) return null;
   const light = tone === 'light';
   return (
