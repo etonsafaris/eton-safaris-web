@@ -176,8 +176,8 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     label: 'Bookings',
     table: 'bookings',
     icon: 'calendar-check',
-    subtitle: 'Guest bookings and confirmations',
-    view: 'table',
+    subtitle: 'Guest bookings, down payments, Pesapal checkout, and confirmations.',
+    view: 'custom',
     fields: [
       { name: 'guest_name', label: 'Guest name', type: 'text', required: true },
       { name: 'email', label: 'Email', type: 'email' },

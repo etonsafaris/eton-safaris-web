@@ -44,6 +44,11 @@ import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-c
 import { ensureDemoBooking } from '@/lib/ensure-demo-booking';
 import { countryCategoryPath, canonicalCountrySlug, publicCountrySlug } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
+import {
+  bookingStatusAfterPayment,
+  normalizeBookingStatus,
+  paymentStatusAfterAmount,
+} from '@/lib/booking-status';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
 import {
   isUnreadNotification,
@@ -703,18 +708,25 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       return;
     }
     const total = pickNumber(record, ['final_tour_price', 'total_price', 'amount'], paid);
-    const remaining = Math.max(0, total - paid);
+    const existingPaid = pickNumber(record, ['amount_paid'], 0);
+    const newPaid = existingPaid + paid;
+    const remaining = Math.max(0, total - newPaid);
     const code = pickString(record, ['booking_code']) || generateBookingCode();
-    const paymentStatus = remaining <= 0 ? 'Full Payment' : 'Partial Payment';
+    const paymentStatus = paymentStatusAfterAmount(total, newPaid);
+    const bookingStatus = bookingStatusAfterPayment(
+      total,
+      newPaid,
+      normalizeBookingStatus(pickString(record, ['status']))
+    );
     const { error: updateError } = await saveWithColumnFallback(
       'bookings',
       {
-        amount_paid: paid,
+        amount_paid: newPaid,
         remaining_balance: remaining,
         final_tour_price: total,
         booking_code: code,
         payment_status: paymentStatus,
-        status: remaining <= 0 ? 'Confirmed' : 'Partial Payment',
+        status: bookingStatus,
       },
       record.id
     );

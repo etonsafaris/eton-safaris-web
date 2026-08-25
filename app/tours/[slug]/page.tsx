@@ -110,7 +110,7 @@ export default function TourDetailPage() {
       country: form.country_of_residence,
       message: form.message,
       travel_date: form.travel_date || null,
-      status: 'Pending Booking',
+      status: 'Pending',
       payment_status: 'Pending Booking',
       booking_code: bookingCode,
       amount_paid: 0,

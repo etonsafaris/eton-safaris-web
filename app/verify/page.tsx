@@ -3,9 +3,15 @@
 import { useState } from 'react';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
-import { supabase } from '@/lib/supabase/client';
+import { paymentSummary, verifyStatusClass, verifyStatusLabel } from '@/lib/booking-status';
 import { pickString } from '@/lib/data';
+import { supabase } from '@/lib/supabase/client';
 import type { RecordRow } from '@/lib/types';
+
+function money(amount: number, currency = 'USD') {
+  if (!Number.isFinite(amount) || amount <= 0) return '—';
+  return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
 
 export default function VerifyBookingPage() {
   const [code, setCode] = useState('');
@@ -40,6 +46,8 @@ export default function VerifyBookingPage() {
     setCheckedAt(new Date().toLocaleString());
   }
 
+  const summary = booking ? paymentSummary(booking) : null;
+
   return (
     <PublicShell>
       <PageHero
@@ -67,12 +75,16 @@ export default function VerifyBookingPage() {
             {error}
           </p>
         )}
-        {booking && (
+        {booking && summary && (
           <article className="mt-8 rounded-2xl border border-amber-200 bg-[#fffdf5] p-6 shadow-card">
-            <p className="inline-flex rounded-full bg-[#006400] px-4 py-1 text-sm font-semibold text-white">
-              STATUS: BOOKING CONFIRMED
+            <p className={`inline-flex rounded-full px-4 py-1 text-sm font-semibold text-white ${verifyStatusClass(booking)}`}>
+              STATUS: {verifyStatusLabel(booking)}
             </p>
             <dl className="mt-6 grid gap-3 text-sm text-gray-800">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Booking code</dt>
+                <dd className="mt-1 font-mono font-semibold">{pickString(booking, ['booking_code'])}</dd>
+              </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-moss">Guest name</dt>
                 <dd className="mt-1 font-semibold">{pickString(booking, ['guest_name', 'name'])}</dd>
@@ -82,9 +94,33 @@ export default function VerifyBookingPage() {
                 <dd className="mt-1">{pickString(booking, ['tour'])}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-moss">Status</dt>
-                <dd className="mt-1">{pickString(booking, ['status', 'payment_status']) || 'Confirmed'}</dd>
+                <dt className="text-xs uppercase tracking-wide text-moss">Travel date</dt>
+                <dd className="mt-1">{pickString(booking, ['travel_date']).slice(0, 10) || '—'}</dd>
               </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Booking status</dt>
+                <dd className="mt-1">{summary.bookingStatus}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Payment status</dt>
+                <dd className="mt-1">{summary.paymentStatus}</dd>
+              </div>
+              {summary.total > 0 ? (
+                <>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-moss">Tour fee</dt>
+                    <dd className="mt-1">{money(summary.total, summary.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-moss">Amount paid</dt>
+                    <dd className="mt-1">{money(summary.paid, summary.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-moss">Remaining balance</dt>
+                    <dd className="mt-1 font-semibold">{money(summary.balance, summary.currency)}</dd>
+                  </div>
+                </>
+              ) : null}
             </dl>
             {checkedAt && <p className="mt-4 text-xs text-gray-500">Verified at {checkedAt}</p>}
           </article>

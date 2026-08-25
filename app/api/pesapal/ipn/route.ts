@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { bookingStatusAfterPayment, normalizeBookingStatus, paymentStatusAfterAmount } from '@/lib/booking-status';
 import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { pesapalRequest } from '@/lib/pesapal';
@@ -182,7 +183,12 @@ async function handleIpn(request: Request) {
       const paid = paidFromRows || (alreadyCompleted ? numberValue(booking.amount_paid, 0) : numberValue(booking.amount_paid, 0) + confirmedAmount);
       const total = numberValue(booking.final_tour_price || booking.total_price, paid);
       const remaining = Math.max(0, Number((total - paid).toFixed(2)));
-      const paymentLabel = remaining <= 0.009 ? 'Full Payment' : 'Partial Payment';
+      const paymentLabel = paymentStatusAfterAmount(total, paid);
+      const bookingStatus = bookingStatusAfterPayment(
+        total,
+        paid,
+        normalizeBookingStatus(String(booking.status || 'Pending'))
+      );
 
       await saveWithColumnFallback(
         'bookings',
@@ -190,7 +196,7 @@ async function handleIpn(request: Request) {
           amount_paid: paid,
           remaining_balance: remaining,
           payment_status: paymentLabel,
-          status: remaining <= 0.009 ? 'Confirmed' : 'Pending',
+          status: bookingStatus,
         },
         { id: booking.id as string | number, client: supabase }
       );

@@ -9,6 +9,7 @@ import NotificationsModule from '@/components/admin/NotificationsModule';
 import SubscribersModule from '@/components/admin/SubscribersModule';
 import KeywordsPanel from '@/components/admin/KeywordsPanel';
 import ReviewsPanel from '@/components/admin/ReviewsPanel';
+import BookingsPanel from '@/components/admin/BookingsPanel';
 import QuotationPanel from '@/components/admin/QuotationPanel';
 import { isFullAdmin, parseModules } from '@/lib/admin-access';
 import { getCollection, MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
@@ -47,6 +48,13 @@ export default function AdminCollectionPage() {
     return (
       <Suspense fallback={<p className="text-sm text-gray-500">Loading quotations…</p>}>
         <QuotationPanel />
+      </Suspense>
+    );
+  }
+  if (collection === 'bookings') {
+    return (
+      <Suspense fallback={<p className="text-sm text-gray-500">Loading bookings…</p>}>
+        <BookingsPanel />
       </Suspense>
     );
   }
