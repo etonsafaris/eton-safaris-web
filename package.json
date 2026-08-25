@@ -23,7 +23,21 @@
     "seed:morocco-tours-keywords": "node scripts/seed-morocco-tours-keywords.mjs",
     "seed:south-africa-wildlife-keywords": "node scripts/seed-south-africa-wildlife-keywords.mjs",
     "seed:malawi-wildlife-keywords": "node scripts/seed-malawi-wildlife-keywords.mjs",
-    "seed:egypt-tours-keywords": "node scripts/seed-egypt-tours-keywords.mjs"
+    "seed:egypt-tours-keywords": "node scripts/seed-egypt-tours-keywords.mjs",
+    "keywords:generate-remaining": "node scripts/generate-remaining-country-keywords.mjs",
+    "keywords:generate-first": "node scripts/generate-first-country-keywords.mjs",
+    "keywords:export": "node scripts/generate-remaining-country-keywords.mjs --export-only",
+    "seed:remaining-country-keywords": "node scripts/generate-remaining-country-keywords.mjs --seed",
+    "seed:first-country-keywords": "node scripts/generate-first-country-keywords.mjs --seed",
+    "seed:botswana-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs botswana",
+    "seed:namibia-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs namibia",
+    "seed:zambia-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs zambia",
+    "seed:zimbabwe-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs zimbabwe",
+    "seed:dr-congo-gorilla-keywords": "node scripts/seed-remaining-country-keywords.mjs dr-congo",
+    "seed:ethiopia-tours-keywords": "node scripts/seed-remaining-country-keywords.mjs ethiopia",
+    "seed:mozambique-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs mozambique",
+    "seed:madagascar-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs madagascar",
+    "seed:seychelles-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs seychelles"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

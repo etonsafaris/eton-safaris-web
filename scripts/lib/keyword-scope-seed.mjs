@@ -225,6 +225,8 @@ export async function runKeywordScopeSeed(options) {
     categoryDescription,
     keywordFile,
     extrasFile,
+    injectFocusKeywords = false,
+    focusKeywordLimit = 400,
   } = options;
 
   const pastedLines = readKeywordLines(keywordFile, true);
@@ -361,6 +363,57 @@ export async function runKeywordScopeSeed(options) {
     }
   }
 
+  let focusKeywordsInjected = 0;
+  let countryFocusInjected = 0;
+  if (injectFocusKeywords) {
+    const focusChips = merged.keywords.slice(0, Math.max(20, Number(focusKeywordLimit) || 400));
+    const categoryId = categoryMatch?.id;
+    if (categoryId) {
+      const existingSeo = parseKeywordList(
+        categoryMatch.focus_keywords ?? categoryMatch.focus_keyword ?? categoryMatch.focus_keyphrase
+      );
+      const categoryMerged = mergeKeywordImport(existingSeo, focusChips);
+      const categoryPatch = {
+        focus_keywords: categoryMerged.keywords,
+        focus_keyphrase: categoryMerged.keywords[0] || TARGET_CATEGORY,
+        updated_at: new Date().toISOString(),
+      };
+      const categorySeo = await saveRow(supabase, 'categories', categoryPatch, categoryId);
+      if (categorySeo.error) {
+        console.warn(`Could not inject category focus_keywords: ${categorySeo.error.message}`);
+      } else {
+        focusKeywordsInjected = categoryMerged.keywords.length;
+        categoryMatch = categorySeo.data || categoryMatch;
+      }
+    }
+
+    const countryId = countryMatch?.id;
+    if (countryId) {
+      const existingCountrySeo = parseKeywordList(
+        countryMatch.focus_keywords ?? countryMatch.focus_keyword ?? countryMatch.focus_keyphrase
+      );
+      // Country meta gets a tighter set: country-level + top destination phrases.
+      const countryChips = focusChips.filter(
+        (phrase) =>
+          phrase.toLowerCase().includes(TARGET_COUNTRY.toLowerCase()) ||
+          /safari|tour|holiday|trek|beach|wildlife/i.test(phrase)
+      ).slice(0, Math.min(120, focusChips.length));
+      const countryMerged = mergeKeywordImport(existingCountrySeo, countryChips);
+      const countryPatch = {
+        focus_keywords: countryMerged.keywords,
+        focus_keyphrase: countryMerged.keywords[0] || `${TARGET_COUNTRY} safari`,
+        updated_at: new Date().toISOString(),
+      };
+      const countrySeo = await saveRow(supabase, 'countries', countryPatch, countryId);
+      if (countrySeo.error) {
+        console.warn(`Could not inject country focus_keywords: ${countrySeo.error.message}`);
+      } else {
+        countryFocusInjected = countryMerged.keywords.length;
+        countryMatch = countrySeo.data || countryMatch;
+      }
+    }
+  }
+
   const { data: verifyRows, error: verifyError } = await supabase
     .from('keywords')
     .select('*')
@@ -395,6 +448,8 @@ export async function runKeywordScopeSeed(options) {
     skippedJunk: [...new Set([...pasted.skippedJunk, ...extras.skippedJunk])],
     totalForScope: merged.keywords.length,
     verifiedCount: verifiedPhrases.length,
+    focusKeywordsInjected,
+    countryFocusInjected,
     sample,
   };
 }
