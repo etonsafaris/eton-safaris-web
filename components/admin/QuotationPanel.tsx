@@ -12,7 +12,8 @@ import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import {
   buildQuoteDocumentHtml,
-  packageOverviewFromTour,
+  packageDetailsForQuote,
+  parseInquiryGuestFields,
   QUOTE_TERMS_SUMMARY,
 } from '@/lib/quote-document';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -240,17 +241,19 @@ export default function QuotationPanel() {
     const tour = tours.find((row) => String(row.id) === id);
     if (!tour) return;
     const country = pickString(tour, ['country', 'destination']);
-    const duration = pickString(tour, ['duration_days', 'duration']);
-    const price = pickString(tour, ['price', 'base_price']);
+    const durationRaw = pickString(tour, ['duration_days', 'duration']);
+    const price = pickString(tour, ['price', 'base_price', 'agreed_price']);
+    const packageDetails = packageDetailsForQuote(tour);
     setForm((current) => ({
       ...current,
+      // Keep guest-entered fields; only fill package-side fields from the tour.
       country: country || current.country,
-      duration: duration ? `${duration} days` : current.duration,
+      duration: durationRaw ? `${durationRaw} days` : current.duration,
       agreed_price: price || current.agreed_price,
-      highlights: packageOverviewFromTour(tour),
+      highlights: packageDetails,
     }));
     if (country) setFilterCountry(country);
-    if (duration) setFilterDuration(duration);
+    if (durationRaw) setFilterDuration(durationRaw);
   }
 
   function fillFromInquiry(row: InquiryCard) {
@@ -259,31 +262,63 @@ export default function QuotationPanel() {
     setSavedId('');
     setStatus('');
     setError('');
-    const countryHint = pickString(row, ['destination', 'tour', 'country']);
+
+    const rawMessage = pickString(row, ['message', 'budget']);
+    const parsed = parseInquiryGuestFields(rawMessage);
+    const countryHint =
+      pickString(row, ['destination', 'country']) ||
+      parsed.destination ||
+      '';
+    const guests =
+      pickString(row, ['guests']) ||
+      parsed.travellers ||
+      '1';
+    const travelDate =
+      pickString(row, ['travel_date']).slice(0, 10) ||
+      parsed.travelDate ||
+      '';
+    const durationHint = parsed.duration;
+    const guestNotes = parsed.guestNotes || rawMessage;
+    const tourHint = pickString(row, ['tour']) || parsed.tour || '';
+
     setForm({
       name: pickString(row, ['name', 'guest_name']),
       email: pickString(row, ['email']),
       phone: pickString(row, ['phone']),
-      guests: pickString(row, ['guests']) || '1',
-      travel_date: pickString(row, ['travel_date']).slice(0, 10),
-      message: pickString(row, ['message', 'budget']),
+      guests,
+      travel_date: travelDate,
+      message: guestNotes,
       agreed_price: '',
       expiration_days: '14',
       country: countryHint,
-      duration: '',
+      duration: durationHint,
       highlights: '',
     });
+
     if (countryHint) setFilterCountry(countryHint);
     else setFilterCountry('');
-    setFilterDuration('');
-    const tourName = pickString(row, ['tour', 'destination']);
-    if (tourName) {
-      const match = tours.find((tour) => getRecordTitle(tour).toLowerCase() === tourName.toLowerCase());
-      if (match?.id !== undefined) applyTourSelection(String(match.id));
-      else setTourId('');
-    } else {
-      setTourId('');
+
+    const durationDigits = durationHint.replace(/[^\d]/g, '');
+    if (durationDigits) setFilterDuration(durationDigits);
+    else setFilterDuration('');
+
+    // Prefer an exact package match; otherwise match by country + title contains.
+    const needle = tourHint.toLowerCase().trim();
+    let match =
+      (needle &&
+        tours.find((tour) => getRecordTitle(tour).toLowerCase() === needle)) ||
+      null;
+    if (!match && needle) {
+      match =
+        tours.find((tour) => getRecordTitle(tour).toLowerCase().includes(needle)) ||
+        tours.find((tour) => needle.includes(getRecordTitle(tour).toLowerCase())) ||
+        null;
     }
+    // Country alone only filters the package list — never auto-picks a random tour.
+
+    if (match?.id !== undefined) applyTourSelection(String(match.id));
+    else setTourId('');
+
     setComposerOpen(true);
   }
 
@@ -369,13 +404,19 @@ export default function QuotationPanel() {
     setStatus('');
 
     const tourTitle = selected ? getRecordTitle(selected) : '';
+    const storedMessage = [
+      form.highlights.trim() ? `PACKAGE DETAILS\n${form.highlights.trim()}` : '',
+      form.message.trim() ? `GUEST NOTES\n${form.message.trim()}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
     const quoteFields = {
       name: form.name,
       email: form.email,
       phone: form.phone,
       tour: tourTitle,
       destination: form.country,
-      message: form.message,
+      message: storedMessage,
       guests: form.guests,
       travel_date: form.travel_date || null,
       agreed_price: form.agreed_price,
@@ -764,45 +805,75 @@ export default function QuotationPanel() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  required
-                  placeholder="Guest name"
-                  value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
-                <input
-                  required
-                  type="email"
-                  placeholder="Guest email"
-                  value={form.email}
-                  onChange={(event) => setForm({ ...form, email: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
-                <input
-                  placeholder="Phone"
-                  value={form.phone}
-                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
-                <input
-                  placeholder="Travellers"
-                  value={form.guests}
-                  onChange={(event) => setForm({ ...form, guests: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
-                <input
-                  type="date"
-                  value={form.travel_date}
-                  onChange={(event) => setForm({ ...form, travel_date: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
-                <input
-                  placeholder="Validity (days)"
-                  value={form.expiration_days}
-                  onChange={(event) => setForm({ ...form, expiration_days: event.target.value })}
-                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-                />
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Guest name
+                  </label>
+                  <input
+                    required
+                    placeholder="Guest name"
+                    value={form.name}
+                    onChange={(event) => setForm({ ...form, name: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Guest email
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    placeholder="Guest email"
+                    value={form.email}
+                    onChange={(event) => setForm({ ...form, email: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Phone
+                  </label>
+                  <input
+                    placeholder="Phone"
+                    value={form.phone}
+                    onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Travellers
+                  </label>
+                  <input
+                    placeholder="Travellers"
+                    value={form.guests}
+                    onChange={(event) => setForm({ ...form, guests: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Travel date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.travel_date}
+                    onChange={(event) => setForm({ ...form, travel_date: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Validity (days)
+                  </label>
+                  <input
+                    placeholder="Validity (days)"
+                    value={form.expiration_days}
+                    onChange={(event) => setForm({ ...form, expiration_days: event.target.value })}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  />
+                </div>
               </div>
 
               <div>
@@ -818,26 +889,36 @@ export default function QuotationPanel() {
                 />
               </div>
 
-              {selected ? (
-                <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-4 text-sm text-[#374151]">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#20A048]">
-                    Package (auto-filled · itinerary excluded)
-                  </p>
-                  <p className="mt-1 font-semibold text-[#111827]">{getRecordTitle(selected)}</p>
-                  <p className="mt-1 text-[#6b7280]">
-                    {form.country || pickString(selected, ['country']) || '—'}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                  Guest notes (from inquiry)
+                </label>
+                <textarea
+                  placeholder="Guest message from the inquiry"
+                  value={form.message}
+                  onChange={(event) => setForm({ ...form, message: event.target.value })}
+                  className="h-24 w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                  Package details (auto-filled · itinerary excluded)
+                </label>
+                <textarea
+                  placeholder="Select a tour package to load full package details"
+                  value={form.highlights}
+                  onChange={(event) => setForm({ ...form, highlights: event.target.value })}
+                  className="h-48 w-full rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2.5 text-sm leading-relaxed"
+                />
+                {selected ? (
+                  <p className="mt-1 text-xs text-[#6b7280]">
+                    Loaded from <strong>{getRecordTitle(selected)}</strong>
+                    {form.country ? ` · ${form.country}` : ''}
                     {form.duration ? ` · ${form.duration}` : ''}
                   </p>
-                  {form.highlights ? <p className="mt-2 leading-relaxed">{form.highlights}</p> : null}
-                </div>
-              ) : null}
-
-              <textarea
-                placeholder="Guest notes (optional)"
-                value={form.message}
-                onChange={(event) => setForm({ ...form, message: event.target.value })}
-                className="h-20 w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
-              />
+                ) : null}
+              </div>
 
               <p className="rounded-lg bg-[#f9fafb] px-3 py-2 text-xs leading-relaxed text-[#6b7280]">
                 <strong className="text-[#374151]">Terms (summary):</strong> {QUOTE_TERMS_SUMMARY}

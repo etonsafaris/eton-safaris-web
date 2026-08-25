@@ -1,4 +1,5 @@
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 
 export const QUOTE_TERMS_SUMMARY =
   'Quote valid for the stated period. 30% deposit secures booking; balance due 45 days before travel. Gorilla/park permits are non-refundable once issued. Prices may adjust for currency or park fee changes. Full terms apply on booking confirmation.';
@@ -25,30 +26,135 @@ function escapeHtml(value: string) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/\n/g, '<br/>');
+}
+
+function plainText(value: unknown, max = 0) {
+  const text = String(value || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '';
+  if (max > 0 && text.length > max) return `${text.slice(0, max).trim()}…`;
+  return text;
+}
+
+function section(label: string, body: string) {
+  if (!body.trim()) return '';
+  return `${label}\n${body.trim()}`;
+}
+
+/**
+ * Full package details for a quotation — description, highlights, includes/excludes,
+ * category, group size, journey notes. Never includes day-by-day itinerary.
+ */
+export function packageDetailsForQuote(tour: Record<string, unknown> | null | undefined) {
+  if (!tour) return '';
+
+  const rawDescription = String(tour.description || '');
+  const embedded = extractEmbeddedContent(rawDescription);
+  const description = plainText(stripEmbeddedContent(rawDescription));
+  const highlights = plainText(tour.highlights || embedded.fields?.highlights || '');
+  const includes = plainText(tour.price_includes || embedded.fields?.price_includes || '');
+  const excludes = plainText(tour.price_excludes || embedded.fields?.price_excludes || '');
+  const journey = plainText(tour.journey_details || embedded.fields?.journey_details || '');
+  const summary = plainText(tour.summary || tour.excerpt || '');
+  const category = plainText(tour.category || '');
+  const groupSize = plainText(tour.group_size || '');
+  const country = plainText(tour.country || tour.destination || '');
+  const duration = plainText(tour.duration_days || tour.duration || '');
+  const title = plainText(tour.title || tour.name || '');
+
+  const blockText = (embedded.blocks || [])
+    .map((block) => {
+      const heading = plainText(block.title);
+      const body = plainText(block.description);
+      if (!heading && !body) return '';
+      return heading && body ? `${heading}: ${body}` : heading || body;
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  const parts = [
+    title ? `Package: ${title}` : '',
+    [
+      country && `Country: ${country}`,
+      duration && `Duration: ${duration} days`,
+      category && `Category: ${category}`,
+      groupSize && `Group size: ${groupSize}`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    section('Overview', summary || description),
+    summary && description && summary !== description ? section('Description', description) : '',
+    section('Highlights', highlights),
+    section('Includes', includes),
+    section('Excludes', excludes),
+    section('Journey notes', journey),
+    section('Additional details', blockText),
+  ].filter(Boolean);
+
+  return parts.join('\n\n');
+}
+
+/** Short preview helper. */
+export function packageOverviewFromTour(tour: Record<string, unknown> | null | undefined) {
+  const full = packageDetailsForQuote(tour);
+  if (!full) return '';
+  return full.length > 600 ? `${full.slice(0, 600).trim()}…` : full;
+}
+
+/** Pull structured guest fields out of composed inquiry messages. */
+export function parseInquiryGuestFields(message: string) {
+  const text = String(message || '');
+  const read = (label: string) => {
+    const match = text.match(new RegExp(`${label}\\s*:\\s*(.+)`, 'i'));
+    return match?.[1]?.trim() || '';
+  };
+  const destination = read('Safari destination') || read('Destination');
+  const residence = read('Country of residence');
+  const duration = read('Duration of stay') || read('Duration');
+  const travellers = read('Travellers') || read('Guests');
+  const travelDate = read('Travel date');
+  const tour = read('Tour');
+
+  const split = text.split(
+    /\n(?=Safari destination:|Country of residence:|Duration of stay:|Travellers:|Travel date:|Tour:)/i
+  );
+  const guestNotes = (split[0] || text).trim();
+
+  return {
+    destination,
+    residence,
+    duration,
+    travellers: travellers.replace(/[^\d].*$/, '').trim() || travellers,
+    travelDate: travelDate.slice(0, 10),
+    tour,
+    guestNotes,
+  };
 }
 
 /** Compact one-page professional quotation HTML (print + email + guest view). */
 export function buildQuoteDocumentHtml(input: QuoteDocumentInput) {
   const origin = (input.siteOrigin || SITE.url).replace(/\/$/, '');
   const logo = `${origin}${SITE_LOGO.split('?')[0]}`;
-  const accept =
-    input.quoteId ? `${origin}/quote/${encodeURIComponent(input.quoteId)}` : '';
-  const valid =
-    input.expirationDays?.trim()
-      ? `Valid for ${escapeHtml(input.expirationDays.trim())} days from issue`
-      : 'Valid for 14 days from issue';
+  const accept = input.quoteId ? `${origin}/quote/${encodeURIComponent(input.quoteId)}` : '';
+  const valid = input.expirationDays?.trim()
+    ? `Valid for ${escapeHtml(input.expirationDays.trim())} days from issue`
+    : 'Valid for 14 days from issue';
 
   const row = (label: string, value: string) =>
     value.trim()
-      ? `<tr><td class="lbl">${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`
+      ? `<tr><td class="lbl">${escapeHtml(label).replace(/<br\/>/g, '')}</td><td>${escapeHtml(value)}</td></tr>`
       : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Safari Quotation — ${escapeHtml(SITE.name)}</title>
+  <title>Safari Quotation — ${escapeHtml(SITE.name).replace(/<br\/>/g, '')}</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #1f2937; background: #f3f4f6; }
@@ -66,7 +172,7 @@ export function buildQuoteDocumentHtml(input: QuoteDocumentInput) {
     .fee { margin: 8px 0 18px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
     .fee strong { display: block; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #166534; }
     .fee span { font-size: 22px; font-weight: 700; color: #14532d; }
-    .notes { font-size: 14px; line-height: 1.55; color: #374151; margin: 0 0 16px; }
+    .notes { font-size: 13px; line-height: 1.55; color: #374151; margin: 0 0 16px; white-space: pre-wrap; }
     .terms { font-size: 12px; line-height: 1.5; color: #6b7280; background: #f9fafb; padding: 12px 14px; border-radius: 8px; margin: 0 0 16px; }
     .terms strong { color: #374151; }
     .cta { margin: 0 0 8px; }
@@ -82,15 +188,15 @@ export function buildQuoteDocumentHtml(input: QuoteDocumentInput) {
 <body>
   <div class="sheet">
     <header class="header">
-      <img src="${escapeHtml(logo)}" alt="${escapeHtml(SITE.name)}" />
+      <img src="${escapeHtml(logo).replace(/<br\/>/g, '')}" alt="${escapeHtml(SITE.name).replace(/<br\/>/g, '')}" />
       <div class="brand">
-        <h1>${escapeHtml(SITE.name)}</h1>
-        <p>${escapeHtml(SITE.tagline)}</p>
+        <h1>${escapeHtml(SITE.name).replace(/<br\/>/g, '')}</h1>
+        <p>${escapeHtml(SITE.tagline).replace(/<br\/>/g, '')}</p>
       </div>
     </header>
     <div class="body">
       <p class="eyebrow">Safari quotation</p>
-      <h2 class="title">${escapeHtml(input.tour || 'Tailored safari')}</h2>
+      <h2 class="title">${escapeHtml(input.tour || 'Tailored safari').replace(/<br\/>/g, '')}</h2>
       <table>
         ${row('Guest', `${input.guest}${input.email ? ` · ${input.email}` : ''}`)}
         ${row('Phone', input.phone || '')}
@@ -98,55 +204,36 @@ export function buildQuoteDocumentHtml(input: QuoteDocumentInput) {
         ${row('Duration', input.duration || '')}
         ${row('Travellers', input.guests || '')}
         ${row('Travel date', input.travelDate || 'Flexible')}
-        ${row('Validity', valid)}
+        ${row('Validity', valid.replace(/<br\/>/g, ''))}
       </table>
       ${
         input.tourFee.trim()
-          ? `<div class="fee"><strong>Tour fee</strong><span>${escapeHtml(input.tourFee)}</span></div>`
+          ? `<div class="fee"><strong>Tour fee</strong><span>${escapeHtml(input.tourFee).replace(/<br\/>/g, '')}</span></div>`
           : ''
       }
       ${
         input.highlights?.trim()
-          ? `<p class="notes"><strong>Package overview</strong><br/>${escapeHtml(input.highlights.trim())}</p>`
+          ? `<div class="notes"><strong>Package details</strong><br/>${escapeHtml(input.highlights.trim())}</div>`
           : ''
       }
       ${
         input.notes?.trim()
-          ? `<p class="notes"><strong>Notes</strong><br/>${escapeHtml(input.notes.trim())}</p>`
+          ? `<div class="notes"><strong>Guest notes</strong><br/>${escapeHtml(input.notes.trim())}</div>`
           : ''
       }
-      <p class="terms"><strong>Terms (summary):</strong> ${escapeHtml(QUOTE_TERMS_SUMMARY)}</p>
+      <p class="terms"><strong>Terms (summary):</strong> ${escapeHtml(QUOTE_TERMS_SUMMARY).replace(/<br\/>/g, ' ')}</p>
       ${
         accept
-          ? `<p class="cta"><a href="${escapeHtml(accept)}">View and accept this quotation online</a></p>`
+          ? `<p class="cta"><a href="${escapeHtml(accept).replace(/<br\/>/g, '')}">View and accept this quotation online</a></p>`
           : ''
       }
     </div>
     <footer class="footer">
-      <strong>${escapeHtml(SITE.name)}</strong><br/>
-      ${escapeHtml(SITE.address)}<br/>
-      ${escapeHtml(SITE.email)} · ${escapeHtml(SITE.phoneDisplay)} · ${escapeHtml(SITE.url)}
+      <strong>${escapeHtml(SITE.name).replace(/<br\/>/g, '')}</strong><br/>
+      ${escapeHtml(SITE.address).replace(/<br\/>/g, '')}<br/>
+      ${escapeHtml(SITE.email).replace(/<br\/>/g, '')} · ${escapeHtml(SITE.phoneDisplay).replace(/<br\/>/g, '')} · ${escapeHtml(SITE.url).replace(/<br\/>/g, '')}
     </footer>
   </div>
 </body>
 </html>`;
-}
-
-/** Plain-text package overview from a tour row — never includes itinerary. */
-export function packageOverviewFromTour(tour: Record<string, unknown> | null | undefined) {
-  if (!tour) return '';
-  const parts: string[] = [];
-  const summary = String(tour.summary || tour.excerpt || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  const description = String(tour.description || '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const highlights = String(tour.highlights || '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (summary) parts.push(summary.slice(0, 280));
-  else if (description) parts.push(description.slice(0, 280));
-  if (highlights) parts.push(highlights.slice(0, 220));
-  return parts.join(' · ');
 }
