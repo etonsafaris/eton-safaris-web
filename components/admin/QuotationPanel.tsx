@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FileText, Trash2, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SITE_LOGO } from '@/lib/collections';
+import { QuoteContactFooter, QuoteLetterhead } from '@/components/public/QuoteLetterhead';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
 import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
@@ -735,17 +736,8 @@ export default function QuotationPanel() {
               </button>
             </div>
 
-            {/* Document preview header */}
-            <div className="border-b-4 border-[#20A048] bg-[#fafafa] px-5 py-5 sm:px-7">
-              <div className="flex items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={SITE_LOGO} alt={SITE.name} className="h-14 w-auto" />
-                <div>
-                  <p className="font-serif text-xl font-bold text-[#14532d]">{SITE.name}</p>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7280]">{SITE.tagline}</p>
-                </div>
-              </div>
-            </div>
+            {/* Document preview letterhead */}
+            <QuoteLetterhead />
 
             <div className="space-y-4 px-5 py-5 sm:px-7">
               <div className="grid gap-3 sm:grid-cols-3">
@@ -925,13 +917,7 @@ export default function QuotationPanel() {
               </p>
             </div>
 
-            <div className="border-t border-[#e5e7eb] bg-[#fafafa] px-5 py-4 text-xs leading-relaxed text-[#6b7280] sm:px-7">
-              <strong className="text-[#14532d]">{SITE.name}</strong>
-              <br />
-              {SITE.address}
-              <br />
-              {SITE.email} · {SITE.phoneDisplay}
-            </div>
+            <QuoteContactFooter />
 
             <div className="flex flex-wrap items-center gap-3 border-t border-[#e5e7eb] px-5 py-4 sm:px-7">
               <button

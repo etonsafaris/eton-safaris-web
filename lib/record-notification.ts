@@ -7,20 +7,38 @@ export type DashboardNotice = {
   category?: string;
 };
 
+/**
+ * Persist an unread dashboard notification for the admin Notifications module + red badge.
+ */
 export async function recordDashboardNotice(input: DashboardNotice) {
   const client = createPrivilegedClient();
+  const title = input.title.trim() || 'Eton Safaris notification';
+  const message = input.message.trim() || title;
+  const category = input.category || 'system';
+  const now = new Date().toISOString();
+
   const payload = {
-    title: input.title,
-    message: input.message,
-    category: input.category || 'system',
-    body: input.message,
-    content: input.message,
+    title,
+    message,
+    category,
+    body: message,
+    content: message,
     status: 'Unread',
     read: false,
     seen: false,
-    created_at: new Date().toISOString(),
+    is_read: false,
+    created_at: now,
   };
-  const result = await saveWithColumnFallback('notifications', payload, { client });
+
+  let result = await saveWithColumnFallback('notifications', payload, { client });
+  if (result.error) {
+    // Minimal fallback if some unread columns are missing from the table.
+    result = await saveWithColumnFallback(
+      'notifications',
+      { title, message, category, status: 'Unread' },
+      { client }
+    );
+  }
   if (result.error) {
     console.error('[Notifications] Failed to save dashboard notice:', result.error);
     if (/row-level security|permission denied|42501|Could not find the table/i.test(result.error.message)) {

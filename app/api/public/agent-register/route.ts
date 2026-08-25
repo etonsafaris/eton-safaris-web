@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { saveAgentApplicationOnServer } from '@/lib/save-agent-application';
 
 export async function POST(request: Request) {
@@ -11,6 +12,21 @@ export async function POST(request: Request) {
     const result = await saveAgentApplicationOnServer(body);
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 });
+    }
+
+    if (!result.alreadyExists) {
+      const name = String(body.name || body.username || 'Agent').trim();
+      const email = String(body.email || '').trim();
+      const phone = String(body.phone || body.phoneNumber || '').trim();
+      const country = String(body.country || '').trim();
+      await deliverIncomingAlert({
+        title: 'New agent registration — approval required',
+        message: `${name} (${email}${phone ? `, ${phone}` : ''}${country ? `, ${country}` : ''}) applied as an agent and is waiting for approval.`,
+        category: 'agent',
+        guestEmail: email,
+        recordDashboard: true,
+        emailAdmin: true,
+      });
     }
 
     return NextResponse.json({

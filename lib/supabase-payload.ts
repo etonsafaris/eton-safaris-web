@@ -151,7 +151,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'source',
     'quoted_at',
   ],
-  notifications: ['title', 'message', 'category', 'body', 'content', 'status', 'read', 'seen'],
+  notifications: ['title', 'message', 'category', 'body', 'content', 'status', 'read', 'seen', 'is_read'],
   subscribers: ['email', 'name', 'phone', 'last_digest_at'],
 };
 

@@ -23,7 +23,7 @@ export function useAdminNotifications() {
 
   useEffect(() => {
     void load();
-    const timer = window.setInterval(() => void load(), 20000);
+    const timer = window.setInterval(() => void load(), 8000);
     function onChange() {
       void load();
     }

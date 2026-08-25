@@ -27,7 +27,8 @@ export async function notifyWorkspace(input: NotifyInput) {
         sendToGuest: input.sendToGuest,
         guestTitle: input.guestTitle,
         guestMessage: input.guestMessage,
-        recordDashboard: input.recordDashboard,
+        // Inbound website messages always land in Notifications unless explicitly opted out.
+        recordDashboard: input.recordDashboard !== false,
         emailAdmin: input.emailAdmin,
         html: input.html,
       }),
@@ -38,6 +39,7 @@ export async function notifyWorkspace(input: NotifyInput) {
       reason?: string;
       error?: string;
       id?: string;
+      recordError?: string;
     };
     if (!response.ok) {
       console.error('[Notify] Email API failed:', response.status, body);
@@ -53,6 +55,9 @@ export async function notifyWorkspace(input: NotifyInput) {
       reason: body.reason,
       id: body.id,
     });
+    if (!body.recorded && input.recordDashboard !== false) {
+      console.error('[Notify] Dashboard notification was not recorded:', body.recordError || body.reason || body.error);
+    }
     return {
       emailed: Boolean(body.emailed),
       recorded: Boolean(body.recorded),
@@ -61,7 +66,7 @@ export async function notifyWorkspace(input: NotifyInput) {
     };
   } catch (err) {
     console.error('[Notify] Email API unreachable:', err);
-    return { emailed: false, error: err instanceof Error ? err.message : 'unreachable' };
+    return { emailed: false, recorded: false, error: err instanceof Error ? err.message : 'unreachable' };
   }
 }
 

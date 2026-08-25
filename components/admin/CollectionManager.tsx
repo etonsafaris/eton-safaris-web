@@ -41,6 +41,7 @@ import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
+import { ensureDemoBooking } from '@/lib/ensure-demo-booking';
 import { countryCategoryPath, canonicalCountrySlug, publicCountrySlug } from '@/lib/country-utils';
 import { generateBookingCode } from '@/lib/booking-code';
 import { fetchBookingsForAgent } from '@/lib/agent-bookings';
@@ -125,6 +126,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       if (config.id === 'landing_pages') {
         const created = await ensureDefaultLandingPages();
         if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
+      }
+      if (config.id === 'bookings') {
+        const created = await ensureDemoBooking();
+        if (created > 0) {
+          try {
+            data = await fetchAdminTable(config.table);
+          } catch {
+            data = await fetchCollectionRecords(config.table, config.aliases);
+          }
+        }
       }
       setRecords(
         data.slice().sort((a, b) => {
@@ -250,6 +261,9 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         { label: 'Payment', keys: ['payment_status', 'status'], badge: true },
         { label: 'Paid', keys: ['amount_paid'], money: true },
         { label: 'Balance', keys: ['remaining_balance'], money: true },
+        { label: 'Tour fee', keys: ['final_tour_price'], money: true },
+        { label: 'Guests', keys: ['guests'] },
+        { label: 'Phone', keys: ['phone'] },
         { label: 'Status', keys: ['status'], badge: true },
       ];
     }

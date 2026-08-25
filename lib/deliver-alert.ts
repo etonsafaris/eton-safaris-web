@@ -54,6 +54,10 @@ export async function deliverIncomingAlert(input: IncomingAlert) {
   }
 
   const emailed = Boolean(adminResult.emailed);
+  const noticeId =
+    recorded.data?.[0] && typeof recorded.data[0] === 'object' && recorded.data[0] !== null
+      ? String((recorded.data[0] as { id?: string | number }).id || '')
+      : '';
   return {
     ok: true,
     recorded: !recorded.error,
@@ -62,7 +66,7 @@ export async function deliverIncomingAlert(input: IncomingAlert) {
     recordError: recorded.error?.message,
     emailError: 'error' in adminResult ? adminResult.error : undefined,
     reason: 'reason' in adminResult ? adminResult.reason : recorded.error?.message,
-    id: 'id' in adminResult ? adminResult.id : undefined,
+    id: noticeId || ('id' in adminResult ? adminResult.id : undefined),
     from: 'from' in adminResult ? adminResult.from : undefined,
     to: 'to' in adminResult ? adminResult.to : [adminInbox()],
   };

@@ -134,6 +134,8 @@ export default function TourDetailPage() {
       message: `${form.guest_name} (${form.email}) booked ${getRecordTitle(tour || {})}. Booking code: ${bookingCode}. Calendar: ${calendarUrl}`,
       category: 'booking',
       guestEmail: form.email,
+      recordDashboard: true,
+      emailAdmin: true,
     });
     const tourParam = pickString(tour || {}, ['slug']) || slug;
     const bookingId = data?.[0]?.id ? String(data[0].id) : '';

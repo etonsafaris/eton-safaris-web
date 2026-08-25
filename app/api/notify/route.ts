@@ -28,12 +28,17 @@ export async function POST(request: Request) {
       sendToGuest: Boolean(body.sendToGuest),
       guestTitle: body.guestTitle,
       guestMessage: body.guestMessage,
-      recordDashboard: body.recordDashboard,
+      // Default true so website inquiries/bookings always create an unread dashboard notice.
+      recordDashboard: body.recordDashboard !== false,
       emailAdmin: body.emailAdmin,
       html: body.html,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      recorded: Boolean(result.recorded),
+      recordError: result.recordError,
+    });
   } catch (error) {
     console.error('[Notify API] Failed:', error);
     return NextResponse.json(

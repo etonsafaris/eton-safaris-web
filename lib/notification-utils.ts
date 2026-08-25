@@ -15,11 +15,16 @@ function isFlagFalse(value: unknown) {
 
 export function isUnreadNotification(record: RecordRow) {
   const readValue = record.read ?? record.seen ?? record.is_read ?? record.isRead;
+  // Explicitly marked read/seen → not unread.
   if (isFlagTrue(readValue) || record.read_at || record.seen_at) return false;
   const status = pickString(record, ['status']).toLowerCase();
   if (/^(read|seen|archived|done|closed)$/.test(status)) return false;
+  // Explicit unread flags / statuses.
   if (isFlagFalse(readValue)) return true;
-  return /^(unread|new|notice)$/.test(status);
+  if (/^(unread|new|notice|pending)$/.test(status)) return true;
+  // Default for inbound dashboard notices: treat as unread unless marked read above.
+  // (Older rows may lack status/read columns after column-fallback saves.)
+  return true;
 }
 
 export function unreadNotificationCount(records: RecordRow[]) {

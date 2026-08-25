@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import PublicShell from '@/components/public/PublicShell';
-import { SITE, SITE_LOGO } from '@/lib/collections';
+import { QuoteContactFooter, QuoteLetterhead } from '@/components/public/QuoteLetterhead';
 import { fetchCollectionRecords, pickString } from '@/lib/data';
 import { QUOTE_TERMS_SUMMARY } from '@/lib/quote-document';
 import type { RecordRow } from '@/lib/types';
@@ -60,20 +60,13 @@ export default function GuestQuotePage() {
 
   return (
     <PublicShell>
-      <section className="bg-[#f3f4f6] px-4 py-12">
-        <div className="mx-auto max-w-[720px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+      <section className="bg-[#eef2f0] px-4 py-12">
+        <div className="mx-auto max-w-[760px] overflow-hidden rounded-xl bg-white shadow-[0_8px_28px_rgba(27,67,50,0.12)]">
           {!quote ? (
             <p className="p-10 text-center text-gray-500">Quotation not found.</p>
           ) : (
             <>
-              <header className="flex items-center gap-4 border-b-4 border-[#20A048] px-7 py-5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={SITE_LOGO} alt={SITE.name} className="h-14 w-auto" />
-                <div>
-                  <p className="font-serif text-xl font-bold text-[#14532d]">{SITE.name}</p>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7280]">{SITE.tagline}</p>
-                </div>
-              </header>
+              <QuoteLetterhead />
 
               <div className="px-7 py-6">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#20A048]">Safari quotation</p>
@@ -86,7 +79,12 @@ export default function GuestQuotePage() {
 
                 <dl className="mt-6 space-y-0 text-sm">
                   {[
-                    ['Guest', `${pickString(quote, ['name', 'guest_name'])}${pickString(quote, ['email']) ? ` · ${pickString(quote, ['email'])}` : ''}`],
+                    [
+                      'Guest',
+                      `${pickString(quote, ['name', 'guest_name'])}${
+                        pickString(quote, ['email']) ? ` · ${pickString(quote, ['email'])}` : ''
+                      }`,
+                    ],
                     ['Phone', pickString(quote, ['phone'])],
                     ['Country / destination', pickString(quote, ['destination', 'country'])],
                     ['Travellers', pickString(quote, ['guests']) || '—'],
@@ -100,7 +98,7 @@ export default function GuestQuotePage() {
                   ]
                     .filter(([, value]) => Boolean(value && String(value).trim()))
                     .map(([label, value]) => (
-                      <div key={label} className="flex justify-between gap-4 border-b border-[#eef2f0] py-2.5">
+                      <div key={label} className="flex justify-between gap-4 border-b border-[#e8efe9] py-2.5">
                         <dt className="text-[#6b7280]">{label}</dt>
                         <dd className="text-right text-[#111827]">{value}</dd>
                       </div>
@@ -108,17 +106,19 @@ export default function GuestQuotePage() {
                 </dl>
 
                 {fee ? (
-                  <div className="mt-5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
+                  <div className="mt-5 rounded-r-lg border-l-4 border-[#20A048] bg-[#f0fdf4] px-4 py-3">
                     <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#166534]">Tour fee</p>
                     <p className="mt-1 text-2xl font-bold text-[#14532d]">{fee}</p>
                   </div>
                 ) : null}
 
                 {pickString(quote, ['message']) ? (
-                  <p className="mt-5 text-sm leading-relaxed text-[#374151]">{pickString(quote, ['message'])}</p>
+                  <p className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-[#374151]">
+                    {pickString(quote, ['message'])}
+                  </p>
                 ) : null}
 
-                <p className="mt-5 rounded-lg bg-[#f9fafb] px-3 py-2 text-xs leading-relaxed text-[#6b7280]">
+                <p className="mt-5 rounded-lg bg-[#f7faf8] px-3 py-2 text-xs leading-relaxed text-[#6b7280]">
                   <strong className="text-[#374151]">Terms (summary):</strong> {QUOTE_TERMS_SUMMARY}
                 </p>
 
@@ -141,13 +141,7 @@ export default function GuestQuotePage() {
                 {status ? <p className="mt-4 text-sm text-[#20A048]">{status}</p> : null}
               </div>
 
-              <footer className="border-t border-[#e5e7eb] px-7 py-4 text-xs leading-relaxed text-[#6b7280]">
-                <strong className="text-[#14532d]">{SITE.name}</strong>
-                <br />
-                {SITE.address}
-                <br />
-                {SITE.email} · {SITE.phoneDisplay} · {SITE.url}
-              </footer>
+              <QuoteContactFooter />
             </>
           )}
         </div>

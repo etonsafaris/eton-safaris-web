@@ -69,6 +69,19 @@ export async function submitWebsiteInquiry(input: WebsiteInquiryInput) {
     emailAdmin: true,
   });
 
+  // If the first notify call somehow skipped the dashboard row, try once more.
+  if (!mail?.recorded) {
+    await notifyWorkspace({
+      title: input.notifyTitle,
+      message: `${input.name} (${input.email}): ${input.message}`,
+      category: 'inquiry',
+      guestEmail: input.email,
+      recordDashboard: true,
+      emailAdmin: false,
+      sendToGuest: false,
+    });
+  }
+
   return {
     error: null,
     recorded: Boolean(mail?.recorded),
