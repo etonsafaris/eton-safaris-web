@@ -12,7 +12,7 @@ import { notifyWorkspace } from '@/lib/notify';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 import { generateBookingCode } from '@/lib/booking-code';
-import { parseMoneyAmount } from '@/lib/booking-status';
+import { guestBookingCodeNotice, parseMoneyAmount } from '@/lib/booking-status';
 import { SITE } from '@/lib/collections';
 
 type Step = 1 | 2 | 3;
@@ -43,6 +43,7 @@ function PaymentPortalInner() {
   const [error, setError] = useState('');
   const [reference, setReference] = useState(merchantRef);
   const [bookingId, setBookingId] = useState(searchParams?.get('booking') || '');
+  const [bookingCode, setBookingCode] = useState('');
   const [lockedTotal, setLockedTotal] = useState<number | null>(null);
   const [alreadyPaid, setAlreadyPaid] = useState(0);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -86,6 +87,7 @@ function PaymentPortalInner() {
         const parts = guestName.split(/\s+/);
         setLockedTotal(total > 0 ? total : null);
         setAlreadyPaid(paid);
+        setBookingCode(String(data.booking_code || ''));
         setForm((current) => ({
           ...current,
           first_name: parts[0] || current.first_name,
@@ -141,8 +143,10 @@ function PaymentPortalInner() {
 
     const ref = `ETON-${Date.now()}`;
     let activeBookingId = bookingId;
+    let activeBookingCode = bookingCode;
 
     if (!activeBookingId) {
+      activeBookingCode = generateBookingCode();
       const bookingPayload = buildSavePayload('bookings', {
         guest_name: guestName,
         email: form.email.trim(),
@@ -153,11 +157,22 @@ function PaymentPortalInner() {
         final_tour_price: total,
         amount_paid: 0,
         remaining_balance: total,
-        booking_code: generateBookingCode(),
+        booking_code: activeBookingCode,
       });
       const inserted = await saveWithColumnFallback('bookings', bookingPayload);
       activeBookingId = String(inserted.data?.[0]?.id || '');
       if (activeBookingId) setBookingId(activeBookingId);
+      if (activeBookingCode) setBookingCode(activeBookingCode);
+    }
+
+    if (!activeBookingCode && activeBookingId) {
+      const { data: existing } = await supabase.from('bookings').select('booking_code').eq('id', activeBookingId).maybeSingle();
+      activeBookingCode = String(existing?.booking_code || '');
+      if (!activeBookingCode) {
+        activeBookingCode = generateBookingCode();
+        await saveWithColumnFallback('bookings', { booking_code: activeBookingCode }, activeBookingId);
+      }
+      setBookingCode(activeBookingCode);
     }
 
     const payload = buildSavePayload('pesapal_payments', {
@@ -174,11 +189,31 @@ function PaymentPortalInner() {
     });
     await saveWithColumnFallback('pesapal_payments', payload);
 
-    await notifyWorkspace({
-      title: 'Payment initiated',
-      message: `${guestName} (${form.email}) started a ${form.currency} ${amount.toFixed(2)} Pesapal checkout. Ref ${ref}.`,
-      category: 'booking',
-    });
+    if (activeBookingCode) {
+      const codeNotice = guestBookingCodeNotice({
+        guestName,
+        tour: form.tour || form.description || 'your safari',
+        bookingCode: activeBookingCode,
+        verifyUrl: `${SITE.url}/verify`,
+        paymentLink: activeBookingId ? `${SITE.url}/payment?booking=${activeBookingId}` : `${SITE.url}/payment`,
+        siteName: SITE.name,
+      });
+      await notifyWorkspace({
+        title: 'Payment initiated',
+        message: `${guestName} (${form.email}) started a ${form.currency} ${amount.toFixed(2)} Pesapal checkout. Booking code ${activeBookingCode}. Ref ${ref}.`,
+        category: 'booking',
+        guestEmail: form.email.trim(),
+        sendToGuest: true,
+        guestTitle: codeNotice.guestTitle,
+        guestMessage: `${codeNotice.guestMessage}\n\nPayment reference: ${ref}`,
+      });
+    } else {
+      await notifyWorkspace({
+        title: 'Payment initiated',
+        message: `${guestName} (${form.email}) started a ${form.currency} ${amount.toFixed(2)} Pesapal checkout. Ref ${ref}.`,
+        category: 'booking',
+      });
+    }
 
     try {
       const response = await fetch('/api/pesapal/order', {

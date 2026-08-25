@@ -61,7 +61,7 @@ export const REVIEW_SOURCES: ReviewSource[] = [
     id: 'website',
     label: 'Website',
     match: ['website', 'eton'],
-    href: '#safari-reviews',
+    href: '',
   },
 ];
 
@@ -78,7 +78,21 @@ export function reviewExternalHref(review: RecordRow): string {
   if (explicit.startsWith('http') || explicit.startsWith('/')) return explicit;
 
   const source = REVIEW_SOURCES.find((item) => sourceMatches(review, item));
-  return source?.href || REVIEW_SOURCES.find((item) => item.id === 'website')?.href || '/contact-us';
+  return source?.href || '';
+}
+
+export function isWebsiteReview(review: RecordRow) {
+  const value = pickString(review, ['source']).toLowerCase().trim();
+  if (!value) return true;
+  return REVIEW_SOURCES.find((item) => item.id === 'website')?.match.some((token) => value.includes(token)) || false;
+}
+
+/** External listing URL for third-party reviews. Website reviews are not clickable. */
+export function reviewClickHref(review: RecordRow): string {
+  if (isWebsiteReview(review)) return '';
+  const href = reviewExternalHref(review);
+  if (!href || href.startsWith('#')) return '';
+  return href;
 }
 
 export type ReviewSourceBadge = {

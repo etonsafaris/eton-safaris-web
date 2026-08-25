@@ -5,12 +5,11 @@ import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import { paymentSummary, verifyStatusClass, verifyStatusLabel } from '@/lib/booking-status';
 import { pickString } from '@/lib/data';
-import { supabase } from '@/lib/supabase/client';
 import type { RecordRow } from '@/lib/types';
 
 function money(amount: number, currency = 'USD') {
-  if (!Number.isFinite(amount) || amount <= 0) return '—';
-  return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  if (!Number.isFinite(amount)) return '—';
+  return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function VerifyBookingPage() {
@@ -27,39 +26,46 @@ export default function VerifyBookingPage() {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) return;
     setLoading(true);
-    const { data, error: queryError } = await supabase
-      .from('bookings')
-      .select('*')
-      .ilike('booking_code', trimmed)
-      .limit(1);
-    setLoading(false);
-    if (queryError) {
-      setError(queryError.message);
-      return;
+    try {
+      const response = await fetch('/api/public/verify-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trimmed }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { booking?: RecordRow; error?: string };
+      if (!response.ok || !body.booking) {
+        setError(body.error || 'Invalid booking or payment code. Please check your spelling or contact support.');
+        return;
+      }
+      setBooking(body.booking);
+      setCheckedAt(new Date().toLocaleString());
+    } catch (verifyError) {
+      setError(verifyError instanceof Error ? verifyError.message : 'Could not verify this booking.');
+    } finally {
+      setLoading(false);
     }
-    const match = ((data as RecordRow[]) || [])[0];
-    if (!match) {
-      setError('Error: Invalid Booking Code. Please check your spelling or contact support.');
-      return;
-    }
-    setBooking(match);
-    setCheckedAt(new Date().toLocaleString());
   }
 
   const summary = booking ? paymentSummary(booking) : null;
+  const paidLabel =
+    summary && summary.total > 0 && summary.balance <= 0.009
+      ? 'Fully paid'
+      : summary && summary.paid > 0
+        ? 'Partially paid'
+        : 'Not yet paid';
 
   return (
     <PublicShell>
       <PageHero
         title="Verify Your Booking"
-        subtitle="Enter the SAF- code from your confirmation email."
+        subtitle="Enter the booking / payment code from your confirmation email."
       />
       <section className="mx-auto max-w-2xl px-4 py-12">
         <form onSubmit={verify} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
           <input
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase())}
-            placeholder="Enter your Booking Code to verify status"
+            placeholder="Enter your Booking Code or Payment Code"
             className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-moss"
           />
           <button
@@ -80,9 +86,10 @@ export default function VerifyBookingPage() {
             <p className={`inline-flex rounded-full px-4 py-1 text-sm font-semibold text-white ${verifyStatusClass(booking)}`}>
               STATUS: {verifyStatusLabel(booking)}
             </p>
+            <p className="mt-3 text-sm font-semibold text-[#111827]">{paidLabel}</p>
             <dl className="mt-6 grid gap-3 text-sm text-gray-800">
               <div>
-                <dt className="text-xs uppercase tracking-wide text-moss">Booking code</dt>
+                <dt className="text-xs uppercase tracking-wide text-moss">Booking / payment code</dt>
                 <dd className="mt-1 font-mono font-semibold">{pickString(booking, ['booking_code'])}</dd>
               </div>
               <div>
@@ -105,22 +112,18 @@ export default function VerifyBookingPage() {
                 <dt className="text-xs uppercase tracking-wide text-moss">Payment status</dt>
                 <dd className="mt-1">{summary.paymentStatus}</dd>
               </div>
-              {summary.total > 0 ? (
-                <>
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-moss">Tour fee</dt>
-                    <dd className="mt-1">{money(summary.total, summary.currency)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-moss">Amount paid</dt>
-                    <dd className="mt-1">{money(summary.paid, summary.currency)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-moss">Remaining balance</dt>
-                    <dd className="mt-1 font-semibold">{money(summary.balance, summary.currency)}</dd>
-                  </div>
-                </>
-              ) : null}
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Final tour fee</dt>
+                <dd className="mt-1">{money(summary.total, summary.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Amount paid</dt>
+                <dd className="mt-1">{money(summary.paid, summary.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-moss">Remaining balance</dt>
+                <dd className="mt-1 font-semibold">{money(summary.balance, summary.currency)}</dd>
+              </div>
             </dl>
             {checkedAt && <p className="mt-4 text-xs text-gray-500">Verified at {checkedAt}</p>}
           </article>

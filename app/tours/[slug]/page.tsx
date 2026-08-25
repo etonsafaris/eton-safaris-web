@@ -30,6 +30,8 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyWorkspace } from '@/lib/notify';
 import { generateBookingCode } from '@/lib/booking-code';
+import { guestBookingCodeNotice } from '@/lib/booking-status';
+import { SITE } from '@/lib/collections';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import type { RecordRow } from '@/lib/types';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
@@ -129,16 +131,28 @@ export default function TourDetailPage() {
       email: form.email,
     });
     const calendarUrl = googleCalendarUrl(calendarEvent);
+    const bookingId = data?.[0]?.id ? String(data[0].id) : '';
+    const paymentLink = bookingId ? `${SITE.url}/payment?booking=${encodeURIComponent(bookingId)}` : `${SITE.url}/payment`;
+    const codeNotice = guestBookingCodeNotice({
+      guestName: form.guest_name,
+      tour: getRecordTitle(tour || {}),
+      bookingCode,
+      verifyUrl: `${SITE.url}/verify`,
+      paymentLink,
+      siteName: SITE.name,
+    });
     await notifyWorkspace({
       title: 'New Booking',
       message: `${form.guest_name} (${form.email}) booked ${getRecordTitle(tour || {})}. Booking code: ${bookingCode}. Calendar: ${calendarUrl}`,
       category: 'booking',
       guestEmail: form.email,
+      sendToGuest: true,
+      guestTitle: codeNotice.guestTitle,
+      guestMessage: codeNotice.guestMessage,
       recordDashboard: true,
       emailAdmin: true,
     });
     const tourParam = pickString(tour || {}, ['slug']) || slug;
-    const bookingId = data?.[0]?.id ? String(data[0].id) : '';
     if (typeof window !== 'undefined') {
       window.open(calendarUrl, '_blank', 'noopener,noreferrer');
     }
@@ -416,7 +430,8 @@ export default function TourDetailPage() {
                   className="dav-filled-input"
                 />
                 <input
-                  placeholder="Country of Residence"
+                  required
+                  placeholder="Country of Residence *"
                   value={review.country}
                   onChange={(event) => setReview({ ...review, country: event.target.value })}
                   className="dav-filled-input"

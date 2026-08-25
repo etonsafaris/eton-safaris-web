@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { quoteRequestPath } from '@/lib/quote-request';
 
 export default function SpeakToExpertCard({
   className = '',
@@ -62,6 +63,14 @@ export default function SpeakToExpertCard({
             </Link>
           </div>
         ) : null}
+        <div className="mt-3 text-center">
+          <Link
+            href={quoteRequestPath({ country: countryName })}
+            className="inline-block w-full rounded-[2px] border-2 border-[#5bc787] bg-white px-5 py-2 text-lg font-semibold uppercase tracking-wide leading-[27px] text-[#2d6a4f] hover:bg-[#f0fdf4]"
+          >
+            Request a Quote
+          </Link>
+        </div>
       </aside>
     );
   }

@@ -54,6 +54,7 @@ export function guestPaymentNotice(input: {
   remainingBalance: number;
   bookingCode?: string;
   paymentLink?: string;
+  verifyUrl?: string;
   siteName?: string;
 }) {
   const currency = input.currency || 'USD';
@@ -80,7 +81,8 @@ export function guestPaymentNotice(input: {
         `Amount just paid: ${justPaid}`,
         `Total paid: ${totalPaid}`,
         `Remaining balance: ${formatMoneyAmount(0, currency)}`,
-        input.bookingCode ? `Booking code: ${input.bookingCode}` : '',
+        input.bookingCode ? `Booking / payment code: ${input.bookingCode}` : '',
+        input.verifyUrl ? `Verify your booking: ${input.verifyUrl}` : '',
         '',
         `We look forward to hosting you. If you need anything, reply to this email.`,
         '',
@@ -104,10 +106,41 @@ export function guestPaymentNotice(input: {
       `Amount just paid: ${justPaid}`,
       `Total paid so far: ${totalPaid}`,
       `Remaining balance: ${remaining}`,
-      input.bookingCode ? `Booking code: ${input.bookingCode}` : '',
+      input.bookingCode ? `Booking / payment code: ${input.bookingCode}` : '',
+      input.verifyUrl ? `Verify anytime: ${input.verifyUrl}` : '',
       input.paymentLink ? `\nPay the remaining balance securely here:\n${input.paymentLink}` : '',
       '',
       `Please settle the remaining balance before travel.`,
+      '',
+      site,
+    ]
+      .filter((line) => line !== '')
+      .join('\n'),
+  };
+}
+
+/** Email issued when a booking/payment code is first created for a guest. */
+export function guestBookingCodeNotice(input: {
+  guestName: string;
+  tour: string;
+  bookingCode: string;
+  verifyUrl: string;
+  paymentLink?: string;
+  siteName?: string;
+}) {
+  const name = input.guestName.trim() || 'Guest';
+  const tour = input.tour.trim() || 'your safari';
+  const site = input.siteName || 'Eton Safaris';
+  return {
+    guestTitle: `Your safari booking code is ${input.bookingCode} · ${site}`,
+    guestMessage: [
+      `Dear ${name},`,
+      '',
+      `Your safari booking for ${tour} has been recorded.`,
+      '',
+      `Booking / payment code: ${input.bookingCode}`,
+      `Use this code at ${input.verifyUrl} to check whether you are fully paid or still have a remaining balance.`,
+      input.paymentLink ? `\nPay securely:\n${input.paymentLink}` : '',
       '',
       site,
     ]

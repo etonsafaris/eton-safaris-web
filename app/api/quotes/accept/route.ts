@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { generateBookingCode } from '@/lib/booking-code';
 import { quoteFinalTourFee } from '@/lib/booking-status';
+import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
       guestEmail: String(quote.email || ''),
       sendToGuest: String(quote.email || '').includes('@'),
       guestTitle: 'Quotation accepted — next step: payment',
-      guestMessage: `Dear ${quote.name || 'Guest'},\n\nThank you for accepting your safari quotation for ${quote.tour || 'your tour'}.\n\nFinal tour fee: USD ${finalTourFee.toFixed(2)}\nRemaining balance: USD ${finalTourFee.toFixed(2)}\nBooking code: ${bookingCode}\n\nYou can pay securely online from the next screen.\n\nEton Safaris`,
+      guestMessage: `Dear ${quote.name || 'Guest'},\n\nThank you for accepting your safari quotation for ${quote.tour || 'your tour'}.\n\nFinal tour fee: USD ${finalTourFee.toFixed(2)}\nRemaining balance: USD ${finalTourFee.toFixed(2)}\nBooking / payment code: ${bookingCode}\nVerify anytime: ${SITE.url}/verify\n\nYou can pay securely online from the next screen.\n\n${SITE.name}`,
     });
 
     return NextResponse.json({

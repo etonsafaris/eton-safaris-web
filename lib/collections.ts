@@ -231,12 +231,14 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     subtitle: 'Guest reviews from Website, SafariBookings, TripAdvisor, Google, Travelstride, SafariPicked, and Trustpilot',
     view: 'custom',
     fields: [
-      { name: 'author', label: 'Author', type: 'text', required: true },
+      { name: 'author', label: 'Guest name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email' },
+      { name: 'country', label: 'Country of residence', type: 'text' },
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'rating', label: 'Rating', type: 'number' },
       { name: 'source', label: 'Source', type: 'select', options: ['Website', 'SafariBookings', 'TripAdvisor', 'Google', 'Travelstride', 'SafariPicked', 'Trustpilot'] },
       { name: 'source_url', label: 'Source URL', type: 'url' },
-      { name: 'content', label: 'Review', type: 'textarea' },
+      { name: 'content', label: 'Experience / note', type: 'textarea' },
     ],
   },
   {

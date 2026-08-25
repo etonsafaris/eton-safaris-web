@@ -239,6 +239,7 @@ async function handleIpn(request: Request) {
           remainingBalance: remaining,
           bookingCode: bookingReference,
           paymentLink,
+          verifyUrl: `${SITE.url}/verify`,
           siteName: SITE.name,
         });
         await deliverIncomingAlert({

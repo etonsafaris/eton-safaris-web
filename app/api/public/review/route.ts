@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     const title = 'New Tour Review';
-    const message = `${author} (${email || 'no email'}) rated ${body.title || 'a tour'} ${rating}/5: ${content}`;
+    const message = `${author} (${email || 'no email'}) from ${body.country?.trim() || 'unknown country'} rated ${body.title || 'a tour'} ${rating}/5: ${content}`;
     await deliverIncomingAlert({
       title,
       message,

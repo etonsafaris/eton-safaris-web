@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Star, X } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString } from '@/lib/data';
-import { reviewExternalHref } from '@/lib/review-links';
+import { reviewExternalHref, isWebsiteReview } from '@/lib/review-links';
 import { matchesCountry } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -101,7 +101,9 @@ function ReviewCard({
         )}
         <div>
           <p className="text-sm font-bold uppercase text-[#111]">{author}</p>
-          <p className="text-xs text-gray-500">Tourist</p>
+          <p className="text-xs text-gray-500">
+            {pickString(review, ['country', 'country_of_residence']) || 'Tourist'}
+          </p>
         </div>
       </div>
     </article>
@@ -199,10 +201,13 @@ export default function SafariTourReviews({ countrySlug, countryName }: { countr
               </div>
               <div>
                 <p className="text-sm font-bold uppercase text-[#111]">{reviewAuthor(open)}</p>
-                <p className="text-xs text-gray-500">Tourist{pickString(open, ['source']) ? ` · ${pickString(open, ['source'])}` : ''}</p>
+                <p className="text-xs text-gray-500">
+                  {pickString(open, ['country', 'country_of_residence']) ||
+                    (pickString(open, ['source']) ? pickString(open, ['source']) : 'Tourist')}
+                </p>
               </div>
             </div>
-            {hasOriginal ? (
+            {hasOriginal && !isWebsiteReview(open) ? (
               <a
                 href={originalHref}
                 target="_blank"

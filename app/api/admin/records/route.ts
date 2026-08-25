@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
+import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { bearerTokenFromRequest, createWriteClient, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -122,7 +123,8 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const client = createWriteClient(bearerTokenFromRequest(request));
+    // Prefer service role so admins can delete bookings even when RLS blocks anon/auth deletes.
+    const client = createPrivilegedClient();
     const names = TABLE_ALIASES[table] || [table];
     let lastMessage = '';
 

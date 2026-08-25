@@ -27,7 +27,6 @@ import {
 } from '@/lib/booking-status';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
-import { ensureDemoBooking } from '@/lib/ensure-demo-booking';
 import { notifyWorkspace } from '@/lib/notify';
 import { supabase } from '@/lib/supabase/client';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -128,7 +127,6 @@ export default function BookingsPanel() {
     setLoading(true);
     setError('');
     try {
-      await ensureDemoBooking();
       const [bookingRows, tourRows] = await Promise.all([
         loadBookings(),
         fetchAdminTable('tours').catch(() => fetchCollectionRecords('tours')),
@@ -252,7 +250,7 @@ export default function BookingsPanel() {
       guestEmail,
       sendToGuest: true,
       guestTitle: `Your safari booking is confirmed — ${SITE.name}`,
-      guestMessage: `Dear ${guestName},\n\nYour booking for ${pickString(record, ['tour'])} is confirmed.\nBooking code: ${code}\nVerify: ${SITE.url}/verify\nPay online: ${SITE.url}/payment?booking=${record.id}\n\n${SITE.name}`,
+      guestMessage: `Dear ${guestName},\n\nYour booking for ${pickString(record, ['tour'])} is confirmed.\nBooking / payment code: ${code}\nVerify (fully paid or remaining balance): ${SITE.url}/verify\nPay online: ${SITE.url}/payment?booking=${record.id}\n\n${SITE.name}`,
     });
   }
 
@@ -309,6 +307,7 @@ export default function BookingsPanel() {
       remainingBalance: remaining,
       bookingCode: code,
       paymentLink: `${SITE.url}/payment?booking=${paymentModal.id}`,
+      verifyUrl: `${SITE.url}/verify`,
       siteName: SITE.name,
     });
     setPaymentModal(null);
@@ -773,6 +772,14 @@ export default function BookingsPanel() {
                           Cancel booking
                         </button>
                       ) : null}
+                      <button
+                        type="button"
+                        onClick={() => void removeBooking(detail)}
+                        disabled={deletingId === String(pickRecordId(detail))}
+                        className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-60"
+                      >
+                        {deletingId === String(pickRecordId(detail)) ? 'Deleting…' : 'Delete booking'}
+                      </button>
                     </div>
                   </>
                 );
