@@ -269,9 +269,12 @@ export function getCategoryKey(record: RecordRow): string {
   return pickString(record, ['id', 'slug', 'name']) || getRecordTitleFallback(record);
 }
 
+/** Public category URL segment — prefer the current title/name over a stale stored slug. */
 export function categoryPublicSlug(category: RecordRow): string {
-  const fromSlug = normalizeSlug(pickString(category, ['slug']));
-  const fromName = normalizeSlug(pickString(category, ['title', 'name']));
+  const fromName = normalizeSlug(pickString(category, ['name', 'title']));
+  const fromSlug = normalizeSlug(pickString(category, ['slug', 'seo_slug']));
+  // Same rule as destinations: renamed categories must not keep linking as the old slug.
+  if (fromName && fromName.length >= MIN_PUBLIC_COUNTRY_SLUG) return fromName;
   if (fromSlug && fromSlug.length >= MIN_PUBLIC_COUNTRY_SLUG) return fromSlug;
   if (fromName) return fromName;
   return fromSlug || fromName;

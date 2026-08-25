@@ -132,6 +132,12 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
     setError('');
 
     const packedFaqs = serializeFaqs(faqs);
+    const currentSlug = slugify(title);
+    const seoForSave: SeoValues = {
+      ...seo,
+      slug: currentSlug,
+      seo_title: seo.seo_title || title,
+    };
     const payload = buildSavePayload(
       'categories',
       {
@@ -141,11 +147,12 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         post_blocks: faqRowsForStorage(faqs),
         country,
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
-        slug: seo.slug || slugify(title),
+        // Public links always use the current category title, not a previous rename.
+        slug: currentSlug,
         // Keep the original publish date on edits; only stamp new categories.
         published_at: publishStampForSave(publishedAt, isEdit),
       },
-      { seo }
+      { seo: seoForSave }
     );
 
     const result = await saveWithColumnFallback('categories', payload, isEdit ? categoryId : undefined);
@@ -187,11 +194,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
             value={title}
             onChange={(event) => {
               const value = event.target.value;
+              const nextSlug = slugify(value);
               setTitle(value);
+              // Keep the public slug locked to the current category title (not an old rename).
               setSeo((current) => ({
                 ...current,
                 seo_title: current.seo_title || value,
-                slug: current.slug || slugify(value),
+                slug: nextSlug,
               }));
             }}
             required

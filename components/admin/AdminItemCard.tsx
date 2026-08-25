@@ -112,6 +112,7 @@ export default function AdminItemCard({
           href={href}
           target="_blank"
           rel="noreferrer"
+          title={href}
           className="absolute inset-0 z-[1]"
           aria-label={`View ${title} on website`}
         />

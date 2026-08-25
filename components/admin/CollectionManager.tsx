@@ -177,8 +177,9 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     if (config.id === 'categories') {
       const country = pickString(record, ['country']);
       const countryKey = canonicalCountrySlug(country) || publicCountrySlug({ name: country, slug: country });
+      // Path uses current category name via categoryPublicSlug (not a stale rename slug).
       if (countryKey) return countryCategoryPath(countryKey, record);
-      const value = pickString(record, ['slug', 'name', 'title']);
+      const value = pickString(record, ['name', 'title']) || pickString(record, ['slug']);
       return value ? `/tours?category=${encodeURIComponent(value)}` : null;
     }
     if (config.id === 'countries') {
@@ -496,8 +497,13 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     event.preventDefault();
     setSaving(true);
     const raw: Record<string, unknown> = { ...form };
-    if (!raw.slug && typeof raw.title === 'string') raw.slug = slugify(raw.title as string);
-    if (!raw.slug && typeof raw.name === 'string') raw.slug = slugify(raw.name as string);
+    // Categories: always derive the public slug from the current name (not a previous rename).
+    if (config.id === 'categories' && typeof raw.name === 'string' && String(raw.name).trim()) {
+      raw.slug = slugify(String(raw.name));
+    } else {
+      if (!raw.slug && typeof raw.title === 'string') raw.slug = slugify(raw.title as string);
+      if (!raw.slug && typeof raw.name === 'string') raw.slug = slugify(raw.name as string);
+    }
 
     const table = config.table;
     const previousHtml = String(editing?.description || editing?.content || '');
