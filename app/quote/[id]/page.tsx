@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import PublicShell from '@/components/public/PublicShell';
-import PageHero from '@/components/public/PageHero';
-import { SITE } from '@/lib/collections';
+import { SITE, SITE_LOGO } from '@/lib/collections';
 import { fetchCollectionRecords, pickString } from '@/lib/data';
-import { stripPublicMoney } from '@/lib/public-money';
+import { QUOTE_TERMS_SUMMARY } from '@/lib/quote-document';
 import type { RecordRow } from '@/lib/types';
 
 export default function GuestQuotePage() {
@@ -26,9 +25,12 @@ export default function GuestQuotePage() {
       .catch((error) => console.error(error));
   }, [id]);
 
+  const fee = useMemo(() => pickString(quote || {}, ['agreed_price', 'total_price', 'base_price']), [quote]);
+  const accepted = /accepted/i.test(pickString(quote || {}, ['status']));
+
   async function accept() {
     if (!quote?.id) return;
-    if (/accepted/i.test(pickString(quote, ['status']))) {
+    if (accepted) {
       setStatus('This quotation is already accepted.');
       return;
     }
@@ -45,11 +47,11 @@ export default function GuestQuotePage() {
         setSaving(false);
         return;
       }
-      const params = new URLSearchParams();
+      const next = new URLSearchParams();
       const tour = pickString(quote, ['tour']);
-      if (tour) params.set('tour', tour);
-      if (body.bookingId) params.set('booking', String(body.bookingId));
-      router.push(`/payment?${params.toString()}`);
+      if (tour) next.set('tour', tour);
+      if (body.bookingId) next.set('booking', String(body.bookingId));
+      router.push(`/payment?${next.toString()}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Could not accept this quotation.');
       setSaving(false);
@@ -58,54 +60,97 @@ export default function GuestQuotePage() {
 
   return (
     <PublicShell>
-      <PageHero title="Your safari quotation" subtitle={quote ? `Status: ${pickString(quote, ['status']) || 'Quoted'}` : undefined} />
-      <section className="mx-auto max-w-3xl px-4 py-16">
-        {!quote ? (
-          <p className="text-center text-gray-500">Quotation not found.</p>
-        ) : (
-          <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-moss">{SITE.name}</p>
-            <p className="mt-2 text-sm text-gray-500">Status: {pickString(quote, ['status']) || 'Quoted'}</p>
-            <dl className="mt-8 space-y-3 text-sm">
-              <div className="flex justify-between border-b py-2">
-                <dt className="text-gray-500">Guest</dt>
-                <dd>{pickString(quote, ['name', 'guest_name'])}</dd>
+      <section className="bg-[#f3f4f6] px-4 py-12">
+        <div className="mx-auto max-w-[720px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+          {!quote ? (
+            <p className="p-10 text-center text-gray-500">Quotation not found.</p>
+          ) : (
+            <>
+              <header className="flex items-center gap-4 border-b-4 border-[#20A048] px-7 py-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={SITE_LOGO} alt={SITE.name} className="h-14 w-auto" />
+                <div>
+                  <p className="font-serif text-xl font-bold text-[#14532d]">{SITE.name}</p>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7280]">{SITE.tagline}</p>
+                </div>
+              </header>
+
+              <div className="px-7 py-6">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#20A048]">Safari quotation</p>
+                <h1 className="mt-1 font-serif text-2xl text-[#111827]">
+                  {pickString(quote, ['tour']) || 'Tailored safari'}
+                </h1>
+                <p className="mt-1 text-sm text-[#6b7280]">
+                  Status: {pickString(quote, ['status']) || 'Quoted'}
+                </p>
+
+                <dl className="mt-6 space-y-0 text-sm">
+                  {[
+                    ['Guest', `${pickString(quote, ['name', 'guest_name'])}${pickString(quote, ['email']) ? ` · ${pickString(quote, ['email'])}` : ''}`],
+                    ['Phone', pickString(quote, ['phone'])],
+                    ['Country / destination', pickString(quote, ['destination', 'country'])],
+                    ['Travellers', pickString(quote, ['guests']) || '—'],
+                    ['Travel date', pickString(quote, ['travel_date']).slice(0, 10) || 'Flexible'],
+                    [
+                      'Validity',
+                      pickString(quote, ['expiration_days'])
+                        ? `Valid for ${pickString(quote, ['expiration_days'])} days from issue`
+                        : '',
+                    ],
+                  ]
+                    .filter(([, value]) => Boolean(value && String(value).trim()))
+                    .map(([label, value]) => (
+                      <div key={label} className="flex justify-between gap-4 border-b border-[#eef2f0] py-2.5">
+                        <dt className="text-[#6b7280]">{label}</dt>
+                        <dd className="text-right text-[#111827]">{value}</dd>
+                      </div>
+                    ))}
+                </dl>
+
+                {fee ? (
+                  <div className="mt-5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#166534]">Tour fee</p>
+                    <p className="mt-1 text-2xl font-bold text-[#14532d]">{fee}</p>
+                  </div>
+                ) : null}
+
+                {pickString(quote, ['message']) ? (
+                  <p className="mt-5 text-sm leading-relaxed text-[#374151]">{pickString(quote, ['message'])}</p>
+                ) : null}
+
+                <p className="mt-5 rounded-lg bg-[#f9fafb] px-3 py-2 text-xs leading-relaxed text-[#6b7280]">
+                  <strong className="text-[#374151]">Terms (summary):</strong> {QUOTE_TERMS_SUMMARY}
+                </p>
+
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={accept}
+                    disabled={saving || accepted}
+                    className="rounded-lg bg-[#20A048] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {saving ? 'Accepting…' : accepted ? 'Already accepted' : 'Accept and Book This Tour'}
+                  </button>
+                  <Link
+                    href="/contact-us"
+                    className="rounded-lg border border-[#e5e7eb] px-5 py-3 text-sm font-semibold text-[#14532d]"
+                  >
+                    Talk to us
+                  </Link>
+                </div>
+                {status ? <p className="mt-4 text-sm text-[#20A048]">{status}</p> : null}
               </div>
-              <div className="flex justify-between border-b py-2">
-                <dt className="text-gray-500">Tour</dt>
-                <dd>{pickString(quote, ['tour'])}</dd>
-              </div>
-              <div className="flex justify-between border-b py-2">
-                <dt className="text-gray-500">Guests</dt>
-                <dd>{pickString(quote, ['guests']) || '—'}</dd>
-              </div>
-              <div className="flex justify-between border-b py-2">
-                <dt className="text-gray-500">Travel date</dt>
-                <dd>{pickString(quote, ['travel_date']).slice(0, 10) || 'Flexible'}</dd>
-              </div>
-            </dl>
-            {pickString(quote, ['message']) && (
-              <p className="mt-6 leading-relaxed text-gray-700">{stripPublicMoney(pickString(quote, ['message']))}</p>
-            )}
-            <p className="mt-6 text-sm text-gray-500">
-              Booking details and the day-by-day itinerary are confirmed privately with your tour operator.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={accept}
-                disabled={saving || /accepted/i.test(pickString(quote, ['status']))}
-                className="rounded-lg bg-moss-accent px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {saving ? 'Accepting…' : 'Accept and Book This Tour'}
-              </button>
-              <Link href="/contact-us" className="rounded-lg border px-5 py-3 text-sm font-semibold text-forest">
-                Talk to us
-              </Link>
-            </div>
-            {status && <p className="mt-4 text-sm text-moss">{status}</p>}
-          </div>
-        )}
+
+              <footer className="border-t border-[#e5e7eb] px-7 py-4 text-xs leading-relaxed text-[#6b7280]">
+                <strong className="text-[#14532d]">{SITE.name}</strong>
+                <br />
+                {SITE.address}
+                <br />
+                {SITE.email} · {SITE.phoneDisplay} · {SITE.url}
+              </footer>
+            </>
+          )}
+        </div>
       </section>
     </PublicShell>
   );

@@ -10,6 +10,7 @@ export type NotifyInput = {
   guestMessage?: string;
   recordDashboard?: boolean;
   emailAdmin?: boolean;
+  html?: string;
 };
 
 export async function notifyWorkspace(input: NotifyInput) {
@@ -28,6 +29,7 @@ export async function notifyWorkspace(input: NotifyInput) {
         guestMessage: input.guestMessage,
         recordDashboard: input.recordDashboard,
         emailAdmin: input.emailAdmin,
+        html: input.html,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {

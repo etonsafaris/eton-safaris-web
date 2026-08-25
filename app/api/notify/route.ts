@@ -14,6 +14,7 @@ export async function POST(request: Request) {
       guestMessage?: string;
       recordDashboard?: boolean;
       emailAdmin?: boolean;
+      html?: string;
     };
     if (body.honeypot?.trim()) {
       return NextResponse.json({ ok: true, emailed: false, recorded: false });
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
       guestMessage: body.guestMessage,
       recordDashboard: body.recordDashboard,
       emailAdmin: body.emailAdmin,
+      html: body.html,
     });
 
     return NextResponse.json(result);

@@ -9,8 +9,8 @@ import { isOwnerAdminEmail } from '@/lib/inbox';
 import { agentBookingNote, fetchBookingsForAgent } from '@/lib/agent-bookings';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
-import { notifyWorkspace } from '@/lib/notify';
 import { pickString } from '@/lib/data';
+import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import type { User } from '@supabase/supabase-js';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import type { RecordRow } from '@/lib/types';
@@ -94,7 +94,7 @@ export default function AgentPortalPage() {
         `Travel date: ${form.travel_date || '—'}`,
         `Travel plans: ${form.travel_plans || '—'}`,
       ].join('\n');
-      const inquiry = {
+      await submitWebsiteInquiry({
         title: 'Inquiry from the agent',
         name: form.guest_name,
         email: form.email,
@@ -106,25 +106,7 @@ export default function AgentPortalPage() {
         agent_email: user.email,
         source: 'agent',
         message: inquiryMessage,
-        status: 'Pending',
-      };
-      let inquiryResult = await saveWithColumnFallback('inquiries', buildSavePayload('inquiries', inquiry));
-      if (inquiryResult.error) {
-        inquiryResult = await saveWithColumnFallback(
-          'quotations_inquiries',
-          buildSavePayload('quotations_inquiries', inquiry)
-        );
-      } else {
-        await saveWithColumnFallback('quotations_inquiries', buildSavePayload('quotations_inquiries', inquiry));
-      }
-      await notifyWorkspace({
-        title: 'Inquiry from the agent',
-        message: inquiryMessage,
-        category: 'inquiry',
-        guestEmail: form.email,
-        emailAdmin: true,
-        recordDashboard: true,
-        sendToGuest: false,
+        notifyTitle: 'Inquiry from the agent',
       });
     }
     setStatus(editingId ? 'Guest updated.' : 'Guest recorded.');

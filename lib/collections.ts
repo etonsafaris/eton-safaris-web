@@ -198,14 +198,14 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     table: 'quotations_inquiries',
     aliases: ['quotations'],
     icon: 'inbox',
-    subtitle: 'Select a tour package to auto-populate quotations, generate a professional PDF, and send to the guest.',
+    subtitle: 'Website inquiries, quote requests, and one-page professional quotations.',
     view: 'custom',
     fields: [
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'email', label: 'Email', type: 'email', required: true },
       { name: 'tour', label: 'Tour package', type: 'text' },
       { name: 'message', label: 'Message', type: 'textarea' },
-      { name: 'status', label: 'Status', type: 'select', options: ['Pending', 'Quoted', 'Closed'] },
+      { name: 'status', label: 'Status', type: 'select', options: ['Pending', 'Quoted', 'Closed', 'Accepted'] },
     ],
   },
   {

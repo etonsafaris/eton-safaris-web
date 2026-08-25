@@ -7,9 +7,7 @@ import ResponsiveImage from '@/components/public/ResponsiveImage';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { SITE_MEDIA } from '@/lib/site-media';
-import { notifyWorkspace } from '@/lib/notify';
-import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 
@@ -38,31 +36,24 @@ export default function ContactPage() {
     const composed = form.country
       ? `${form.message}\n\nCountry of residence: ${form.country}`
       : form.message;
-    const payload = buildSavePayload('inquiries', {
+    const result = await submitWebsiteInquiry({
       name: form.name,
       email: form.email,
-      message: composed,
-      tour: form.country,
       phone: form.phone,
-      status: 'Pending',
+      tour: form.country,
+      destination: form.country,
+      message: composed,
+      title: 'Website inquiry',
+      source: 'contact',
+      notifyTitle: 'New Inquiry',
     });
-    let result = await saveWithColumnFallback('inquiries', payload);
-    if (result.error) {
-      result = await saveWithColumnFallback('quotations_inquiries', buildSavePayload('quotations_inquiries', payload));
-    }
     if (result.error) {
       console.error('[Supabase] Contact insert failed:', result.error);
       setStatus(result.error.message);
       return;
     }
-    const mail = await notifyWorkspace({
-      title: 'New Inquiry',
-      message: `${form.name} (${form.email}) sent an inquiry: ${composed}`,
-      category: 'inquiry',
-      guestEmail: form.email,
-    });
     setStatus(
-      mail?.emailed
+      result.emailed
         ? 'Inquiry received. A notification email was sent.'
         : 'Inquiry saved. Email delivery is not configured yet, so the message was stored but not emailed.'
     );

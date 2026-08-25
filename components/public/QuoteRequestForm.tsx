@@ -5,9 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
-import { notifyWorkspace } from '@/lib/notify';
-import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 
 export default function QuoteRequestForm() {
   const searchParams = useSearchParams();
@@ -59,36 +57,28 @@ export default function QuoteRequestForm() {
       .filter(Boolean)
       .join('\n');
 
-    const payload = buildSavePayload('inquiries', {
+    const result = await submitWebsiteInquiry({
       name: form.name,
       email: form.email,
       phone: form.phone,
       tour: interest,
+      destination: form.destination,
       guests: Number(form.guests) || 1,
       travel_date: form.travel_date || null,
       message: composed,
-      status: 'Pending',
       title: `Quote request: ${interest}`,
+      source: 'quote_request',
+      notifyTitle: 'New Quote Request',
     });
 
-    let result = await saveWithColumnFallback('inquiries', payload);
-    if (result.error) {
-      result = await saveWithColumnFallback('quotations_inquiries', buildSavePayload('quotations_inquiries', payload));
-    }
     if (result.error) {
       setStatus(result.error.message);
       setSaving(false);
       return;
     }
 
-    const mail = await notifyWorkspace({
-      title: 'New Quote Request',
-      message: `${form.name} (${form.email}) requested a quote for ${interest}. ${composed}`,
-      category: 'inquiry',
-      guestEmail: form.email,
-    });
     setStatus(
-      mail?.emailed
+      result.emailed
         ? 'Quote request received. Our safari specialists will reply with a tailored itinerary.'
         : 'Quote request saved. We will contact you shortly with a tailored safari quotation.'
     );

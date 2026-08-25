@@ -5,43 +5,23 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FileText, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
-import { SITE } from '@/lib/collections';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SITE_LOGO } from '@/lib/collections';
 import { fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
+import {
+  buildQuoteDocumentHtml,
+  packageOverviewFromTour,
+  QUOTE_TERMS_SUMMARY,
+} from '@/lib/quote-document';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
 
-type TabId = 'pending' | 'quoted' | 'all';
+type TabId = 'inquiry' | 'quoted' | 'all';
+type InquirySource = 'inquiries' | 'quotations_inquiries';
 
-function quoteHtml(input: {
-  guest: string;
-  email: string;
-  tour: string;
-  guests: string;
-  travelDate: string;
-  notes: string;
-  quoteId?: string;
-}) {
-  const link = input.quoteId ? `https://etonsafaris.com/quote/${input.quoteId}` : '';
-  return `<!DOCTYPE html><html><head><title>Safari quotation</title>
-    <style>body{font-family:Georgia,serif;padding:40px;color:#1f2937;max-width:720px;margin:0 auto}h1{color:#14532d}table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px solid #e5e7eb}.note{color:#6b7280;font-size:13px;margin-top:24px}</style>
-    </head><body>
-    <p>${SITE.name}</p>
-    <h1>Safari Quotation</h1>
-    <table>
-      <tr><td>Guest</td><td>${input.guest} (${input.email})</td></tr>
-      <tr><td>Tour</td><td>${input.tour}</td></tr>
-      <tr><td>Guests</td><td>${input.guests}</td></tr>
-      <tr><td>Travel date</td><td>${input.travelDate || 'Flexible'}</td></tr>
-    </table>
-    <p>${input.notes || 'A tailored safari itinerary will be confirmed with you directly.'}</p>
-    ${link ? `<p><a href="${link}">View and accept this quotation</a></p>` : ''}
-    <p class="note">Price and day-by-day itinerary are confirmed privately with your tour operator and are not included in this guest quotation.</p>
-    <p>Contact ${SITE.email} · ${SITE.phoneDisplay}</p>
-    </body></html>`;
-}
+type InquiryCard = RecordRow & { _source: InquirySource };
 
 function displayOrDash(value: string) {
   return value.trim() || '—';
@@ -49,6 +29,15 @@ function displayOrDash(value: string) {
 
 function inquiryStatus(row: RecordRow) {
   return pickString(row, ['status']) || 'Pending';
+}
+
+function isPendingStatus(value: string) {
+  const v = value.toLowerCase().trim();
+  return !v || v === 'pending' || v === 'inquiry';
+}
+
+function isQuotedStatus(value: string) {
+  return /quoted|quote sent|accepted/i.test(value || 'Quoted');
 }
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -59,27 +48,50 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+function sourceBadge(row: RecordRow) {
+  const source = pickString(row, ['source', 'title', 'message']).toLowerCase();
+  if (source.includes('agent')) return { label: 'Agent', className: 'bg-sky-100 text-sky-800' };
+  if (source.includes('quote')) return { label: 'Quote request', className: 'bg-violet-100 text-violet-800' };
+  if (source.includes('contact') || source.includes('website inquiry')) {
+    return { label: 'Contact', className: 'bg-amber-100 text-amber-800' };
+  }
+  return { label: 'Website', className: 'bg-slate-100 text-slate-700' };
+}
+
+const COUNTRY_OPTIONS = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
+  value: item.name,
+  label: item.name,
+}));
+
 export default function QuotationPanel() {
   const searchParams = useSearchParams();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [rows, setRows] = useState<RecordRow[]>([]);
   const [inquiries, setInquiries] = useState<RecordRow[]>([]);
-  const [tab, setTab] = useState<TabId>('pending');
+  const [tab, setTab] = useState<TabId>('inquiry');
   const [tourId, setTourId] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
+  const [filterDuration, setFilterDuration] = useState('');
   const [inquiryId, setInquiryId] = useState('');
+  const [inquirySource, setInquirySource] = useState<InquirySource>('quotations_inquiries');
   const [composerOpen, setComposerOpen] = useState(false);
   const [form, setForm] = useState({
     name: '',
     email: '',
+    phone: '',
     guests: '1',
     travel_date: '',
     message: '',
     agreed_price: '',
     expiration_days: '14',
+    country: '',
+    duration: '',
+    highlights: '',
   });
   const [status, setStatus] = useState('');
   const [savedId, setSavedId] = useState('');
   const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
 
   async function load() {
     const [tourRows, quoteRows, inquiryRows] = await Promise.all([
@@ -101,48 +113,105 @@ export default function QuotationPanel() {
     [tourId, tours]
   );
 
-  const pendingInquiries = useMemo(() => {
-    const fromInquiries = inquiries.filter((row) => {
-      const value = inquiryStatus(row).toLowerCase();
-      return value === 'pending' || value === '' || value === 'inquiry';
+  const durationOptions = useMemo(() => {
+    const values = new Set<string>();
+    tours.forEach((tour) => {
+      const days = pickString(tour, ['duration_days', 'duration']);
+      if (days) values.add(days);
     });
-    const fromQuotes = rows.filter((row) => {
-      const value = inquiryStatus(row).toLowerCase();
-      const title = `${pickString(row, ['title', 'source', 'message'])}`.toLowerCase();
-      const pending = value === 'pending' || value === '' || value === 'inquiry';
-      return pending && (title.includes('agent') || title.includes('inquiry'));
-    });
-    const seen = new Set(fromInquiries.map((row) => String(row.id ?? pickString(row, ['email']))));
-    return [
-      ...fromInquiries,
-      ...fromQuotes.filter((row) => {
-        const key = String(row.id ?? pickString(row, ['email']));
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      }),
-    ];
-  }, [inquiries, rows]);
-  const quotedRows = rows.filter((row) => /quoted|quote sent|accepted/i.test(pickString(row, ['status']) || 'Quoted'));
+    return Array.from(values).sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
+  }, [tours]);
 
-  function fillFromInquiry(row: RecordRow) {
+  const filteredTours = useMemo(() => {
+    return tours.filter((tour) => {
+      if (filterCountry) {
+        const country = pickString(tour, ['country', 'destination']).toLowerCase();
+        if (!country.includes(filterCountry.toLowerCase())) return false;
+      }
+      if (filterDuration) {
+        const days = pickString(tour, ['duration_days', 'duration']);
+        if (days !== filterDuration) return false;
+      }
+      return true;
+    });
+  }, [tours, filterCountry, filterDuration]);
+
+  const inquiryCards = useMemo(() => {
+    const pendingQuotes = rows.filter((row) => isPendingStatus(inquiryStatus(row)));
+    const pendingInquiries = inquiries.filter((row) => isPendingStatus(inquiryStatus(row)));
+    const seen = new Set<string>();
+    const cards: InquiryCard[] = [];
+
+    for (const row of pendingQuotes) {
+      const key = String(row.id ?? `${pickString(row, ['email'])}|${pickString(row, ['message']).slice(0, 40)}`);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      cards.push({ ...row, _source: 'quotations_inquiries' });
+    }
+    for (const row of pendingInquiries) {
+      const email = pickString(row, ['email']).toLowerCase();
+      const msg = pickString(row, ['message']).slice(0, 40).toLowerCase();
+      const key = String(row.id ?? `${email}|${msg}`);
+      const duplicate = cards.some(
+        (card) =>
+          pickString(card, ['email']).toLowerCase() === email &&
+          pickString(card, ['message']).slice(0, 40).toLowerCase() === msg
+      );
+      if (duplicate || seen.has(key)) continue;
+      seen.add(key);
+      cards.push({ ...row, _source: 'inquiries' });
+    }
+    return cards;
+  }, [inquiries, rows]);
+
+  const quotedRows = rows.filter((row) => isQuotedStatus(pickString(row, ['status']) || 'Quoted'));
+
+  function applyTourSelection(id: string) {
+    setTourId(id);
+    const tour = tours.find((row) => String(row.id) === id);
+    if (!tour) return;
+    const country = pickString(tour, ['country', 'destination']);
+    const duration = pickString(tour, ['duration_days', 'duration']);
+    const price = pickString(tour, ['price', 'base_price']);
+    setForm((current) => ({
+      ...current,
+      country: country || current.country,
+      duration: duration ? `${duration} days` : current.duration,
+      agreed_price: price || current.agreed_price,
+      highlights: packageOverviewFromTour(tour),
+    }));
+    if (country) setFilterCountry(country);
+    if (duration) setFilterDuration(duration);
+  }
+
+  function fillFromInquiry(row: InquiryCard) {
     setInquiryId(String(row.id || ''));
+    setInquirySource(row._source);
     setSavedId('');
     setStatus('');
     setError('');
+    const countryHint = pickString(row, ['destination', 'tour', 'country']);
     setForm({
       name: pickString(row, ['name', 'guest_name']),
       email: pickString(row, ['email']),
+      phone: pickString(row, ['phone']),
       guests: pickString(row, ['guests']) || '1',
       travel_date: pickString(row, ['travel_date']).slice(0, 10),
       message: pickString(row, ['message', 'budget']),
       agreed_price: '',
       expiration_days: '14',
+      country: countryHint,
+      duration: '',
+      highlights: '',
     });
+    if (countryHint) setFilterCountry(countryHint);
+    else setFilterCountry('');
+    setFilterDuration('');
     const tourName = pickString(row, ['tour', 'destination']);
     if (tourName) {
       const match = tours.find((tour) => getRecordTitle(tour).toLowerCase() === tourName.toLowerCase());
-      setTourId(match?.id !== undefined ? String(match.id) : '');
+      if (match?.id !== undefined) applyTourSelection(String(match.id));
+      else setTourId('');
     } else {
       setTourId('');
     }
@@ -152,28 +221,73 @@ export default function QuotationPanel() {
   useEffect(() => {
     const params = searchParams;
     if (!params) return;
+    const inquiryParam = params.get('inquiry');
     const email = params.get('email') || '';
-    if (!email.includes('@') && !params.get('name')) return;
+    const name = params.get('name') || '';
+    if (!inquiryParam && !email.includes('@') && !name) return;
+
+    if (inquiryParam) {
+      const fromQuotes = rows.find((row) => String(row.id) === inquiryParam);
+      const fromInquiries = inquiries.find((row) => String(row.id) === inquiryParam);
+      if (fromQuotes) {
+        fillFromInquiry({ ...fromQuotes, _source: 'quotations_inquiries' });
+        return;
+      }
+      if (fromInquiries) {
+        fillFromInquiry({ ...fromInquiries, _source: 'inquiries' });
+        return;
+      }
+      // Wait until records load.
+      if (!rows.length && !inquiries.length) return;
+      return;
+    }
+
     setInquiryId('');
+    setInquirySource('quotations_inquiries');
     setSavedId('');
     setStatus('');
     setError('');
     setForm({
-      name: params.get('name') || '',
+      name,
       email,
+      phone: params.get('phone') || '',
       guests: params.get('guests') || '1',
       travel_date: (params.get('travel_date') || '').slice(0, 10),
       message: params.get('message') || '',
       agreed_price: '',
       expiration_days: '14',
+      country: params.get('country') || params.get('destination') || '',
+      duration: '',
+      highlights: '',
     });
     const tourName = params.get('tour') || '';
     if (tourName && tours.length) {
       const match = tours.find((tour) => getRecordTitle(tour).toLowerCase() === tourName.toLowerCase());
-      setTourId(match?.id !== undefined ? String(match.id) : '');
+      if (match?.id !== undefined) applyTourSelection(String(match.id));
     }
     setComposerOpen(true);
-  }, [searchParams, tours]);
+    // Intentionally open from deep-link params once data is available.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, tours.length, rows.length, inquiries.length]);
+
+  function documentPayload(quoteId?: string) {
+    return {
+      guest: form.name,
+      email: form.email,
+      phone: form.phone,
+      tour: selected ? getRecordTitle(selected) : form.country || 'Safari quotation',
+      country: form.country,
+      duration: form.duration,
+      guests: form.guests,
+      travelDate: form.travel_date,
+      tourFee: form.agreed_price,
+      notes: form.message,
+      highlights: form.highlights,
+      expirationDays: form.expiration_days,
+      quoteId,
+      siteOrigin: typeof window !== 'undefined' ? window.location.origin : SITE.url,
+    };
+  }
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -181,86 +295,140 @@ export default function QuotationPanel() {
       setStatus('Select a tour package first.');
       return;
     }
-    const payload = buildSavePayload('quotations_inquiries', {
+    setSending(true);
+    setError('');
+    setStatus('');
+
+    const tourTitle = selected ? getRecordTitle(selected) : '';
+    const quoteFields = {
       name: form.name,
       email: form.email,
-      tour: selected ? getRecordTitle(selected) : '',
+      phone: form.phone,
+      tour: tourTitle,
+      destination: form.country,
       message: form.message,
       guests: form.guests,
-      travel_date: form.travel_date,
+      travel_date: form.travel_date || null,
       agreed_price: form.agreed_price,
       expiration_days: form.expiration_days,
-      inquiry_id: inquiryId || null,
+      title: `Quotation: ${tourTitle}`,
+      source: 'quotation',
       status: 'Quoted',
-    });
-    const result = await saveWithColumnFallback('quotations_inquiries', payload);
-    if (result.error) {
-      setStatus(result.error.message);
-      return;
+      inquiry_id: inquirySource === 'inquiries' ? inquiryId || null : null,
+    };
+
+    let quoteId = '';
+
+    if (inquiryId && inquirySource === 'quotations_inquiries') {
+      const result = await saveWithColumnFallback(
+        'quotations_inquiries',
+        buildSavePayload('quotations_inquiries', quoteFields),
+        inquiryId
+      );
+      if (result.error) {
+        setError(result.error.message);
+        setSending(false);
+        return;
+      }
+      quoteId = inquiryId;
+    } else {
+      const result = await saveWithColumnFallback(
+        'quotations_inquiries',
+        buildSavePayload('quotations_inquiries', quoteFields)
+      );
+      if (result.error) {
+        setError(result.error.message);
+        setSending(false);
+        return;
+      }
+      quoteId = result.data?.[0]?.id ? String(result.data[0].id) : '';
+      if (!quoteId) {
+        const latest = await fetchCollectionRecords('quotations_inquiries', ['quotations']);
+        const match = latest.find(
+          (row) =>
+            pickString(row, ['email']).toLowerCase() === form.email.trim().toLowerCase() &&
+            isQuotedStatus(pickString(row, ['status']))
+        );
+        quoteId = match?.id ? String(match.id) : '';
+      }
+    }
+
+    if (inquiryId && inquirySource === 'inquiries') {
+      await saveWithColumnFallback('inquiries', { status: 'Quoted' }, inquiryId);
+    } else if (form.email.trim()) {
+      // Keep the legacy inquiries table in sync when the card came from quotations_inquiries.
+      const match = inquiries.find(
+        (row) =>
+          pickString(row, ['email']).toLowerCase() === form.email.trim().toLowerCase() &&
+          isPendingStatus(inquiryStatus(row))
+      );
+      if (match?.id !== undefined) {
+        await saveWithColumnFallback('inquiries', { status: 'Quoted' }, String(match.id));
+      }
     }
 
     await notifyAdminItemSaved({
       module: 'Quotation',
       action: 'created',
-      item: { ...payload, ...(result.data?.[0] || {}) },
+      item: { ...quoteFields, id: quoteId },
     });
 
-    if (inquiryId) {
-      await saveWithColumnFallback('inquiries', { status: 'Quote Sent' }, inquiryId);
-    }
-
-    const latest = await fetchCollectionRecords('quotations_inquiries', ['quotations']);
-    const match = latest.find(
-      (row) => pickString(row, ['email']).toLowerCase() === form.email.trim().toLowerCase()
-    );
-    const quoteId = match?.id ? String(match.id) : '';
     setSavedId(quoteId);
 
+    const html = buildQuoteDocumentHtml(documentPayload(quoteId));
     await notifyWorkspace({
       title: 'Safari quotation',
-      message: `Dear ${form.name}, your safari quotation for ${selected ? getRecordTitle(selected) : 'your tour'} is ready. View and accept it here: https://etonsafaris.com/quote/${quoteId || ''}`,
+      message: `Dear ${form.name}, your safari quotation for ${tourTitle || 'your tour'} is ready. View and accept it here: ${SITE.url}/quote/${quoteId || ''}`,
       category: 'inquiry',
       guestEmail: form.email,
       sendToGuest: true,
+      guestTitle: `Your safari quotation from ${SITE.name}`,
+      guestMessage: `Dear ${form.name},\n\nYour safari quotation for ${tourTitle} is ready.\nTour fee: ${form.agreed_price || 'As discussed'}\nAccept online: ${SITE.url}/quote/${quoteId || ''}\n\n${SITE.name}`,
+      html,
+      recordDashboard: true,
+      emailAdmin: true,
     });
 
-    setStatus('Quote sent to the guest. Price and itinerary stay internal.');
+    await notifyWorkspace({
+      title: 'Quotation sent',
+      message: `Quotation sent to ${form.name} (${form.email}) for ${tourTitle}. Fee: ${form.agreed_price || '—'}.`,
+      category: 'inquiry',
+      recordDashboard: true,
+      emailAdmin: false,
+      sendToGuest: false,
+    });
+
+    setStatus('Quotation sent. Inquiry moved to Quoted.');
     setTab('quoted');
+    setComposerOpen(false);
+    setSending(false);
     await load();
   }
 
   function printQuote() {
     const popup = window.open('', '_blank');
     if (!popup) return;
-    popup.document.write(
-      quoteHtml({
-        guest: form.name,
-        email: form.email,
-        tour: selected ? getRecordTitle(selected) : 'Safari quotation',
-        guests: form.guests,
-        travelDate: form.travel_date,
-        notes: form.message,
-        quoteId: savedId,
-      })
-    );
+    popup.document.write(buildQuoteDocumentHtml(documentPayload(savedId)));
     popup.document.close();
+    popup.focus();
     popup.print();
   }
 
   const tabs: { id: TabId; label: string; count: number }[] = [
-    { id: 'pending', label: 'Pending Inquiries', count: pendingInquiries.length },
+    { id: 'inquiry', label: 'Inquiry', count: inquiryCards.length },
     { id: 'quoted', label: 'Quoted', count: quotedRows.length },
     { id: 'all', label: 'All Quotations', count: rows.length },
   ];
 
-  const visibleCards =
-    tab === 'pending' ? pendingInquiries : tab === 'quoted' ? quotedRows : rows;
+  const visibleCards: InquiryCard[] | RecordRow[] =
+    tab === 'inquiry' ? inquiryCards : tab === 'quoted' ? quotedRows : rows;
 
   return (
     <div>
       <h2 className="font-serif text-3xl font-bold text-[#111827]">Quotation & Inquiry Manager</h2>
       <p className="mt-1 text-sm text-[#6b7280]">
-        Select a tour package to auto-populate quotations, generate a professional PDF, and send to the guest.
+        Website quote requests, contact messages, and agent inquiries land here. Send a one-page
+        professional quotation to move an inquiry to Quoted.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -290,11 +458,12 @@ export default function QuotationPanel() {
           </div>
         ) : (
           visibleCards.map((row, index) => {
-            const pending = tab === 'pending';
+            const pending = tab === 'inquiry';
             const badge = pending ? inquiryStatus(row) : pickString(row, ['status']) || 'Quoted';
+            const source = sourceBadge(row);
             return (
               <article
-                key={String(row.id ?? index)}
+                key={`${pending ? (row as InquiryCard)._source : 'q'}-${String(row.id ?? index)}`}
                 className="rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -302,11 +471,9 @@ export default function QuotationPanel() {
                     <h3 className="text-lg font-bold text-[#111827]">
                       {pickString(row, ['name', 'guest_name']) || 'Guest'}
                     </h3>
-                    {/agent/i.test(pickString(row, ['title', 'source', 'message'])) ? (
-                      <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-800">
-                        From agent
-                      </span>
-                    ) : null}
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${source.className}`}>
+                      {source.label}
+                    </span>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         pending ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
@@ -318,11 +485,11 @@ export default function QuotationPanel() {
                   {pending ? (
                     <button
                       type="button"
-                      onClick={() => fillFromInquiry(row)}
+                      onClick={() => fillFromInquiry(row as InquiryCard)}
                       className="inline-flex items-center gap-2 rounded-lg bg-[#6b7c3a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5c6b32]"
                     >
                       <FileText className="h-4 w-4" />
-                      Create Quote
+                      Send Quotation
                     </button>
                   ) : (
                     row.id !== undefined && (
@@ -345,7 +512,7 @@ export default function QuotationPanel() {
                   <div className="space-y-1.5">
                     <Field label="Phone" value={pickString(row, ['phone'])} />
                     <Field label="Travel Date" value={pickString(row, ['travel_date']).slice(0, 10)} />
-                    <Field label="Budget" value={pickString(row, ['budget', 'message'])} />
+                    <Field label="Message" value={pickString(row, ['message', 'budget']).slice(0, 120)} />
                   </div>
                 </div>
               </article>
@@ -355,106 +522,216 @@ export default function QuotationPanel() {
       </div>
 
       {composerOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
-          <form onSubmit={save} className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-serif text-2xl">Create Quote</h3>
-              <button type="button" onClick={() => setComposerOpen(false)} aria-label="Close quote form">
-                <X />
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/45 p-3 py-8 sm:p-6">
+          <form
+            onSubmit={save}
+            className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-5 py-4 sm:px-7">
+              <div>
+                <h3 className="font-serif text-2xl text-[#111827]">Send Quotation</h3>
+                <p className="text-xs text-[#6b7280]">One-page professional quote · no itinerary</p>
+              </div>
+              <button type="button" onClick={() => setComposerOpen(false)} aria-label="Close quotation form">
+                <X className="h-5 w-5 text-[#6b7280]" />
               </button>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <SearchableSelect
-                  value={tourId}
-                  onChange={setTourId}
-                  options={tours.map((tour) => ({
-                    value: String(tour.id),
-                    label: getRecordTitle(tour),
-                  }))}
-                  placeholder="Select tour package"
+
+            {/* Document preview header */}
+            <div className="border-b-4 border-[#20A048] bg-[#fafafa] px-5 py-5 sm:px-7">
+              <div className="flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={SITE_LOGO} alt={SITE.name} className="h-14 w-auto" />
+                <div>
+                  <p className="font-serif text-xl font-bold text-[#14532d]">{SITE.name}</p>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7280]">{SITE.tagline}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-5 py-5 sm:px-7">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Country
+                  </label>
+                  <SearchableSelect
+                    value={filterCountry}
+                    onChange={(value) => {
+                      setFilterCountry(value);
+                      setForm((current) => ({ ...current, country: value }));
+                      setTourId('');
+                    }}
+                    options={[{ value: '', label: 'All countries' }, ...COUNTRY_OPTIONS]}
+                    placeholder="Filter by country"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Duration
+                  </label>
+                  <select
+                    value={filterDuration}
+                    onChange={(event) => {
+                      setFilterDuration(event.target.value);
+                      setTourId('');
+                    }}
+                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                  >
+                    <option value="">All durations</option>
+                    {durationOptions.map((days) => (
+                      <option key={days} value={days}>
+                        {days} days
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    Tour package
+                  </label>
+                  <SearchableSelect
+                    value={tourId}
+                    onChange={applyTourSelection}
+                    options={filteredTours.map((tour) => ({
+                      value: String(tour.id),
+                      label: `${getRecordTitle(tour)}${
+                        pickString(tour, ['duration_days'])
+                          ? ` · ${pickString(tour, ['duration_days'])}d`
+                          : ''
+                      }`,
+                    }))}
+                    placeholder="Select package"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  required
+                  placeholder="Guest name"
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+                <input
+                  required
+                  type="email"
+                  placeholder="Guest email"
+                  value={form.email}
+                  onChange={(event) => setForm({ ...form, email: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+                <input
+                  placeholder="Phone"
+                  value={form.phone}
+                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+                <input
+                  placeholder="Travellers"
+                  value={form.guests}
+                  onChange={(event) => setForm({ ...form, guests: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+                <input
+                  type="date"
+                  value={form.travel_date}
+                  onChange={(event) => setForm({ ...form, travel_date: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+                />
+                <input
+                  placeholder="Validity (days)"
+                  value={form.expiration_days}
+                  onChange={(event) => setForm({ ...form, expiration_days: event.target.value })}
+                  className="rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
                 />
               </div>
-              <input
-                required
-                placeholder="Guest name"
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
-              <input
-                required
-                type="email"
-                placeholder="Guest email"
-                value={form.email}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
-              <input
-                placeholder="Guests"
-                value={form.guests}
-                onChange={(event) => setForm({ ...form, guests: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
-              <input
-                type="date"
-                value={form.travel_date}
-                onChange={(event) => setForm({ ...form, travel_date: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
-              <input
-                placeholder="Agreed / final tour price (admin only)"
-                value={form.agreed_price}
-                onChange={(event) => setForm({ ...form, agreed_price: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
-              <input
-                placeholder="Expiration days"
-                value={form.expiration_days}
-                onChange={(event) => setForm({ ...form, expiration_days: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              />
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                  Tour fee
+                </label>
+                <input
+                  required
+                  placeholder="e.g. USD 2,450 per person"
+                  value={form.agreed_price}
+                  onChange={(event) => setForm({ ...form, agreed_price: event.target.value })}
+                  className="w-full rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2.5 text-sm font-semibold text-[#14532d]"
+                />
+              </div>
+
+              {selected ? (
+                <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-4 text-sm text-[#374151]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#20A048]">
+                    Package (auto-filled · itinerary excluded)
+                  </p>
+                  <p className="mt-1 font-semibold text-[#111827]">{getRecordTitle(selected)}</p>
+                  <p className="mt-1 text-[#6b7280]">
+                    {form.country || pickString(selected, ['country']) || '—'}
+                    {form.duration ? ` · ${form.duration}` : ''}
+                  </p>
+                  {form.highlights ? <p className="mt-2 leading-relaxed">{form.highlights}</p> : null}
+                </div>
+              ) : null}
+
               <textarea
-                placeholder="Guest-facing notes (no price or itinerary)"
+                placeholder="Guest notes (optional)"
                 value={form.message}
                 onChange={(event) => setForm({ ...form, message: event.target.value })}
-                className="sm:col-span-2 h-24 rounded-lg border px-3 py-2.5 text-sm"
+                className="h-20 w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
               />
-              {selected && (
-                <div className="sm:col-span-2 rounded-lg bg-cream p-4 text-sm text-gray-700">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-moss">Internal only</p>
-                  <p className="mt-1 font-semibold">{getRecordTitle(selected)}</p>
-                  <p>
-                    {pickString(selected, ['price'])} · {pickString(selected, ['duration_days', 'country'])}
-                  </p>
-                </div>
-              )}
+
+              <p className="rounded-lg bg-[#f9fafb] px-3 py-2 text-xs leading-relaxed text-[#6b7280]">
+                <strong className="text-[#374151]">Terms (summary):</strong> {QUOTE_TERMS_SUMMARY}
+              </p>
             </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button type="submit" className="rounded-lg bg-[#6b7c3a] px-4 py-2 text-sm font-semibold text-white">
-                Send Quote
+
+            <div className="border-t border-[#e5e7eb] bg-[#fafafa] px-5 py-4 text-xs leading-relaxed text-[#6b7280] sm:px-7">
+              <strong className="text-[#14532d]">{SITE.name}</strong>
+              <br />
+              {SITE.address}
+              <br />
+              {SITE.email} · {SITE.phoneDisplay}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 border-t border-[#e5e7eb] px-5 py-4 sm:px-7">
+              <button
+                type="submit"
+                disabled={sending}
+                className="rounded-lg bg-[#6b7c3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {sending ? 'Sending…' : 'Send Quotation'}
               </button>
-              <button type="button" onClick={printQuote} className="rounded-lg border px-4 py-2 text-sm font-semibold">
+              <button
+                type="button"
+                onClick={printQuote}
+                className="rounded-lg border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold"
+              >
                 Print / PDF
               </button>
-              {form.email && (
+              {form.email ? (
                 <a
                   href={gmailComposeHref(form.email, `Safari quotation from ${SITE.name}`)}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-lg border px-4 py-2 text-sm font-semibold text-moss"
+                  className="rounded-lg border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#6b7c3a]"
                 >
                   Email guest
                 </a>
-              )}
-              {savedId && (
-                <Link href={`/quote/${savedId}`} target="_blank" className="rounded-lg border px-4 py-2 text-sm font-semibold">
+              ) : null}
+              {savedId ? (
+                <Link
+                  href={`/quote/${savedId}`}
+                  target="_blank"
+                  className="rounded-lg border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold"
+                >
                   Guest quote link
                 </Link>
-              )}
+              ) : null}
             </div>
-            {status && <p className="mt-3 text-sm text-moss">{status}</p>}
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+            {status ? <p className="px-5 pb-4 text-sm text-[#6b7c3a] sm:px-7">{status}</p> : null}
+            {error ? <p className="px-5 pb-4 text-sm text-red-600 sm:px-7">{error}</p> : null}
           </form>
         </div>
       )}
