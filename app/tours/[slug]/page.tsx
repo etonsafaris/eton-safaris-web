@@ -15,10 +15,10 @@ import {
   pickNumber,
   pickStoredString,
   pickString,
-  recordPublishedAt,
   slugify,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -196,6 +196,9 @@ export default function TourDetailPage() {
 
   const countryName = pickString(tour || {}, ['country']);
   const countrySlug = countryName ? slugify(countryName) : '';
+  const published = useEnsurePublishedAt('tours', tour, '', (stamp) => {
+    setTour((row) => (row ? { ...row, published_at: stamp } : row));
+  });
 
   if (!ready || !tour) {
     return (
@@ -220,7 +223,7 @@ export default function TourDetailPage() {
         duration={pickNumber(tour, ['duration_days']) > 0 ? `${pickNumber(tour, ['duration_days'])} Days` : undefined}
         country={pickString(tour, ['country']) || undefined}
         groupSize="Flexible"
-        published={recordPublishedAt(tour)}
+        published={published || undefined}
       />
       <div className="bg-[#ececec]">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-2 text-sm">

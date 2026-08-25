@@ -18,6 +18,7 @@ import {
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
@@ -53,6 +54,9 @@ export default function SafariUpdateDetailPage() {
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = post ? getRecordImage(post) || undefined : undefined;
+  const published = useEnsurePublishedAt('safari_updates', post, '', (stamp) => {
+    setPost((row) => (row ? { ...row, published_at: stamp } : row));
+  });
 
   return (
     <PublicShell>
@@ -61,11 +65,11 @@ export default function SafariUpdateDetailPage() {
         title={post ? getRecordTitle(post) : 'Safari Update'}
         image={heroImage}
         country={country || undefined}
-        published={recordPublishedAt(post)}
+        published={published || undefined}
       />
       <ContentDetailLayout
         country={country}
-        published={recordPublishedAt(post)}
+        published={published || undefined}
         showLocation={false}
         hideMeta
         sidebarTitle="Recent Updates"

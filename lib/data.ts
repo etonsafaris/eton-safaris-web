@@ -246,43 +246,72 @@ export function pickStoredString(record: RecordRow | null | undefined, keys: str
   return fallback;
 }
 
-/** Prefer publish stamp, then create, then last update. Never invent "today". */
+/** Prefer publish stamp, then create, then last update. Never invent "today" when reading. */
 export const RECORD_DATE_KEYS = [
   'published_at',
   'publishedAt',
   'publish_date',
   'published_date',
   'date_published',
+  'post_date',
+  'date',
   'created_at',
   'createdAt',
   'created_date',
   'createdDate',
+  'CreatedDate',
   'updated_at',
   'updatedAt',
   'updated_date',
   'updatedDate',
   'modified_at',
   'modifiedAt',
+  'timestamp',
 ] as const;
 
 function coerceDateString(value: unknown): string {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+
   if (typeof value === 'number' && Number.isFinite(value)) {
-    const date = new Date(value);
+    const ms = value > 0 && value < 1e12 ? value * 1000 : value;
+    const date = new Date(ms);
     return Number.isNaN(date.getTime()) ? '' : date.toISOString();
   }
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.seconds === 'number') return coerceDateString(Number(obj.seconds) * 1000);
+    if (typeof obj._seconds === 'number') return coerceDateString(Number(obj._seconds) * 1000);
+    if (obj.$date !== undefined) return coerceDateString(obj.$date);
+    if (obj.value !== undefined) return coerceDateString(obj.value);
+  }
+
   if (typeof value === 'string' && value.trim()) {
     const trimmed = value.trim();
-    if (/^(null|undefined|—|-)$/i.test(trimmed)) return '';
-    return trimmed;
+    if (/^(null|undefined|—|-|n\/a|none)$/i.test(trimmed)) return '';
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
+    if (dateOnly) {
+      const date = new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+    const parsed = Date.parse(trimmed);
+    if (!Number.isNaN(parsed)) return new Date(parsed).toISOString();
+    // Keep human-readable stamps that already include a year.
+    if (/\d{4}/.test(trimmed)) return trimmed;
+    return '';
   }
+
   return '';
 }
 
 export function pickDateValue(record: RecordRow | null | undefined, keys: string[]): string {
   if (!record) return '';
+  const lowerMap = new Map<string, unknown>();
+  for (const [key, value] of Object.entries(record)) {
+    lowerMap.set(key.toLowerCase(), value);
+  }
   for (const key of keys) {
-    const coerced = coerceDateString(record[key]);
+    const coerced = coerceDateString(record[key] ?? lowerMap.get(key.toLowerCase()));
     if (coerced) return coerced;
   }
   return '';
@@ -299,14 +328,26 @@ export function recordPublishedAt(record: RecordRow | null | undefined): string 
     const coerced = coerceDateString(fields[key]);
     if (coerced) return coerced;
   }
+
+  // Last resort: any record key that looks like a date field.
+  for (const [key, value] of Object.entries(record)) {
+    if (!/(publish|created|updated|modified|^date$|timestamp)/i.test(key)) continue;
+    if (/status|type|timezone|lifetime|duration|travel|available|expiry|expire/i.test(key)) continue;
+    const coerced = coerceDateString(value);
+    if (coerced) return coerced;
+  }
   return '';
 }
 
-/** Keep an existing publish stamp on edit; stamp new records once at create time. */
-export function publishStampForSave(existing: string | undefined, isEdit: boolean): string | undefined {
+/**
+ * Keep an existing publish stamp on edit; if missing (legacy rows), stamp once so public pages
+ * always have a date. Callers may still pass isEdit for readability.
+ */
+export function publishStampForSave(existing: string | undefined, _isEdit = false): string {
+  const coerced = coerceDateString(existing);
+  if (coerced) return coerced;
   const trimmed = (existing || '').trim();
-  if (trimmed) return trimmed;
-  if (isEdit) return undefined;
+  if (trimmed && !/^(null|undefined|—|-|n\/a|none)$/i.test(trimmed)) return trimmed;
   return new Date().toISOString();
 }
 

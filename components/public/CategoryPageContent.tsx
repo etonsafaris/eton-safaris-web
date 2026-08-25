@@ -17,10 +17,12 @@ import {
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
+  pickRecordId,
   pickString,
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { countryHeroImage } from '@/lib/country-heroes';
@@ -119,7 +121,22 @@ export default function CategoryPageContent({
   const descriptionHtml = toProseHtml(
     selectedCategory ? visibleRecordHtml(selectedCategory, ['description', 'content', 'about', 'summary']) : ''
   );
-  const faqs = parseCmsPageExtras(selectedCategory, categorySlug).faqs;
+  const categoryExtras = parseCmsPageExtras(selectedCategory, categorySlug);
+  const faqs = categoryExtras.faqs;
+  const publishedFallback =
+    categoryExtras.published_at || (country ? recordPublishedAt(country) : '');
+  const published = useEnsurePublishedAt(
+    'categories',
+    selectedCategory,
+    publishedFallback,
+    (stamp) => {
+      const id = pickRecordId(selectedCategory);
+      if (id == null) return;
+      setCategories((rows) =>
+        rows.map((row) => (pickRecordId(row) === id ? { ...row, published_at: stamp } : row))
+      );
+    }
+  );
 
   const filteredTours = useMemo(
     () => (ready ? filterToursByCategory(tours, selectedCategory, categorySlug) : []),
@@ -151,10 +168,10 @@ export default function CategoryPageContent({
         image={heroImage}
         variant="country"
         country={countryTitle}
-        published={selectedCategory ? recordPublishedAt(selectedCategory) : undefined}
+        published={published || undefined}
         metaItems={[
           { label: 'Country', value: countryTitle },
-          { label: 'Published', value: selectedCategory ? recordPublishedAt(selectedCategory) : '' },
+          { label: 'Published', value: published },
         ]}
       />
 

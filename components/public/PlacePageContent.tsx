@@ -19,6 +19,7 @@ import {
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -111,7 +112,12 @@ export default function PlacePageContent({
     pickStoredString(place, ['country']) ||
     (countryTitle !== 'this destination' ? countryTitle : '');
   const metaLocation = place ? pickStoredString(place, ['location']) : '';
-  const metaPublished = place ? recordPublishedAt(place) : undefined;
+  const publishedFallback =
+    pickStoredString(place, ['published_at', 'created_at', 'created_date']) ||
+    (country ? recordPublishedAt(country) : '');
+  const metaPublished = useEnsurePublishedAt('explore', place, publishedFallback, (stamp) => {
+    setPlace((row) => (row ? { ...row, published_at: stamp } : row));
+  });
 
   return (
     <>
@@ -121,7 +127,7 @@ export default function PlacePageContent({
         variant="park"
         location={metaLocation || undefined}
         country={metaCountry || undefined}
-        published={metaPublished}
+        published={metaPublished || undefined}
       />
 
       <section className="bg-white px-4 py-10 md:px-6">

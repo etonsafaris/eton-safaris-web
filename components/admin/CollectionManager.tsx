@@ -17,6 +17,7 @@ import {
   pickNumber,
   pickRecordId,
   recordPublishedAt,
+  publishStampForSave,
   slugify,
   isLanguagePost,
   clearCollectionCache,
@@ -529,24 +530,33 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       raw.post_blocks = packedFaqs;
     }
     const bestTime = isCountries ? String(raw.best_time_to_visit || '').trim() : '';
+    const publishStamp = publishStampForSave(
+      String(raw.published_at || '') || recordPublishedAt(editing) || '',
+      Boolean(editing?.id)
+    );
+    raw.published_at = publishStamp;
     const embedData = usesFaqs
       ? {
           ...previousEmbed,
           fields: {
             ...previousEmbed.fields,
             faqs: packedFaqs,
+            published_at: publishStamp,
             ...(isCountries ? { best_time_to_visit: bestTime } : {}),
           },
         }
-      : previousEmbed;
+      : {
+          ...previousEmbed,
+          fields: {
+            ...previousEmbed.fields,
+            published_at: publishStamp,
+          },
+        };
     if (typeof raw.description === 'string') {
       raw.description = embedContent(String(raw.description), embedData);
     }
     if (typeof raw.content === 'string') {
       raw.content = embedContent(String(raw.content), embedData);
-    }
-    if (!editing?.id) {
-      raw.published_at = new Date().toISOString();
     }
     const payload = buildSavePayload(table, raw, { seo, knownColumns: columns });
     const result = await saveWithColumnFallback(table, payload, editing?.id);

@@ -26,9 +26,9 @@ import {
   isPublishedRecord,
   pickPlainText,
   pickString,
-  recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PageFaqList from '@/components/public/PageFaqList';
 import { countryHeroImage } from '@/lib/country-heroes';
@@ -120,6 +120,9 @@ export default function CountryPageContent({
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
   const faqs = mergeFaqs(extras.faqs, landingConversionCopy(slug, title).faqs);
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
+  const published = useEnsurePublishedAt('countries', country, extras.published_at, (stamp) => {
+    setCountry((row) => (row ? { ...row, published_at: stamp } : row));
+  });
 
   const countryHtml = toProseHtml(country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '');
   const descriptionHtml = countryHtml;
@@ -146,7 +149,7 @@ export default function CountryPageContent({
         variant="country"
         bestTime={visitTime}
         country={title}
-        published={country ? recordPublishedAt(country) : extras.published_at}
+        published={published || undefined}
       />
 
       <section className="bg-[#f3f3f3] px-4 py-12">

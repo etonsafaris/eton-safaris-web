@@ -133,6 +133,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
 
     const packedFaqs = serializeFaqs(faqs);
     const currentSlug = slugify(title);
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const seoForSave: SeoValues = {
       ...seo,
       slug: currentSlug,
@@ -142,15 +143,17 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       'categories',
       {
         name: title,
-        description: embedContent(description, { fields: { faqs: packedFaqs } }),
+        description: embedContent(description, {
+          fields: { faqs: packedFaqs, published_at: stamp },
+        }),
         faqs: packedFaqs,
         post_blocks: faqRowsForStorage(faqs),
         country,
         image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
         // Public links always use the current category title, not a previous rename.
         slug: currentSlug,
-        // Keep the original publish date on edits; only stamp new categories.
-        published_at: publishStampForSave(publishedAt, isEdit),
+        // Keep the original publish date when present; stamp legacy rows that never had one.
+        published_at: stamp,
       },
       { seo: seoForSave }
     );

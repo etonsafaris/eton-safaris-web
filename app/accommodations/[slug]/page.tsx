@@ -8,6 +8,7 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickStoredString, pickString, recordPublishedAt, visibleRecordHtml } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
@@ -40,6 +41,10 @@ export default function AccommodationDetailPage() {
       .catch((error) => console.error(error));
   }, [slug, live]);
 
+  const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {
+    setItem((row) => (row ? { ...row, published_at: stamp } : row));
+  });
+
   if (!item) {
     return (
       <PublicShell>
@@ -58,7 +63,7 @@ export default function AccommodationDetailPage() {
           { label: 'Country', value: pickString(item, ['country']) },
           { label: 'National Park', value: pickStoredString(item, ['national_park', 'park', 'park_name']) },
           { label: 'Type', value: pickStoredString(item, ['type']) },
-          { label: 'Published', value: recordPublishedAt(item) },
+          { label: 'Published', value: published },
         ]}
       />
       <ContentDetailLayout

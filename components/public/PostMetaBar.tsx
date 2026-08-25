@@ -2,11 +2,17 @@ import { Calendar, MapPin } from 'lucide-react';
 
 export function formatPublishedDate(value?: string): string {
   if (!value) return '—';
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  const trimmed = value.trim();
+  if (!trimmed || /^(null|undefined|—|-|n\/a|none)$/i.test(trimmed)) return '—';
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
   const date = dateOnly
     ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
-    : new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+    : new Date(trimmed);
+  if (Number.isNaN(date.getTime())) {
+    // Keep already-human stamps such as "August 15, 2026".
+    if (/\d{4}/.test(trimmed)) return trimmed;
+    return '—';
+  }
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 

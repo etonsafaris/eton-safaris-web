@@ -18,6 +18,7 @@ import {
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { useCmsLive } from '@/lib/cms-live';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
@@ -75,6 +76,10 @@ export default function ParkDetailPage() {
     [stays]
   );
 
+  const published = useEnsurePublishedAt('national_park', park, '', (stamp) => {
+    setPark((row) => (row ? { ...row, published_at: stamp } : row));
+  });
+
   if (!ready || !park) {
     return (
       <PublicShell>
@@ -96,7 +101,7 @@ export default function ParkDetailPage() {
         title={parkName}
         location={pickString(park, ['location']) || undefined}
         country={pickString(park, ['country']) || undefined}
-        published={recordPublishedAt(park)}
+        published={published || undefined}
         image={getRecordImage(park)}
       />
       <ContentDetailLayout

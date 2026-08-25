@@ -88,6 +88,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
     }
 
     const packedFaqs = serializeFaqs(faqs);
+    const stamp = publishStampForSave(publishedAt, isEdit);
     const payload = buildSavePayload(
       'countries',
       {
@@ -95,7 +96,11 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         tagline: headline,
         best_time_to_visit: bestTimeToVisit.trim(),
         description: embedContent(description, {
-          fields: { faqs: packedFaqs, best_time_to_visit: bestTimeToVisit.trim() },
+          fields: {
+            faqs: packedFaqs,
+            best_time_to_visit: bestTimeToVisit.trim(),
+            published_at: stamp,
+          },
         }),
         summary,
         faqs: packedFaqs,
@@ -103,8 +108,8 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         image_url: imageUrl,
         slug: (seo.slug && slugify(seo.slug).length >= 3 ? slugify(seo.slug) : '') || slugify(name),
         status: 'Published',
-        // Keep the original publish date on edits; only stamp new countries.
-        published_at: publishStampForSave(publishedAt, isEdit),
+        // Keep the original publish date when present; stamp legacy rows that never had one.
+        published_at: stamp,
       },
       { seo }
     );
