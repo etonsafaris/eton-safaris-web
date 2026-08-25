@@ -3,10 +3,33 @@
 import { useEffect, useState } from 'react';
 import { Quote, Star } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
-import { fetchCollectionRecords, pickNumber, pickString } from '@/lib/data';
+import { fetchCollectionRecords, pickNumber, pickStoredString, pickString } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import { isWebsiteReview, reviewClickHref } from '@/lib/review-links';
 import type { RecordRow } from '@/lib/types';
+
+function reviewAuthor(review: RecordRow) {
+  return (
+    pickStoredString(review, ['author', 'guest_name', 'name']) ||
+    pickString(review, ['author', 'guest_name', 'name']) ||
+    'Safari Guest'
+  );
+}
+
+function reviewCountry(review: RecordRow) {
+  return (
+    pickStoredString(review, ['country', 'country_of_residence', 'residence', 'nationality']) ||
+    pickString(review, ['country', 'country_of_residence', 'residence', 'nationality'])
+  );
+}
+
+function reviewNote(review: RecordRow) {
+  return (
+    pickStoredString(review, ['content', 'review', 'message', 'experience']) ||
+    pickString(review, ['content', 'review', 'message', 'experience']) ||
+    'A memorable safari with Eton Safaris.'
+  );
+}
 
 export default function TestimonialsSection() {
   const live = useCmsLive();
@@ -14,15 +37,24 @@ export default function TestimonialsSection() {
 
   useEffect(() => {
     fetchCollectionRecords('reviews')
-      .then(setReviews)
+      .then((rows) => {
+        // Website reviews with a guest name first so name + country of residence are visible.
+        const sorted = rows.slice().sort((a, b) => {
+          const aWeb = isWebsiteReview(a) ? 0 : 1;
+          const bWeb = isWebsiteReview(b) ? 0 : 1;
+          if (aWeb !== bWeb) return aWeb - bWeb;
+          return 0;
+        });
+        setReviews(sorted);
+      })
       .catch((error) => console.error('[Supabase] Failed to load testimonials:', error));
   }, [live]);
 
   const items = reviews.map((review, index) => {
     const rating = pickNumber(review, ['rating'], 5);
-    const author = pickString(review, ['author', 'guest_name', 'name']) || 'Safari Guest';
-    const country = pickString(review, ['country', 'country_of_residence', 'residence']);
-    const content = pickString(review, ['content', 'review', 'message']);
+    const author = reviewAuthor(review);
+    const country = reviewCountry(review);
+    const content = reviewNote(review);
     const source = pickString(review, ['source']) || 'Website';
     const website = isWebsiteReview(review);
     const href = reviewClickHref(review);
@@ -43,14 +75,21 @@ export default function TestimonialsSection() {
             ))}
           </span>
         </div>
-        <p className="text-sm leading-relaxed text-white/80 md:text-base">
-          &ldquo;{content || 'A memorable safari with Eton Safaris.'}&rdquo;
-        </p>
-        <div className="mt-6">
+        <p className="text-sm leading-relaxed text-white/80 md:text-base">&ldquo;{content}&rdquo;</p>
+        <div className="mt-6 space-y-1">
           <p className="font-semibold text-white">{author}</p>
-          <p className="text-xs uppercase tracking-widest text-sage">
-            {website ? country || 'Website guest' : country || source}
-          </p>
+          {website ? (
+            <p className="text-xs uppercase tracking-widest text-sage">
+              {country ? country : 'Country of residence not provided'}
+            </p>
+          ) : (
+            <>
+              {country ? (
+                <p className="text-xs uppercase tracking-widest text-sage">{country}</p>
+              ) : null}
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{source}</p>
+            </>
+          )}
           {href ? (
             <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-white/50">View on {source} →</p>
           ) : null}

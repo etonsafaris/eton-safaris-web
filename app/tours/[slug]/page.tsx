@@ -161,6 +161,14 @@ export default function TourDetailPage() {
 
   async function submitReview(event: React.FormEvent) {
     event.preventDefault();
+    if (!review.author.trim() || !review.content.trim()) {
+      setReviewStatus('Name and review note are required.');
+      return;
+    }
+    if (!review.country.trim()) {
+      setReviewStatus('Country of residence is required.');
+      return;
+    }
     const payload = buildSavePayload('reviews', {
       author: review.author.trim(),
       email: review.email.trim(),

@@ -21,9 +21,13 @@ export async function POST(request: Request) {
     const author = body.author?.trim() || '';
     const content = body.content?.trim() || '';
     const email = body.email?.trim() || '';
+    const country = body.country?.trim() || '';
     const rating = Number(body.rating) || 5;
     if (!author || !content) {
       return NextResponse.json({ error: 'Name and review text are required' }, { status: 400 });
+    }
+    if (!country) {
+      return NextResponse.json({ error: 'Country of residence is required' }, { status: 400 });
     }
 
     const client = createPrivilegedClient();
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
         rating,
         source: 'Website',
         content,
-        country: body.country?.trim() || null,
+        country,
       },
       { client }
     );
@@ -45,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     const title = 'New Tour Review';
-    const message = `${author} (${email || 'no email'}) from ${body.country?.trim() || 'unknown country'} rated ${body.title || 'a tour'} ${rating}/5: ${content}`;
+    const message = `${author} (${email || 'no email'}) from ${country} rated ${body.title || 'a tour'} ${rating}/5: ${content}`;
     await deliverIncomingAlert({
       title,
       message,
