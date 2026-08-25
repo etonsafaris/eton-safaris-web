@@ -65,9 +65,15 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const isPages = config.id === 'pages';
   const isLandingPages = config.id === 'landing_pages';
   const isNotifications = config.id === 'notifications';
-  const isOps = ['bookings', 'inquiries', 'pesapal_payments', 'registered_agents', 'notifications', 'subscribers'].includes(
-    config.id
-  );
+  const isOps = [
+    'bookings',
+    'inquiries',
+    'quotations_inquiries',
+    'pesapal_payments',
+    'registered_agents',
+    'notifications',
+    'subscribers',
+  ].includes(config.id);
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

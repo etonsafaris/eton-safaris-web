@@ -6,7 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { FileText, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE, SITE_LOGO } from '@/lib/collections';
-import { fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
+import { fetchAdminTable } from '@/lib/admin-records-client';
+import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import {
@@ -33,11 +34,28 @@ function inquiryStatus(row: RecordRow) {
 
 function isPendingStatus(value: string) {
   const v = value.toLowerCase().trim();
-  return !v || v === 'pending' || v === 'inquiry';
+  if (/quoted|quote sent|accepted|closed/i.test(v)) return false;
+  return !v || v === 'pending' || v === 'inquiry' || v === 'new';
 }
 
 function isQuotedStatus(value: string) {
-  return /quoted|quote sent|accepted/i.test(value || 'Quoted');
+  return /quoted|quote sent|accepted/i.test(value.trim());
+}
+
+async function loadOpsTable(table: string, aliases: string[] = []): Promise<RecordRow[]> {
+  try {
+    return await fetchAdminTable(table);
+  } catch (adminError) {
+    console.warn(`[Quotations] Admin API failed for ${table}:`, adminError);
+  }
+  try {
+    clearCollectionCache(table);
+    aliases.forEach((alias) => clearCollectionCache(alias));
+    return await fetchCollectionRecords(table, aliases);
+  } catch (clientError) {
+    console.warn(`[Quotations] Client fetch failed for ${table}:`, clientError);
+    return [];
+  }
 }
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -92,16 +110,34 @@ export default function QuotationPanel() {
   const [savedId, setSavedId] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const [tourRows, quoteRows, inquiryRows] = await Promise.all([
-      fetchCollectionRecords('tours'),
-      fetchCollectionRecords('quotations_inquiries', ['quotations']),
-      fetchCollectionRecords('inquiries', ['contact_inquiries']),
-    ]);
-    setTours(tourRows);
-    setRows(quoteRows);
-    setInquiries(inquiryRows);
+    setLoading(true);
+    setError('');
+    try {
+      const [tourRows, quoteRows, inquiryRows] = await Promise.all([
+        fetchCollectionRecords('tours').catch((tourError) => {
+          console.warn('[Quotations] Tours load failed:', tourError);
+          return [] as RecordRow[];
+        }),
+        // Admin API bypasses RLS — same path as Bookings / Notifications.
+        loadOpsTable('quotations_inquiries', ['quotations']),
+        loadOpsTable('inquiries', ['contact_inquiries']),
+      ]);
+      setTours(tourRows);
+      setRows(
+        quoteRows.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+      );
+      setInquiries(
+        inquiryRows.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+      );
+    } catch (loadError) {
+      console.error(loadError);
+      setError(loadError instanceof Error ? loadError.message : 'Could not load quotations and inquiries.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -136,6 +172,9 @@ export default function QuotationPanel() {
     });
   }, [tours, filterCountry, filterDuration]);
 
+  const quotedRows = rows.filter((row) => isQuotedStatus(pickString(row, ['status'])));
+
+  // If Inquiry is empty but All has pending-like rows, still surface them.
   const inquiryCards = useMemo(() => {
     const pendingQuotes = rows.filter((row) => isPendingStatus(inquiryStatus(row)));
     const pendingInquiries = inquiries.filter((row) => isPendingStatus(inquiryStatus(row)));
@@ -163,8 +202,6 @@ export default function QuotationPanel() {
     }
     return cards;
   }, [inquiries, rows]);
-
-  const quotedRows = rows.filter((row) => isQuotedStatus(pickString(row, ['status']) || 'Quoted'));
 
   function applyTourSelection(id: string) {
     setTourId(id);
@@ -343,7 +380,7 @@ export default function QuotationPanel() {
       }
       quoteId = result.data?.[0]?.id ? String(result.data[0].id) : '';
       if (!quoteId) {
-        const latest = await fetchCollectionRecords('quotations_inquiries', ['quotations']);
+        const latest = await loadOpsTable('quotations_inquiries', ['quotations']);
         const match = latest.find(
           (row) =>
             pickString(row, ['email']).toLowerCase() === form.email.trim().toLowerCase() &&
@@ -425,11 +462,27 @@ export default function QuotationPanel() {
 
   return (
     <div>
-      <h2 className="font-serif text-3xl font-bold text-[#111827]">Quotation & Inquiry Manager</h2>
-      <p className="mt-1 text-sm text-[#6b7280]">
-        Website quote requests, contact messages, and agent inquiries land here. Send a one-page
-        professional quotation to move an inquiry to Quoted.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-3xl font-bold text-[#111827]">Quotation & Inquiry Manager</h2>
+          <p className="mt-1 text-sm text-[#6b7280]">
+            Website quote requests, contact messages, and agent inquiries land here. Send a one-page
+            professional quotation to move an inquiry to Quoted.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-semibold text-[#4b5563] hover:bg-[#f9fafb]"
+        >
+          {loading ? 'Refreshing…' : 'Refresh'}
+        </button>
+      </div>
+
+      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+      {loading && rows.length === 0 && inquiries.length === 0 ? (
+        <p className="mt-6 text-sm text-[#6b7280]">Loading inquiries…</p>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tabs.map((item) => {
@@ -454,7 +507,13 @@ export default function QuotationPanel() {
       <div className="mt-5 space-y-4">
         {visibleCards.length === 0 ? (
           <div className="rounded-xl border border-[#e5e7eb] bg-white py-12 text-center text-sm text-[#6b7280]">
-            No records in this tab yet.
+            {loading
+              ? 'Loading…'
+              : tab === 'inquiry'
+                ? 'No open inquiries yet. Submit a quote request or contact form on the website, then click Refresh.'
+                : tab === 'quoted'
+                  ? 'No quoted items yet. Open an inquiry and click Send Quotation.'
+                  : 'No quotation records found. Check that website forms are saving, then Refresh.'}
           </div>
         ) : (
           visibleCards.map((row, index) => {

@@ -37,13 +37,20 @@ export async function submitWebsiteInquiry(input: WebsiteInquiryInput) {
     status: 'Pending',
   };
 
-  // Primary store for the Quotation & Inquiry module.
-  const quotePayload = buildSavePayload('quotations_inquiries', row);
-  let primary = await saveWithColumnFallback('quotations_inquiries', quotePayload);
+  // Primary store for the Quotation & Inquiry module (try common table names).
+  let primary = await saveWithColumnFallback(
+    'quotations_inquiries',
+    buildSavePayload('quotations_inquiries', row)
+  );
+  if (primary.error) {
+    primary = await saveWithColumnFallback('quotations', buildSavePayload('quotations_inquiries', row));
+  }
 
   // Legacy inquiries table (best-effort).
-  const inquiryPayload = buildSavePayload('inquiries', row);
-  const legacy = await saveWithColumnFallback('inquiries', inquiryPayload);
+  let legacy = await saveWithColumnFallback('inquiries', buildSavePayload('inquiries', row));
+  if (legacy.error) {
+    legacy = await saveWithColumnFallback('contact_inquiries', buildSavePayload('inquiries', row));
+  }
 
   if (primary.error && !legacy.error) {
     primary = legacy;

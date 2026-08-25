@@ -13,9 +13,18 @@ const ALLOWED_TABLES = new Set([
   'registered_agents',
   'inquiries',
   'quotations_inquiries',
+  'quotations',
+  'contact_inquiries',
   'bookings',
   'pesapal_payments',
 ]);
+
+const TABLE_ALIASES: Record<string, string[]> = {
+  quotations_inquiries: ['quotations_inquiries', 'quotations'],
+  inquiries: ['inquiries', 'contact_inquiries'],
+  quotations: ['quotations', 'quotations_inquiries'],
+  contact_inquiries: ['contact_inquiries', 'inquiries'],
+};
 
 async function allowAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || '';
@@ -72,18 +81,23 @@ export async function GET(request: Request) {
       }
       return NextResponse.json({ rows: jsonSafeRows(rows.data) });
     }
-    const { data, error } = await client.from(table).select('*').order('created_at', { ascending: false });
-    if (error) {
-      const fallback = await client.from(table).select('*');
-      if (fallback.error) {
-        const message = isRlsError(fallback.error.message)
-          ? rlsHelpMessage(`Loading ${table}`)
-          : fallback.error.message;
-        return NextResponse.json({ error: message }, { status: 400 });
+
+    const names = TABLE_ALIASES[table] || [table];
+    let lastMessage = '';
+    for (const name of names) {
+      const { data, error } = await client.from(name).select('*').order('created_at', { ascending: false });
+      if (!error) {
+        return NextResponse.json({ rows: jsonSafeRows(data || []) });
       }
-      return NextResponse.json({ rows: jsonSafeRows(fallback.data || []) });
+      const fallback = await client.from(name).select('*');
+      if (!fallback.error) {
+        return NextResponse.json({ rows: jsonSafeRows(fallback.data || []) });
+      }
+      lastMessage = isRlsError(fallback.error.message)
+        ? rlsHelpMessage(`Loading ${name}`)
+        : fallback.error.message;
     }
-    return NextResponse.json({ rows: jsonSafeRows(data || []) });
+    return NextResponse.json({ error: lastMessage || `Could not load ${table}` }, { status: 400 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Could not load records' },
