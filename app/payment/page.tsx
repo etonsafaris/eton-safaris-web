@@ -12,6 +12,7 @@ import { notifyWorkspace } from '@/lib/notify';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 import { generateBookingCode } from '@/lib/booking-code';
+import { parseMoneyAmount } from '@/lib/booking-status';
 import { SITE } from '@/lib/collections';
 
 type Step = 1 | 2 | 3;
@@ -78,14 +79,13 @@ function PaymentPortalInner() {
       .maybeSingle()
       .then(({ data }) => {
         if (!data) return;
-        const total = Number(data.final_tour_price || data.total_price || 0);
-        const paid = Number(data.amount_paid || 0);
-        const remaining = Number(data.remaining_balance);
-        const due = Number.isFinite(remaining) && remaining > 0 ? remaining : Math.max(0, total - paid);
+        const total = parseMoneyAmount(data.final_tour_price) || parseMoneyAmount(data.total_price);
+        const paid = parseMoneyAmount(data.amount_paid);
+        const due = Math.max(0, Number((total - paid).toFixed(2)));
         const guestName = String(data.guest_name || '').trim();
         const parts = guestName.split(/\s+/);
-        setLockedTotal(Number.isFinite(total) && total > 0 ? total : null);
-        setAlreadyPaid(Number.isFinite(paid) ? paid : 0);
+        setLockedTotal(total > 0 ? total : null);
+        setAlreadyPaid(paid);
         setForm((current) => ({
           ...current,
           first_name: parts[0] || current.first_name,

@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
-import { bookingStatusAfterPayment, normalizeBookingStatus, paymentStatusAfterAmount } from '@/lib/booking-status';
+import {
+  bookingStatusAfterPayment,
+  guestPaymentNotice,
+  normalizeBookingStatus,
+  parseMoneyAmount,
+  paymentStatusAfterAmount,
+} from '@/lib/booking-status';
 import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { pesapalRequest } from '@/lib/pesapal';
@@ -30,21 +36,30 @@ function paymentReceiptHtml(input: {
   remainingBalance: number;
   paymentStatus: string;
   tour?: string;
+  paymentLink?: string;
 }): string {
+  const completed = input.remainingBalance <= 0.009;
   const rows = [
     ['Client Name', input.clientName],
     ['Booking Reference', input.bookingReference],
     ['Tour', input.tour || '—'],
-    ['Final Tour Price', money(input.finalTourPrice, input.currency)],
-    ['Amount Paid', money(input.amountPaid, input.currency)],
+    ['Final Tour Fee', money(input.finalTourPrice, input.currency)],
+    ['Amount Just Paid', money(input.amountPaid, input.currency)],
     ['Total Paid', money(input.totalPaid, input.currency)],
     ['Remaining Balance', money(input.remainingBalance, input.currency)],
     ['Payment Status', input.paymentStatus],
   ];
+  const intro = completed
+    ? `<p>Thank you for completing your safari fee. Your Final Tour Fee of ${money(input.finalTourPrice, input.currency)} is fully paid.</p>`
+    : `<p>Thank you. We received your partial payment. Your remaining balance is <strong>${money(input.remainingBalance, input.currency)}</strong> against the Final Tour Fee of ${money(input.finalTourPrice, input.currency)}.</p>`;
+  const balanceCta =
+    !completed && input.paymentLink
+      ? `<p style="margin-top:16px"><a href="${input.paymentLink}" style="display:inline-block;background:#006400;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Pay remaining balance</a></p>`
+      : '';
   return `
     <div style="font-family:Arial,sans-serif;color:#111827;line-height:1.5">
-      <h2 style="color:#006400;margin:0 0 16px">Eton Safaris payment confirmation</h2>
-      <p>Thank you. We have received your safari payment. Details are below.</p>
+      <h2 style="color:#006400;margin:0 0 16px">${completed ? 'Thank you — safari fee complete' : 'Partial payment received'}</h2>
+      ${intro}
       <table style="border-collapse:collapse;width:100%;max-width:560px">
         ${rows
           .map(
@@ -56,6 +71,7 @@ function paymentReceiptHtml(input: {
           )
           .join('')}
       </table>
+      ${balanceCta}
       <p style="margin-top:16px">If you have questions, reply to this email or write to ${SITE.email}.</p>
     </div>
   `;
@@ -181,7 +197,11 @@ async function handleIpn(request: Request) {
         .filter((row) => /completed/i.test(String(row.status || '')))
         .reduce((sum, row) => sum + numberValue(row.pesapal_amount || row.amount, 0), 0);
       const paid = paidFromRows || (alreadyCompleted ? numberValue(booking.amount_paid, 0) : numberValue(booking.amount_paid, 0) + confirmedAmount);
-      const total = numberValue(booking.final_tour_price || booking.total_price, paid);
+      // Always base remaining balance on the booking's Final Tour Fee (from quotation when accepted).
+      const total =
+        parseMoneyAmount(booking.final_tour_price) ||
+        parseMoneyAmount(booking.total_price) ||
+        paid;
       const remaining = Math.max(0, Number((total - paid).toFixed(2)));
       const paymentLabel = paymentStatusAfterAmount(total, paid);
       const bookingStatus = bookingStatusAfterPayment(
@@ -195,6 +215,7 @@ async function handleIpn(request: Request) {
         {
           amount_paid: paid,
           remaining_balance: remaining,
+          final_tour_price: total,
           payment_status: paymentLabel,
           status: bookingStatus,
         },
@@ -206,14 +227,28 @@ async function handleIpn(request: Request) {
         const clientName = String(booking.guest_name || payment?.guest_name || payment?.email || 'Guest');
         const bookingReference = String(booking.booking_code || booking.id || reference);
         const guestEmail = String(booking.email || payment?.email || '');
-        const title = remaining <= 0.009 ? 'Safari payment completed — Full Payment' : 'Partial safari payment received';
-        const message = `${clientName} paid ${money(confirmedAmount, currency)} for ${String(booking.tour || payment?.tour || 'a safari')}. Total paid: ${money(paid, currency)}. Remaining: ${money(remaining, currency)}. Status: ${paymentLabel}.`;
+        const tour = String(booking.tour || payment?.tour || 'a safari');
+        const paymentLink = `${SITE.url}/payment?booking=${booking.id}`;
+        const notice = guestPaymentNotice({
+          guestName: clientName,
+          tour,
+          currency,
+          finalTourFee: total,
+          amountJustPaid: confirmedAmount,
+          totalPaid: paid,
+          remainingBalance: remaining,
+          bookingCode: bookingReference,
+          paymentLink,
+          siteName: SITE.name,
+        });
         await deliverIncomingAlert({
-          title,
-          message,
+          title: notice.adminTitle,
+          message: notice.adminMessage,
           category: 'booking',
           guestEmail,
           sendToGuest: guestEmail.includes('@'),
+          guestTitle: notice.guestTitle,
+          guestMessage: notice.guestMessage,
           html: paymentReceiptHtml({
             clientName,
             bookingReference,
@@ -223,7 +258,8 @@ async function handleIpn(request: Request) {
             totalPaid: paid,
             remainingBalance: remaining,
             paymentStatus: paymentLabel,
-            tour: String(booking.tour || payment?.tour || ''),
+            tour,
+            paymentLink,
           }),
         });
       }

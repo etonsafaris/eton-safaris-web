@@ -127,6 +127,15 @@ export async function DELETE(request: Request) {
     let lastMessage = '';
 
     for (const name of names) {
+      // Booking delete also clears linked Pesapal payment rows so the panel stays clean.
+      if (name === 'bookings') {
+        await client.from('pesapal_payments').delete().eq('booking_id', id);
+        const asNumber = Number(id);
+        if (Number.isFinite(asNumber) && String(asNumber) === id) {
+          await client.from('pesapal_payments').delete().eq('booking_id', asNumber);
+        }
+      }
+
       const removed = await client.from(name).delete().eq('id', id);
       if (!removed.error) {
         return NextResponse.json({ ok: true, table: name, id });

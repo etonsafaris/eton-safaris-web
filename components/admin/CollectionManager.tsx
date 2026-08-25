@@ -46,6 +46,7 @@ import { countryCategoryPath, canonicalCountrySlug, publicCountrySlug } from '@/
 import { generateBookingCode } from '@/lib/booking-code';
 import {
   bookingStatusAfterPayment,
+  guestPaymentNotice,
   normalizeBookingStatus,
   paymentStatusAfterAmount,
 } from '@/lib/booking-status';
@@ -707,10 +708,18 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       setError('Enter a valid amount paid.');
       return;
     }
-    const total = pickNumber(record, ['final_tour_price', 'total_price', 'amount'], paid);
+    const total = pickNumber(record, ['final_tour_price', 'total_price', 'amount'], 0);
+    if (total <= 0) {
+      setError('Set the Final Tour Fee on this booking first (from the quotation).');
+      return;
+    }
     const existingPaid = pickNumber(record, ['amount_paid'], 0);
     const newPaid = existingPaid + paid;
-    const remaining = Math.max(0, total - newPaid);
+    if (newPaid > total + 0.01) {
+      setError('Amount cannot exceed the remaining balance on this booking.');
+      return;
+    }
+    const remaining = Math.max(0, Number((total - newPaid).toFixed(2)));
     const code = pickString(record, ['booking_code']) || generateBookingCode();
     const paymentStatus = paymentStatusAfterAmount(total, newPaid);
     const bookingStatus = bookingStatusAfterPayment(
@@ -733,6 +742,29 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     if (updateError) {
       setError(updateError.message);
       return;
+    }
+    const guestEmail = pickString(record, ['email']);
+    if (guestEmail.includes('@')) {
+      const notice = guestPaymentNotice({
+        guestName: pickString(record, ['guest_name', 'name']),
+        tour: pickString(record, ['tour']),
+        finalTourFee: total,
+        amountJustPaid: paid,
+        totalPaid: newPaid,
+        remainingBalance: remaining,
+        bookingCode: code,
+        paymentLink: `${SITE.url}/payment?booking=${record.id}`,
+        siteName: SITE.name,
+      });
+      await notifyWorkspace({
+        title: notice.adminTitle,
+        message: notice.adminMessage,
+        category: 'booking',
+        guestEmail,
+        sendToGuest: true,
+        guestTitle: notice.guestTitle,
+        guestMessage: notice.guestMessage,
+      });
     }
     await load();
   }

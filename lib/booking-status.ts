@@ -15,6 +15,107 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+/** Parse a tour fee from quotation text like "USD 2,450" or "2450 per person". */
+export function parseMoneyAmount(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value;
+  const raw = String(value ?? '').trim();
+  if (!raw) return 0;
+  const match = raw.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+  if (!match) return 0;
+  const amount = Number(match[0]);
+  return Number.isFinite(amount) && amount >= 0 ? amount : 0;
+}
+
+/** Final tour fee from a quotation record (agreed_price first). */
+export function quoteFinalTourFee(quote: Record<string, unknown> | RecordRow | null | undefined): number {
+  if (!quote) return 0;
+  return (
+    parseMoneyAmount(quote.agreed_price) ||
+    parseMoneyAmount(quote.total_price) ||
+    parseMoneyAmount(quote.base_price) ||
+    parseMoneyAmount(quote.tour_fee) ||
+    0
+  );
+}
+
+export function formatMoneyAmount(amount: number, currency = 'USD') {
+  if (!Number.isFinite(amount)) return `${currency} 0.00`;
+  return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Guest email copy after a payment against the booking's final tour fee. */
+export function guestPaymentNotice(input: {
+  guestName: string;
+  tour: string;
+  currency?: string;
+  finalTourFee: number;
+  amountJustPaid: number;
+  totalPaid: number;
+  remainingBalance: number;
+  bookingCode?: string;
+  paymentLink?: string;
+  siteName?: string;
+}) {
+  const currency = input.currency || 'USD';
+  const name = input.guestName.trim() || 'Guest';
+  const tour = input.tour.trim() || 'your safari';
+  const site = input.siteName || 'Eton Safaris';
+  const fee = formatMoneyAmount(input.finalTourFee, currency);
+  const justPaid = formatMoneyAmount(input.amountJustPaid, currency);
+  const totalPaid = formatMoneyAmount(input.totalPaid, currency);
+  const remaining = formatMoneyAmount(input.remainingBalance, currency);
+  const completed = input.remainingBalance <= 0.009;
+
+  if (completed) {
+    return {
+      adminTitle: 'Safari fee completed — Full Payment',
+      adminMessage: `${name} completed the final tour fee for ${tour}. Paid ${justPaid}. Total paid ${totalPaid} of ${fee}.`,
+      guestTitle: `Thank you — your safari fee is complete · ${site}`,
+      guestMessage: [
+        `Dear ${name},`,
+        '',
+        `Thank you for completing your safari payment for ${tour}.`,
+        '',
+        `Final tour fee: ${fee}`,
+        `Amount just paid: ${justPaid}`,
+        `Total paid: ${totalPaid}`,
+        `Remaining balance: ${formatMoneyAmount(0, currency)}`,
+        input.bookingCode ? `Booking code: ${input.bookingCode}` : '',
+        '',
+        `We look forward to hosting you. If you need anything, reply to this email.`,
+        '',
+        site,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    };
+  }
+
+  return {
+    adminTitle: 'Partial safari payment received',
+    adminMessage: `${name} paid ${justPaid} for ${tour}. Total paid ${totalPaid} of ${fee}. Remaining balance: ${remaining}.`,
+    guestTitle: `Payment received — remaining balance ${remaining} · ${site}`,
+    guestMessage: [
+      `Dear ${name},`,
+      '',
+      `Thank you. We received your partial payment for ${tour}.`,
+      '',
+      `Final tour fee: ${fee}`,
+      `Amount just paid: ${justPaid}`,
+      `Total paid so far: ${totalPaid}`,
+      `Remaining balance: ${remaining}`,
+      input.bookingCode ? `Booking code: ${input.bookingCode}` : '',
+      input.paymentLink ? `\nPay the remaining balance securely here:\n${input.paymentLink}` : '',
+      '',
+      `Please settle the remaining balance before travel.`,
+      '',
+      site,
+    ]
+      .filter((line) => line !== '')
+      .join('\n'),
+  };
+}
+
 export function normalizeBookingStatus(raw: string): BookingStatus {
   const value = raw.trim().toLowerCase();
   if (!value || value === 'pending' || value === 'pending booking' || value === 'new') return 'Pending';
@@ -46,10 +147,14 @@ export function isPendingBooking(record: RecordRow) {
 }
 
 export function paymentSummary(record: RecordRow) {
-  const total = pickNumber(record, ['final_tour_price', 'total_price', 'amount'], 0);
-  const paid = pickNumber(record, ['amount_paid'], 0);
-  const storedBalance = pickNumber(record, ['remaining_balance'], NaN);
-  const balance = Number.isFinite(storedBalance) ? storedBalance : Math.max(0, total - paid);
+  const total =
+    parseMoneyAmount(record.final_tour_price) ||
+    parseMoneyAmount(record.total_price) ||
+    parseMoneyAmount(record.amount) ||
+    pickNumber(record, ['final_tour_price', 'total_price', 'amount'], 0);
+  const paid = parseMoneyAmount(record.amount_paid) || pickNumber(record, ['amount_paid'], 0);
+  // Remaining balance is always derived from Final Tour Fee − amount paid.
+  const balance = Math.max(0, Number((total - paid).toFixed(2)));
   const paymentStatus = normalizePaymentStatus(
     pickString(record, ['payment_status']) || pickString(record, ['status'])
   );

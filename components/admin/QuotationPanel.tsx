@@ -874,11 +874,14 @@ export default function QuotationPanel() {
                 </label>
                 <input
                   required
-                  placeholder="e.g. USD 2,450 per person"
+                  placeholder="e.g. 2450 or USD 2,450"
                   value={form.agreed_price}
                   onChange={(event) => setForm({ ...form, agreed_price: event.target.value })}
                   className="w-full rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2.5 text-sm font-semibold text-[#14532d]"
                 />
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  This becomes the Final Tour Fee on the booking when the guest accepts. Remaining balance is calculated from this amount.
+                </p>
               </div>
 
               <div>

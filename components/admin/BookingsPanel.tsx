@@ -18,6 +18,7 @@ import { generateBookingCode } from '@/lib/booking-code';
 import {
   bookingStatusAfterPayment,
   bookingTabFor,
+  guestPaymentNotice,
   normalizeBookingStatus,
   normalizePaymentStatus,
   paymentStatusAfterAmount,
@@ -25,7 +26,7 @@ import {
   PAYMENT_STATUSES,
 } from '@/lib/booking-status';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
-import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickNumber, pickString } from '@/lib/data';
+import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
 import { ensureDemoBooking } from '@/lib/ensure-demo-booking';
 import { notifyWorkspace } from '@/lib/notify';
 import { supabase } from '@/lib/supabase/client';
@@ -266,9 +267,20 @@ export default function BookingsPanel() {
     setPaymentSaving(true);
     setError('');
     const summary = paymentSummary(paymentModal);
-    const total = summary.total || paid;
+    // Never invent a final fee from the payment — use the quotation / booking Final Tour Fee.
+    const total = summary.total;
+    if (total <= 0) {
+      setPaymentSaving(false);
+      setError('Set the Final Tour Fee on this booking first (from the quotation).');
+      return;
+    }
+    if (paid > summary.balance + 0.01) {
+      setPaymentSaving(false);
+      setError(`Amount cannot exceed the remaining balance (${money(summary.balance, summary.currency)}).`);
+      return;
+    }
     const newPaid = summary.paid + paid;
-    const remaining = Math.max(0, total - newPaid);
+    const remaining = Math.max(0, Number((total - newPaid).toFixed(2)));
     const paymentStatus = paymentStatusAfterAmount(total, newPaid);
     const bookingStatus = bookingStatusAfterPayment(
       total,
@@ -286,16 +298,30 @@ export default function BookingsPanel() {
     });
     setPaymentSaving(false);
     if (!ok) return;
+    const guestEmail = pickString(paymentModal, ['email']);
+    const notice = guestPaymentNotice({
+      guestName: pickString(paymentModal, ['guest_name', 'name']),
+      tour: pickString(paymentModal, ['tour']),
+      currency: summary.currency,
+      finalTourFee: total,
+      amountJustPaid: paid,
+      totalPaid: newPaid,
+      remainingBalance: remaining,
+      bookingCode: code,
+      paymentLink: `${SITE.url}/payment?booking=${paymentModal.id}`,
+      siteName: SITE.name,
+    });
     setPaymentModal(null);
     setPaymentAmount('');
-    const guestEmail = pickString(paymentModal, ['email']);
     if (guestEmail.includes('@')) {
       await notifyWorkspace({
-        title: 'Payment recorded',
-        message: `${pickString(paymentModal, ['guest_name'])} — ${money(paid, summary.currency)} received. Remaining ${money(remaining, summary.currency)}.`,
+        title: notice.adminTitle,
+        message: notice.adminMessage,
         category: 'booking',
         guestEmail,
         sendToGuest: true,
+        guestTitle: notice.guestTitle,
+        guestMessage: notice.guestMessage,
       });
     }
   }
@@ -307,14 +333,15 @@ export default function BookingsPanel() {
       return;
     }
     const link = `${SITE.url}/payment?booking=${record.id}`;
+    const summary = paymentSummary(record);
     await notifyWorkspace({
       title: 'Safari payment link',
-      message: `Complete your safari payment securely: ${link}`,
+      message: `Pay remaining balance ${money(summary.balance, summary.currency)} for ${pickString(record, ['tour'])}: ${link}`,
       category: 'booking',
       guestEmail,
       sendToGuest: true,
-      guestTitle: `Pay for your safari — ${SITE.name}`,
-      guestMessage: `Dear ${pickString(record, ['guest_name'])},\n\nPay securely for ${pickString(record, ['tour'])}:\n${link}\n\n${SITE.name}`,
+      guestTitle: `Pay remaining balance ${money(summary.balance, summary.currency)} — ${SITE.name}`,
+      guestMessage: `Dear ${pickString(record, ['guest_name'])},\n\nFinal tour fee: ${money(summary.total, summary.currency)}\nAmount paid: ${money(summary.paid, summary.currency)}\nRemaining balance: ${money(summary.balance, summary.currency)}\n\nPay securely:\n${link}\n\n${SITE.name}`,
     });
   }
 
@@ -328,18 +355,24 @@ export default function BookingsPanel() {
   }
 
   async function removeBooking(record: RecordRow) {
-    const id = record.id;
-    if (id === undefined || id === null || id === '') return;
+    const id = pickRecordId(record);
+    if (id == null) {
+      setError('This booking has no id and cannot be deleted.');
+      return;
+    }
     const label = pickString(record, ['guest_name', 'email']) || 'this booking';
-    if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+    if (!confirm(`Delete booking for ${label}? Related payment history for this booking will also be removed. This cannot be undone.`)) {
+      return;
+    }
     setDeletingId(String(id));
     setError('');
     try {
       await deleteAdminRecord('bookings', id);
-      if (detail?.id === id) setDetail(null);
+      if (pickRecordId(detail) === id) setDetail(null);
+      setRows((current) => current.filter((row) => pickRecordId(row) !== id));
       await load();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Delete failed');
+      setError(deleteError instanceof Error ? deleteError.message : 'Could not delete this booking.');
     }
     setDeletingId('');
   }
