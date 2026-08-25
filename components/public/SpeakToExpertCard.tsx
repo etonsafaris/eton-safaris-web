@@ -66,7 +66,7 @@ export default function SpeakToExpertCard({
         <div className="mt-3 text-center">
           <Link
             href={quoteRequestPath({ country: countryName })}
-            className="inline-block w-full rounded-[2px] border-2 border-[#5bc787] bg-white px-5 py-2 text-lg font-semibold uppercase tracking-wide leading-[27px] text-[#2d6a4f] hover:bg-[#f0fdf4]"
+            className="mt-1 inline-flex w-full items-center justify-center rounded-full bg-[#f5c518] px-5 py-3 text-center text-[15px] font-extrabold uppercase tracking-wide text-[#111] shadow-[0_4px_0_#c49200,0_8px_18px_rgba(0,0,0,0.28)] transition hover:bg-[#ffd84d] hover:shadow-[0_2px_0_#c49200,0_6px_14px_rgba(0,0,0,0.25)]"
           >
             Request a Quote
           </Link>
