@@ -26,7 +26,7 @@ import {
   PAYMENT_STATUSES,
 } from '@/lib/booking-status';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
-import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
+import { clearCollectionCache, adminListColumnsFor, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
 import { notifyWorkspace } from '@/lib/notify';
 import { supabase } from '@/lib/supabase/client';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -129,7 +129,11 @@ export default function BookingsPanel() {
     try {
       const [bookingRows, tourRows] = await Promise.all([
         loadBookings(),
-        fetchAdminTable('tours').catch(() => fetchCollectionRecords('tours')),
+        fetchAdminTable('tours').catch(() =>
+          fetchCollectionRecords('tours', [], {
+            columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
+          })
+        ),
       ]);
       bookingRows.sort((a, b) => {
         const aTime = Date.parse(recordReceivedAt(a) || '') || 0;

@@ -10,15 +10,44 @@ const FETCH_CACHE_MS = 60_000;
 const recordCache = new Map<string, { expires: number; rows: RecordRow[] }>();
 const inflight = new Map<string, Promise<RecordRow[]>>();
 
+function missingSelectColumn(message?: string) {
+  const text = String(message || '');
+  const match =
+    text.match(/Could not find the '([^']+)' column/i) ||
+    text.match(/column ["'`]([^"'`.]+)["'`]/i) ||
+    text.match(/column (?:[\w]+\.)?([A-Za-z_][\w]*) does not exist/i);
+  return match?.[1] || null;
+}
+
+function dropColumnFromSelect(columns: string, column: string) {
+  return columns
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== column && part !== '*')
+    .join(',');
+}
+
 export async function fetchAllRecords(tableName: string, columns = '*'): Promise<RecordRow[]> {
   const allRows: RecordRow[] = [];
   let start = 0;
+  let selectColumns = columns;
 
   while (true) {
     const end = start + PAGE_SIZE - 1;
-    const { data, error } = await supabase.from(tableName).select(columns).range(start, end);
+    const { data, error } = await supabase.from(tableName).select(selectColumns).range(start, end);
 
     if (error) {
+      const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
+      if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(selectColumns, missing);
+        if (next && next !== selectColumns) {
+          console.warn(`[Supabase] Dropping missing column "${missing}" from "${tableName}" list select.`);
+          selectColumns = next;
+          allRows.length = 0;
+          start = 0;
+          continue;
+        }
+      }
       console.error(`[Supabase] Error fetching "${tableName}" (rows ${start}–${end}):`, error);
       throw error;
     }
@@ -61,18 +90,6 @@ export async function fetchCollectionRecords(
         return rows;
       } catch (error) {
         lastError = error;
-        const message = error instanceof Error ? error.message : String(error);
-        if (columns !== '*' && /column/i.test(message)) {
-          try {
-            const rows = await fetchAllRecords(name, '*');
-            if (FETCH_CACHE_MS > 0) {
-              recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
-            }
-            return rows;
-          } catch (fallbackError) {
-            lastError = fallbackError;
-          }
-        }
         console.error(`[Supabase] Table "${name}" failed, trying next alias if available.`);
       }
     }
@@ -92,6 +109,64 @@ export async function fetchCollectionRecords(
 /** Lightweight columns for tour cards / listing pages (avoids huge description payloads). */
 export const TOUR_LIST_COLUMNS =
   'id,title,slug,country,category,duration_days,duration_nights,price,image_url,cover_image,featured_image,social_image_url,published_at,status,is_featured,is_popular,show_on_landing';
+
+/** Admin grids only need identity + card fields — never pull full description HTML for thousands of rows.
+ * Keep selects conservative: missing columns are stripped at runtime, but fewer misses = fewer retries.
+ */
+export const ADMIN_LIST_COLUMNS: Record<string, string> = {
+  tours:
+    'id,title,country,category,duration_days,duration_nights,price,image_url,status,is_featured,is_popular,show_on_landing',
+  accommodations: 'id,name,location,country,type,image_url,description_title,status',
+  national_park: 'id,name,location,country,image_url,description_title,status',
+  national_parks: 'id,name,location,country,image_url,description_title,status',
+  parks: 'id,name,location,country,image_url,description_title,status',
+  explore: 'id,title,name,location,country,image_url,description_title,status',
+  safari_updates: 'id,title,excerpt,country,category,image_url,status',
+  countries: 'id,name,title,tagline,image_url,status',
+  categories: 'id,name,title,country,image_url,status',
+  pages: 'id,title,name,image_url,status',
+  landing_pages: 'id,title,name,country,image_url,status',
+  bookings:
+    'id,guest_name,email,tour,destination,status,travel_date,final_tour_price,amount_paid,remaining_balance,booking_code,payment_status',
+};
+
+export function adminListColumnsFor(table: string, aliases: string[] = []): string | undefined {
+  return ADMIN_LIST_COLUMNS[table] || aliases.map((alias) => ADMIN_LIST_COLUMNS[alias]).find(Boolean);
+}
+
+/** Exact row count without downloading row payloads (admin dashboard cards). */
+export async function countCollectionRecords(table: string, aliases: string[] = []): Promise<number> {
+  const names = [table, ...aliases].filter(Boolean);
+  let lastError: unknown = null;
+  for (const name of names) {
+    const { count, error } = await supabase.from(name).select('id', { count: 'exact', head: true });
+    if (!error) return count || 0;
+    lastError = error;
+    console.error(`[Supabase] Count "${name}" failed:`, error);
+  }
+  if (lastError) throw lastError;
+  return 0;
+}
+
+/** Load one full row for an admin editor — never download the whole table to find a single id. */
+export async function fetchCollectionRecordById(
+  table: string,
+  id: string,
+  aliases: string[] = []
+): Promise<RecordRow | null> {
+  const names = [table, ...aliases].filter(Boolean);
+  for (const name of names) {
+    const { data, error } = await supabase.from(name).select('*').eq('id', id).maybeSingle();
+    if (!error && data) {
+      rememberKnownColumns(name, Object.keys(data as RecordRow));
+      return data as RecordRow;
+    }
+    if (error && !/no rows|PGRST116/i.test(error.message || '')) {
+      console.error(`[Supabase] Fetch "${name}" id=${id} failed:`, error);
+    }
+  }
+  return null;
+}
 
 export function clearCollectionCache(table?: string) {
   if (!table) {

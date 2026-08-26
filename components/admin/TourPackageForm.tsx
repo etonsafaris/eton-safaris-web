@@ -28,7 +28,7 @@ import {
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -176,8 +176,12 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
 
   useEffect(() => {
     Promise.all([
-      fetchCollectionRecords('countries'),
-      fetchCollectionRecords('categories'),
+      fetchCollectionRecords('countries', [], {
+        columns: adminListColumnsFor('countries') || 'id,name,title,tagline,image_url,status',
+      }),
+      fetchCollectionRecords('categories', [], {
+        columns: adminListColumnsFor('categories') || 'id,name,title,country,image_url,status',
+      }),
     ]).then(([countryRows, categoryRows]) => {
       setCountries(countryRows);
       setCategories(categoryRows);
@@ -185,10 +189,8 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('tours').then((rows) => {
-      if (rows[0]) setSchemaColumns(Object.keys(rows[0]));
-      if (!tourId) return;
-      const tour = rows.find((row) => String(row.id) === tourId);
+    if (!tourId) return;
+    fetchCollectionRecordById('tours', tourId).then((tour) => {
       if (!tour) return;
       setSchemaColumns(Object.keys(tour));
       const embedded = extractEmbeddedContent(String(tour.description || ''));

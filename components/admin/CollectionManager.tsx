@@ -8,6 +8,7 @@ import AdminItemCard from '@/components/admin/AdminItemCard';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
 import {
+  adminListColumnsFor,
   fetchCollectionRecords,
   formatColumnLabel,
   getDynamicColumns,
@@ -115,23 +116,25 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     try {
       clearCollectionCache(config.table);
       (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
+      const listColumns = adminListColumnsFor(config.table, config.aliases || []);
+      const listOptions = listColumns ? { columns: listColumns } : undefined;
       let data: RecordRow[] = [];
       if (isOps) {
         try {
           data = await fetchAdminTable(config.table);
         } catch {
-          data = await fetchCollectionRecords(config.table, config.aliases);
+          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
         }
       } else {
-        data = await fetchCollectionRecords(config.table, config.aliases);
+        data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
       }
       if (config.id === 'pages') {
         const created = await ensureDefaultCmsPages();
-        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
+        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
       }
       if (config.id === 'landing_pages') {
         const created = await ensureDefaultLandingPages();
-        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases);
+        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
       }
       setRecords(
         data.slice().sort((a, b) => {

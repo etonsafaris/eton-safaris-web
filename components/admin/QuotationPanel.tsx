@@ -8,7 +8,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import { QuoteContactFooter, QuoteLetterhead } from '@/components/public/QuoteLetterhead';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
-import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
+import { clearCollectionCache, adminListColumnsFor, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import {
@@ -151,7 +151,9 @@ export default function QuotationPanel() {
     setError('');
     try {
       const [tourRows, quoteRows, inquiryRows] = await Promise.all([
-        fetchCollectionRecords('tours').catch((tourError) => {
+        fetchCollectionRecords('tours', [], {
+          columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
+        }).catch((tourError) => {
           console.warn('[Quotations] Tours load failed:', tourError);
           return [] as RecordRow[];
         }),

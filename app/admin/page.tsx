@@ -7,7 +7,13 @@ import { collectionIcon } from '@/lib/admin-icons';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
-import { fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
+import {
+  adminListColumnsFor,
+  countCollectionRecords,
+  fetchCollectionRecords,
+  getRecordTitle,
+  pickString,
+} from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function AdminOverviewPage() {
@@ -24,9 +30,12 @@ export default function AdminOverviewPage() {
           .filter((item) => item.table)
           .map(async (item) => {
             try {
-              const rows = await fetchCollectionRecords(item.table, item.aliases);
-              next[item.id] = rows.length;
-              if (item.id === 'bookings') setBookings(rows);
+              // Counts only — never pull full description HTML for every collection on the dashboard.
+              next[item.id] = await countCollectionRecords(item.table, item.aliases || []);
+              if (item.id === 'bookings') {
+                const bookingColumns = adminListColumnsFor('bookings') || 'id,destination,country,tour,created_at';
+                setBookings(await fetchCollectionRecords(item.table, item.aliases || [], { columns: bookingColumns }));
+              }
             } catch (error) {
               console.error(error);
               next[item.id] = 0;

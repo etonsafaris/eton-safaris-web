@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -110,8 +110,12 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
 
   useEffect(() => {
     Promise.all([
-      fetchCollectionRecords('countries'),
-      fetchCollectionRecords('national_park', ['national_parks', 'parks']),
+      fetchCollectionRecords('countries', [], {
+        columns: adminListColumnsFor('countries') || 'id,name,title,tagline,image_url,status',
+      }),
+      fetchCollectionRecords('national_park', ['national_parks', 'parks'], {
+        columns: adminListColumnsFor('national_park') || 'id,name,location,country,image_url,status',
+      }),
     ]).then(([countryRows, parkRows]) => {
       setCountries(countryRows);
       setParks(parkRows);
@@ -119,9 +123,8 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('accommodations').then((rows) => {
-      if (!accommodationId) return;
-      const accommodation = rows.find((row) => String(row.id) === accommodationId);
+    if (!accommodationId) return;
+    fetchCollectionRecordById('accommodations', accommodationId).then((accommodation) => {
       if (!accommodation) return;
 
       setName(String(accommodation.name || ''));

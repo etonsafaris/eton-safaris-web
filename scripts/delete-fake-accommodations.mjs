@@ -113,12 +113,28 @@ console.log(JSON.stringify({ fakeCount: found.size, dryRun, sample: [...found.va
 if (dryRun) process.exit(0);
 
 let deleted = 0;
+const failed = [];
 const ids = [...found.keys()];
 for (let i = 0; i < ids.length; i += 50) {
   const chunk = ids.slice(i, i + 50);
-  const { error } = await sb.from('accommodations').delete().in('id', chunk);
-  if (error) console.warn('chunk delete failed', error.message);
-  else deleted += chunk.length;
+  let ok = false;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { error } = await sb.from('accommodations').delete().in('id', chunk);
+    if (!error) {
+      deleted += chunk.length;
+      ok = true;
+      break;
+    }
+    if (!isTransient(error.message || error.code || '')) {
+      console.warn('chunk delete failed', error.message);
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+  }
+  if (!ok) failed.push(...chunk);
   console.log(`Deleted ${deleted}/${ids.length}`);
 }
-console.log(JSON.stringify({ deleted }, null, 2));
+if (failed.length) {
+  console.warn(JSON.stringify({ remainingFailed: failed.length }, null, 2));
+}
+console.log(JSON.stringify({ deleted, failed: failed.length }, null, 2));
