@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { categoryMatchesCountry, matchesCategoryValue, matchesCountry, recordMatchesCountrySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickString, publicRecordSlug } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
@@ -21,8 +21,10 @@ export function findCountryRecord(rows: RecordRow[], slug: string) {
 
 export function findRecordBySlug(rows: RecordRow[], slug: string) {
   const needle = normalizeSlug(slug);
+  if (!needle) return null;
   return (
     rows.find((row) => normalizeSlug(pickString(row, ['slug', 'seo_slug'])) === needle) ||
+    rows.find((row) => publicRecordSlug(row) === needle) ||
     rows.find((row) => String(row.id) === slug) ||
     null
   );

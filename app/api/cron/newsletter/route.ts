@@ -89,7 +89,21 @@ export async function GET(request: Request) {
 
     const tourList = (tours || [])
 
-      .map((tour) => `<li><a href="${SITE.url}/tours/${tour.slug || ''}">${tour.title}</a> — ${tour.country || ''}</li>`)
+      .map((tour) => {
+        const slug =
+          String(tour.slug || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') ||
+          String(tour.title || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') ||
+          String(tour.id || '');
+        return `<li><a href="${SITE.url}/tours/${slug}">${tour.title}</a> — ${tour.country || ''}</li>`;
+      })
 
       .join('');
 

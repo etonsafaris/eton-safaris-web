@@ -15,11 +15,13 @@ import {
   pickNumber,
   pickStoredString,
   pickString,
+  publicRecordSlug,
   slugify,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
+import { findRecordBySlug } from '@/lib/load-public';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { stripPublicMoney } from '@/lib/public-money';
@@ -64,7 +66,7 @@ export default function TourDetailPage() {
   useEffect(() => {
     fetchCollectionRecords('tours')
       .then((rows) => {
-        const match = rows.find((row) => pickString(row, ['slug']) === slug || String(row.id) === slug) || null;
+        const match = findRecordBySlug(rows, slug);
         setTour(match);
         const country = match ? pickString(match, ['country']) : '';
         const category = match ? pickString(match, ['category']) : '';
@@ -152,7 +154,7 @@ export default function TourDetailPage() {
       recordDashboard: true,
       emailAdmin: true,
     });
-    const tourParam = pickString(tour || {}, ['slug']) || slug;
+    const tourParam = publicRecordSlug(tour || {}) || pickString(tour || {}, ['slug']) || slug;
     if (typeof window !== 'undefined') {
       window.open(calendarUrl, '_blank', 'noopener,noreferrer');
     }

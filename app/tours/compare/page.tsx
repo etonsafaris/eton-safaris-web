@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -83,7 +83,7 @@ export default function TourComparePage() {
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={`/tours/${pickString(tour, ['slug']) || tour.id}`}
+                      href={`/tours/${publicRecordSlug(tour)}`}
                       className="font-semibold text-moss"
                     >
                       View

@@ -309,6 +309,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
     setError('');
 
     const stamp = publishStampForSave(publishedAt, isEdit);
+    const tourSlug = slugify(seo.slug || form.slug || form.title);
     const payload = buildSavePayload(
       'tours',
       {
@@ -325,12 +326,15 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
           },
         }),
         duration_days: form.duration_days ? Number(form.duration_days) : null,
-        slug: seo.slug || form.slug || slugify(form.title),
+        slug: tourSlug,
         itineraries: JSON.stringify(itineraries),
         group_size: 'Flexible',
         published_at: stamp,
       },
-      { seo, knownColumns: schemaColumns }
+      {
+        seo: { ...seo, slug: tourSlug || seo.slug },
+        knownColumns: schemaColumns,
+      }
     );
 
     const result = await saveWithColumnFallback('tours', payload, isEdit ? tourId : undefined);

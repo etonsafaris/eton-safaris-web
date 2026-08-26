@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Clock, Star } from 'lucide-react';
 import DavCtaButton from '@/components/public/DavCtaButton';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
-import { getRecordImage, getRecordTitle, pickNumber, pickPlainText } from '@/lib/data';
+import { getRecordImage, getRecordTitle, pickNumber, pickPlainText, publicRecordSlug } from '@/lib/data';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -13,7 +13,7 @@ export default function TourCard({
   tour: RecordRow;
   durationBadge?: boolean;
 }) {
-  const slug = String(tour.slug || tour.id || '');
+  const slug = publicRecordSlug(tour);
   const days = pickNumber(tour, ['duration_days', 'days', 'duration']);
   const nights = days > 0 ? Math.max(days - 1, 0) : 0;
   return (

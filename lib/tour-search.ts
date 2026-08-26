@@ -5,6 +5,7 @@ import {
   pickNumber,
   pickPlainText,
   pickString,
+  publicRecordSlug,
   slugify,
 } from '@/lib/data';
 import { matchesCategoryValue } from '@/lib/country-utils';
@@ -116,7 +117,7 @@ export function searchPublishedTours(
 }
 
 export function tourPublicPath(tour: RecordRow): string {
-  return `/tours/${pickString(tour, ['slug']) || tour.id}`;
+  return `/tours/${publicRecordSlug(tour)}`;
 }
 
 export function suggestTours(tours: RecordRow[], query: string, limit = 6): RecordRow[] {

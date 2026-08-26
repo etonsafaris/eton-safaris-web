@@ -121,7 +121,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
       itemListElement: tours.slice(0, 20).map((tour, index) => ({
         '@type': 'ListItem',
         position: index + 1,
-        url: `https://etonsafaris.com/tours/${pickString(tour, ['slug']) || tour.id}`,
+        url: `https://etonsafaris.com/tours/${publicRecordSlug(tour)}`,
         name: getRecordTitle(tour),
       })),
     },
