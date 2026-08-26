@@ -8,6 +8,8 @@ import {
   BookOpen,
   Calendar,
   Check,
+  ChevronDown,
+  ChevronUp,
   DollarSign,
   FileText,
   Mountain,
@@ -28,6 +30,7 @@ import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
+import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
 import type { RecordRow } from '@/lib/types';
@@ -290,6 +293,16 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
     }
   }
 
+  function moveDay(index: number, direction: -1 | 1) {
+    setItineraries((current) =>
+      moveArrayItem(current, index, direction).map((entry, itemIndex) => ({
+        ...entry,
+        day: String(itemIndex + 1),
+      }))
+    );
+    setEditingDay((current) => adjustEditingIndexAfterMove(current, index, direction));
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
@@ -495,6 +508,11 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
               <h3 className="font-serif text-2xl font-bold text-[#1e293b]">
                 Itineraries ({itineraries.length})
               </h3>
+              {itineraries.length > 1 ? (
+                <p className="mt-1 text-sm text-[#6b7280]">
+                  Use the arrows to change day order — this order is what guests see on the public tour page.
+                </p>
+              ) : null}
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {itineraries.map((entry, index) => (
                   <article key={`${entry.day}-${index}`} className="flex flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
@@ -511,13 +529,37 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
                         )}
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#f3f4f6] pt-3">
-                      <button type="button" onClick={() => editDay(index)} className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]" aria-label="Edit day">
-                        <SquarePen className="h-4 w-4" />
-                      </button>
-                      <button type="button" onClick={() => deleteDay(index)} className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50" aria-label="Delete day">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => moveDay(index, -1)}
+                          className="rounded-md p-1.5 text-[#047857] hover:bg-[#ecfdf5] disabled:cursor-not-allowed disabled:opacity-30"
+                          aria-label={`Move day ${index + 1} up`}
+                          title="Move up"
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index >= itineraries.length - 1}
+                          onClick={() => moveDay(index, 1)}
+                          className="rounded-md p-1.5 text-[#047857] hover:bg-[#ecfdf5] disabled:cursor-not-allowed disabled:opacity-30"
+                          aria-label={`Move day ${index + 1} down`}
+                          title="Move down"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => editDay(index)} className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]" aria-label="Edit day">
+                          <SquarePen className="h-4 w-4" />
+                        </button>
+                        <button type="button" onClick={() => deleteDay(index)} className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50" aria-label="Delete day">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </article>
                 ))}

@@ -9,6 +9,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -130,7 +131,7 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
       if (editingIndex !== null) {
         return current.map((block, index) => (index === editingIndex ? draftBlock : block));
       }
-      return [draftBlock, ...current];
+      return [...current, draftBlock];
     });
     setDraftBlock({ title: '', description: '' });
     setEditingIndex(null);
@@ -151,6 +152,11 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
     } else if (editingIndex !== null && editingIndex > index) {
       setEditingIndex(editingIndex - 1);
     }
+  }
+
+  function moveBlock(index: number, direction: -1 | 1) {
+    setBlocks((current) => moveArrayItem(current, index, direction));
+    setEditingIndex((current) => adjustEditingIndexAfterMove(current, index, direction));
   }
 
   async function handleImageSelect(event: React.ChangeEvent<HTMLInputElement>) {
@@ -301,6 +307,7 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
             blocks={blocks}
             onEdit={editBlock}
             onDelete={deleteBlock}
+            onMove={moveBlock}
           />
 
           <h2 className={`font-serif text-2xl font-bold italic text-[#374151] ${blocks.length > 0 ? 'mt-2' : ''}`}>

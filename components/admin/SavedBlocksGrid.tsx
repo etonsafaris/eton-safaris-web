@@ -1,6 +1,6 @@
 'use client';
 
-import { SquarePen, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, SquarePen, Trash2 } from 'lucide-react';
 
 export type ContentBlock = {
   title: string;
@@ -21,15 +21,20 @@ export default function SavedBlocksGrid({
   blocks,
   onEdit,
   onDelete,
+  onMove,
   className = 'mb-8',
   lineClamp = 3,
+  itemLabel = 'block',
 }: {
   heading?: string;
   blocks: ContentBlock[];
   onEdit: (index: number) => void;
   onDelete: (index: number) => void;
+  /** Move card up (-1) or down (+1). When set, reorder controls appear. */
+  onMove?: (index: number, direction: -1 | 1) => void;
   className?: string;
   lineClamp?: number;
+  itemLabel?: string;
 }) {
   if (blocks.length === 0) return null;
 
@@ -38,6 +43,11 @@ export default function SavedBlocksGrid({
       <h2 className="font-serif text-2xl font-bold text-[#1e293b]">
         {heading} ({blocks.length})
       </h2>
+      {onMove && blocks.length > 1 ? (
+        <p className="mt-1 text-sm text-[#6b7280]">
+          Use the arrows to change order — this order is what guests see on the public page.
+        </p>
+      ) : null}
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {blocks.map((block, index) => {
           const preview = previewText(block.description);
@@ -66,7 +76,7 @@ export default function SavedBlocksGrid({
                   </span>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-serif text-base font-bold leading-snug text-[#1e293b]">
-                      {block.title || 'Untitled block'}
+                      {block.title || `Untitled ${itemLabel}`}
                     </h3>
                     {preview && (
                       <p
@@ -87,29 +97,63 @@ export default function SavedBlocksGrid({
                     )}
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#f3f4f6] pt-3">
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEdit(index);
-                    }}
-                    className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]"
-                    aria-label={`Edit block ${index + 1}`}
-                  >
-                    <SquarePen className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDelete(index);
-                    }}
-                    className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50"
-                    aria-label={`Delete block ${index + 1}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
+                  {onMove ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onMove(index, -1);
+                        }}
+                        className="rounded-md p-1.5 text-[#047857] hover:bg-[#ecfdf5] disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label={`Move ${itemLabel} ${index + 1} up`}
+                        title="Move up"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index >= blocks.length - 1}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onMove(index, 1);
+                        }}
+                        className="rounded-md p-1.5 text-[#047857] hover:bg-[#ecfdf5] disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label={`Move ${itemLabel} ${index + 1} down`}
+                        title="Move down"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEdit(index);
+                      }}
+                      className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]"
+                      aria-label={`Edit ${itemLabel} ${index + 1}`}
+                    >
+                      <SquarePen className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete(index);
+                      }}
+                      className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50"
+                      aria-label={`Delete ${itemLabel} ${index + 1}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>

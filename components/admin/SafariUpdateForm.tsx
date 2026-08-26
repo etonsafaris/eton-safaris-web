@@ -11,6 +11,7 @@ import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -97,7 +98,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
       if (editingIndex !== null) {
         return current.map((block, index) => (index === editingIndex ? draftBlock : block));
       }
-      return [draftBlock, ...current];
+      return [...current, draftBlock];
     });
     setDraftBlock({ title: '', description: '' });
     setEditingIndex(null);
@@ -118,6 +119,11 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
     } else if (editingIndex !== null && editingIndex > index) {
       setEditingIndex(editingIndex - 1);
     }
+  }
+
+  function moveBlock(index: number, direction: -1 | 1) {
+    setBlocks((current) => moveArrayItem(current, index, direction));
+    setEditingIndex((current) => adjustEditingIndexAfterMove(current, index, direction));
   }
 
   async function handleCoverUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -298,6 +304,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
             blocks={blocks}
             onEdit={editBlock}
             onDelete={deleteBlock}
+            onMove={moveBlock}
           />
 
           <h2 className={`font-serif text-2xl italic text-[#374151] ${blocks.length > 0 ? 'mt-2' : ''}`}>

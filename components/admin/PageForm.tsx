@@ -23,6 +23,7 @@ import {
 import { faqsForEditor } from '@/lib/default-faqs';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
+import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { fetchCollectionRecords, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -167,10 +168,15 @@ export default function PageForm({ pageId }: PageFormProps) {
       if (editingIndex !== null) {
         return current.map((block, index) => (index === editingIndex ? draftBlock : block));
       }
-      return [draftBlock, ...current];
+      return [...current, draftBlock];
     });
     setDraftBlock({ title: '', description: '', image_url: '' });
     setEditingIndex(null);
+  }
+
+  function moveBlock(index: number, direction: -1 | 1) {
+    setBlocks((current) => moveArrayItem(current, index, direction));
+    setEditingIndex((current) => adjustEditingIndexAfterMove(current, index, direction));
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -469,8 +475,11 @@ export default function PageForm({ pageId }: PageFormProps) {
               if (editingIndex === index) {
                 setDraftBlock({ title: '', description: '', image_url: '' });
                 setEditingIndex(null);
+              } else if (editingIndex !== null && editingIndex > index) {
+                setEditingIndex(editingIndex - 1);
               }
             }}
+            onMove={moveBlock}
           />
           <h2 className={`font-serif text-2xl font-bold italic text-[#374151] ${blocks.length > 0 ? 'mt-2' : ''}`}>
             {editingIndex !== null
