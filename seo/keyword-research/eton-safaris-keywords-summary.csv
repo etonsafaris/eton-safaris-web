@@ -1,16 +1,31 @@
-﻿Group,Country,Category,Keyword File,Before,After,Added
-First countries,Uganda,Uganda Gorilla Trekking Safaris,uganda-gorilla-trekking-keywords.txt,568,2110,1542
-First countries,Uganda,Uganda Wildlife Safaris,uganda-wildlife-safari-keywords.txt,53,1472,1419
-First countries,Kenya,Kenya Wildlife Safaris,kenya-wildlife-safari-keywords.txt,120,1778,1658
-First countries,Kenya,Kenya Beach Holidays,kenya-beach-holiday-keywords.txt,80,1545,1465
-First countries,Tanzania,Tanzania Wildlife Safaris,tanzania-wildlife-safari-keywords.txt,135,1644,1509
-First countries,Tanzania,Tanzania Beach Holidays,tanzania-beach-holiday-keywords.txt,95,1572,1477
-First countries,Tanzania,Tanzania Mountain Climbing Safaris,tanzania-mountain-climbing-keywords.txt,125,1703,1578
-First countries,Rwanda,Rwanda Gorilla Trekking Safaris,rwanda-gorilla-trekking-keywords.txt,54,1318,1264
-First countries,Rwanda,Rwanda Wildlife Safaris,rwanda-wildlife-safari-keywords.txt,0,1013,1013
-First countries,South Africa,South Africa Wildlife Safaris,south-africa-wildlife-safari-keywords.txt,389,3351,2962
-First countries,Malawi,Malawi Wildlife Safaris,malawi-wildlife-safari-keywords.txt,138,1432,1294
-First countries,Morocco,Morocco Tours,morocco-tours-keywords.txt,237,1787,1550
-First countries,Egypt,Egypt Tours,egypt-tours-keywords.txt,512,2075,1563
-First countries TOTAL,,,,,22800,20294
-Workbook TOTAL rows,,,,,40183,
+﻿Country,Category,Keyword File,Keyword Count
+Botswana,Botswana Wildlife Safaris,botswana-wildlife-safari-keywords.txt,2465
+Botswana,Botswana Wildlife Safari Tours,botswana-wildlife-safari-tours-keywords.txt,2159
+DR Congo,DR Congo Gorilla Trekking Safaris,dr-congo-gorilla-trekking-keywords.txt,3152
+DR Congo,DR Congo Wildlife Safaris,dr-congo-wildlife-safari-keywords.txt,2904
+Egypt,Egypt Tours,egypt-tours-keywords.txt,2075
+Ethiopia,Ethiopia Tours,ethiopia-tours-keywords.txt,1680
+Ethiopia,Ethiopia Tour Safaris,ethiopia-tour-safaris-keywords.txt,1477
+Kenya,Kenya Wildlife Safaris,kenya-wildlife-safari-keywords.txt,1778
+Kenya,Kenya Beach Holidays,kenya-beach-holiday-keywords.txt,1545
+Madagascar,Madagascar Wildlife Safaris,madagascar-wildlife-safari-keywords.txt,1676
+Madagascar,Madagascar Tour Safaris,madagascar-tour-safaris-keywords.txt,1474
+Malawi,Malawi Wildlife Safaris,malawi-wildlife-safari-keywords.txt,1432
+Morocco,Morocco Tours,morocco-tours-keywords.txt,1787
+Mozambique,Mozambique Beach Holidays,mozambique-beach-holiday-keywords.txt,1576
+Mozambique,Mozambique Safari Tours,mozambique-safari-tours-keywords.txt,1473
+Namibia,Namibia Wildlife Safaris,namibia-wildlife-safari-keywords.txt,1700
+Rwanda,Rwanda Gorilla Trekking Safaris,rwanda-gorilla-trekking-keywords.txt,1318
+Rwanda,Rwanda Wildlife Safaris,rwanda-wildlife-safari-keywords.txt,1013
+Seychelles,Seychelles Beach Holidays,seychelles-beach-holiday-keywords.txt,1575
+Seychelles,Seychelles Safaris Tours,seychelles-safaris-tours-keywords.txt,1476
+South Africa,South Africa Wildlife Safaris,south-africa-wildlife-safari-keywords.txt,3351
+Tanzania,Tanzania Wildlife Safaris,tanzania-wildlife-safari-keywords.txt,1644
+Tanzania,Tanzania Beach Holidays,tanzania-beach-holiday-keywords.txt,1572
+Tanzania,Tanzania Mountain Climbing Safaris,tanzania-mountain-climbing-keywords.txt,1703
+Uganda,Uganda Gorilla Trekking Safaris,uganda-gorilla-trekking-keywords.txt,2110
+Uganda,Uganda Wildlife Safaris,uganda-wildlife-safari-keywords.txt,1472
+Zambia,Zambia Wildlife Safaris,zambia-wildlife-safari-keywords.txt,1524
+Zimbabwe,Zimbabwe Wildlife Safaris,zimbabwe-wildlife-safari-keywords.txt,1525
+Zimbabwe,Zimbabwe Tour Safaris,zimbabwe-tour-safaris-keywords.txt,1376
+TOTAL workbook rows,,,52522

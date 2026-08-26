@@ -27,6 +27,16 @@ npm run seed:remaining-country-keywords
 
 This writes the full lists into the `keywords` admin library and injects up to 400 focus keywords onto each category (plus a country-level set) so public pages emit `<meta name="keywords">`.
 
-## Note on Keysearch
+## Coverage rule
 
-Exact Keysearch volume/KD scores require a Keysearch account API. These lists are built from destination/experience long-tails (parks, trip styles, durations, commercial intent) chosen for **lower competition than East Africa head terms** and strong safari planning traffic patterns from 2025 market reports.
+Every live CMS category under each country should have a keyword pack. Audit with:
+
+```bash
+npm run keywords:audit-categories
+```
+
+Fill gaps with:
+
+```bash
+npm run seed:missing-category-keywords
+```

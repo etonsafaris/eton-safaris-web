@@ -227,6 +227,7 @@ export async function runKeywordScopeSeed(options) {
     extrasFile,
     injectFocusKeywords = false,
     focusKeywordLimit = 400,
+    renameFrom,
   } = options;
 
   const pastedLines = readKeywordLines(keywordFile, true);
@@ -273,6 +274,10 @@ export async function runKeywordScopeSeed(options) {
     return !country || country.toLowerCase() === countryName.toLowerCase();
   });
   let categoryMatch =
+    (renameFrom
+      ? findNamedRow(scopedCategories, renameFrom, ['name', 'title', 'category']) ||
+        findNamedRow(categories || [], renameFrom, ['name', 'title', 'category'])
+      : null) ||
     findNamedRow(scopedCategories, TARGET_CATEGORY, ['name', 'title', 'category']) ||
     findNamedRow(categories || [], TARGET_CATEGORY, ['name', 'title', 'category']);
   let categoryCreated = false;
@@ -304,8 +309,14 @@ export async function runKeywordScopeSeed(options) {
       categoryMatch.published === false ||
       categoryMatch.is_published === false;
     const currentSlug = String(categoryMatch.slug || '').trim();
-    const needsSlugFix = Boolean(categorySlug) && currentSlug !== categorySlug;
-    if (needsPublish || needsSlugFix) {
+    const needsSlugFix =
+      Boolean(categorySlug) &&
+      (currentSlug !== categorySlug || currentSlug.length <= 2);
+    const currentName = pickName(categoryMatch, ['name', 'title', 'category']);
+    const needsRename =
+      Boolean(renameFrom) ||
+      (currentName && currentName.toLowerCase() !== TARGET_CATEGORY.toLowerCase());
+    if (needsPublish || needsSlugFix || needsRename) {
       const patch = {};
       if (needsPublish) {
         patch.status = 'published';
@@ -315,6 +326,13 @@ export async function runKeywordScopeSeed(options) {
       }
       if (needsSlugFix) {
         patch.slug = categorySlug;
+      }
+      if (needsRename) {
+        patch.name = TARGET_CATEGORY;
+        patch.title = TARGET_CATEGORY;
+      }
+      if (categoryDescription) {
+        patch.description = categoryDescription;
       }
       const updated = await saveRow(supabase, 'categories', patch, categoryMatch.id);
       if (!updated.error && updated.data) {
