@@ -1,0 +1,659 @@
+[
+  {
+    "name": "Mikeno Lodge",
+    "country": "DR Congo",
+    "national_park": "Virunga National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://visit.virunga.org/accommodation/mikeno-lodge/",
+    "location_note": "Park headquarters at Rumangabo in Mahura Forest; base for gorilla and Nyiragongo volcano trips."
+  },
+  {
+    "name": "Bukima Tented Camp",
+    "country": "DR Congo",
+    "national_park": "Virunga National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.mikenolodge.com/",
+    "location_note": "Platform tents at the main mountain-gorilla trailhead, just outside the park boundary beneath Mt Mikeno."
+  },
+  {
+    "name": "Orchids Safari Club",
+    "country": "DR Congo",
+    "national_park": "Kahuzi-Biega National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://orchids-hotel.net/en/home/",
+    "location_note": "Lake Kivu shore in Bukavu; usual overnight base before eastern lowland gorilla treks."
+  },
+  {
+    "name": "Coco Lodge Bukavu",
+    "country": "DR Congo",
+    "national_park": "Kahuzi-Biega National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.kahuzibiega.org/accommodation/",
+    "location_note": "Small mid-range lodge in Bukavu used by gorilla-trekking visitors to Kahuzi-Biega."
+  },
+  {
+    "name": "Hotel Begonias Bukavu",
+    "country": "DR Congo",
+    "national_park": "Kahuzi-Biega National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.kahuzibiega.org/accommodation/",
+    "location_note": "Garden hotel in Bukavu with pool; common overnight stop for park day trips."
+  },
+  {
+    "name": "Lakeside Hotel Bukavu",
+    "country": "DR Congo",
+    "national_park": "Kahuzi-Biega National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.kahuzibiega.org/accommodation/",
+    "location_note": "Lake Kivu–facing hotel in Bukavu serving as a base for Kahuzi-Biega visits."
+  },
+  {
+    "name": "Limalimo Lodge",
+    "country": "Ethiopia",
+    "national_park": "Simien Mountains National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://limalimolodge.com/",
+    "location_note": "Boutique rammed-earth eco-lodge on an escarpment near Debark, just outside the park gate."
+  },
+  {
+    "name": "Simien Lodge",
+    "country": "Ethiopia",
+    "national_park": "Simien Mountains National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.simiens.com/",
+    "location_note": "Highest lodge in Africa (~3,260 m) on the Simien escarpment; geladas often on the grounds."
+  },
+  {
+    "name": "Bale Mountain Lodge",
+    "country": "Ethiopia",
+    "national_park": "Bale Mountains National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://balemountainlodge.com/",
+    "location_note": "Wilderness lodge in the Katcha clearing of Harenna Forest; base for Sanetti Plateau wolf viewing."
+  },
+  {
+    "name": "Wabe Shebelle Hotel Goba",
+    "country": "Ethiopia",
+    "national_park": "Bale Mountains National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://balemountains.org/plan-your-trip/lodging/",
+    "location_note": "Long-standing hotel in Goba, roughly midway between Dinsho HQ and the Sanetti Plateau road."
+  },
+  {
+    "name": "Doho Lodge and Hot Springs",
+    "country": "Ethiopia",
+    "national_park": "Awash National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://doholodge.com/",
+    "location_note": "Northern edge of Awash NP among doum palms and natural hot springs near Fantale volcano."
+  },
+  {
+    "name": "Awash Falls Lodge",
+    "country": "Ethiopia",
+    "national_park": "Awash National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://wildlife-lodges.com/lodge/awashfallslodge/",
+    "location_note": "Overlooks the Awash River gorge and falls on the park boundary; sister property to Doho Lodge."
+  },
+  {
+    "name": "Paradise Lodge Arbaminch",
+    "country": "Ethiopia",
+    "national_park": "Nechisar National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.paradiselodgeethiopia.com/home",
+    "location_note": "Cliffside tukul lodge overlooking Lakes Chamo and Abaya and the Nechisar forest ridge."
+  },
+  {
+    "name": "Haile Resort Arba Minch",
+    "country": "Ethiopia",
+    "national_park": "Nechisar National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://hailehotelsandresorts.com/",
+    "location_note": "Lakeside resort hotel in Arba Minch used as a mid-range base for Nechisar boat and game drives."
+  },
+  {
+    "name": "Lale's Camp",
+    "country": "Ethiopia",
+    "national_park": "Omo National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wild-expeditions.africa/our-camps/lales-camp",
+    "location_note": "Remote Meru tents on the lower Omo River near Dus; river access toward the Omo cultural landscape."
+  },
+  {
+    "name": "Eco Omo Lodge",
+    "country": "Ethiopia",
+    "national_park": "Omo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.eco-omo.com/",
+    "location_note": "Lodge beside the Neri River in Jinka; gateway town for Mago and Omo valley excursions."
+  },
+  {
+    "name": "Turmi Lodge",
+    "country": "Ethiopia",
+    "national_park": "Omo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.paradiselodgeethiopia.com/home",
+    "location_note": "Sister property of Paradise Lodge in Turmi; base for Hamar and Omo Valley visits south of the park."
+  },
+  {
+    "name": "Vakôna Forest Lodge",
+    "country": "Madagascar",
+    "national_park": "Andasibe-Mantadia National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.vakonahotel.com/en",
+    "location_note": "28 forest bungalows next to Andasibe with private reserve and lake-side restaurant."
+  },
+  {
+    "name": "Mantadia Lodge",
+    "country": "Madagascar",
+    "national_park": "Andasibe-Mantadia National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://mantadialodge.com/",
+    "location_note": "Hilltop contemporary lodge overlooking Andasibe forest; pool and spa near Analamazaotra."
+  },
+  {
+    "name": "Andasibe Cyperus Hotel",
+    "country": "Madagascar",
+    "national_park": "Andasibe-Mantadia National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.cyperushotel.com/index.php/en/",
+    "location_note": "3-star bungalow hotel in Andasibe forest with pool; short transfer to park gates."
+  },
+  {
+    "name": "Feon'ny Ala Hotel",
+    "country": "Madagascar",
+    "national_park": "Andasibe-Mantadia National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "edge",
+    "website": "https://www.feonnyala-hotel.com/",
+    "location_note": "Long-established bungalows beside Analamazaotra Reserve; indri calls often heard from rooms."
+  },
+  {
+    "name": "Isalo Rock Lodge",
+    "country": "Madagascar",
+    "national_park": "Isalo National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://isalorocklodge.com/",
+    "location_note": "Modern sandstone-mountain retreat overlooking Isalo canyons near Ranohira."
+  },
+  {
+    "name": "Le Relais de la Reine",
+    "country": "Madagascar",
+    "national_park": "Isalo National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://lerelaisdelareine.com/",
+    "location_note": "Spa ecolodge on ~40 ha of private land south of Isalo near Ranohira on the RN7."
+  },
+  {
+    "name": "Satrana Lodge",
+    "country": "Madagascar",
+    "national_park": "Isalo National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.satranalodge-madagascar.com/",
+    "location_note": "Tented lodge on the RN7 at the entrance to Isalo National Park."
+  },
+  {
+    "name": "Le Jardin du Roy",
+    "country": "Madagascar",
+    "national_park": "Isalo National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://lejardinduroy.com/",
+    "location_note": "Sister property to Relais de la Reine among Isalo’s rock formations near Ranohira."
+  },
+  {
+    "name": "Hôtel Thermal Ranomafana",
+    "country": "Madagascar",
+    "national_park": "Ranomafana National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.thermal-ranomafana.mg/",
+    "location_note": "Classic thermal-springs hotel in Ranomafana village below the park rainforest."
+  },
+  {
+    "name": "Setam Lodge",
+    "country": "Madagascar",
+    "national_park": "Ranomafana National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://setam-madagascar.com/lodge",
+    "location_note": "Hilltop lodge a few kilometres from Ranomafana village with park views from the terrace."
+  },
+  {
+    "name": "Hotel Manja",
+    "country": "Madagascar",
+    "national_park": "Ranomafana National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://manjahotel.com/",
+    "location_note": "Village hotel on the RN25 in Ranomafana; common mid-range base for park walks."
+  },
+  {
+    "name": "Ankarana Lodge",
+    "country": "Madagascar",
+    "national_park": "Ankarana National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ankaranalodge.com/",
+    "location_note": "Owner-run lodge ~1 km from Mahamasina (east) gate with bungalows and pool."
+  },
+  {
+    "name": "Iharana Bush Camp",
+    "country": "Madagascar",
+    "national_park": "Ankarana National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://iharanabushcamp.com/",
+    "location_note": "Boutique bush camp facing Ankarana tsingy on the southwest side; via ferrata and caving."
+  },
+  {
+    "name": "Relais de l'Ankarana",
+    "country": "Madagascar",
+    "national_park": "Ankarana National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "http://relaisdelankarana.unblog.fr/",
+    "location_note": "Simple bungalow hotel in Mahamasina village near the east park entrance."
+  },
+  {
+    "name": "Soleil des Tsingy",
+    "country": "Madagascar",
+    "national_park": "Tsingy de Bemaraha National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.soleildestsingy.mg/",
+    "location_note": "17 bungalows and infinity pool near Bekopaka at the gates of the Great Tsingy."
+  },
+  {
+    "name": "Orchidée du Bemaraha",
+    "country": "Madagascar",
+    "national_park": "Tsingy de Bemaraha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.orchideedubemaraha.com/",
+    "location_note": "Hillside bungalow lodge at the entrance to Bekopaka village for Tsingy day trips."
+  },
+  {
+    "name": "Olympe du Bemaraha",
+    "country": "Madagascar",
+    "national_park": "Tsingy de Bemaraha National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.tsingy-olympedubemaraha.com/en/",
+    "location_note": "Bekopaka hillside hotel with pool; mid-range base for Petite and Grande Tsingy."
+  },
+  {
+    "name": "Masoala Forest Lodge",
+    "country": "Madagascar",
+    "national_park": "Masoala National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.masoalaforestlodge.com/",
+    "location_note": "Boat-access stilted rainforest tents on the Masoala Peninsula beside Tampolo Marine Reserve."
+  },
+  {
+    "name": "Nature Lodge Joffreville",
+    "country": "Madagascar",
+    "national_park": "Montagne d'Ambre National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.naturelodge-ambre.com/en/",
+    "location_note": "Thatched chalets in Joffreville ~7 km from Amber Mountain park entrance."
+  },
+  {
+    "name": "The Litchi Tree",
+    "country": "Madagascar",
+    "national_park": "Montagne d'Ambre National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.thelitchitree.com/",
+    "location_note": "Colonial-era guesthouse in Joffreville at the foot of Montagne d'Ambre."
+  },
+  {
+    "name": "Constance Ephelia",
+    "country": "Seychelles",
+    "national_park": "Morne Seychellois National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.constancehotels.com/en/hotels-resorts/ephelia/",
+    "location_note": "120-hectare Port Launay resort between marine park beaches and Morne Seychellois forest slopes."
+  },
+  {
+    "name": "Hilton Seychelles Northolme Resort & Spa",
+    "country": "Seychelles",
+    "national_park": "Morne Seychellois National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.hilton.com/en/hotels/sezhihi-hilton-seychelles-northolme-resort-and-spa/",
+    "location_note": "Cliff villas at Glacis near Beau Vallon; short drive to Morne Seychellois trailheads."
+  },
+  {
+    "name": "STORY Seychelles",
+    "country": "Seychelles",
+    "national_park": "Morne Seychellois National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://story-seychelles.com/",
+    "location_note": "Beau Vallon beach resort on Mahé; about five minutes from Morne Seychellois trail access."
+  },
+  {
+    "name": "Savoy Seychelles Resort & Spa",
+    "country": "Seychelles",
+    "national_park": "Morne Seychellois National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.savoy.sc/",
+    "location_note": "Large Beau Vallon hotel with easy road access to Morne Seychellois National Park."
+  },
+  {
+    "name": "Constance Lemuria",
+    "country": "Seychelles",
+    "national_park": "Vallée de Mai Nature Reserve",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.constancehotels.com/en/hotels-resorts/lemuria/",
+    "location_note": "Anse Lazio–area resort on Praslin; short drive to UNESCO Vallée de Mai."
+  },
+  {
+    "name": "Acajou Beach Resort",
+    "country": "Seychelles",
+    "national_park": "Vallée de Mai Nature Reserve",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.acajouseychelles.com/",
+    "location_note": "Côte d'Or beach hotel on Praslin minutes from Vallée de Mai and Curieuse boat trips."
+  },
+  {
+    "name": "Indian Ocean Lodge",
+    "country": "Seychelles",
+    "national_park": "Vallée de Mai Nature Reserve",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://indianoceanlodge.com/",
+    "location_note": "Grande Anse boutique hotel on Praslin; convenient base for Vallée de Mai visits."
+  },
+  {
+    "name": "Coco de Mer Hotel and Black Parrot Suites",
+    "country": "Seychelles",
+    "national_park": "Vallée de Mai Nature Reserve",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.cocodemer.com/",
+    "location_note": "Anse Bois de Rose resort on Praslin close to Vallée de Mai and black parrot habitat."
+  },
+  {
+    "name": "Acajou Beach Resort",
+    "country": "Seychelles",
+    "national_park": "Curieuse Marine National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.acajouseychelles.com/",
+    "location_note": "Côte d'Or base facing Curieuse; hotel boats run snorkel and tortoise day trips to the park."
+  },
+  {
+    "name": "Raffles Seychelles",
+    "country": "Seychelles",
+    "national_park": "Curieuse Marine National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.raffles.com/praslin/",
+    "location_note": "Anse Takamaka villas on Praslin with views toward Curieuse Marine National Park."
+  },
+  {
+    "name": "Berjaya Praslin Resort",
+    "country": "Seychelles",
+    "national_park": "Curieuse Marine National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.berjayahotel.com/praslin",
+    "location_note": "Anse Volbert beach resort; frequent departure point for Curieuse Island excursions."
+  },
+  {
+    "name": "Constance Lemuria",
+    "country": "Seychelles",
+    "national_park": "Praslin National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.constancehotels.com/en/hotels-resorts/lemuria/",
+    "location_note": "Resort beside Praslin’s forested northwest; gateway to Praslin National Park trails and Vallée de Mai."
+  },
+  {
+    "name": "Coco de Mer Hotel and Black Parrot Suites",
+    "country": "Seychelles",
+    "national_park": "Praslin National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.cocodemer.com/",
+    "location_note": "Set against Praslin’s interior forest near park habitat for endemic black parrots."
+  },
+  {
+    "name": "Les Lauriers Eco Hotel",
+    "country": "Seychelles",
+    "national_park": "Praslin National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://laurier-seychelles.com/",
+    "location_note": "Anse Volbert eco hotel a short drive from Praslin National Park / Vallée de Mai."
+  },
+  {
+    "name": "Mövenpick Resort & Spa Sharm El Sheikh",
+    "country": "Egypt",
+    "national_park": "Ras Mohammed National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://movenpick.accor.com/en/africa/egypt/sharm-el-sheikh/resort-sharm-el-sheikh.html",
+    "location_note": "Naama Bay resort commonly used as a dive base for day trips into Ras Mohammed."
+  },
+  {
+    "name": "Four Seasons Resort Sharm El Sheikh",
+    "country": "Egypt",
+    "national_park": "Ras Mohammed National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.fourseasons.com/sharmelsheikh/",
+    "location_note": "Clifftop Sharks Bay resort; about a 30–40 minute drive to Ras Mohammed park entrance."
+  },
+  {
+    "name": "Softotel Sharks Bay Resort",
+    "country": "Egypt",
+    "national_park": "Ras Mohammed National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.softotel.com/",
+    "location_note": "Sharks Bay mid-range hotel used by divers heading to Ras Mohammed reefs."
+  },
+  {
+    "name": "Bedawi Eco Camping Ras Mohamed",
+    "country": "Egypt",
+    "national_park": "Ras Mohammed National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://bedawi.com/travel-offer/eco-camping-ras-mohamed",
+    "location_note": "Authorized Bedouin beach camping inside Ras Mohammed near Turtle Bay / Marsa Bareika."
+  },
+  {
+    "name": "Desert Rose Eco Lodge",
+    "country": "Egypt",
+    "national_park": "White Desert National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://desertroseecolodge.com/",
+    "location_note": "Locally run ecolodge in Bahariya Oasis organizing White Desert camping safaris."
+  },
+  {
+    "name": "International Hot Spring Hotel",
+    "country": "Egypt",
+    "national_park": "White Desert National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://internationalhotspringhotel.com/",
+    "location_note": "Family-run Bawiti hotel with hot springs; pioneering base for White Desert safaris since 1995."
+  },
+  {
+    "name": "Morgenland Holly Village",
+    "country": "Egypt",
+    "national_park": "Saint Katherine Protectorate",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://morgenland-village.net/",
+    "location_note": "Large hotel in St Catherine town near the monastery and Mount Sinai trailheads."
+  },
+  {
+    "name": "Fox Camp (Moses Lodge)",
+    "country": "Egypt",
+    "national_park": "Saint Katherine Protectorate",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.booking.com/hotel/eg/fox-camp-moses-lodge.html",
+    "location_note": "Bedouin-style lodge in St Catherine village, walking distance toward the monastery."
+  },
+  {
+    "name": "Tunis Tone Ecolodge",
+    "country": "Egypt",
+    "national_park": "Wadi El Rayan Protected Area",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://tunistone.com/",
+    "location_note": "Tunis Village ecolodge overlooking Lake Qarun; day trips to Wadi El Rayan waterfalls."
+  },
+  {
+    "name": "Byoum Lakeside Hotel",
+    "country": "Egypt",
+    "national_park": "Wadi El Rayan Protected Area",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://byoumhotel.com/",
+    "location_note": "4-star hotel on Lake Qarun in Fayoum; common base for Wadi El Rayan and Wadi El Hitan."
+  },
+  {
+    "name": "Zad El Mosafer Ecolodge",
+    "country": "Egypt",
+    "national_park": "Wadi El Rayan Protected Area",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.booking.com/hotel/eg/zad-el-mosafer-ecolodge.html",
+    "location_note": "Mud-brick ecolodge in Tunis Village organizing desert safaris toward Wadi El Rayan."
+  },
+  {
+    "name": "Kasbah du Toubkal",
+    "country": "Morocco",
+    "national_park": "Toubkal National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://kasbahtoubkal.com/",
+    "location_note": "Restored hilltop kasbah above Imlil at ~1,800 m; classic High Atlas trekking base."
+  },
+  {
+    "name": "Hotel Le Village du Toubkal",
+    "country": "Morocco",
+    "national_park": "Toubkal National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "inside",
+    "website": "https://www.villagetoubkal.com/",
+    "location_note": "Small Imlil valley hotel deep in Toubkal National Park with hammam and trek desk."
+  },
+  {
+    "name": "Toubkal Ecolodge",
+    "country": "Morocco",
+    "national_park": "Toubkal National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.toubkalecolodge.com/",
+    "location_note": "Family ecolodge in the Imlil / Toubkal area for Atlas mountain walks."
+  },
+  {
+    "name": "Michlifen Resort & Golf",
+    "country": "Morocco",
+    "national_park": "Ifrane National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.michlifen.com/en/",
+    "location_note": "5-star alpine-style resort at 1,650 m beside Ifrane National Park cedar forests."
+  },
+  {
+    "name": "Hôtel Perce-Neige",
+    "country": "Morocco",
+    "national_park": "Ifrane National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.hotelperceneige.com/",
+    "location_note": "Classic Ifrane town hotel near park cedar forests and Michlifen ski slopes."
+  },
+  {
+    "name": "Atlas Kasbah Ecolodge",
+    "country": "Morocco",
+    "national_park": "Souss-Massa National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://atlaskasbah.com/",
+    "location_note": "Award-winning ecolodge in the Arganeraie near Agadir; base for Souss-Massa birding."
+  },
+  {
+    "name": "Ksar Massa",
+    "country": "Morocco",
+    "national_park": "Souss-Massa National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://ksarmassa.com/",
+    "location_note": "Kasbah-style lodge and spa on Sidi R'bat dunes where Oued Massa meets the Atlantic, in the park."
+  },
+  {
+    "name": "Villa du Souss Eco Lodge",
+    "country": "Morocco",
+    "national_park": "Souss-Massa National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://villadusouss.com/",
+    "location_note": "Family ecolodge near Agadir airport in the Souss plain toward Souss-Massa."
+  },
+  {
+    "name": "Dar Echchaouen Maison d'Hôtes",
+    "country": "Morocco",
+    "national_park": "Talassemtane National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://darechchaouenchefchaouene.adorehotels.com/",
+    "location_note": "Boutique riad by Ras El Maa in Chefchaouen; gateway to Talassemtane Rif trails."
+  },
+  {
+    "name": "Casa Hassan",
+    "country": "Morocco",
+    "national_park": "Talassemtane National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.casahassan.com/",
+    "location_note": "Historic medina hotel in Chefchaouen used as a base for Akchour and Talassemtane hikes."
+  },
+  {
+    "name": "Hotel Parador Chefchaouen",
+    "country": "Morocco",
+    "national_park": "Talassemtane National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.hotel-parador.com/",
+    "location_note": "Hilltop hotel overlooking Chefchaouen medina with views toward Talassemtane mountains."
+  }
+]

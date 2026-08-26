@@ -12,6 +12,7 @@ import {
   isPublishedRecord,
   pickPlainText,
   pickString,
+  publicRecordSlug,
 } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -46,7 +47,7 @@ export default function ParksPageClient({ initialParks }: { initialParks: Record
             {parks.map((park, index) => (
               <PlaceCard
                 key={String(park.id ?? index)}
-                href={`/parks/${pickString(park, ['slug']) || park.id}`}
+                href={`/parks/${publicRecordSlug(park)}`}
                 image={getRecordImage(park) || undefined}
                 title={getRecordTitle(park)}
                 location={pickString(park, ['location', 'country'])}

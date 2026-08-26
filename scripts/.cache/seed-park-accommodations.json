@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "dryRun": false,
+  "parks": 232,
+  "created": 717,
+  "updated": 0,
+  "skipped": 0,
+  "failed": 1603,
+  "types": [
+    "Luxury Lodge",
+    "Mid-range Lodge",
+    "Luxury Tented Camp",
+    "Mid-Range Tented Camp",
+    "Luxury Hotel",
+    "Mid-Range Hotel",
+    "Luxury Banda",
+    "Mid-Range Banda"
+  ]
+}

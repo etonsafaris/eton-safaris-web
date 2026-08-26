@@ -185,9 +185,18 @@ export function matchesCategoryValue(record: RecordRow, value: string): boolean 
   const target = normalizeSlug(value.replace(/-/g, ' '));
   const slugTarget = normalizeSlug(value);
   if (!target && !slugTarget) return true;
-  return recordCategoryTokens(record).some(
-    (token) => token === target || token === slugTarget || token === normalizeSlug(value)
-  );
+  const tokens = recordCategoryTokens(record);
+  if (tokens.some((token) => token === target || token === slugTarget || token === normalizeSlug(value))) {
+    return true;
+  }
+  // Soft match: significant overlapping words (e.g. gorilla-trekking vs uganda-gorilla-trekking-safaris)
+  const targetParts = slugTarget.split('-').filter((part) => part.length > 3);
+  if (targetParts.length < 2) return false;
+  return tokens.some((token) => {
+    const tokenParts = new Set(token.split('-').filter((part) => part.length > 3));
+    const hits = targetParts.filter((part) => tokenParts.has(part)).length;
+    return hits >= Math.min(2, targetParts.length);
+  });
 }
 
 export function matchesCategory(record: RecordRow, category: RecordRow | null): boolean {
@@ -195,7 +204,12 @@ export function matchesCategory(record: RecordRow, category: RecordRow | null): 
   const categoryTokens = categoryMatchTokens(category);
   const recordTokens = recordCategoryTokens(record);
   if (!recordTokens.length || !categoryTokens.length) return false;
-  return recordTokens.some((token) => categoryTokens.includes(token));
+  if (recordTokens.some((token) => categoryTokens.includes(token))) return true;
+  // Soft match against category title/slug so renamed or slightly mismatched labels still resolve.
+  const title = pickString(category, ['name', 'title']);
+  if (title && matchesCategoryValue(record, title)) return true;
+  const slug = categoryPublicSlug(category);
+  return Boolean(slug && matchesCategoryValue(record, slug));
 }
 
 export function findCategoryBySlug(

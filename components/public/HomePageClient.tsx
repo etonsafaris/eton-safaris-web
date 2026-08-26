@@ -30,6 +30,7 @@ import {
   isPublishedRecord,
   pickString,
   pickPlainText,
+  publicRecordSlug,
   recordPublishedAt,
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
@@ -243,7 +244,7 @@ export default function HomePageClient({
   const parkItems = parks.map((park, index) => (
     <Link
       key={String(park.id ?? index)}
-      href={`/parks/${pickString(park, ['slug']) || park.id}`}
+      href={`/parks/${publicRecordSlug(park)}`}
       className="block h-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-lg"
     >
       {getRecordImage(park) ? (

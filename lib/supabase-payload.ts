@@ -5,7 +5,6 @@ import { packSeoSettings, type SeoValues } from '@/lib/seo';
 /** Columns that must never be written (UI aliases or missing from Supabase). */
 const BLOCKED_COLUMNS = new Set([
   'seo_slug',
-  'focus_keyword',
 ]);
 
 /** Read-only / server-managed columns. */
@@ -236,14 +235,25 @@ export function getStaticAllowedColumns(table: string): Set<string> {
 
 export function seoValuesToTablePayload(table: string, values: SeoValues): Record<string, unknown> {
   const allowed = getStaticAllowedColumns(table);
+  const packedSettings = packSeoSettings(values);
+  let seoSchema = values.seo_schema;
+  try {
+    const parsed = seoSchema ? JSON.parse(seoSchema) : { '@context': 'https://schema.org', '@type': values.schema_type };
+    parsed._etonSeo = JSON.parse(packedSettings);
+    seoSchema = JSON.stringify(parsed);
+  } catch {
+    seoSchema = values.seo_schema;
+  }
+
   const raw: Record<string, unknown> = {
     focus_keyphrase: values.focus_keyphrase,
+    focus_keyword: values.focus_keyphrase,
     focus_keywords: values.focus_keywords,
     social_image_url: values.social_image_url,
     seo_title: values.seo_title,
     slug: values.slug,
     meta_description: values.meta_description,
-    seo_schema: values.seo_schema,
+    seo_schema: seoSchema,
     schema_type: values.schema_type,
     canonical_url: values.canonical_url,
     robots_index: values.robots_index,
@@ -252,7 +262,7 @@ export function seoValuesToTablePayload(table: string, values: SeoValues): Recor
     breadcrumb_title: values.breadcrumb_title,
     og_title: values.og_title,
     og_description: values.og_description,
-    seo_settings: packSeoSettings(values),
+    seo_settings: packedSettings,
   };
 
   const payload: Record<string, unknown> = {};

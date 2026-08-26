@@ -42,6 +42,7 @@ function ToursList({
   }, [initialTours, initialCategories, initialCountries]);
 
   useEffect(() => {
+    if (live === 0) return undefined;
     Promise.all([
       fetchCollectionRecords('tours').then((rows) => rows.filter(isPublishedRecord)),
       fetchCollectionRecords('categories').catch(() => []),
@@ -68,9 +69,9 @@ function ToursList({
       <PageHero
         title="Tours"
         subtitle={
-          q || destination || category
-            ? `Search results${q ? ` for “${q}”` : ''}${destination ? ` in ${destination}` : ''}${category ? ` · ${category}` : ''}${days ? ` · ${days} days` : ''}${depart ? ` · departing ${depart}` : ''}`
-            : 'All safari packages from the live database.'
+          q || destination || category || days
+            ? `${filtered.length.toLocaleString()} package${filtered.length === 1 ? '' : 's'}${q ? ` for “${q}”` : ''}${destination ? ` in ${destination}` : ''}${category ? ` · ${category}` : ''}${days ? ` · ${days} days` : ''}${depart ? ` · departing ${depart}` : ''}`
+            : `${filtered.length.toLocaleString()} Total Packages from the live database.`
         }
         image={filtered[0] ? getRecordImage(filtered[0]) : undefined}
       />

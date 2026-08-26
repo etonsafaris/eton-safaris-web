@@ -16,6 +16,7 @@ import {
   ROBOTS_ADVANCED_OPTIONS,
   SEO_SCHEMA_TYPES,
   seoScore,
+  seoScorePercent,
   validateSeoSchema,
   type SeoContentType,
   type SeoValues,
@@ -33,6 +34,8 @@ type SeoPanelProps = {
   className?: string;
   coverImageUrl?: string;
   contentType?: SeoContentType;
+  keywordLibraryCountry?: string;
+  keywordLibraryCategory?: string;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -101,21 +104,32 @@ export default function SeoPanel({
   className = '',
   coverImageUrl = '',
   contentType = 'page',
+  keywordLibraryCountry = '',
+  keywordLibraryCategory = '',
 }: SeoPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'seo' | 'readability' | 'schema'>('seo');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [keywordDraft, setKeywordDraft] = useState('');
-  const [keywordCountry, setKeywordCountry] = useState('Uganda');
-  const [keywordCategory, setKeywordCategory] = useState('');
+  const [keywordCountry, setKeywordCountry] = useState(keywordLibraryCountry || 'Uganda');
+  const [keywordCategory, setKeywordCategory] = useState(keywordLibraryCategory || '');
   const [libraryCategories, setLibraryCategories] = useState<{ value: string; label: string }[]>([]);
   const [toast, setToast] = useState('');
+
+  useEffect(() => {
+    if (keywordLibraryCountry) setKeywordCountry(keywordLibraryCountry);
+  }, [keywordLibraryCountry]);
+
+  useEffect(() => {
+    if (keywordLibraryCategory) setKeywordCategory(keywordLibraryCategory);
+  }, [keywordLibraryCategory]);
 
   const analysis = useMemo(
     () => analyzeSeo(values, contentForReadability),
     [values, contentForReadability]
   );
   const score = seoScore(values, contentForReadability);
+  const scorePercent = seoScorePercent(values, contentForReadability);
   const readability = useMemo(() => analyzeReadability(contentForReadability), [contentForReadability]);
   const flesch = useMemo(() => fleschReadingEase(contentForReadability), [contentForReadability]);
   const schemaCheck = useMemo(() => validateSeoSchema(values.seo_schema), [values.seo_schema]);
@@ -257,13 +271,16 @@ export default function SeoPanel({
       >
         <div className="flex items-center gap-3">
           <span
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${
-              score === 'good' ? 'bg-green-100' : 'bg-red-100'
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+              scorePercent >= 90 ? 'bg-green-100 text-green-700' : scorePercent >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
             }`}
           >
-            {score === 'good' ? '☺' : '☹'}
+            {scorePercent}
           </span>
-          <span className="font-bold text-[#111827]">SEO</span>
+          <div>
+            <span className="font-bold text-[#111827]">SEO</span>
+            <span className="ml-2 text-sm text-[#6b7280]">{scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}</span>
+          </div>
         </div>
         <ChevronDown className={`h-5 w-5 text-[#6b7280] transition ${open ? 'rotate-180' : ''}`} />
       </button>

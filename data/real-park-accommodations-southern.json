@@ -1,0 +1,1892 @@
+[
+  {
+    "name": "Onguma The Fort",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://onguma.com/onguma-the-fort/",
+    "location_note": "Onguma private reserve on Etosha’s eastern boundary near Von Lindequist Gate, overlooking Fischer’s Pan."
+  },
+  {
+    "name": "Onguma Camp Kala",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://onguma.com/",
+    "location_note": "Ultra-intimate four-suite camp on Onguma Game Reserve, minutes from Etosha’s eastern gate."
+  },
+  {
+    "name": "Mushara Lodge",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://mushara-lodge.com/",
+    "location_note": "About 8 km from Von Lindequist Gate on Etosha’s eastern side; base for park day drives."
+  },
+  {
+    "name": "Mushara Outpost",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://mushara-lodge.com/",
+    "location_note": "Tent-style suites in the Mushara Collection near Etosha’s eastern entrance."
+  },
+  {
+    "name": "Okaukuejo Resort",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/okaukuejo-resort/",
+    "location_note": "Classic NWR rest camp inside southern Etosha, famous for its floodlit waterhole."
+  },
+  {
+    "name": "Halali Resort",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/halali-resort/",
+    "location_note": "Central Etosha NWR camp between Okaukuejo and Namutoni, with a floodlit waterhole."
+  },
+  {
+    "name": "Namutoni Resort",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/namutoni-resort/",
+    "location_note": "Historic fort-style NWR camp near Etosha’s eastern gate and Fischer’s Pan."
+  },
+  {
+    "name": "Dolomite Resort",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/dolomite-resort/",
+    "location_note": "Western Etosha NWR lodge on a dolomite ridge overlooking plains and waterholes."
+  },
+  {
+    "name": "Andersson's at Ongava",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/namibia/etosha/anderssons-at-ongava",
+    "location_note": "Wilderness camp on Ongava Game Reserve bordering southern Etosha near Andersson Gate."
+  },
+  {
+    "name": "Etosha Safari Lodge",
+    "country": "Namibia",
+    "national_park": "Etosha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://gondwana-collection.com/en/lodges/etosha-safari-lodge/",
+    "location_note": "Gondwana Collection lodge south of Andersson Gate; self-drive base for Etosha."
+  },
+  {
+    "name": "Little Kulala",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/namibia/sossusvlei/little-kulala",
+    "location_note": "Kulala Wilderness Reserve with private gate access to Sossusvlei dune fields."
+  },
+  {
+    "name": "Kulala Desert Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/namibia/sossusvlei/kulala-desert-lodge",
+    "location_note": "Wilderness lodge on Kulala Reserve bordering Namib-Naukluft near Sesriem."
+  },
+  {
+    "name": "&Beyond Sossusvlei Desert Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/our-lodges/africa/namibia/sossusvlei/andbeyond-sossusvlei-desert-lodge/",
+    "location_note": "Private NamibRand-adjacent desert lodge with guided access toward Sossusvlei."
+  },
+  {
+    "name": "Sossusvlei Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://sossusvleilodge.com/",
+    "location_note": "At the Sesriem entrance gate to Namib-Naukluft and the road to Sossusvlei."
+  },
+  {
+    "name": "Sossus Dune Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/sossus-dune-lodge/",
+    "location_note": "Only NWR lodge inside the park near Sesriem; early access to Sossusvlei."
+  },
+  {
+    "name": "Namib Desert Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://gondwana-collection.com/en/lodges/namib-desert-lodge/",
+    "location_note": "Gondwana lodge among fossilized dunes north of Sesriem on the C19 approach."
+  },
+  {
+    "name": "Dead Valley Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.deadvalleylodge.com/",
+    "location_note": "Near Sesriem canyon and the gate into the Sossusvlei section of the park."
+  },
+  {
+    "name": "Agama River Camp",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://agamalodge.com/",
+    "location_note": "Desert lodge between Solitaire and Sesriem for Sossusvlei and Naukluft day trips."
+  },
+  {
+    "name": "Hoodia Desert Lodge",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.hoodiadesertlodge.com/",
+    "location_note": "Intimate lodge on the Tsauchab River road toward Sesriem and Sossusvlei."
+  },
+  {
+    "name": "Kwessi Dunes",
+    "country": "Namibia",
+    "national_park": "Namib-Naukluft National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://naturalselection.travel/camps/kwessi-dunes/",
+    "location_note": "Natural Selection desert camp near the Namib dunes with Sossusvlei excursions."
+  },
+  {
+    "name": "Shipwreck Lodge",
+    "country": "Namibia",
+    "national_park": "Skeleton Coast National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://shipwrecklodge.com.na/",
+    "location_note": "Shipwreck-inspired chalets in the Skeleton Coast concession between Hoarusib and Hoanib, near Möwe Bay."
+  },
+  {
+    "name": "Hoanib Skeleton Coast Camp",
+    "country": "Namibia",
+    "national_park": "Skeleton Coast National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/namibia/kunene-region/hoanib-skeleton-coast-camp",
+    "location_note": "Wilderness camp in the Hoanib Valley with fly-in access into Skeleton Coast National Park."
+  },
+  {
+    "name": "Terrace Bay Resort",
+    "country": "Namibia",
+    "national_park": "Skeleton Coast National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/terrace-bay-resort/",
+    "location_note": "NWR coastal resort inside Skeleton Coast Park; self-drive access along the C34."
+  },
+  {
+    "name": "Hoanib Valley Camp",
+    "country": "Namibia",
+    "national_park": "Skeleton Coast National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://naturalselection.travel/camps/hoanib-valley-camp/",
+    "location_note": "Natural Selection camp in the Hoanib Valley gateway landscapes to the Skeleton Coast."
+  },
+  {
+    "name": "Waterberg Resort",
+    "country": "Namibia",
+    "national_park": "Waterberg Plateau Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nwr.com.na/resorts/waterberg-resort/",
+    "location_note": "NWR chalets and campsites at the base of the Waterberg Plateau cliffs."
+  },
+  {
+    "name": "Waterberg Wilderness Lodge",
+    "country": "Namibia",
+    "national_park": "Waterberg Plateau Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.waterberg-wilderness.com/",
+    "location_note": "Private wilderness reserve on the Waterberg massif adjoining the national park."
+  },
+  {
+    "name": "Waterberg Plateau Lodge",
+    "country": "Namibia",
+    "national_park": "Waterberg Plateau Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.waterberg-wilderness.com/",
+    "location_note": "Cliff-edge rooms in the Waterberg Wilderness private reserve overlooking the plateau."
+  },
+  {
+    "name": "Frans Indongo Lodge",
+    "country": "Namibia",
+    "national_park": "Waterberg Plateau Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.indongolodge.com/",
+    "location_note": "Farm lodge between Otjiwarongo and Waterberg; day-trip base for the plateau park."
+  },
+  {
+    "name": "Nambwa Tented Lodge",
+    "country": "Namibia",
+    "national_park": "Bwabwata National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://africanmonarchjourneys.com/stay/nambwa-tented-lodge/",
+    "location_note": "Elevated tented suites inside Bwabwata on the Kwando River floodplain."
+  },
+  {
+    "name": "Kazile Island Lodge",
+    "country": "Namibia",
+    "national_park": "Bwabwata National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://africanmonarchjourneys.com/",
+    "location_note": "African Monarch lodge on an island near Bwabwata’s Kwando channels."
+  },
+  {
+    "name": "Ngepi Camp",
+    "country": "Namibia",
+    "national_park": "Bwabwata National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.ngepicamp.com/",
+    "location_note": "Riverside camp near Divundu/Popa Falls; gateway to western Bwabwata and Mahango."
+  },
+  {
+    "name": "Ndhovu Safari Lodge",
+    "country": "Namibia",
+    "national_park": "Bwabwata National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.ndhovu.com/",
+    "location_note": "Okavango River lodge near Divundu for game drives into Mahango/Bwabwata."
+  },
+  {
+    "name": "Hakusembe River Lodge",
+    "country": "Namibia",
+    "national_park": "Bwabwata National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://gondwana-collection.com/en/lodges/hakusembe-river-lodge/",
+    "location_note": "Gondwana lodge on the Okavango near Rundu; regional base for Kavango–Zambezi parks."
+  },
+  {
+    "name": "Mfuwe Lodge",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://bushcampcompany.com/products/mfuwe-lodge",
+    "location_note": "Just inside the Mfuwe Gate between two lagoons; famous for seasonal mango-tree elephants."
+  },
+  {
+    "name": "Time + Tide Chinzombo",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.timeandtideafrica.com/camp/time-tide-chinzombo",
+    "location_note": "Flagship Luangwa riverside tents with private plunge pools opposite Nsefu sector."
+  },
+  {
+    "name": "Time + Tide Kakuli",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.timeandtideafrica.com/",
+    "location_note": "Seasonal bushcamp on a Luangwa River bend in the park’s classic walking country."
+  },
+  {
+    "name": "Nkwali Camp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.robinpopesafaris.net/camps-lodges/nkwali/",
+    "location_note": "Robin Pope Safaris camp on a private Luangwa riverbank concession opposite the park."
+  },
+  {
+    "name": "Nsefu Camp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.robinpopesafaris.net/camps-lodges/nsefu-camp/",
+    "location_note": "Historic Robin Pope camp in the exclusive Nsefu sector of South Luangwa."
+  },
+  {
+    "name": "Tafika Camp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.remoteafrica.com/tafika-camp/",
+    "location_note": "Remote Africa camp on the Luangwa River in the northern Nsefu area."
+  },
+  {
+    "name": "Puku Ridge Camp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.pukuridgecamp.com/",
+    "location_note": "Hilltop luxury tents overlooking a productive Luangwa floodplain inside the park."
+  },
+  {
+    "name": "Chamilandu Bushcamp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://bushcampcompany.com/",
+    "location_note": "Seasonal Bushcamp Company camp on the Luangwa south of Mfuwe."
+  },
+  {
+    "name": "Flatdogs Camp",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.flatdogscamp.com/",
+    "location_note": "Popular riverside camp outside Mfuwe Gate with park drive access."
+  },
+  {
+    "name": "Kapani Lodge",
+    "country": "Zambia",
+    "national_park": "South Luangwa National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.normanarrsafaris.com/",
+    "location_note": "Norman Carr Safaris lodge on a private reserve beside the Luangwa near Mfuwe."
+  },
+  {
+    "name": "Time + Tide Chongwe Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.timeandtideafrica.com/camp/time-tide-chongwe-camp",
+    "location_note": "At the Chongwe–Zambezi confluence on the park’s western boundary."
+  },
+  {
+    "name": "Potato Bush Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://greensafaris.com/potato-bush/index.php",
+    "location_note": "Intimate Green Safaris riverfront camp inside Lower Zambezi near Jeki."
+  },
+  {
+    "name": "Anabezi Lodge",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.anabezi.com/",
+    "location_note": "Luxury suites under winterthorns at the Zambezi–Mushuu confluence inside the park."
+  },
+  {
+    "name": "Sausage Tree Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sausagetreecamp.com/",
+    "location_note": "Classic riverside luxury camp inside Lower Zambezi National Park."
+  },
+  {
+    "name": "Chiawa Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.chiawa.com/",
+    "location_note": "Long-established Chiawa family camp on the Zambezi inside the park."
+  },
+  {
+    "name": "Old Mondoro",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.chiawa.com/old-mondoro/",
+    "location_note": "Small sister camp to Chiawa deeper inside Lower Zambezi’s game-rich channels."
+  },
+  {
+    "name": "Royal Zambezi Lodge",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.royalzambezilodge.com/",
+    "location_note": "River lodge on a private reserve opposite Mana Pools, beside Lower Zambezi NP."
+  },
+  {
+    "name": "Baines' River Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.bainesrivercamp.com/",
+    "location_note": "Zambezi riverbank lodge outside the park gate with canoeing and park drives."
+  },
+  {
+    "name": "Musesengere Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://kerdowneyzambia.com/",
+    "location_note": "Ker & Downey camp far east in Lower Zambezi near the Kulefu area."
+  },
+  {
+    "name": "Kutali Camp",
+    "country": "Zambia",
+    "national_park": "Lower Zambezi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.chiawa.com/",
+    "location_note": "Seasonal Chiawa Safaris bushcamp inside Lower Zambezi’s woodland interior."
+  },
+  {
+    "name": "Ila Safari Lodge",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://greensafaris.com/ila/index.php",
+    "location_note": "Green Safaris lodge on the Kafue River at the park’s eastern edge near Hook Bridge."
+  },
+  {
+    "name": "Chisa Busanga Camp",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://greensafaris.com/chisa-busanga/index.php",
+    "location_note": "Tree-nest style camp on the Busanga Plains in northern Kafue."
+  },
+  {
+    "name": "Busanga Bush Camp",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/zambia/kafue/busanga-bush-camp",
+    "location_note": "Wilderness seasonal camp deep on the Busanga Plains floodplains."
+  },
+  {
+    "name": "Mukambi Safari Lodge",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.mukambi.com/",
+    "location_note": "Kafue River lodge on the main Lusaka–Mongu road at the park boundary."
+  },
+  {
+    "name": "Kaingu Safari Lodge",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.kaingu-lodge.com/",
+    "location_note": "Lodge on the Kafue River adjoining the park’s Hook area with boat safaris."
+  },
+  {
+    "name": "Konkamoya Lodge",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.konkamoya.com/",
+    "location_note": "Southern Kafue lodge overlooking Lake Itezhi-Tezhi shoreline woodlands."
+  },
+  {
+    "name": "Musekese Camp",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.musekese.com/",
+    "location_note": "Owner-run bushcamp in central Kafue’s woodland and riverine habitats."
+  },
+  {
+    "name": "Mayukuyuku Bush Camp",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.mukambi.com/mayukuyuku/",
+    "location_note": "Mukambi’s tented bushcamp inside Kafue near the riverine corridors."
+  },
+  {
+    "name": "Ntemwa-Busanga Camp",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.mukambi.com/",
+    "location_note": "Mukambi seasonal camp serving the northern Busanga Plains."
+  },
+  {
+    "name": "Hippo Lodge",
+    "country": "Zambia",
+    "national_park": "Kafue National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.hippolodge.com/",
+    "location_note": "Riverside lodge near Kafue’s eastern approaches with park safari access."
+  },
+  {
+    "name": "King Lewanika Lodge",
+    "country": "Zambia",
+    "national_park": "Liuwa Plain National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://kerdowneyzambia.com/",
+    "location_note": "Ker & Downey luxury lodge near Matamanene airstrip on Liuwa’s plains."
+  },
+  {
+    "name": "Time + Tide Liuwa Plain",
+    "country": "Zambia",
+    "national_park": "Liuwa Plain National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.timeandtideafrica.com/",
+    "location_note": "Seasonal Time + Tide camp on Liuwa’s grassland wilderness."
+  },
+  {
+    "name": "Liuwa Camp",
+    "country": "Zambia",
+    "national_park": "Liuwa Plain National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.africanparks.org/the-parks/liuwa-plain",
+    "location_note": "Park-linked safari camping base used for Liuwa wildebeest migration viewing."
+  },
+  {
+    "name": "Tongabezi Lodge",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.tongabezi.com/",
+    "location_note": "Private Zambezi river lodge upstream of Victoria Falls near Livingstone."
+  },
+  {
+    "name": "The Royal Livingstone Hotel",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.anantara.com/en/royal-livingstone",
+    "location_note": "Anantara hotel on the Zambezi bank beside Mosi-oa-Tunya NP and the Falls."
+  },
+  {
+    "name": "Avani Victoria Falls Resort",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "edge",
+    "website": "https://www.avanihotels.com/en/victoria-falls",
+    "location_note": "Resort adjoining Royal Livingstone with walkable access to the Falls park."
+  },
+  {
+    "name": "Toka Leya Camp",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/zambia/victoria-falls/toka-leya-camp",
+    "location_note": "Wilderness tented camp on the Zambezi inside the greater Mosi-oa-Tunya riverside reserve."
+  },
+  {
+    "name": "Islands of Siankaba",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.siankaba.net/",
+    "location_note": "Island lodge on the Zambezi upstream of Livingstone for Falls day visits."
+  },
+  {
+    "name": "The River Club",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.theriverclubafrica.com/",
+    "location_note": "Edwardian-style Zambezi lodge near Livingstone with Victoria Falls excursions."
+  },
+  {
+    "name": "David Livingstone Safari Lodge & Spa",
+    "country": "Zambia",
+    "national_park": "Mosi-oa-Tunya National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.dl-safari.com/",
+    "location_note": "Riverside hotel in Livingstone used as a base for Mosi-oa-Tunya and the Falls."
+  },
+  {
+    "name": "Mwaleshi Camp",
+    "country": "Zambia",
+    "national_park": "North Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.remoteafrica.com/mwaleshi-camp/",
+    "location_note": "Remote Africa walking-focused camp on the Mwaleshi River inside North Luangwa."
+  },
+  {
+    "name": "Takwela Camp",
+    "country": "Zambia",
+    "national_park": "North Luangwa National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.remoteafrica.com/takwela-camp/",
+    "location_note": "Remote Africa riverside camp at the Luangwa–Mwaleshi confluence."
+  },
+  {
+    "name": "Kutandala Camp",
+    "country": "Zambia",
+    "national_park": "North Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.kutandala.com/",
+    "location_note": "Owner-run intimate camp dedicated to walking safaris in North Luangwa."
+  },
+  {
+    "name": "Buffalo Camp",
+    "country": "Zambia",
+    "national_park": "North Luangwa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.shiwasafaris.com/",
+    "location_note": "Shiwa Safaris seasonal camp inside North Luangwa’s wilderness block."
+  },
+  {
+    "name": "Wasa Lodge",
+    "country": "Zambia",
+    "national_park": "Kasanka National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://kasanka.com/accommodation/",
+    "location_note": "Main Kasanka Trust lodge on Lake Wasa near the park entrance and bat forests."
+  },
+  {
+    "name": "Luwombwa Lodge",
+    "country": "Zambia",
+    "national_park": "Kasanka National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://kasanka.com/accommodation/",
+    "location_note": "Quieter Kasanka Trust lodge on the Luwombwa River floodplain."
+  },
+  {
+    "name": "Kapabi Camp",
+    "country": "Zambia",
+    "national_park": "Kasanka National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://kasanka.com/accommodation/",
+    "location_note": "Seasonal self-catering tented camp for Kasanka’s fruit-bat migration season."
+  },
+  {
+    "name": "Somalisa Camp",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/somalisa-camp/",
+    "location_note": "African Bush Camps signature camp in an acacia grove with an elephant drinking pool."
+  },
+  {
+    "name": "Linkwasha Camp",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/hwange-national-park/linkwasha-camp",
+    "location_note": "Wilderness camp in the Linkwasha Concession near Ngamo Plains."
+  },
+  {
+    "name": "Davison's Camp",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/hwange-national-park/davisons-camp",
+    "location_note": "Wilderness tented camp in southeastern Hwange’s productive Linkwasha area."
+  },
+  {
+    "name": "Little Makalolo",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/hwange-national-park/little-makalolo",
+    "location_note": "Intimate Wilderness camp overlooking a busy Hwange waterhole."
+  },
+  {
+    "name": "The Hide Safari Camp",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.thehide.com/",
+    "location_note": "Award-winning camp beside a productive pan in central Hwange."
+  },
+  {
+    "name": "Verney's Camp",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/verneys-camp/",
+    "location_note": "African Bush Camps camp in a teak forest clearing with a waterhole hide."
+  },
+  {
+    "name": "Nehimba Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.nehimba.com/",
+    "location_note": "Private concession lodge in northern Hwange’s wilderness sector."
+  },
+  {
+    "name": "Ivory Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ivorylodge.net/",
+    "location_note": "Tree lodge on a private reserve bordering Hwange near Hwange Town."
+  },
+  {
+    "name": "Camelthorn Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://imvelosafarilodges.com/camelthorn-lodge/",
+    "location_note": "Imvelo lodge in the Ngamo community concession on Hwange’s southeastern edge."
+  },
+  {
+    "name": "Hwange Safari Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Hwange National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.africansunhotels.com/",
+    "location_note": "Large lodge near the Main Camp gate overlooking a floodlit waterhole."
+  },
+  {
+    "name": "Ruckomechi Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/mana-pools-national-park/ruckomechi-camp",
+    "location_note": "Wilderness camp on the Ruckomechi River floodplain adjoining Mana Pools."
+  },
+  {
+    "name": "Little Ruckomechi",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/mana-pools-national-park/little-ruckomechi",
+    "location_note": "Exclusive three-tent Wilderness satellite near Ruckomechi Camp."
+  },
+  {
+    "name": "Chikwenya Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/zimbabwe/mana-pools-national-park/chikwenya",
+    "location_note": "Wilderness camp at Mana’s eastern end on the Zambezi floodplain."
+  },
+  {
+    "name": "Vundu Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/vundu-camp/",
+    "location_note": "African Bush Camps riverside camp inside Mana Pools for walking and canoeing."
+  },
+  {
+    "name": "Kanga Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/kanga-camp/",
+    "location_note": "Inland African Bush Camps camp around a productive Mana pan."
+  },
+  {
+    "name": "Nyamatusi Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/nyamatusi-camp/",
+    "location_note": "High-end African Bush Camps camp on the Zambezi inside Mana Pools."
+  },
+  {
+    "name": "Zambezi Expeditions",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://africanbushcamps.com/experiences/zambezi-expeditions/",
+    "location_note": "Seasonal classic-safari tented camp on the Mana Pools riverfront."
+  },
+  {
+    "name": "John's Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.johnscamp.com/",
+    "location_note": "Small owner-run camp on the Mana floodplain focused on walking safaris."
+  },
+  {
+    "name": "Mana River Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.manariverlodge.com/",
+    "location_note": "Riverside lodge inside Mana Pools with boat and canoe access on the Zambezi."
+  },
+  {
+    "name": "Goliath Safaris Camp",
+    "country": "Zimbabwe",
+    "national_park": "Mana Pools National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.goliathsafaris.com/",
+    "location_note": "Nick Murray’s walking-safari camp under mahogany trees on the Mana floodplain."
+  },
+  {
+    "name": "Victoria Falls Hotel",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.victoriafallshotel.com/",
+    "location_note": "Iconic colonial hotel overlooking the Second Gorge and Victoria Falls Bridge."
+  },
+  {
+    "name": "Victoria Falls Safari Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.africaalbidatourism.com/victoria-falls-safari-lodge/",
+    "location_note": "Hilltop lodge in the Victoria Falls Safari Resort overlooking a waterhole."
+  },
+  {
+    "name": "Ilala Lodge Hotel",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.ilalalodge.com/",
+    "location_note": "Boutique hotel near the Falls rainforest entrance in Victoria Falls town."
+  },
+  {
+    "name": "Victoria Falls River Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.victoriafallsriverlodge.com/",
+    "location_note": "Wild Horizons lodge on the Zambezi inside Zambezi National Park upstream of the Falls."
+  },
+  {
+    "name": "Old Drift Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.olddriftlodge.com/",
+    "location_note": "Luxury suites on the Zambezi in Zambezi National Park near Victoria Falls."
+  },
+  {
+    "name": "The Elephant Camp",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.theelephantcamp.com/",
+    "location_note": "Wild Horizons lodge on a private estate overlooking gorges near the Falls."
+  },
+  {
+    "name": "Stanley & Livingstone Boutique Hotel",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.stanleyandlivingstone.com/",
+    "location_note": "Relais & Châteaux hotel on a private game estate outside Victoria Falls town."
+  },
+  {
+    "name": "Matetsi Victoria Falls",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.matetsivictoriafalls.com/",
+    "location_note": "Luxury river lodges on a private reserve upstream of Victoria Falls on the Zambezi."
+  },
+  {
+    "name": "Palm River Hotel",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.palmriverhotel.com/",
+    "location_note": "Modern hotel on the Zambezi riverbank in Victoria Falls town."
+  },
+  {
+    "name": "Batonka Guest Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Victoria Falls",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.batonkaguesthouse.com/",
+    "location_note": "Quiet guest lodge in the residential area of Victoria Falls town."
+  },
+  {
+    "name": "Amalinda Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Matobo National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.amalindacollection.com/amalinda-lodge/",
+    "location_note": "Lodge built among granite kopjes on the edge of Matobo’s ancient hills."
+  },
+  {
+    "name": "Camp Amalinda",
+    "country": "Zimbabwe",
+    "national_park": "Matobo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.amalindacollection.com/",
+    "location_note": "Sister property to Amalinda Lodge among Matobo’s balancing boulder landscapes."
+  },
+  {
+    "name": "Big Cave Camp",
+    "country": "Zimbabwe",
+    "national_park": "Matobo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.bigcavematopos.com/",
+    "location_note": "Thatched lodge on a granite outcrop overlooking Matobo National Park."
+  },
+  {
+    "name": "Matobo Hills Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Matobo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.matobohillslodge.com/",
+    "location_note": "Lodge near the park entrance for rhino tracking and rock-art excursions."
+  },
+  {
+    "name": "The Farmhouse at Matobo",
+    "country": "Zimbabwe",
+    "national_park": "Matobo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.farmhousematopos.com/",
+    "location_note": "Converted farmhouse stay outside the park gates for day visits into Matobo."
+  },
+  {
+    "name": "Chilo Gorge Safari Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Gonarezhou National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.chilogorge.com/",
+    "location_note": "Cliff-top lodge overlooking the Save River beside Gonarezhou’s northern boundary."
+  },
+  {
+    "name": "Singita Pamushana Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Gonarezhou National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://singita.com/lodge/singita-pamushana-lodge/",
+    "location_note": "Singita lodge on Malilangwe Reserve adjoining the Gonarezhou ecosystem."
+  },
+  {
+    "name": "Gonarezhou Conservation Trust Camps",
+    "country": "Zimbabwe",
+    "national_park": "Gonarezhou National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://gonarezhou.org/",
+    "location_note": "Park-operated and partner tented camps including Chipinda Pools access points."
+  },
+  {
+    "name": "Swimuwini Camp",
+    "country": "Zimbabwe",
+    "national_park": "Gonarezhou National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.zimparks.org.zw/",
+    "location_note": "ZimParks self-catering camp near the Runde River inside Gonarezhou."
+  },
+  {
+    "name": "Bumi Hills Safari Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Matusadona National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.bumihills.com/",
+    "location_note": "Hilltop lodge overlooking Lake Kariba beside Matusadona’s wildlife shoreline."
+  },
+  {
+    "name": "Changa Safari Camp",
+    "country": "Zimbabwe",
+    "national_park": "Matusadona National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.changasafaricamp.com/",
+    "location_note": "Luxury tented camp on Lake Kariba’s edge facing Matusadona National Park."
+  },
+  {
+    "name": "Musango Safari Camp",
+    "country": "Zimbabwe",
+    "national_park": "Matusadona National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.musango.com/",
+    "location_note": "Steve Edwards’ island camp on Lake Kariba opposite Matusadona."
+  },
+  {
+    "name": "Spurwing Island Lodge",
+    "country": "Zimbabwe",
+    "national_park": "Matusadona National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.spurwingisland.com/",
+    "location_note": "Island lodge on Lake Kariba with boat access into Matusadona."
+  },
+  {
+    "name": "Rhino Safari Camp",
+    "country": "Zimbabwe",
+    "national_park": "Matusadona National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.rhinosafaricamp.com/",
+    "location_note": "Tented camp inside Matusadona on the Sanyati West shoreline of Kariba."
+  },
+  {
+    "name": "Singita Lebombo Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://singita.com/lodge/singita-lebombo-lodge/",
+    "location_note": "Singita concession lodge on the N’wanetsi River in southeastern Kruger."
+  },
+  {
+    "name": "Singita Sweni Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://singita.com/lodge/singita-sweni-lodge/",
+    "location_note": "Intimate Singita sister lodge on the Sweni River inside Kruger."
+  },
+  {
+    "name": "Lion Sands Tinga Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.more.co.za/lionsands/",
+    "location_note": "MORE Collection lodge on the Sabie River inside Kruger’s Lion Sands concession."
+  },
+  {
+    "name": "Lion Sands Narina Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.more.co.za/lionsands/",
+    "location_note": "Elevated suites in the Kruger section of Lion Sands along the Sabie River."
+  },
+  {
+    "name": "&Beyond Ngala Safari Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.andbeyond.com/our-lodges/africa/south-africa/kruger-national-park/andbeyond-ngala-safari-lodge/",
+    "location_note": "Private Ngala concession lodge inside Kruger National Park."
+  },
+  {
+    "name": "&Beyond Ngala Tented Camp",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.andbeyond.com/our-lodges/africa/south-africa/kruger-national-park/andbeyond-ngala-tented-camp/",
+    "location_note": "Classic luxury tents on the Ngala private concession within Kruger."
+  },
+  {
+    "name": "Jock Safari Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.jocksafarilodge.com/",
+    "location_note": "Private concession lodge at the Biyamiti–Mitomeni confluence in southern Kruger."
+  },
+  {
+    "name": "Lukimbi Safari Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.lukimbi.com/",
+    "location_note": "Private concession lodge on the Lwakahle River in southern Kruger."
+  },
+  {
+    "name": "Skukuza Rest Camp",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kruger/camps/skukuza",
+    "location_note": "Largest SANParks rest camp in southern Kruger on the Sabie River."
+  },
+  {
+    "name": "Singita Ebony Lodge",
+    "country": "South Africa",
+    "national_park": "Kruger National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://singita.com/lodge/singita-ebony-lodge/",
+    "location_note": "Founding Singita lodge on the Sand River in Sabi Sand, open to Kruger wildlife."
+  },
+  {
+    "name": "Gorah Elephant Camp",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://gorah.hunterhotels.com/",
+    "location_note": "Only private luxury concession camp in the heart of Addo’s main elephant section."
+  },
+  {
+    "name": "RiverBend Lodge",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://riverbendcollection.co.za/",
+    "location_note": "Private concession lodge within Addo on the Sundays River / Zuurberg side."
+  },
+  {
+    "name": "Addo Rest Camp",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/addo-elephant/camps/addo",
+    "location_note": "Main SANParks rest camp inside Addo with chalets and a floodlit waterhole."
+  },
+  {
+    "name": "Spekboom Tented Camp",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/addo-elephant",
+    "location_note": "SANParks tented camp in Addo’s spekboom thicket landscapes."
+  },
+  {
+    "name": "Matyholweni Rest Camp",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/addo-elephant/camps/matyholweni",
+    "location_note": "Southern SANParks rest camp near Addo’s southern gate."
+  },
+  {
+    "name": "Kuzuko Lodge",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.kuzuko.com/",
+    "location_note": "Legacy lodge on a private Big Five reserve adjoining northern Addo."
+  },
+  {
+    "name": "Camp Figtree",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.campfigtree.com/",
+    "location_note": "Hillside lodge outside Addo with views toward the Zuurberg and park day trips."
+  },
+  {
+    "name": "Hitgeheim Country Lodge",
+    "country": "South Africa",
+    "national_park": "Addo Elephant National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.hitgeheim.co.za/",
+    "location_note": "Country lodge near Addo village used as a self-drive park base."
+  },
+  {
+    "name": "Bakubung Bush Lodge",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.legacyhotels.co.za/hotels/bakubung-bush-lodge",
+    "location_note": "Legacy Hotels lodge inside Pilanesberg near a busy waterhole."
+  },
+  {
+    "name": "Kwa Maritane Bush Lodge",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.legacyhotels.co.za/hotels/kwa-maritane-bush-lodge",
+    "location_note": "Legacy lodge inside southeastern Pilanesberg with underground hide."
+  },
+  {
+    "name": "Tshukudu Bush Lodge",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.legacyhotels.co.za/hotels/tshukudu-bush-lodge",
+    "location_note": "Exclusive hilltop Legacy lodge inside Pilanesberg for adults-only stays."
+  },
+  {
+    "name": "Shepherd's Tree Game Lodge",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.shepherdstreegamelodge.com/",
+    "location_note": "Modern lodge in western Pilanesberg with spa and game drives."
+  },
+  {
+    "name": "Manyane Resort",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.goldenleopardresorts.co.za/",
+    "location_note": "Family resort and chalets at Pilanesberg’s eastern Manyane Gate."
+  },
+  {
+    "name": "Ivory Tree Game Lodge",
+    "country": "South Africa",
+    "national_park": "Pilanesberg National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ivorytreegamelodge.com/",
+    "location_note": "Lodge on Pilanesberg’s eastern periphery with park safari access."
+  },
+  {
+    "name": "The Twelve Apostles Hotel and Spa",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.12apostleshotel.com/",
+    "location_note": "Cliffside hotel between the Twelve Apostles range and the Atlantic at Camps Bay."
+  },
+  {
+    "name": "Belmond Mount Nelson Hotel",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.belmond.com/hotels/africa/south-africa/cape-town/belmond-mount-nelson-hotel/",
+    "location_note": "Historic luxury hotel at the foot of Table Mountain in the Gardens district."
+  },
+  {
+    "name": "The Silo Hotel",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.theroyalportfolio.com/hotels/the-silo/",
+    "location_note": "Royal Portfolio hotel at the V&A Waterfront with Table Mountain views."
+  },
+  {
+    "name": "Ellerman House",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.ellerman.co.za/",
+    "location_note": "Clifftop Bantry Bay mansion hotel beneath Lion’s Head and Signal Hill."
+  },
+  {
+    "name": "The Bay Hotel",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.thebayhotel.com/",
+    "location_note": "Camps Bay beachfront hotel below the Twelve Apostles section of the park."
+  },
+  {
+    "name": "Taj Cape Town",
+    "country": "South Africa",
+    "national_park": "Table Mountain National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.tajhotels.com/en-us/taj/taj-cape-town/",
+    "location_note": "City-bowl luxury hotel with direct Table Mountain and park excursion access."
+  },
+  {
+    "name": "!Xaus Lodge",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.xauslodge.co.za/",
+    "location_note": "Community-owned lodge overlooking a pan in the ‡Khomani concession inside Kgalagadi."
+  },
+  {
+    "name": "Twee Rivieren Rest Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi/camps/twee-rivieren",
+    "location_note": "Main southern SANParks gate camp at the confluence of the Auob and Nossob."
+  },
+  {
+    "name": "Nossob Rest Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi/camps/nossob",
+    "location_note": "SANParks camp on the Nossob River bed in central Kgalagadi."
+  },
+  {
+    "name": "Mata-Mata Rest Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi/camps/mata-mata",
+    "location_note": "Western SANParks camp on the Auob River near the Namibian border gate."
+  },
+  {
+    "name": "Kieliekrankie Wilderness Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi",
+    "location_note": "Unfenced SANParks wilderness camp on a dune ridge inside Kgalagadi."
+  },
+  {
+    "name": "Urikaruus Wilderness Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi",
+    "location_note": "SANParks wilderness camp on the Auob River between Twee Rivieren and Mata-Mata."
+  },
+  {
+    "name": "Grootkolk Wilderness Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi",
+    "location_note": "Remote northern SANParks wilderness camp near the Botswana border."
+  },
+  {
+    "name": "Kalahari Tented Camp",
+    "country": "South Africa",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/kgalagadi",
+    "location_note": "SANParks tented camp overlooking a waterhole near Mata-Mata."
+  },
+  {
+    "name": "Storms River Mouth Rest Camp",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/garden-route/camps/storms-river-mouth",
+    "location_note": "SANParks chalets on the Tsitsikamma coast inside Garden Route National Park."
+  },
+  {
+    "name": "Ebb & Flow Rest Camp",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/garden-route/camps/ebb-and-flow",
+    "location_note": "SANParks rest camp on the Touw River in the Wilderness section of the park."
+  },
+  {
+    "name": "Tsala Treetop Lodge",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.tsamiretreat.com/",
+    "location_note": "Elevated luxury suites in the Bitou forest near Plettenberg Bay on the Garden Route."
+  },
+  {
+    "name": "The Plettenberg Hotel",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.collectionmcgrath.com/the-plettenberg/",
+    "location_note": "Cliff-top Relais & Châteaux hotel in Plettenberg Bay on the Garden Route."
+  },
+  {
+    "name": "Pezula Resort Hotel & Spa",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.pezula.com/",
+    "location_note": "Clifftop resort above the Knysna coastline on the Garden Route."
+  },
+  {
+    "name": "Hog Hollow Country Lodge",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.hoghollow.co.za/",
+    "location_note": "Forest lodge near The Crags with views toward the Tsitsikamma mountains."
+  },
+  {
+    "name": "Emily Moon River Lodge",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.emilymoon.co.za/",
+    "location_note": "Bitou River lodge outside Plettenberg Bay for Garden Route stays."
+  },
+  {
+    "name": "Kurland Hotel",
+    "country": "South Africa",
+    "national_park": "Garden Route National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.kurland.co.za/",
+    "location_note": "Country estate hotel near Nature’s Valley and Tsitsikamma forests."
+  },
+  {
+    "name": "Marataba Safari Lodge",
+    "country": "South Africa",
+    "national_park": "Marakele National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.marataba.co.za/",
+    "location_note": "Luxury lodge on Marataba private concession adjoining Marakele National Park."
+  },
+  {
+    "name": "Marataba Trails Lodge",
+    "country": "South Africa",
+    "national_park": "Marakele National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.marataba.co.za/",
+    "location_note": "Walking-safari lodge on the Marataba concession beside Marakele."
+  },
+  {
+    "name": "Tlopi Tented Camp",
+    "country": "South Africa",
+    "national_park": "Marakele National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/marakele",
+    "location_note": "SANParks tented camp beside a dam inside Marakele National Park."
+  },
+  {
+    "name": "Bontle Rest Camp",
+    "country": "South Africa",
+    "national_park": "Marakele National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/marakele",
+    "location_note": "SANParks camping and tented sites near Marakele’s reception area."
+  },
+  {
+    "name": "Matlabas Rest Camp",
+    "country": "South Africa",
+    "national_park": "Marakele National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sanparks.org/parks/marakele",
+    "location_note": "SANParks self-catering cottages in the Matlabas section of Marakele."
+  },
+  {
+    "name": "Mvuu Lodge",
+    "country": "Malawi",
+    "national_park": "Liwonde National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://cawsmw.com/lodges/mvuu-lodge/",
+    "location_note": "Central African Wilderness Safaris lodge on a Shire River lagoon inside Liwonde."
+  },
+  {
+    "name": "Mvuu Camp",
+    "country": "Malawi",
+    "national_park": "Liwonde National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://cawsmw.com/",
+    "location_note": "Sister riverside camp to Mvuu Lodge inside Liwonde National Park."
+  },
+  {
+    "name": "Kuthengo Camp",
+    "country": "Malawi",
+    "national_park": "Liwonde National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.timeandtideafrica.com/",
+    "location_note": "Time + Tide / Robin Pope luxury tents on the Shire floodplain in Liwonde."
+  },
+  {
+    "name": "Liwonde Safari Camp",
+    "country": "Malawi",
+    "national_park": "Liwonde National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.liwondesafaricamp.com/",
+    "location_note": "Community-facing camp near Liwonde’s boundary with park boat and drive access."
+  },
+  {
+    "name": "Chelinda Lodge",
+    "country": "Malawi",
+    "national_park": "Nyika National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://cawsmw.com/",
+    "location_note": "Log-cabin lodge on the Nyika Plateau inside the national park."
+  },
+  {
+    "name": "Chelinda Camp",
+    "country": "Malawi",
+    "national_park": "Nyika National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://cawsmw.com/",
+    "location_note": "More affordable plateau camp near Chelinda Lodge inside Nyika."
+  },
+  {
+    "name": "Zungulila Stone Chalet",
+    "country": "Malawi",
+    "national_park": "Nyika National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.nyika.com/",
+    "location_note": "Remote self-catering stone chalet on Nyika’s southern grasslands."
+  },
+  {
+    "name": "Mkulumadzi Lodge",
+    "country": "Malawi",
+    "national_park": "Majete Wildlife Reserve",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.robinpopesafaris.net/camps-lodges/mkulumadzi-lodge/",
+    "location_note": "Robin Pope Safaris lodge at a river confluence inside Majete’s private concession."
+  },
+  {
+    "name": "Thawale Lodge",
+    "country": "Malawi",
+    "national_park": "Majete Wildlife Reserve",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.africanparks.org/the-parks/majete",
+    "location_note": "African Parks–linked lodge near Majete headquarters overlooking a waterhole."
+  },
+  {
+    "name": "Mumbo Island Camp",
+    "country": "Malawi",
+    "national_park": "Lake Malawi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.kayakafrica.co.za/mumbo-island/",
+    "location_note": "Kayak Africa eco-camp on Mumbo Island inside Lake Malawi National Park."
+  },
+  {
+    "name": "Domwe Island Camp",
+    "country": "Malawi",
+    "national_park": "Lake Malawi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.kayakafrica.co.za/",
+    "location_note": "Self-catering island camp within Lake Malawi National Park near Cape Maclear."
+  },
+  {
+    "name": "Pumulani Lodge",
+    "country": "Malawi",
+    "national_park": "Lake Malawi National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.robinpopesafaris.net/camps-lodges/pumulani/",
+    "location_note": "Robin Pope lakeshore lodge on Nankumba Peninsula beside Lake Malawi NP."
+  },
+  {
+    "name": "Chembe Eagles Nest",
+    "country": "Malawi",
+    "national_park": "Lake Malawi National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.chembeseaglesnest.com/",
+    "location_note": "Lakeshore lodge at Cape Maclear on the edge of Lake Malawi National Park."
+  },
+  {
+    "name": "Fat Monkeys Lodge",
+    "country": "Malawi",
+    "national_park": "Lake Malawi National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.fatmonkeysmalawi.com/",
+    "location_note": "Cape Maclear beach lodge used as a base for Lake Malawi NP island trips."
+  },
+  {
+    "name": "Montebelo Gorongosa Lodge & Safari",
+    "country": "Mozambique",
+    "national_park": "Gorongosa National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.montebelo.com/",
+    "location_note": "Main visitor lodge near Chitengo inside Gorongosa National Park."
+  },
+  {
+    "name": "Muzimu Tented Camp",
+    "country": "Mozambique",
+    "national_park": "Gorongosa National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://gorongosa.org/",
+    "location_note": "Upscale tented camp on Lake Urema floodplains inside Gorongosa."
+  },
+  {
+    "name": "Explore Gorongosa Camp",
+    "country": "Mozambique",
+    "national_park": "Gorongosa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.exploregorongosa.com/",
+    "location_note": "Owner-run walking and canoe safari camp inside Gorongosa’s wilderness."
+  },
+  {
+    "name": "Giraffe Camp",
+    "country": "Mozambique",
+    "national_park": "Gorongosa National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://gorongosa.org/",
+    "location_note": "Park-linked tented camp used for immersive Gorongosa safari stays."
+  },
+  {
+    "name": "Azura Benguerra Island",
+    "country": "Mozambique",
+    "national_park": "Bazaruto Archipelago",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.azura-retreats.com/azura-benguerra/",
+    "location_note": "Boutique beach villa retreat on Benguerra Island in Bazaruto Archipelago NP."
+  },
+  {
+    "name": "&Beyond Benguerra Island",
+    "country": "Mozambique",
+    "national_park": "Bazaruto Archipelago",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.andbeyond.com/our-lodges/africa/mozambique/bazaruto-archipelago/andbeyond-benguerra-island/",
+    "location_note": "Luxury casinhas on Benguerra Island inside the archipelago national park."
+  },
+  {
+    "name": "Anantara Bazaruto Island Resort",
+    "country": "Mozambique",
+    "national_park": "Bazaruto Archipelago",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.anantara.com/en/bazaruto-island",
+    "location_note": "Full-service resort on Bazaruto Island within the marine national park."
+  },
+  {
+    "name": "Kisawa Sanctuary",
+    "country": "Mozambique",
+    "national_park": "Bazaruto Archipelago",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.kisawasanctuary.com/",
+    "location_note": "Ultra-luxury beach sanctuary on Benguerra Island in the Bazaruto Archipelago."
+  },
+  {
+    "name": "Pestana Bazaruto Lodge",
+    "country": "Mozambique",
+    "national_park": "Bazaruto Archipelago",
+    "type": "Mid-Range Hotel",
+    "placement": "inside",
+    "website": "https://www.pestana.com/",
+    "location_note": "Beach lodge on Bazaruto Island with dhow and marine park activities."
+  },
+  {
+    "name": "Azura Quilalea Private Island",
+    "country": "Mozambique",
+    "national_park": "Quirimbas National Park",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.azura-retreats.com/azura-quilalea/",
+    "location_note": "Private-island villa retreat inside Quirimbas National Park."
+  },
+  {
+    "name": "Anantara Medjumbe Island Resort",
+    "country": "Mozambique",
+    "national_park": "Quirimbas National Park",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.anantara.com/en/medjumbe-island",
+    "location_note": "Intimate island resort in the Quirimbas Archipelago marine park."
+  },
+  {
+    "name": "Ibo Island Lodge",
+    "country": "Mozambique",
+    "national_park": "Quirimbas National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.iboislandlodge.com/",
+    "location_note": "Restored mansions on historic Ibo Island in the Quirimbas Archipelago."
+  },
+  {
+    "name": "Guludo Beach Lodge",
+    "country": "Mozambique",
+    "national_park": "Quirimbas National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.guludo.com/",
+    "location_note": "Community-focused beach lodge on the mainland fringe of Quirimbas NP."
+  },
+  {
+    "name": "&Beyond Vamizi Island",
+    "country": "Mozambique",
+    "national_park": "Quirimbas National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/our-lodges/africa/mozambique/vamizi-island/",
+    "location_note": "Luxury villas on Vamizi in the wider Quirimbas island chain north of Pemba."
+  },
+  {
+    "name": "Machampane Wilderness Camp",
+    "country": "Mozambique",
+    "national_park": "Limpopo National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.limpopopn.gov.mz/",
+    "location_note": "Tented wilderness camp on the Machampane River inside Limpopo NP."
+  },
+  {
+    "name": "Aguia Pesqueira Camp",
+    "country": "Mozambique",
+    "national_park": "Limpopo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.peaceparks.org/",
+    "location_note": "Park camp overlooking Massingir Dam inside Limpopo National Park."
+  },
+  {
+    "name": "Covane Community Lodge",
+    "country": "Mozambique",
+    "national_park": "Limpopo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.peaceparks.org/",
+    "location_note": "Community lodge near Massingir on the edge of Limpopo National Park."
+  },
+  {
+    "name": "Anvil Bay",
+    "country": "Mozambique",
+    "national_park": "Maputo Special Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://anvilbay.com/",
+    "location_note": "Community-owned beach camp at Ponta Chemucane inside Maputo Special Reserve."
+  },
+  {
+    "name": "Machangulo Beach Lodge",
+    "country": "Mozambique",
+    "national_park": "Maputo Special Reserve",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.machangulobeachlodge.com/",
+    "location_note": "Peninsula lodge adjoining Maputo Special Reserve / Maputo National Park coast."
+  },
+  {
+    "name": "White Pearl Resorts Ponta Mamoli",
+    "country": "Mozambique",
+    "national_park": "Maputo Special Reserve",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.whitepearlresorts.com/",
+    "location_note": "Beach resort south of the reserve near Ponta Mamoli on the Maputaland coast."
+  },
+  {
+    "name": "Millibangalala Beach Camp",
+    "country": "Mozambique",
+    "national_park": "Maputo Special Reserve",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.peaceparks.org/",
+    "location_note": "Park beach camping area on the Indian Ocean shore inside the reserve."
+  }
+]

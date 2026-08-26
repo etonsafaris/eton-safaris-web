@@ -1,5 +1,5 @@
 import PostMetaBar, { type MetaItem } from '@/components/public/PostMetaBar';
-import RelatedSidebar from '@/components/public/RelatedSidebar';
+import FitRelatedSidebar from '@/components/public/FitRelatedSidebar';
 
 export default function ContentDetailLayout({
   country,
@@ -36,9 +36,11 @@ export default function ContentDetailLayout({
         />
       )}
       <section className="bg-white">
-        <div className="grid grid-cols-1 items-start gap-3 px-5 py-5 lg:grid-cols-4">
-          <article className="min-w-0 lg:col-span-3 lg:pl-[30px] lg:pr-[50px]">{children}</article>
-          <RelatedSidebar title={sidebarTitle} items={sidebarItems} countryName={country} />
+        <div className="relative grid grid-cols-1 items-start gap-3 px-5 py-5 lg:grid-cols-4">
+          <article data-content-article className="min-w-0 lg:col-span-3 lg:pl-[30px] lg:pr-[50px]">
+            {children}
+          </article>
+          <FitRelatedSidebar title={sidebarTitle} items={sidebarItems} countryName={country} />
         </div>
       </section>
       {below}

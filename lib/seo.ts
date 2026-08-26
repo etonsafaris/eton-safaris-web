@@ -177,7 +177,21 @@ export function packSeoSettings(values: SeoValues): string {
 
 export function seoValuesFromRecord(record: Record<string, unknown> = {}): SeoValues {
   const packed = parsePackedSettings(record.seo_settings);
-  const schemaType = String(packed.schema_type || record.schema_type || 'WebPage') as SeoSchemaType;
+  let schemaPacked: Partial<SeoValues> = {};
+  let seoSchemaText = String(record.seo_schema || '');
+  try {
+    const schemaObj = seoSchemaText ? (JSON.parse(seoSchemaText) as Record<string, unknown>) : null;
+    if (schemaObj && schemaObj._etonSeo) {
+      schemaPacked = parsePackedSettings(schemaObj._etonSeo);
+      const clone = { ...schemaObj };
+      delete clone._etonSeo;
+      seoSchemaText = JSON.stringify(clone);
+    }
+  } catch {
+    /* keep raw schema */
+  }
+  const merged = { ...schemaPacked, ...packed };
+  const schemaType = String(merged.schema_type || record.schema_type || 'WebPage') as SeoSchemaType;
   return {
     focus_keyphrase: String(record.focus_keyphrase || record.focus_keyword || ''),
     seo_title: String(record.seo_title || ''),
@@ -186,16 +200,16 @@ export function seoValuesFromRecord(record: Record<string, unknown> = {}): SeoVa
     social_image_url: String(
       record.social_image_url || record.image_url || record.cover_image || record.featured_image || ''
     ),
-    focus_keywords: parseFocusKeywords(record.focus_keywords ?? record.focus_keyword),
-    seo_schema: String(packed.seo_schema || record.seo_schema || ''),
+    focus_keywords: parseFocusKeywords(record.focus_keywords),
+    seo_schema: String(merged.seo_schema || seoSchemaText || ''),
     schema_type: SEO_SCHEMA_TYPES.some((item) => item.value === schemaType) ? schemaType : 'WebPage',
-    canonical_url: String(packed.canonical_url || record.canonical_url || ''),
-    robots_index: packed.robots_index ?? parseBool(record.robots_index ?? record.robots, true),
-    robots_follow: packed.robots_follow ?? parseBool(record.robots_follow, true),
-    robots_advanced: packed.robots_advanced || parseList(record.robots_advanced),
-    breadcrumb_title: String(packed.breadcrumb_title || record.breadcrumb_title || ''),
-    og_title: String(packed.og_title || record.og_title || ''),
-    og_description: String(packed.og_description || record.og_description || ''),
+    canonical_url: String(merged.canonical_url || record.canonical_url || ''),
+    robots_index: merged.robots_index ?? parseBool(record.robots_index ?? record.robots, true),
+    robots_follow: merged.robots_follow ?? parseBool(record.robots_follow, true),
+    robots_advanced: merged.robots_advanced || parseList(record.robots_advanced),
+    breadcrumb_title: String(merged.breadcrumb_title || record.breadcrumb_title || ''),
+    og_title: String(merged.og_title || record.og_title || ''),
+    og_description: String(merged.og_description || record.og_description || ''),
   };
 }
 
@@ -278,9 +292,10 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
   const description = values.meta_description.trim();
   const body = stripHtml(content).toLowerCase();
   const key = keyphrase.toLowerCase();
+  const slug = values.slug.trim().toLowerCase();
 
   if (!keyphrase) {
-    items.push({ type: 'info', message: 'No focus keyphrase was set for this page.' });
+    items.push({ type: 'error', message: 'Add a focus keyphrase.' });
   } else {
     items.push({ type: 'ok', message: 'Focus keyphrase is set.' });
     if (title.toLowerCase().includes(key)) {
@@ -291,11 +306,11 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
     if (description.toLowerCase().includes(key)) {
       items.push({ type: 'ok', message: 'The focus keyphrase appears in the meta description.' });
     } else {
-      items.push({ type: 'info', message: 'Add the focus keyphrase to the meta description.' });
+      items.push({ type: 'error', message: 'The focus keyphrase does not appear in the meta description.' });
     }
-    if (values.slug.toLowerCase().replace(/-/g, ' ').includes(key.replace(/\s+/g, ' '))) {
+    if (slug && (slug.replace(/-/g, ' ').includes(key.replace(/\s+/g, ' ')) || slug.includes(key.replace(/\s+/g, '-')))) {
       items.push({ type: 'ok', message: 'The focus keyphrase is reflected in the slug.' });
-    } else {
+    } else if (slug) {
       items.push({ type: 'info', message: 'The slug does not contain the focus keyphrase.' });
     }
     if (body.includes(key)) {
@@ -326,11 +341,13 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
   }
 
   if (!values.slug.trim()) {
-    items.push({ type: 'info', message: 'Add a URL slug for better SEO-friendly links.' });
+    items.push({ type: 'error', message: 'Add a URL slug for better SEO-friendly links.' });
+  } else {
+    items.push({ type: 'ok', message: 'URL slug is set.' });
   }
 
   if (values.focus_keywords.length === 0) {
-    items.push({ type: 'info', message: 'Add focus keyword tags to strengthen topical relevance.' });
+    items.push({ type: 'error', message: 'Add focus keyword tags to strengthen topical relevance.' });
   } else {
     items.push({ type: 'ok', message: `${values.focus_keywords.length} focus keyword tags are set.` });
   }
@@ -338,22 +355,56 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
   if (values.social_image_url) {
     items.push({ type: 'ok', message: 'A social / Open Graph image is set.' });
   } else {
-    items.push({ type: 'info', message: 'Add a social image so shares look complete on Facebook and X.' });
+    items.push({ type: 'error', message: 'Add a social image so shares look complete on Facebook and X.' });
   }
 
   if (values.canonical_url) {
     items.push({ type: 'ok', message: 'A canonical URL is set.' });
+  } else {
+    items.push({ type: 'info', message: 'Set a canonical URL for cleaner indexing.' });
   }
 
   if (!values.robots_index) {
-    items.push({ type: 'info', message: 'This page is set to noindex and will stay out of Google.' });
+    items.push({ type: 'error', message: 'This page is set to noindex and will stay out of Google.' });
+  } else {
+    items.push({ type: 'ok', message: 'Robots indexing is enabled.' });
+  }
+
+  if (values.robots_follow) {
+    items.push({ type: 'ok', message: 'Robots follow is enabled.' });
+  } else {
+    items.push({ type: 'info', message: 'Robots follow is disabled.' });
+  }
+
+  if (values.og_title && values.og_description) {
+    items.push({ type: 'ok', message: 'Open Graph title and description are set.' });
+  } else {
+    items.push({ type: 'info', message: 'Fill Open Graph title and description in Advanced SEO.' });
+  }
+
+  if (values.schema_type || values.seo_schema) {
+    items.push({ type: 'ok', message: 'Structured data / schema is configured.' });
+  } else {
+    items.push({ type: 'info', message: 'Add schema markup for richer search results.' });
   }
 
   return items;
 }
 
+/** Percentage SEO score (0–100). Errors weigh more than info warnings. */
+export function seoScorePercent(values: SeoValues, content = ''): number {
+  const items = analyzeSeo(values, content);
+  if (!items.length) return 0;
+  let score = 100;
+  for (const item of items) {
+    if (item.type === 'error') score -= 12;
+    else if (item.type === 'info') score -= 4;
+  }
+  return Math.max(0, Math.min(100, score));
+}
+
 export function seoScore(values: SeoValues, content = ''): 'good' | 'needs-work' {
-  return analyzeSeo(values, content).some((item) => item.type === 'error') ? 'needs-work' : 'good';
+  return seoScorePercent(values, content) >= 90 ? 'good' : 'needs-work';
 }
 
 export function analyzeReadability(html: string): SeoAnalysisItem[] {

@@ -28,8 +28,11 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' },
         ],
+      },
+      {
+        source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|jpg|jpeg|png|webp|avif|woff2|mp4|webm|mov)$).*)',
+        headers: [{ key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' }],
       },
       {
         source: '/eton-safaris-gorilla.png',

@@ -24,6 +24,11 @@ export default function AmazingSafaris({
         <div className="dav-amazing-title">
           {kicker ? <div className="dav-amazing-kicker">{kicker}</div> : null}
           <h3>{title}</h3>
+          {tours.length > 0 ? (
+            <p className="mt-2 text-sm font-medium text-[#4b5563]">
+              {tours.length.toLocaleString()} package{tours.length === 1 ? '' : 's'}
+            </p>
+          ) : null}
           <span className="dav-amazing-underline" />
         </div>
         {tours.length === 0 ? (

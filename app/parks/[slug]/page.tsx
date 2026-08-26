@@ -15,6 +15,7 @@ import {
   pickPlainText,
   pickStoredString,
   pickString,
+  publicRecordSlug,
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
@@ -41,7 +42,9 @@ export default function ParkDetailPage() {
           fetchCollectionRecords('accommodations'),
         ]);
         const match =
-          parks.find((row) => pickString(row, ['slug']) === slug || String(row.id) === slug) || null;
+          parks.find(
+            (row) => publicRecordSlug(row) === slug || pickString(row, ['slug', 'seo_slug']) === slug || String(row.id) === slug
+          ) || null;
         setPark(match);
         setOthers(parks.filter(isPublishedRecord).filter((row) => row !== match).slice(0, 20));
         const parkName = match ? getRecordTitle(match) : '';
@@ -62,10 +65,10 @@ export default function ParkDetailPage() {
 
   const stayItems = useMemo(
     () =>
-      stays.map((stay, index) => (
+      stays.slice(0, 10).map((stay, index) => (
         <PlaceCard
           key={String(stay.id ?? index)}
-          href={`/accommodations/${pickString(stay, ['slug']) || stay.id}`}
+          href={`/accommodations/${publicRecordSlug(stay)}`}
           image={getRecordImage(stay) || undefined}
           title={getRecordTitle(stay)}
           location={pickStoredString(stay, ['type', 'location'])}
@@ -109,7 +112,7 @@ export default function ParkDetailPage() {
         country={pickString(park, ['country'])}
         sidebarTitle="Other Parks"
         sidebarItems={others.map((item) => ({
-          href: `/parks/${pickString(item, ['slug']) || item.id}`,
+          href: `/parks/${publicRecordSlug(item)}`,
           image: getRecordImage(item),
           title: getRecordTitle(item),
           date: formatPublishedDate(recordPublishedAt(item)),

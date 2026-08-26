@@ -1,0 +1,821 @@
+[
+  {
+    "name": "Four Seasons Safari Lodge Serengeti",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.fourseasons.com/serengeti/",
+    "location_note": "Central Serengeti beside a watering hole; elevated platforms overlooking the savannah."
+  },
+  {
+    "name": "Singita Faru Faru Lodge",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://singita.com/lodge/singita-faru-faru-lodge/",
+    "location_note": "Grumeti private reserve on the western Serengeti ecosystem, overlooking the Grumeti River."
+  },
+  {
+    "name": "Singita Mara River Tented Camp",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://singita.com/lodge/singita-mara-river-tented-camp/",
+    "location_note": "Lamai Triangle, northern Serengeti, on a bend of the Mara River near migration crossings."
+  },
+  {
+    "name": "&Beyond Klein's Camp",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/our-lodges/africa/tanzania/serengeti-national-park/andbeyond-kleins-camp/",
+    "location_note": "Private Maasai concession on the northeastern Serengeti edge, Kuka Hills."
+  },
+  {
+    "name": "Sayari Camp",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/sayari-camp/",
+    "location_note": "Northern Serengeti near the Mara River; strong for July–October crossings."
+  },
+  {
+    "name": "Namiri Plains",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/namiri-plains/",
+    "location_note": "Eastern Serengeti plains known for big cats and cheetah."
+  },
+  {
+    "name": "Serengeti Serena Safari Lodge",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/serengeti",
+    "location_note": "Central Serengeti on a hill overlooking the plains near Seronera."
+  },
+  {
+    "name": "Mbali Mbali Soroi Serengeti Lodge",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.mbalimbali.com/",
+    "location_note": "Northern Serengeti / Soroi area; part of Mbali Mbali collection."
+  },
+  {
+    "name": "Ngorongoro Serena Safari Lodge",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.serenahotels.com/ngorongoro",
+    "location_note": "Built into the crater rim with direct views into Ngorongoro Crater."
+  },
+  {
+    "name": "&Beyond Ngorongoro Crater Lodge",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/our-lodges/africa/tanzania/ngorongoro-crater/andbeyond-ngorongoro-crater-lodge/",
+    "location_note": "On the crater rim; temporarily closed for rebuild (reopening planned 2027)."
+  },
+  {
+    "name": "Gibb's Farm",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.gibbsfarm.com/",
+    "location_note": "Historic coffee farm on the outer Ngorongoro slopes near Karatu; day access to crater and Manyara."
+  },
+  {
+    "name": "Ngorongoro Farm House",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.twc.co.tz/",
+    "location_note": "Coffee plantation near Loduare Gate / Karatu; Tanganyika Wilderness Camps."
+  },
+  {
+    "name": "The Highlands",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/the-highlands/",
+    "location_note": "Olmoti crater area within the NCA highlands; Asilia."
+  },
+  {
+    "name": "Entamanu Ngorongoro",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.nomad-tanzania.com/",
+    "location_note": "Crater-rim tented camp by Nomad Tanzania with views into the crater."
+  },
+  {
+    "name": "Tarangire Safari Lodge",
+    "country": "Tanzania",
+    "national_park": "Tarangire National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.tarangiresafarilodge.com/",
+    "location_note": "Inside Tarangire since 1985; panoramic views over the Tarangire River valley."
+  },
+  {
+    "name": "Oliver's Camp",
+    "country": "Tanzania",
+    "national_park": "Tarangire National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/olivers-camp/",
+    "location_note": "Remote southeast Tarangire near Silale Swamp; walking and night drives."
+  },
+  {
+    "name": "Kuro Tarangire",
+    "country": "Tanzania",
+    "national_park": "Tarangire National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/kuro-tarangire/",
+    "location_note": "Asilia camp in southern Tarangire near Kuro airstrip."
+  },
+  {
+    "name": "&Beyond Lake Manyara Tree Lodge",
+    "country": "Tanzania",
+    "national_park": "Lake Manyara National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.andbeyond.com/our-lodges/africa/tanzania/lake-manyara-national-park/andbeyond-lake-manyara-tree-lodge/",
+    "location_note": "Only permanent lodge inside the park; treehouse suites in southern mahogany forest."
+  },
+  {
+    "name": "Lake Manyara Serena Safari Lodge",
+    "country": "Tanzania",
+    "national_park": "Lake Manyara National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.serenahotels.com/lake-manyara",
+    "location_note": "On the Mto wa Mbu escarpment overlooking Lake Manyara."
+  },
+  {
+    "name": "Mwagusi Safari Camp",
+    "country": "Tanzania",
+    "national_park": "Ruaha National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.mwagusicamp.com/",
+    "location_note": "Long-established camp on the Mwagusi sand river; classic Ruaha game country."
+  },
+  {
+    "name": "Ruaha River Lodge",
+    "country": "Tanzania",
+    "national_park": "Ruaha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.ruahariverlodge.com/",
+    "location_note": "Foxes property on the Great Ruaha River; pioneer lodge in the park."
+  },
+  {
+    "name": "Jongomero Camp",
+    "country": "Tanzania",
+    "national_park": "Ruaha National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.selous.com/",
+    "location_note": "Remote southwestern Ruaha on the Jongomero sand river; Serena/Asilia heritage group."
+  },
+  {
+    "name": "Kigelia Ruaha",
+    "country": "Tanzania",
+    "national_park": "Ruaha National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.nomad-tanzania.com/",
+    "location_note": "Nomad Tanzania tented camp among sausage trees in core Ruaha."
+  },
+  {
+    "name": "Jabali Ridge",
+    "country": "Tanzania",
+    "national_park": "Ruaha National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/jabali-ridge/",
+    "location_note": "Asilia rock-ridge lodge overlooking the Mwagusi corridor."
+  },
+  {
+    "name": "Rufiji River Camp",
+    "country": "Tanzania",
+    "national_park": "Nyerere National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.foxessafaricamps.com/",
+    "location_note": "Foxes camp on the Rufiji River; early photographic-sector lodge (ex-Selous)."
+  },
+  {
+    "name": "Serena Mivumo River Lodge",
+    "country": "Tanzania",
+    "national_park": "Nyerere National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/",
+    "location_note": "Riverside lodge in Nyerere (Selous) with Rufiji boat and game drives."
+  },
+  {
+    "name": "Roho ya Selous",
+    "country": "Tanzania",
+    "national_park": "Nyerere National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.asiliaafrica.com/camps-lodges/roho-ya-selous/",
+    "location_note": "Asilia tented camp in Nyerere on a lakeside setting."
+  },
+  {
+    "name": "Siwandu Camp",
+    "country": "Tanzania",
+    "national_park": "Nyerere National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.selous.com/",
+    "location_note": "Lake Nzerakera shoreline camp in Nyerere National Park."
+  },
+  {
+    "name": "Marangu Hotel",
+    "country": "Tanzania",
+    "national_park": "Kilimanjaro National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.maranguhotel.com/",
+    "location_note": "Historic climbers’ hotel ~7 km from Marangu Gate on Kilimanjaro’s slopes."
+  },
+  {
+    "name": "Keys Hotel Moshi",
+    "country": "Tanzania",
+    "national_park": "Kilimanjaro National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.keys-hotels-tanzania.com/",
+    "location_note": "Large Moshi staging hotel for Machame, Marangu and other Kili routes."
+  },
+  {
+    "name": "Springlands Hotel",
+    "country": "Tanzania",
+    "national_park": "Kilimanjaro National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.springlandshotel.com/",
+    "location_note": "Well-known Moshi climb hotel and staging base for Kilimanjaro routes."
+  },
+  {
+    "name": "Mount Meru Game Lodge",
+    "country": "Tanzania",
+    "national_park": "Arusha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://mountmerugamelodge.co.tz/",
+    "location_note": "Usa River between Arusha and JRO; gateway lodge for Arusha NP and northern circuit."
+  },
+  {
+    "name": "Hatari Lodge",
+    "country": "Tanzania",
+    "national_park": "Arusha National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.hatarilodge.com/",
+    "location_note": "On the northern edge of Arusha National Park with Mount Meru views."
+  },
+  {
+    "name": "Ngare Sero Mountain Lodge",
+    "country": "Tanzania",
+    "national_park": "Arusha National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.ngare-sero-lodge.com/",
+    "location_note": "Historic lodge near Lake Duluti / Arusha NP approaches."
+  },
+  {
+    "name": "Vuma Hills Tented Camp",
+    "country": "Tanzania",
+    "national_park": "Mikumi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.vumahills.com/",
+    "location_note": "Foxes hilltop camp overlooking Mikumi plains, ~6 km from the park entrance."
+  },
+  {
+    "name": "Stanley's Kopje",
+    "country": "Tanzania",
+    "national_park": "Mikumi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.foxessafaricamps.com/",
+    "location_note": "Foxes tented camp on a kopje inside / overlooking Mikumi game areas."
+  },
+  {
+    "name": "Mikumi Wildlife Camp (Kikoboga)",
+    "country": "Tanzania",
+    "national_park": "Mikumi National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.twc.co.tz/",
+    "location_note": "Long-standing lodge inside Mikumi, also known as Kikoboga."
+  },
+  {
+    "name": "Chada Katavi",
+    "country": "Tanzania",
+    "national_park": "Katavi National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.nomad-tanzania.com/camps/western-tanzania/katavi-national-park/chada",
+    "location_note": "Nomad camp overlooking Chada Plain in the heart of Katavi."
+  },
+  {
+    "name": "Katavi Wildlife Camp",
+    "country": "Tanzania",
+    "national_park": "Katavi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.foxessafaricamps.com/",
+    "location_note": "Foxes Meru-style tents overlooking Katisunga Plain / Katuma River."
+  },
+  {
+    "name": "Mbali Mbali Katavi Lodge",
+    "country": "Tanzania",
+    "national_park": "Katavi National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.mbalimbali.com/",
+    "location_note": "Mbali Mbali lodge in Katavi for fly-in western-circuit safaris."
+  },
+  {
+    "name": "Greystoke Mahale",
+    "country": "Tanzania",
+    "national_park": "Mahale Mountains National Park",
+    "type": "Luxury Banda",
+    "placement": "inside",
+    "website": "https://www.nomad-tanzania.com/camps/western-tanzania/mahale-mountains-national-park/greystoke",
+    "location_note": "Lake Tanganyika beach bandas of reclaimed dhow wood; chimpanzee trekking base."
+  },
+  {
+    "name": "Mbali Mbali Mahale Lodge",
+    "country": "Tanzania",
+    "national_park": "Mahale Mountains National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.mbalimbali.com/",
+    "location_note": "Lakeshore lodge in Mahale for chimp trekking and Tanganyika kayaking."
+  },
+  {
+    "name": "Mbali Mbali Gombe Lodge",
+    "country": "Tanzania",
+    "national_park": "Gombe Stream National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.mbalimbali.com/",
+    "location_note": "Primary lodge serving Gombe chimpanzee treks on Lake Tanganyika."
+  },
+  {
+    "name": "Saadani Safari Lodge",
+    "country": "Tanzania",
+    "national_park": "Saadani National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.saadanisafarilodges.com/",
+    "location_note": "On the southern border of Saadani where bush meets Indian Ocean beach."
+  },
+  {
+    "name": "Udzungwa Forest Lodge (Hondo Hondo)",
+    "country": "Tanzania",
+    "national_park": "Udzungwa Mountains National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://udzungwaforestlodge.com/",
+    "location_note": "Forest-edge tented lodge / Hondo Hondo at the park boundary in Kilombero valley."
+  },
+  {
+    "name": "Wilderness Bisate Lodge",
+    "country": "Rwanda",
+    "national_park": "Volcanoes National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/rwanda/volcanoes-national-park/bisate-lodge",
+    "location_note": "Six nest-like forest villas in a volcanic amphitheatre near Kinigi gorilla trailheads."
+  },
+  {
+    "name": "Wilderness Sabyinyo Lodge",
+    "country": "Rwanda",
+    "national_park": "Volcanoes National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.wildernessdestinations.com/africa/rwanda/volcanoes-national-park/sabyinyo-lodge",
+    "location_note": "Community-owned stone cottages on the park boundary; Wilderness operated."
+  },
+  {
+    "name": "Virunga Lodge",
+    "country": "Rwanda",
+    "national_park": "Volcanoes National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://virungalodge.com/",
+    "location_note": "Ridge above Lakes Bulera and Ruhondo with Virunga volcano views; Volcanoes gorilla base."
+  },
+  {
+    "name": "Five Volcanoes Boutique Hotel",
+    "country": "Rwanda",
+    "national_park": "Volcanoes National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://fivevolcanoesrwanda.com/",
+    "location_note": "Boutique Musanze / Kinigi hotel ~15 minutes from Volcanoes HQ."
+  },
+  {
+    "name": "One&Only Gorilla's Nest",
+    "country": "Rwanda",
+    "national_park": "Volcanoes National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.oneandonlyresorts.com/gorillas-nest",
+    "location_note": "Ultra-luxury lodge in a regenerating forest near Volcanoes National Park."
+  },
+  {
+    "name": "Wilderness Magashi Camp",
+    "country": "Rwanda",
+    "national_park": "Akagera National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/rwanda/akagera-national-park/magashi-camp",
+    "location_note": "Private concession on Lake Rwanyakazinga in northern Akagera; Big Five."
+  },
+  {
+    "name": "Ruzizi Tented Lodge",
+    "country": "Rwanda",
+    "national_park": "Akagera National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.akagerapark.com/lodges/ruzizi-lodge/",
+    "location_note": "Park-operated eco tents on Lake Ihema shoreline, southern Akagera."
+  },
+  {
+    "name": "Karenge Bush Camp",
+    "country": "Rwanda",
+    "national_park": "Akagera National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://visitakagera.org/karenge-bush-camp/",
+    "location_note": "Northern Kilala Plains ridge camp; dawn and night drives."
+  },
+  {
+    "name": "Akagera Game Lodge",
+    "country": "Rwanda",
+    "national_park": "Akagera National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.akagerapark.com/",
+    "location_note": "Larger lodge near southern park HQ / Lake Ihema sector."
+  },
+  {
+    "name": "One&Only Nyungwe House",
+    "country": "Rwanda",
+    "national_park": "Nyungwe National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.oneandonlyresorts.com/nyungwe-house",
+    "location_note": "Gisakura tea estate on the Nyungwe rainforest edge; chimps and canopy walk."
+  },
+  {
+    "name": "Nyungwe Top View Hill Hotel",
+    "country": "Rwanda",
+    "national_park": "Nyungwe National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.nyungwetopviewhotel.com/",
+    "location_note": "Hilltop hotel near Gisakura with views toward Nyungwe and Lake Kivu."
+  },
+  {
+    "name": "Forest of Hope Guest House",
+    "country": "Rwanda",
+    "national_park": "Gishwati-Mukura National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "edge",
+    "website": "https://fharwanda.org/",
+    "location_note": "RDB-supported guest house at Gishwati sector trailhead; primary park stay."
+  },
+  {
+    "name": "Emeraude Kivu Resort",
+    "country": "Rwanda",
+    "national_park": "Gishwati-Mukura National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.emeraudekivuresort.com/",
+    "location_note": "Lake Kivu / Rubavu resort used as a day-trip base for Gishwati."
+  },
+  {
+    "name": "Chobe Game Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.chobegamelodge.com/",
+    "location_note": "Only permanent lodge inside Chobe NP, on the Chobe Riverfront."
+  },
+  {
+    "name": "Sanctuary Chobe Chilwero",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.sanctuaryretreats.com/botswana-lodges-chobe-chilwero",
+    "location_note": "Hilltop lodge above the Chobe River near Kasane / park entrance."
+  },
+  {
+    "name": "Chobe Safari Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.chobesafarilodge.com/",
+    "location_note": "Kasane riverfront heritage lodge ~10 minutes from Chobe Gate."
+  },
+  {
+    "name": "Chobe Marina Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://chobemarinalodge.com/",
+    "location_note": "Kasane lodge on the Chobe River with boat access to the park."
+  },
+  {
+    "name": "Belmond Savute Elephant Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.belmond.com/safaris/africa/botswana/belmond-savute-elephant-lodge/",
+    "location_note": "Savute Channel sector of Chobe; famous for elephants and predators."
+  },
+  {
+    "name": "Savute Safari Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.chobe.com/",
+    "location_note": "Desert & Delta / Chobe Holdings lodge on the Savute Channel."
+  },
+  {
+    "name": "Ngoma Safari Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.chobe.com/",
+    "location_note": "Chobe Forest Reserve escarpment overlooking the Chobe River."
+  },
+  {
+    "name": "Muchenje Safari Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.muchenjelodge.com/",
+    "location_note": "Western Chobe escarpment with panoramic river and floodplain views."
+  },
+  {
+    "name": "Wilderness Mombo Camp",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/botswana/okavango-delta/mombo-camp",
+    "location_note": "Chief’s Island, northeastern Moremi; legendary predator denseness."
+  },
+  {
+    "name": "Xigera Safari Lodge",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.xigera.com/",
+    "location_note": "Paradise Island / western Moremi; land and water Okavango activities."
+  },
+  {
+    "name": "Sanctuary Chief's Camp",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.abercrombiekent.com/stays/safari-lodges/chiefs-camp",
+    "location_note": "North Chief’s Island watering hole; A&K Sanctuary flagship."
+  },
+  {
+    "name": "Camp Moremi",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.desertdelta.com/",
+    "location_note": "Desert & Delta camp on the Xakanaxa lagoon in eastern Moremi."
+  },
+  {
+    "name": "Camp Okavango",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.desertdelta.com/",
+    "location_note": "Nxaragha Island water camp adjacent to Moremi / Okavango channels."
+  },
+  {
+    "name": "Kwara Camp",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.kwando.co.bw/",
+    "location_note": "Kwara private concession bordering northern Moremi."
+  },
+  {
+    "name": "Tau Pan Camp",
+    "country": "Botswana",
+    "national_park": "Central Kalahari Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.kwando.co.bw/camps/tau-pan/",
+    "location_note": "First permanent camp in CKGR; dune ridge overlooking Tau Pan waterhole."
+  },
+  {
+    "name": "Kalahari Plains Camp",
+    "country": "Botswana",
+    "national_park": "Central Kalahari Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/botswana/central-kalahari/kalahari-plains-camp",
+    "location_note": "Wilderness camp in northern CKGR near Deception Valley access."
+  },
+  {
+    "name": "Jack's Camp",
+    "country": "Botswana",
+    "national_park": "Makgadikgadi Pans National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/places-to-stay/africa/botswana/makgadikgadi-pans/jacks-camp/",
+    "location_note": "Iconic 1940s-style camp on a private concession bordering Ntwetwe Pan."
+  },
+  {
+    "name": "San Camp",
+    "country": "Botswana",
+    "national_park": "Makgadikgadi Pans National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.naturalselection.travel/",
+    "location_note": "Minimalist white-canvas camp on the Makgadikgadi salt pans (Natural Selection)."
+  },
+  {
+    "name": "Camp Kalahari",
+    "country": "Botswana",
+    "national_park": "Makgadikgadi Pans National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.naturalselection.travel/",
+    "location_note": "Sister camp to Jack’s / San on the Makgadikgadi grasslands."
+  },
+  {
+    "name": "Leroo La Tau",
+    "country": "Botswana",
+    "national_park": "Makgadikgadi Pans National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.desertdelta.com/",
+    "location_note": "Boteti River lodge on the western edge of Makgadikgadi; zebra migration."
+  },
+  {
+    "name": "Nxai Pan Camp",
+    "country": "Botswana",
+    "national_park": "Nxai Pan National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.kwando.co.bw/camps/nxai-pan/",
+    "location_note": "Only permanent camp inside Nxai Pan; Baines’ Baobabs and zebra migration."
+  },
+  {
+    "name": "Rooiputs Lodge",
+    "country": "Botswana",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://tashebube.co.bw/our-lodges/",
+    "location_note": "Ta Shebube lodge on Botswana side, ~25 km north of Two Rivers / Twee Rivieren."
+  },
+  {
+    "name": "Polentswa Lodge",
+    "country": "Botswana",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://tashebube.co.bw/our-lodges/",
+    "location_note": "Ta Shebube lodge overlooking Polentswa Pan on the Nossob Valley (Botswana)."
+  },
+  {
+    "name": "!Xaus Lodge",
+    "country": "Botswana",
+    "national_park": "Kgalagadi Transfrontier Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://xauslodge.co.za/",
+    "location_note": "Community-owned lodge in the Kgalagadi (SA side of the transfrontier park); San/Mier."
+  },
+  {
+    "name": "Tarangire Sopa Lodge",
+    "country": "Tanzania",
+    "national_park": "Tarangire National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sopalodges.com/tarangire-sopa-lodge/the-lodge",
+    "location_note": "Large Sopa lodge among baobabs and kopjes inside northeastern Tarangire."
+  },
+  {
+    "name": "Ngorongoro Sopa Lodge",
+    "country": "Tanzania",
+    "national_park": "Ngorongoro Conservation Area",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.sopalodges.com/ngorongoro-sopa-lodge/the-lodge",
+    "location_note": "Eastern crater rim lodge with views into Ngorongoro Crater."
+  },
+  {
+    "name": "Serengeti Sopa Lodge",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sopalodges.com/serengeti-sopa-lodge/the-lodge",
+    "location_note": "Nyarboro Hills area of western/central Serengeti."
+  },
+  {
+    "name": "Lake Manyara Wildlife Lodge",
+    "country": "Tanzania",
+    "national_park": "Lake Manyara National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.twc.co.tz/",
+    "location_note": "Historic escarpment lodge overlooking Lake Manyara (Tanganyika Wilderness Camps)."
+  },
+  {
+    "name": "Simply Saadani (Tent With A View)",
+    "country": "Tanzania",
+    "national_park": "Saadani National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.tentwithaview.com/camps-and-lodges/simply-saadani-camp.html",
+    "location_note": "Beach-edge tented camp on stilts bordering Saadani National Park."
+  },
+  {
+    "name": "Meliá Serengeti Lodge",
+    "country": "Tanzania",
+    "national_park": "Serengeti National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.melia.com/en/hotels/tanzania/serengeti-national-park/melia-serengeti-lodge",
+    "location_note": "Central Serengeti luxury lodge on Nyati Rock with migration-season access."
+  },
+  {
+    "name": "Chobe Bakwena Lodge",
+    "country": "Botswana",
+    "national_park": "Chobe National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.chobebakwena.com/",
+    "location_note": "Kasane eco lodge near Chobe River and park entrance."
+  },
+  {
+    "name": "Little Mombo",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.wildernessdestinations.com/africa/botswana/okavango-delta/little-mombo",
+    "location_note": "Intimate sister camp to Mombo on Chief’s Island, Moremi."
+  },
+  {
+    "name": "Camp Xakanaxa",
+    "country": "Botswana",
+    "national_park": "Moremi Game Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.desertdelta.com/",
+    "location_note": "Classic Desert & Delta camp on Xakanaxa Lagoon in Moremi."
+  }
+]

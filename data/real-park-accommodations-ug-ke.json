@@ -1,0 +1,1046 @@
+[
+  {
+    "name": "Mahogany Springs Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://mahoganysprings.com/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Clouds Mountain Gorilla Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://wildplacesafrica.com/clouds-mountain-gorilla-lodge/",
+    "location_note": "Nkuringo sector"
+  },
+  {
+    "name": "Sanctuary Gorilla Forest Camp",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.andbeyond.com/our-lodges/africa/uganda/bwindi-impenetrable-forest/sanctuary-gorilla-forest-camp/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Buhoma Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ugandalodges.com/buhoma/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Haven Lodge Buhoma Community",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://havenlodgebuhomacommunity.com/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Buhoma Community Rest Camp",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://buhomacommunityrestcamp.com/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Buhoma Gorilla Camp",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://buhomagorillacamp.com/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Silverback Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.volcanoessafaris.com/lodges/silverback-lodge/",
+    "location_note": "Buhoma sector"
+  },
+  {
+    "name": "Nkuringo Bwindi Gorilla Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.nkuringolodge.com/",
+    "location_note": "Nkuringo sector"
+  },
+  {
+    "name": "Rushaga Gorilla Lodge",
+    "country": "Uganda",
+    "national_park": "Bwindi Impenetrable National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.rushagagorillalodge.com/",
+    "location_note": "Rushaga sector"
+  },
+  {
+    "name": "Mount Gahinga Lodge",
+    "country": "Uganda",
+    "national_park": "Mgahinga Gorilla National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.volcanoessafaris.com/lodges/mount-gahinga-lodge/",
+    "location_note": "Ntebeko gate / Virunga foothills"
+  },
+  {
+    "name": "Amajambere Iwacu Community Camp",
+    "country": "Uganda",
+    "national_park": "Mgahinga Gorilla National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://www.amagambere.com/",
+    "location_note": "Near Ntebeko park gate"
+  },
+  {
+    "name": "Chameleon Hill Lodge",
+    "country": "Uganda",
+    "national_park": "Mgahinga Gorilla National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.chameleonhill.com/",
+    "location_note": "Lake Mutanda, Kisoro base for Mgahinga"
+  },
+  {
+    "name": "Mweya Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Luxury Hotel",
+    "placement": "inside",
+    "website": "https://www.mweyalodge.com/",
+    "location_note": "Mweya Peninsula"
+  },
+  {
+    "name": "Kyambura Gorge Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.volcanoessafaris.com/lodges/kyambura-gorge-lodge/",
+    "location_note": "Kyambura Gorge / eastern edge"
+  },
+  {
+    "name": "Ishasha Wilderness Camp",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.exclusivecampsandlodges.com/ishasha-wilderness-camp/",
+    "location_note": "Ishasha sector"
+  },
+  {
+    "name": "Katara Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.kataralodge.com/",
+    "location_note": "Kichwamba escarpment / crater lakes"
+  },
+  {
+    "name": "Jacana Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.jacanalodge.com/",
+    "location_note": "Lake Nyamasingiri / Maramagambo area"
+  },
+  {
+    "name": "Enganzi Game Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.enganzigamelodge.com/",
+    "location_note": "Kichwamba escarpment"
+  },
+  {
+    "name": "Queen Elizabeth Bush Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.bush-lodge.com/",
+    "location_note": "Near Kyambura / park edge"
+  },
+  {
+    "name": "Ihamba Lakeside Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ihambalakesidelodge.com/",
+    "location_note": "Lake George / Kasenyi side"
+  },
+  {
+    "name": "Kasenyi Safari Camp",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.kasenyisafaricamp.com/",
+    "location_note": "Kasenyi plains"
+  },
+  {
+    "name": "Enjojo Lodge",
+    "country": "Uganda",
+    "national_park": "Queen Elizabeth National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.enjojolodge.com/",
+    "location_note": "Ishasha sector edge"
+  },
+  {
+    "name": "Paraa Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.paraalodge.com/",
+    "location_note": "North bank of the Nile / Paraa"
+  },
+  {
+    "name": "Baker's Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.ugandaexclusivecamps.com/bakers-lodge/",
+    "location_note": "South bank of the Nile"
+  },
+  {
+    "name": "Papa's Camp",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://wildplacesafrica.com/papas-camp/",
+    "location_note": "South bank of the Nile"
+  },
+  {
+    "name": "Murchison River Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.murchisonriverlodge.com/",
+    "location_note": "South bank overlooking the Nile"
+  },
+  {
+    "name": "Hemingways Tented Camp",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://murchisonrivercamps.com/hemingways/",
+    "location_note": "Nile banks near the falls"
+  },
+  {
+    "name": "Pakuba Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.pakubasafarilodge.com/",
+    "location_note": "Pakuba / northwest sector"
+  },
+  {
+    "name": "Chobe Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.chobelodgeuganda.com/",
+    "location_note": "Nile near Karuma / park approach"
+  },
+  {
+    "name": "Fort Murchison",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "outside",
+    "website": "https://www.fortmurchison.com/",
+    "location_note": "North of the park near Nile"
+  },
+  {
+    "name": "Budongo Eco Lodge",
+    "country": "Uganda",
+    "national_park": "Murchison Falls National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.ugandalodges.com/budongo/",
+    "location_note": "Budongo Forest / chimp trekking"
+  },
+  {
+    "name": "Primate Lodge Kibale",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.ugandalodges.com/primate/",
+    "location_note": "Near Kanyanchu chimp trailhead"
+  },
+  {
+    "name": "Ndali Lodge",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.ndalilodge.co.ug/",
+    "location_note": "Crater lakes near Fort Portal"
+  },
+  {
+    "name": "Kyaninga Lodge",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.kyaningalodge.com/",
+    "location_note": "Lake Kyaninga / Fort Portal"
+  },
+  {
+    "name": "Crater Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.cratersafarilodge.com/",
+    "location_note": "Near Kibale / crater lakes"
+  },
+  {
+    "name": "Kibale Forest Camp",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.naturelodges.eu/kibale-forest-camp/",
+    "location_note": "Near park for chimp trekking"
+  },
+  {
+    "name": "Chimpanzee Forest Guest House",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://www.chimpsguesthouse.com/",
+    "location_note": "Near Kanyanchu"
+  },
+  {
+    "name": "Papaya Lake Lodge",
+    "country": "Uganda",
+    "national_park": "Kibale National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://www.papayalakelodge.com/",
+    "location_note": "Crater lakes near Fort Portal"
+  },
+  {
+    "name": "Mihingo Lodge",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://mihingolodge.com/",
+    "location_note": "Eastern edge overlooking park"
+  },
+  {
+    "name": "Rwakobo Rock",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.rwakoborock.com/",
+    "location_note": "Northeast edge of the park"
+  },
+  {
+    "name": "Mantana Lake Mburo Camp",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.mantanatentedcamps.com/",
+    "location_note": "Inside Lake Mburo"
+  },
+  {
+    "name": "Lake Mburo Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.lakemburosafarilodge.com/",
+    "location_note": "Inside the park"
+  },
+  {
+    "name": "Eagle's Nest Camp",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.eaglesnestuganda.com/",
+    "location_note": "Park edge / kopje views"
+  },
+  {
+    "name": "Arcadia Cottages Lake Mburo",
+    "country": "Uganda",
+    "national_park": "Lake Mburo National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://www.arcadiacottages.com/",
+    "location_note": "Near park entrance"
+  },
+  {
+    "name": "Apoka Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Kidepo Valley National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://wildplacesafrica.com/apoka/",
+    "location_note": "Apoka / rocky kopje inside park"
+  },
+  {
+    "name": "Apoka Rest Camp Bandas",
+    "country": "Uganda",
+    "national_park": "Kidepo Valley National Park",
+    "type": "Mid-Range Banda",
+    "placement": "inside",
+    "website": "https://ugandawildlife.org/",
+    "location_note": "UWA bandas at Apoka"
+  },
+  {
+    "name": "Kidepo Savannah Lodge",
+    "country": "Uganda",
+    "national_park": "Kidepo Valley National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.naturelodges.eu/kidepo-savannah-lodge/",
+    "location_note": "Park boundary / Nabwal"
+  },
+  {
+    "name": "Nga'Moru Wilderness Camp",
+    "country": "Uganda",
+    "national_park": "Kidepo Valley National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.ngamoruwildernesscamp.com/",
+    "location_note": "Near Kidepo park edge"
+  },
+  {
+    "name": "Sipi Heritage Lodge",
+    "country": "Uganda",
+    "national_park": "Mount Elgon National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://sipiheritage.com/",
+    "location_note": "Sipi Falls / Mount Elgon foothills"
+  },
+  {
+    "name": "Lacam Lodge",
+    "country": "Uganda",
+    "national_park": "Mount Elgon National Park",
+    "type": "Mid-Range Banda",
+    "placement": "outside",
+    "website": "https://www.lacamlodge.com/",
+    "location_note": "Sipi Falls escarpment"
+  },
+  {
+    "name": "Sipi Falls Resort",
+    "country": "Uganda",
+    "national_park": "Mount Elgon National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.sipifallsresort.com/",
+    "location_note": "Sipi Falls area"
+  },
+  {
+    "name": "Crow's Nest Sipi",
+    "country": "Uganda",
+    "national_park": "Mount Elgon National Park",
+    "type": "Mid-Range Banda",
+    "placement": "outside",
+    "website": "https://www.crowsnestuganda.com/",
+    "location_note": "Sipi Falls viewpoint"
+  },
+  {
+    "name": "Equator Snow Lodge",
+    "country": "Uganda",
+    "national_park": "Rwenzori Mountains National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://geolodgesafrica.com/equator-snow-lodge/",
+    "location_note": "Near Nyakalengija / Mubuku River gate"
+  },
+  {
+    "name": "Ruboni Community Camp",
+    "country": "Uganda",
+    "national_park": "Rwenzori Mountains National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://rubonicamp.com/",
+    "location_note": "Ruboni village at park gate"
+  },
+  {
+    "name": "Mihunga Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Rwenzori Mountains National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.rwenzorimountaineeringservice.com/",
+    "location_note": "Mihunga near Nyakalengija"
+  },
+  {
+    "name": "Rwenzori Trekkers Hostel",
+    "country": "Uganda",
+    "national_park": "Rwenzori Mountains National Park",
+    "type": "Mid-Range Banda",
+    "placement": "edge",
+    "website": "https://www.rwenzoritrekkers.com/",
+    "location_note": "Kilembe trail approach"
+  },
+  {
+    "name": "Semliki Safari Lodge",
+    "country": "Uganda",
+    "national_park": "Semuliki National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "outside",
+    "website": "https://wildplacesafrica.com/semliki/",
+    "location_note": "Toro-Semliki Wildlife Reserve (main Semuliki-area lodge)"
+  },
+  {
+    "name": "Semuliki National Park Bandas",
+    "country": "Uganda",
+    "national_park": "Semuliki National Park",
+    "type": "Mid-Range Banda",
+    "placement": "inside",
+    "website": "https://ugandawildlife.org/",
+    "location_note": "UWA bandas near Sempaya"
+  },
+  {
+    "name": "Ntoroko Game Lodge",
+    "country": "Uganda",
+    "national_park": "Semuliki National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.ntorokogamelodge.com/",
+    "location_note": "Lake Albert / Semliki flats approach"
+  },
+  {
+    "name": "Governors' Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.governorscamp.com/",
+    "location_note": "Musiara / Mara River"
+  },
+  {
+    "name": "Little Governors' Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.governorscamp.com/little-governors-camp/",
+    "location_note": "Musiara swamp"
+  },
+  {
+    "name": "Mara Serena Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/mara",
+    "location_note": "Central Mara / Kichwa Tembo area ridge"
+  },
+  {
+    "name": "Sarova Mara Game Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.sarovahotels.com/maracamp/",
+    "location_note": "Near Sekenani"
+  },
+  {
+    "name": "Keekorok Lodge",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.keekoroklodge.com/",
+    "location_note": "Keekorok / southeast Mara"
+  },
+  {
+    "name": "Ashnil Mara Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://ashnilhotels.com/destinations/ashnil-mara-camp",
+    "location_note": "Mara River / Talek area"
+  },
+  {
+    "name": "Sala's Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.thesafaricollection.com/properties/salas-camp/",
+    "location_note": "Sand River / southern Mara"
+  },
+  {
+    "name": "Mara Intrepids Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.heritage-eastafrica.com/tented-camps/mara-intrepids/",
+    "location_note": "Talek River"
+  },
+  {
+    "name": "&Beyond Kichwa Tembo Tented Camp",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.andbeyond.com/our-lodges/africa/kenya/masai-mara-national-reserve/andbeyond-kichwa-tembo-tented-camp/",
+    "location_note": "Private concession on Mara edge"
+  },
+  {
+    "name": "Fairmont Mara Safari Club",
+    "country": "Kenya",
+    "national_park": "Masai Mara National Reserve",
+    "type": "Luxury Hotel",
+    "placement": "edge",
+    "website": "https://www.fairmont.com/mara-safari-club-masai-mara/",
+    "location_note": "Mara North / Mara River"
+  },
+  {
+    "name": "Amboseli Serena Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/amboseli",
+    "location_note": "Inside Amboseli"
+  },
+  {
+    "name": "Ol Tukai Lodge",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://oltukailodge.com/",
+    "location_note": "Central Amboseli / Kilimanjaro views"
+  },
+  {
+    "name": "Elewana Tortilis Camp Amboseli",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.elewana.com/camps-lodges/tortilis-camp-amboseli",
+    "location_note": "Private conservancy on park edge"
+  },
+  {
+    "name": "Amboseli Sopa Lodge",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.sopalodges.com/amboseli-sopa-lodge/",
+    "location_note": "Outside park near Kimana"
+  },
+  {
+    "name": "Tawi Lodge",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.tawilodge.com/",
+    "location_note": "Kimana Sanctuary edge"
+  },
+  {
+    "name": "Kibo Safari Camp",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "outside",
+    "website": "https://www.kibosafaricamp.com/",
+    "location_note": "Outside Amboseli"
+  },
+  {
+    "name": "Kilima Safari Camp",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "outside",
+    "website": "https://www.kilimasafaricamp.com/",
+    "location_note": "Outside Amboseli"
+  },
+  {
+    "name": "Porini Amboseli Camp",
+    "country": "Kenya",
+    "national_park": "Amboseli National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.porini.com/camps/porini-amboseli-camp/",
+    "location_note": "Selenkay Conservancy"
+  },
+  {
+    "name": "Ashnil Aruba Lodge",
+    "country": "Kenya",
+    "national_park": "Tsavo East National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://ashnilhotels.com/destinations/ashnil-aruba-lodge",
+    "location_note": "Aruba Dam"
+  },
+  {
+    "name": "Voi Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Tsavo East National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.voisafarilodge.com/",
+    "location_note": "Voi / Kanderi swamp views"
+  },
+  {
+    "name": "Satao Camp",
+    "country": "Kenya",
+    "national_park": "Tsavo East National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.sataocamp.com/",
+    "location_note": "Near Aruba / elephant waterhole"
+  },
+  {
+    "name": "Galdessa Camp",
+    "country": "Kenya",
+    "national_park": "Tsavo East National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.galdessa.com/",
+    "location_note": "Galana River"
+  },
+  {
+    "name": "Sarova Salt Lick Game Lodge",
+    "country": "Kenya",
+    "national_park": "Tsavo East National Park",
+    "type": "Luxury Lodge",
+    "placement": "outside",
+    "website": "https://saltlicksafarilodge.com/",
+    "location_note": "Taita Hills Wildlife Sanctuary (Tsavo ecosystem)"
+  },
+  {
+    "name": "Kilaguni Serena Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Tsavo West National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/kilaguni",
+    "location_note": "Central Tsavo West / Chyulu views"
+  },
+  {
+    "name": "Ngulia Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Tsavo West National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.ngulialodge.com/",
+    "location_note": "Ngulia / rhino sanctuary area"
+  },
+  {
+    "name": "Finch Hattons Luxury Tented Camp",
+    "country": "Kenya",
+    "national_park": "Tsavo West National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.finchhattons.com/",
+    "location_note": "Near Mzima Springs"
+  },
+  {
+    "name": "Severin Safari Camp",
+    "country": "Kenya",
+    "national_park": "Tsavo West National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.severinsafaricamp.com/",
+    "location_note": "Tsavo West"
+  },
+  {
+    "name": "Voyager Ziwani by Heritage",
+    "country": "Kenya",
+    "national_park": "Tsavo West National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.heritage-eastafrica.com/tented-camps/voyager-ziwani/",
+    "location_note": "Ziwani / park edge"
+  },
+  {
+    "name": "Samburu Serena Safari Lodge",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/samburu",
+    "location_note": "Ewaso Nyiro River"
+  },
+  {
+    "name": "Larsen's Camp",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.heritage-eastafrica.com/tented-camps/larsens-camp/",
+    "location_note": "Ewaso Nyiro River"
+  },
+  {
+    "name": "Elephant Bedroom Camp",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.elephantbedroomcamp.com/",
+    "location_note": "Ewaso Nyiro River"
+  },
+  {
+    "name": "Samburu Intrepids Camp",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "inside",
+    "website": "https://www.heritage-eastafrica.com/tented-camps/samburu-intrepids/",
+    "location_note": "Ewaso Nyiro River"
+  },
+  {
+    "name": "Ashnil Samburu Camp",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://ashnilhotels.com/destinations/ashnil-samburu-camp",
+    "location_note": "Buffalo Springs (adjacent reserve)"
+  },
+  {
+    "name": "Saruni Samburu",
+    "country": "Kenya",
+    "national_park": "Samburu National Reserve",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.saruni.com/samburu/",
+    "location_note": "Kalama Conservancy"
+  },
+  {
+    "name": "Sarova Lion Hill Game Lodge",
+    "country": "Kenya",
+    "national_park": "Lake Nakuru National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.sarovahotels.com/lionhill-nakuru/",
+    "location_note": "Lion Hill inside park"
+  },
+  {
+    "name": "Lake Nakuru Lodge",
+    "country": "Kenya",
+    "national_park": "Lake Nakuru National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.lakenakurulodge.com/",
+    "location_note": "Eastern shore inside park"
+  },
+  {
+    "name": "Flamingo Hill Camp",
+    "country": "Kenya",
+    "national_park": "Lake Nakuru National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.flamingohillcamp.com/",
+    "location_note": "Near Main Gate"
+  },
+  {
+    "name": "Mbweha Camp",
+    "country": "Kenya",
+    "national_park": "Lake Nakuru National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.mbwehacamp.com/",
+    "location_note": "Soysambu / park edge"
+  },
+  {
+    "name": "The Emakoko",
+    "country": "Kenya",
+    "national_park": "Nairobi National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.emakoko.com/",
+    "location_note": "Mbagathi River park border"
+  },
+  {
+    "name": "Nairobi Tented Camp",
+    "country": "Kenya",
+    "national_park": "Nairobi National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "inside",
+    "website": "https://www.nairobitentedcamp.com/",
+    "location_note": "Inside Nairobi National Park"
+  },
+  {
+    "name": "Ole Sereni Hotel",
+    "country": "Kenya",
+    "national_park": "Nairobi National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://ole-sereni.com/",
+    "location_note": "Overlooks Nairobi National Park"
+  },
+  {
+    "name": "The Ark",
+    "country": "Kenya",
+    "national_park": "Aberdare National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://thearkkenya.com/",
+    "location_note": "Waterhole lodge inside Aberdares"
+  },
+  {
+    "name": "Aberdare Country Club",
+    "country": "Kenya",
+    "national_park": "Aberdare National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.aberdarecountryclub.com/",
+    "location_note": "Mweiga / gateway to The Ark"
+  },
+  {
+    "name": "Treetops Lodge",
+    "country": "Kenya",
+    "national_park": "Aberdare National Park",
+    "type": "Mid-range Lodge",
+    "placement": "edge",
+    "website": "https://www.treetops.co.ke/",
+    "location_note": "Aberdare forest edge waterhole"
+  },
+  {
+    "name": "Fairmont Mount Kenya Safari Club",
+    "country": "Kenya",
+    "national_park": "Mount Kenya National Park",
+    "type": "Luxury Hotel",
+    "placement": "outside",
+    "website": "https://www.fairmont.com/en/hotels/nanyuki/fairmont-mount-kenya-safari-club.html",
+    "location_note": "Nanyuki foothills / Mount Kenya Wildlife Conservancy"
+  },
+  {
+    "name": "Serena Mountain Lodge",
+    "country": "Kenya",
+    "national_park": "Mount Kenya National Park",
+    "type": "Mid-range Lodge",
+    "placement": "inside",
+    "website": "https://www.serenahotels.com/mountainlodge",
+    "location_note": "Mount Kenya forest waterhole"
+  },
+  {
+    "name": "Naro Moru River Lodge",
+    "country": "Kenya",
+    "national_park": "Mount Kenya National Park",
+    "type": "Mid-range Lodge",
+    "placement": "outside",
+    "website": "https://www.naromoruriverlodge.com/",
+    "location_note": "Classic Naro Moru climbing base"
+  },
+  {
+    "name": "Batian's View",
+    "country": "Kenya",
+    "national_park": "Mount Kenya National Park",
+    "type": "Mid-Range Banda",
+    "placement": "outside",
+    "website": "https://www.batiansview.com/",
+    "location_note": "Naro Moru foothills"
+  },
+  {
+    "name": "Elsa's Kopje",
+    "country": "Kenya",
+    "national_park": "Meru National Park",
+    "type": "Luxury Lodge",
+    "placement": "inside",
+    "website": "https://www.elsaskopje.com/",
+    "location_note": "Mughwango Hill"
+  },
+  {
+    "name": "Rhino River Camp",
+    "country": "Kenya",
+    "national_park": "Meru National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.rhinorivercamp.com/",
+    "location_note": "Near Meru / rhino sanctuary edge"
+  },
+  {
+    "name": "Ikweta Safari Camp",
+    "country": "Kenya",
+    "national_park": "Meru National Park",
+    "type": "Mid-Range Tented Camp",
+    "placement": "edge",
+    "website": "https://www.ikwetasafaricamp.com/",
+    "location_note": "Near Murera Gate"
+  },
+  {
+    "name": "Lake Naivasha Sopa Resort",
+    "country": "Kenya",
+    "national_park": "Hell's Gate National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.sopalodges.com/lake-naivasha-sopa-resort/",
+    "location_note": "Lake Naivasha base for Hell's Gate"
+  },
+  {
+    "name": "Lake Naivasha Simba Lodge",
+    "country": "Kenya",
+    "national_park": "Hell's Gate National Park",
+    "type": "Mid-Range Hotel",
+    "placement": "outside",
+    "website": "https://www.simbalodges.com/lake-naivasha/",
+    "location_note": "Lake Naivasha near Hell's Gate"
+  },
+  {
+    "name": "Fisherman's Camp",
+    "country": "Kenya",
+    "national_park": "Hell's Gate National Park",
+    "type": "Mid-Range Banda",
+    "placement": "outside",
+    "website": "https://www.fishermanscamp.com/",
+    "location_note": "South Lake Naivasha"
+  },
+  {
+    "name": "Ol Donyo Lodge",
+    "country": "Kenya",
+    "national_park": "Chyulu Hills National Park",
+    "type": "Luxury Lodge",
+    "placement": "edge",
+    "website": "https://www.greatplainsconservation.com/ol-donyo-lodge/",
+    "location_note": "Mbirikani Group Ranch / Chyulu foothills"
+  },
+  {
+    "name": "Campi ya Kanzi",
+    "country": "Kenya",
+    "national_park": "Chyulu Hills National Park",
+    "type": "Luxury Tented Camp",
+    "placement": "edge",
+    "website": "https://www.maasai.com/",
+    "location_note": "Chyulu Hills / Maasai wilderness"
+  }
+]

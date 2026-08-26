@@ -1,0 +1,584 @@
+{
+  "counts": {
+    "countries": 17,
+    "categories": 28,
+    "parks": 64,
+    "catalogParks": 64
+  },
+  "parksByCountry": {
+    "Uganda": 7,
+    "Kenya": 7,
+    "Tanzania": 7,
+    "Rwanda": 3,
+    "Botswana": 3,
+    "Namibia": 3,
+    "Zambia": 3,
+    "Zimbabwe": 4,
+    "South Africa": 4,
+    "DR Congo": 2,
+    "Ethiopia": 3,
+    "Malawi": 3,
+    "Mozambique": 3,
+    "Madagascar": 3,
+    "Seychelles": 3,
+    "Egypt": 3,
+    "Morocco": 3
+  },
+  "catalogCountries": [
+    "Uganda",
+    "Kenya",
+    "Tanzania",
+    "Rwanda",
+    "Botswana",
+    "Namibia",
+    "Zambia",
+    "Zimbabwe",
+    "South Africa",
+    "DR Congo",
+    "Ethiopia",
+    "Malawi",
+    "Mozambique",
+    "Madagascar",
+    "Seychelles",
+    "Egypt",
+    "Morocco"
+  ],
+  "missingParks": [],
+  "thinCountries": [
+    {
+      "id": "fd79f4ff-39d5-4e6f-914f-ca446aec2a9e",
+      "name": "Morocco",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "18484e2d-ab8f-44cc-bd93-4648001c3c46",
+      "name": "Seychelles",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "81a6e789-4f54-4d71-955c-89873fe9b3e1",
+      "name": "Zimbabwe",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "95738db1-7d86-4737-b823-c3a1973fc6a7",
+      "name": "Mozambique",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "6a607b81e8698f72032c58f1",
+      "name": "South Africa",
+      "descLen": 95,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "From Kruger National Park's Big Five to Cape Town's Table Mountain and the scenic Garden Route."
+    },
+    {
+      "id": "6a607b81e8698f72032c58f0",
+      "name": "Namibia",
+      "descLen": 105,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "From the towering dunes of Sossusvlei to the Skeleton Coast and Etosha National Park's salt pan wildlife."
+    },
+    {
+      "id": "6a607b81e8698f72032c58ee",
+      "name": "Zambia",
+      "descLen": 113,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Home to the magnificent Victoria Falls and incredible wildlife in South Luangwa and Lower Zambezi National Parks."
+    },
+    {
+      "id": "6a607b81e8698f72032c58ed",
+      "name": "Malawi",
+      "descLen": 143,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Discover Malawi's pristine Nyika National Park, known as the Scotland of Africa, and wildlife-rich Liwonde National Park along the Shire River."
+    }
+  ],
+  "richCountries": [
+    {
+      "name": "Ethiopia",
+      "descLen": 1874,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Rwanda",
+      "descLen": 1568,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Egypt",
+      "descLen": 1801,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Uganda",
+      "descLen": 1703,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Tanzania",
+      "descLen": 1573,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Kenya",
+      "descLen": 1607,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Botswana",
+      "descLen": 1673,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "DR Congo",
+      "descLen": 1782,
+      "hasSeoTitle": true
+    },
+    {
+      "name": "Madagascar",
+      "descLen": 1602,
+      "hasSeoTitle": true
+    }
+  ],
+  "countriesMissingSeo": [
+    {
+      "id": "6a607b81e8698f72032c58f2",
+      "name": "Ethiopia",
+      "descLen": 1874,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Ethiopia, The Cradle of Humanity Ethiopia is a landlocked nation in the Horn of Africa, bordered by Eritrea, Djibouti, Somalia, Kenya, South Sudan, and Sudan, and stands as one of "
+    },
+    {
+      "id": "6a607b81e8698f72032c58ed",
+      "name": "Malawi",
+      "descLen": 143,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Discover Malawi's pristine Nyika National Park, known as the Scotland of Africa, and wildlife-rich Liwonde National Park along the Shire River."
+    },
+    {
+      "id": "6a607b81e8698f72032c58ee",
+      "name": "Zambia",
+      "descLen": 113,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Home to the magnificent Victoria Falls and incredible wildlife in South Luangwa and Lower Zambezi National Parks."
+    },
+    {
+      "id": "6a607b81e8698f72032c58eb",
+      "name": "Rwanda",
+      "descLen": 1568,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Rwanda , Land of a Thousand Hills Rwanda, often called the \"Land of a Thousand Hills,\" is a small, landlocked country in East-Central Africa, bordered by Uganda, Tanzania, Burundi,"
+    },
+    {
+      "id": "6a607b81e8698f72032c58ec",
+      "name": "Egypt",
+      "descLen": 1801,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Egypt, Land of the Pharaohs Egypt stands as one of the world's most iconic and enduring tourist destinations, anchored by the legacy of one of history's greatest ancient civilizati"
+    },
+    {
+      "id": "fd79f4ff-39d5-4e6f-914f-ca446aec2a9e",
+      "name": "Morocco",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "18484e2d-ab8f-44cc-bd93-4648001c3c46",
+      "name": "Seychelles",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "6a607b81e8698f72032c58e8",
+      "name": "Uganda",
+      "descLen": 1703,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Explore Uganda, The Pearl of Africa Uganda, affectionately known as the \"Pearl of Africa,\" offers one of the most diverse and thrilling travel experiences on the continent. It is o"
+    },
+    {
+      "id": "81a6e789-4f54-4d71-955c-89873fe9b3e1",
+      "name": "Zimbabwe",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "6a607b81e8698f72032c58f0",
+      "name": "Namibia",
+      "descLen": 105,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "From the towering dunes of Sossusvlei to the Skeleton Coast and Etosha National Park's salt pan wildlife."
+    },
+    {
+      "id": "6a607b81e8698f72032c58ea",
+      "name": "Tanzania",
+      "descLen": 1573,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Tanzania, Land of Big Five Tanzania is East Africa's largest country by land area, bordered by Kenya, Uganda, Rwanda, Burundi, the Democratic Republic of Congo, Zambia, Malawi, and"
+    },
+    {
+      "id": "95738db1-7d86-4737-b823-c3a1973fc6a7",
+      "name": "Mozambique",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "6a607b81e8698f72032c58f1",
+      "name": "South Africa",
+      "descLen": 95,
+      "hasSeoTitle": false,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "From Kruger National Park's Big Five to Cape Town's Table Mountain and the scenic Garden Route."
+    },
+    {
+      "id": "6a607b81e8698f72032c58ef",
+      "name": "Botswana",
+      "descLen": 1673,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Botswana, Africa's Eden Botswana is a landlocked country in Southern Africa, bordered by South Africa, Namibia, Zimbabwe, and Zambia, and stands out as one of the continent's most "
+    },
+    {
+      "id": "6a607b81e8698f72032c58f3",
+      "name": "DR Congo",
+      "descLen": 1782,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Dr Congo (DRC), Heart of Africa The Democratic Republic of Congo is a vast Central African nation, the second-largest country on the continent, bordered by nine countries and home "
+    },
+    {
+      "id": "9ba58e4a-f2ea-4e27-9cf3-1beb8f6ff0d1",
+      "name": "Madagascar",
+      "descLen": 1602,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Madagascar, A genuine island, a world apart Madagascar is the world's fourth-largest island, located off the southeastern coast of Africa in the Indian Ocean, separated from the ma"
+    }
+  ],
+  "thinCategories": [
+    {
+      "id": "6a607b8161e0380bbe953c39",
+      "name": "Namibia Wildlife Safaris",
+      "country": "Namibia",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "7b3e64dc-5940-44b2-a8a3-f032b0a8c4db",
+      "name": "Morocco Tours",
+      "country": "Morocco",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "9aa0d8ed-5b4b-4905-92a8-18b784a41a4e",
+      "name": "Seychelles Safaris Tours",
+      "country": "Seychelles",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "91d6bef8-2ade-47be-9f90-a669bcb20ad8",
+      "name": "Malawi Wildlife Safaris",
+      "country": "Malawi",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "0a4ce31f-7583-47d1-a3d5-283e6b0aae3e",
+      "name": "Zambia Wildlife Safaris",
+      "country": "Zambia",
+      "descLen": 0,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": ""
+    },
+    {
+      "id": "45b20663-a390-4631-8794-6670f459f975",
+      "name": "Zimbabwe Tour Safaris",
+      "country": "Zimbabwe",
+      "descLen": 124,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": "Zimbabwe tour safaris combining Victoria Falls, Hwange, Mana Pools walking safaris, and classic guided wildlife itineraries."
+    },
+    {
+      "id": "aa7aacf9-8523-46f0-be10-81fee460fb0a",
+      "name": "Mozambique Safari Tours",
+      "country": "Mozambique",
+      "descLen": 127,
+      "hasSeoTitle": true,
+      "hasMeta": false,
+      "hasFocus": false,
+      "sample": "Mozambique safari tours combining Gorongosa wildlife with Quirimbas and Bazaruto beach extensions, diving, and island holidays."
+    },
+    {
+      "id": "3eda7229-4aaf-44ec-878d-e360c07d456d",
+      "name": "Zimbabwe Wildlife Safaris",
+      "country": "Zimbabwe",
+      "descLen": 149,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Zimbabwe wildlife safari tours including Hwange National Park, Mana Pools walking safaris, Victoria Falls, Lake Kariba, Gonarezhou, and Matobo Hills."
+    },
+    {
+      "id": "6a607b8161e0380bbe953c3c",
+      "name": "South Africa Wildlife Safaris",
+      "country": "South Africa",
+      "descLen": 155,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Wildlife safari tours across South Africa, including Kruger National Park, Sabi Sands, Madikwe, Pilanesberg, Addo, Hluhluwe, and private Big Five reserves."
+    },
+    {
+      "id": "b8291a2f-8411-4a38-8c6a-2152aa744e37",
+      "name": "Seychelles Beach Holidays",
+      "country": "Seychelles",
+      "descLen": 157,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Seychelles beach holidays and honeymoon packages across Mahé, Praslin, La Digue, and outer islands, including luxury resorts, snorkeling, and island hopping."
+    },
+    {
+      "id": "3e663abb-8b7d-4b5b-9580-8c8d1c37c44f",
+      "name": "Madagascar Wildlife Safaris",
+      "country": "Madagascar",
+      "descLen": 165,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Madagascar wildlife tours for lemurs, rainforest parks, and unique biodiversity including Andasibe, Ranomafana, Isalo, Avenue of the Baobabs, Nosy Be, and Moron"
+    },
+    {
+      "id": "07a96baa-3a00-4c46-b4ca-27d855c3e360",
+      "name": "Mozambique Beach Holidays",
+      "country": "Mozambique",
+      "descLen": 166,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Mozambique beach holidays and safari combinations including Bazaruto Archipelago, Quirimbas, Vilanculos, Tofo, Gorongosa National Park, and diving/snorkeling es"
+    },
+    {
+      "id": "bfc1c274-35dc-4a0f-b7d2-27b9a8451b9e",
+      "name": "Ethiopia Tours",
+      "country": "Ethiopia",
+      "descLen": 173,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Ethiopia tours covering Simien Mountains trekking, Omo Valley cultural encounters, Lalibela rock churches, Danakil Depression, Bale Mountains, and historic nort"
+    }
+  ],
+  "richCategories": 15,
+  "categoriesMissingSeo": 28,
+  "countryCols": [
+    "image_url",
+    "description",
+    "focus_keywords",
+    "seo_title",
+    "description_title",
+    "meta_description",
+    "seo_schema",
+    "is_popular",
+    "name",
+    "post_blocks",
+    "tagline",
+    "post_type",
+    "seo_slug",
+    "social_image_url",
+    "focus_keyword",
+    "slug",
+    "id",
+    "created_date",
+    "updated_date",
+    "created_by_id",
+    "is_sample"
+  ],
+  "categoryCols": [
+    "country",
+    "image_url",
+    "description",
+    "focus_keywords",
+    "seo_title",
+    "description_title",
+    "meta_description",
+    "seo_schema",
+    "name",
+    "post_blocks",
+    "post_type",
+    "seo_slug",
+    "social_image_url",
+    "focus_keyword",
+    "slug",
+    "id",
+    "created_date",
+    "updated_date",
+    "created_by_id",
+    "is_sample"
+  ],
+  "ugandaSample": {
+    "id": "6a607b81e8698f72032c58e8",
+    "name": "Uganda",
+    "descLen": 1703,
+    "hasSeoTitle": true,
+    "hasMeta": true,
+    "hasFocus": false,
+    "sample": "Explore Uganda, The Pearl of Africa Uganda, affectionately known as the \"Pearl of Africa,\" offers one of the most diverse and thrilling travel experiences on the continent. It is o"
+  },
+  "richCatSamples": [
+    {
+      "id": "6a607b8161e0380bbe953c3f",
+      "name": "Botswana Wildlife Safari Tours",
+      "country": "Botswana",
+      "descLen": 1789,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Botswana Wildlife Safari Tours Botswana's wildlife safari experience is defined by exclusivity, water-based exploration, and some of the most pristine wildernes"
+    },
+    {
+      "id": "6a607b8161e0380bbe953c3b",
+      "name": "Tanzania Mountain Climbing Safaris",
+      "country": "Tanzania",
+      "descLen": 1837,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Tanzania Mountain Climbing Safaris Tanzania is home to Mount Kilimanjaro, Africa's highest peak at 5,895 meters and the tallest free-standing mountain in the wo"
+    },
+    {
+      "id": "6a783cb81232e62e879cecf0",
+      "name": "Uganda Gorilla Trekking Safaris",
+      "country": "Uganda",
+      "descLen": 1791,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Uganda Gorilla Trekking Gorilla trekking is Uganda's flagship tourism experience and one of the most sought-after wildlife encounters on Earth. Uganda is home t"
+    },
+    {
+      "id": "6a607b8161e0380bbe953c37",
+      "name": "Kenya Beach Holidays",
+      "country": "Kenya",
+      "descLen": 1619,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Kenya Beach Holidays Kenya's Indian Ocean coastline stretches for roughly 500 kilometers, offering a compelling mix of pristine beaches, coral reefs, and centur"
+    },
+    {
+      "id": "6a607b8161e0380bbe953c3e",
+      "name": "Rwanda Wildlife Safaris",
+      "country": "Rwanda",
+      "descLen": 1769,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Rwanda Wildlife Safaris While Rwanda is best known globally for gorilla trekking, the country has steadily built out a broader wildlife safari offering that rou"
+    },
+    {
+      "id": "6a607b8161e0380bbe953c31",
+      "name": "Egypt Tours",
+      "country": "Egypt",
+      "descLen": 1710,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Egypt Tours Egypt's tour offerings are built around three signature experiences that can be combined into a single itinerary: ancient history, Nile River cruisi"
+    },
+    {
+      "id": "5215c16d-ba80-4183-941f-8747fa6bf644",
+      "name": "Ethiopia Tour Safaris",
+      "country": "Ethiopia",
+      "descLen": 1753,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Ethiopia Tour Safaris Ethiopia's tourism offering is unlike anywhere else in Africa, built less around classic Big Five safaris and more around a powerful combi"
+    },
+    {
+      "id": "6a607b8161e0380bbe953c32",
+      "name": "Uganda Wildlife Safaris",
+      "country": "Uganda",
+      "descLen": 1718,
+      "hasSeoTitle": true,
+      "hasMeta": true,
+      "hasFocus": false,
+      "sample": "Uganda Wildlife Safaris Uganda offers some of the most varied and rewarding safari experiences in Africa, condensed into a country roughly the size of the Unite"
+    }
+  ]
+}

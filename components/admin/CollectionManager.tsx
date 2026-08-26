@@ -162,6 +162,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   }, [config.table]);
 
   const columns = useMemo(() => getDynamicColumns(records), [records]);
+  const [categoryFilter, setCategoryFilter] = useState('');
+
   const filtered = useMemo(() => {
     const needle = query.toLowerCase().trim();
     return records.filter((record) => {
@@ -173,10 +175,28 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         const country = String(record.country ?? record.destination ?? '').toLowerCase();
         if (!country.includes(countryFilter.toLowerCase())) return false;
       }
+      if (isTours && categoryFilter) {
+        const category = String(record.category ?? record.category_name ?? '').toLowerCase();
+        if (category !== categoryFilter.toLowerCase()) return false;
+      }
       if (!needle) return true;
       return Object.keys(record).some((key) => String(record[key] ?? '').toLowerCase().includes(needle));
     });
-  }, [records, query, countryFilter, postKind, isSafariUpdates]);
+  }, [records, query, countryFilter, categoryFilter, postKind, isSafariUpdates, isTours]);
+
+  const categoryOptions = useMemo(() => {
+    if (!isTours) return [];
+    const pool = countryFilter
+      ? records.filter((record) =>
+          String(record.country ?? record.destination ?? '')
+            .toLowerCase()
+            .includes(countryFilter.toLowerCase())
+        )
+      : records;
+    return Array.from(
+      new Set(pool.map((record) => String(record.category || record.category_name || '').trim()).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [records, countryFilter, isTours]);
 
   const countryOptions = useMemo(() => {
     const fromRecords = Array.from(
@@ -817,7 +837,13 @@ export default function CollectionManager({ config }: { config: CollectionConfig
             </span>
           )}
           <span className="rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
-            {records.length.toLocaleString()} records
+            {isTours
+              ? countryFilter
+                ? `${filtered.length.toLocaleString()} tours in ${countryFilter}`
+                : `${records.length.toLocaleString()} Total Packages`
+              : countryFilter
+                ? `${filtered.length.toLocaleString()} of ${records.length.toLocaleString()} records`
+                : `${records.length.toLocaleString()} records`}
           </span>
           <button
             type="button"
@@ -843,12 +869,28 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           <div className="w-full sm:w-56">
             <SearchableSelect
               value={countryFilter}
-              onChange={setCountryFilter}
+              onChange={(value) => {
+                setCountryFilter(value);
+                setCategoryFilter('');
+              }}
               options={[
-                { value: '', label: 'All countries' },
+                { value: '', label: 'All destinations' },
                 ...countryOptions.map((country) => ({ value: country, label: country })),
               ]}
-              placeholder="All countries"
+              placeholder="All destinations"
+            />
+          </div>
+        )}
+        {isTours && (
+          <div className="w-full sm:w-64">
+            <SearchableSelect
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              options={[
+                { value: '', label: 'All categories' },
+                ...categoryOptions.map((category) => ({ value: category, label: category })),
+              ]}
+              placeholder="All categories"
             />
           </div>
         )}

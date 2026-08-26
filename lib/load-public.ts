@@ -1,14 +1,18 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { categoryMatchesCountry, matchesCategoryValue, matchesCountry, recordMatchesCountrySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickString, publicRecordSlug } from '@/lib/data';
+import { fetchCollectionRecords, getRecordTitle, isLanguagePost, isPublishedRecord, pickStoredString, pickString, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
-export async function loadPublishedRecords(table: string, aliases: string[] = []): Promise<RecordRow[]> {
+export async function loadPublishedRecords(
+  table: string,
+  aliases: string[] = [],
+  options?: { columns?: string }
+): Promise<RecordRow[]> {
   noStore();
   try {
-    const rows = await fetchCollectionRecords(table, aliases);
+    const rows = await fetchCollectionRecords(table, aliases, options);
     return rows.filter(isPublishedRecord);
   } catch {
     return [];
@@ -45,7 +49,7 @@ export async function loadHomePageData() {
   noStore();
   const [countries, tours, updates, parks, categories] = await Promise.all([
     loadPublishedRecords('countries'),
-    loadPublishedRecords('tours'),
+    loadPublishedRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
     loadPublishedRecords('safari_updates'),
     loadPublishedRecords('national_park', ['national_parks', 'parks']),
     fetchCollectionRecords('categories').catch(() => [] as RecordRow[]),
@@ -64,7 +68,7 @@ export async function loadCountryPageData(slug: string) {
   const [countries, categories, tours, parks, places] = await Promise.all([
     loadPublishedRecords('countries'),
     loadPublishedRecords('categories'),
-    loadPublishedRecords('tours'),
+    loadPublishedRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
     loadPublishedRecords('national_park', ['national_parks', 'parks']),
     loadPublishedRecords('explore'),
   ]);
@@ -103,7 +107,7 @@ export async function loadParkDetail(slug: string) {
     park,
     others: parks.filter((row) => row !== park).slice(0, 20),
     stays: accommodations.filter((item) => {
-      const name = pickString(item, ['national_park', 'park', 'park_name']);
+      const name = pickStoredString(item, ['national_park', 'park', 'park_name']);
       return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
     }),
   };

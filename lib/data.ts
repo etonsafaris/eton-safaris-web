@@ -6,17 +6,17 @@ import { isDeployableImageUrl, withImageCacheBust } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 const PAGE_SIZE = 1000;
-const FETCH_CACHE_MS = 0;
+const FETCH_CACHE_MS = 60_000;
 const recordCache = new Map<string, { expires: number; rows: RecordRow[] }>();
 const inflight = new Map<string, Promise<RecordRow[]>>();
 
-export async function fetchAllRecords(tableName: string): Promise<RecordRow[]> {
+export async function fetchAllRecords(tableName: string, columns = '*'): Promise<RecordRow[]> {
   const allRows: RecordRow[] = [];
   let start = 0;
 
   while (true) {
     const end = start + PAGE_SIZE - 1;
-    const { data, error } = await supabase.from(tableName).select('*').range(start, end);
+    const { data, error } = await supabase.from(tableName).select(columns).range(start, end);
 
     if (error) {
       console.error(`[Supabase] Error fetching "${tableName}" (rows ${start}–${end}):`, error);
@@ -34,8 +34,13 @@ export async function fetchAllRecords(tableName: string): Promise<RecordRow[]> {
   return allRows;
 }
 
-export async function fetchCollectionRecords(table: string, aliases: string[] = []): Promise<RecordRow[]> {
-  const cacheKey = [table, ...aliases].join('|');
+export async function fetchCollectionRecords(
+  table: string,
+  aliases: string[] = [],
+  options?: { columns?: string }
+): Promise<RecordRow[]> {
+  const columns = options?.columns || '*';
+  const cacheKey = [table, columns, ...aliases].join('|');
   if (FETCH_CACHE_MS > 0) {
     const cached = recordCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) return cached.rows;
@@ -49,13 +54,25 @@ export async function fetchCollectionRecords(table: string, aliases: string[] = 
 
     for (const name of names) {
       try {
-        const rows = await fetchAllRecords(name);
+        const rows = await fetchAllRecords(name, columns);
         if (FETCH_CACHE_MS > 0) {
           recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
         }
         return rows;
       } catch (error) {
         lastError = error;
+        const message = error instanceof Error ? error.message : String(error);
+        if (columns !== '*' && /column/i.test(message)) {
+          try {
+            const rows = await fetchAllRecords(name, '*');
+            if (FETCH_CACHE_MS > 0) {
+              recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
+            }
+            return rows;
+          } catch (fallbackError) {
+            lastError = fallbackError;
+          }
+        }
         console.error(`[Supabase] Table "${name}" failed, trying next alias if available.`);
       }
     }
@@ -71,6 +88,10 @@ export async function fetchCollectionRecords(table: string, aliases: string[] = 
     inflight.delete(cacheKey);
   }
 }
+
+/** Lightweight columns for tour cards / listing pages (avoids huge description payloads). */
+export const TOUR_LIST_COLUMNS =
+  'id,title,slug,country,category,duration_days,duration_nights,price,image_url,cover_image,featured_image,social_image_url,published_at,status,is_featured,is_popular,show_on_landing';
 
 export function clearCollectionCache(table?: string) {
   if (!table) {

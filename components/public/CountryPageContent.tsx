@@ -26,6 +26,7 @@ import {
   isPublishedRecord,
   pickPlainText,
   pickString,
+  publicRecordSlug,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -213,7 +214,7 @@ export default function CountryPageContent({
               items={parks.map((park, index) => (
                 <PlaceCard
                   key={String(park.id ?? index)}
-                  href={`/parks/${pickString(park, ['slug']) || park.id}`}
+                  href={`/parks/${publicRecordSlug(park)}`}
                   image={getRecordImage(park) || undefined}
                   title={getRecordTitle(park)}
                   location={pickString(park, ['location', 'country'])}

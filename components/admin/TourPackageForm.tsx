@@ -709,6 +709,8 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
         saving={saving}
         coverImageUrl={form.image_url}
         contentType="tour"
+        keywordLibraryCountry={form.country}
+        keywordLibraryCategory={form.category}
       />
     </form>
   );

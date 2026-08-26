@@ -7,7 +7,7 @@ import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickStoredString, pickString, recordPublishedAt, visibleRecordHtml } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickStoredString, pickString, publicRecordSlug, recordPublishedAt, visibleRecordHtml } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -27,7 +27,12 @@ export default function AccommodationDetailPage() {
     Promise.all([fetchCollectionRecords('accommodations'), fetchCollectionRecords('tours')])
       .then(([rows, tourRows]) => {
         const match =
-          rows.find((row) => pickString(row, ['slug']) === slug || String(row.id) === slug) || null;
+          rows.find(
+            (row) =>
+              publicRecordSlug(row) === slug ||
+              pickString(row, ['slug', 'seo_slug']) === slug ||
+              String(row.id) === slug
+          ) || null;
         setItem(match);
         setOthers(rows.filter(isPublishedRecord).filter((row) => row !== match).slice(0, 20));
         const country = match ? pickStoredString(match, ['country']) : '';
@@ -71,7 +76,7 @@ export default function AccommodationDetailPage() {
         country={pickString(item, ['country'])}
         sidebarTitle="Other Accommodations"
         sidebarItems={others.map((row) => ({
-          href: `/accommodations/${pickString(row, ['slug']) || row.id}`,
+          href: `/accommodations/${publicRecordSlug(row)}`,
           image: getRecordImage(row),
           title: getRecordTitle(row),
           date: formatPublishedDate(recordPublishedAt(row)),
@@ -92,6 +97,19 @@ export default function AccommodationDetailPage() {
             {pickStoredString(item, ['description_title'])}
           </h2>
         )}
+        {(pickStoredString(item, ['website', 'website_url']) || '').startsWith('http') ? (
+          <p className="mb-4 text-sm text-[#374151]">
+            Official site:{' '}
+            <a
+              href={pickStoredString(item, ['website', 'website_url'])}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#00A651] hover:underline"
+            >
+              {pickStoredString(item, ['website', 'website_url']).replace(/^https?:\/\//, '')}
+            </a>
+          </p>
+        ) : null}
         <div
           className="public-prose max-w-none"
           dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(item, ['description'])) }}
