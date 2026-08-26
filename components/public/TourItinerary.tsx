@@ -15,15 +15,17 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
       </h2>
       <div className="space-y-4">
         {days.map((day, index) => {
-          const title = stripPublicMoney(day.title || `Day ${index + 1}`);
+          const dayNumber = Number.parseInt(String(day.day ?? ''), 10);
+          const displayDay = Number.isFinite(dayNumber) && dayNumber > 0 ? dayNumber : index + 1;
+          const title = stripPublicMoney(day.title || `Day ${displayDay}`);
           const meals = stripPublicMoney(day.mealPlan || day.meal_plan || '');
           const stay = stripPublicMoney(day.accommodationPlan || day.accommodation_plan || '');
           return (
-            <details key={`${title}-${index}`} className="group">
+            <details key={`${displayDay}-${title}-${index}`} className="group">
               <summary className="flex cursor-pointer list-none items-center gap-3 marker:content-none [&::-webkit-details-marker]:hidden">
                 <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full bg-[#00A651] text-white">
                   <span className="text-[9px] font-bold uppercase tracking-[0.14em]">Day</span>
-                  <span className="text-lg font-bold leading-none">{index + 1}</span>
+                  <span className="text-lg font-bold leading-none">{displayDay}</span>
                 </span>
                 <span className="flex min-h-[52px] flex-1 items-center rounded-lg bg-[#ececec] px-4 py-3 font-semibold text-[#111]">
                   {title}

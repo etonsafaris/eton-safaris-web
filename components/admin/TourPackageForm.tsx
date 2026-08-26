@@ -60,14 +60,14 @@ type TourFormState = {
 const DEFAULT_FORM: TourFormState = {
   title: '',
   description: '',
-  highlights: '• Big 5 Game Drive\n• Sunset Boat Cruise\n• Cultural Village Visit',
+  highlights: '',
   image_url: '',
   country: '',
   category: '',
   duration_days: '',
   price: '',
-  price_includes: '• Accommodation\n• All Meals\n• Transport',
-  price_excludes: '• International Flights\n• Visas\n• Personal Expenses',
+  price_includes: '',
+  price_excludes: '',
   journey_details: '',
   journey_map_url: '',
   featured: true,
@@ -193,14 +193,14 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
       setForm({
         title: String(tour.title || ''),
         description: stripEmbeddedContent(String(tour.description || '')),
-        highlights: String(tour.highlights || embedded.fields?.highlights || DEFAULT_FORM.highlights),
+        highlights: String(tour.highlights || embedded.fields?.highlights || ''),
         image_url: String(tour.image_url || ''),
         country: String(tour.country || ''),
         category: String(tour.category || ''),
         duration_days: String(tour.duration_days ?? ''),
         price: String(tour.price || ''),
-        price_includes: String(tour.price_includes || embedded.fields?.price_includes || DEFAULT_FORM.price_includes),
-        price_excludes: String(tour.price_excludes || embedded.fields?.price_excludes || DEFAULT_FORM.price_excludes),
+        price_includes: String(tour.price_includes || embedded.fields?.price_includes || ''),
+        price_excludes: String(tour.price_excludes || embedded.fields?.price_excludes || ''),
         journey_details: String(tour.journey_details || embedded.fields?.journey_details || ''),
         journey_map_url: String(tour.journey_map_url || embedded.fields?.journey_map_url || ''),
         featured: tour.featured !== false,
@@ -258,7 +258,8 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
           index === editingDay ? { ...draftItinerary, day: String(index + 1) } : { ...entry, day: String(index + 1) }
         );
       }
-      return [{ ...draftItinerary, day: '1' }, ...current].map((entry, index) => ({
+      // Always append so the first day entered stays Day 1 on admin and the public site.
+      return [...current, { ...draftItinerary, day: String(current.length + 1) }].map((entry, index) => ({
         ...entry,
         day: String(index + 1),
       }));
@@ -366,8 +367,14 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
               <TextInput
                 value={form.title}
                 onChange={(value) => {
+                  const nextSlug = slugify(value);
                   updateField('title', value);
-                  if (!seo.seo_title) setSeo({ ...seo, seo_title: value });
+                  updateField('slug', nextSlug);
+                  setSeo((current) => ({
+                    ...current,
+                    seo_title: current.seo_title || value,
+                    slug: nextSlug,
+                  }));
                 }}
                 placeholder="e.g., Majestic Safari Adventure"
               />

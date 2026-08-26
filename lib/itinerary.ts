@@ -38,6 +38,17 @@ export function parseItineraries(value: unknown): ItineraryDay[] {
 export function parseItinerariesFromRecord(record: RecordRow | null | undefined): ItineraryDay[] {
   if (!record) return [];
   const fromColumn = parseItineraries(record.itineraries);
-  if (fromColumn.length > 0) return fromColumn;
-  return extractEmbeddedContent(recordBodyHtml(record)).itineraries || [];
+  const days = fromColumn.length > 0 ? fromColumn : extractEmbeddedContent(recordBodyHtml(record)).itineraries || [];
+  return sortItineraryDays(days);
+}
+
+/** Prefer explicit day numbers when present; otherwise keep saved array order. */
+export function sortItineraryDays(days: ItineraryDay[]): ItineraryDay[] {
+  if (days.length < 2) return days;
+  const indexed = days.map((day, index) => ({ day, index, num: Number.parseInt(String(day.day ?? ''), 10) }));
+  const allNumbered = indexed.every((item) => Number.isFinite(item.num) && item.num > 0);
+  if (!allNumbered) return days;
+  return [...indexed]
+    .sort((a, b) => a.num - b.num || a.index - b.index)
+    .map((item) => item.day);
 }
