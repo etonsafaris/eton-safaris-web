@@ -4,42 +4,36 @@ import PublicShell from '@/components/public/PublicShell';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadCountryPageData } from '@/lib/load-public';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+export const revalidate = 60;
 
 const SEEDED = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS];
 
-export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
+export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);
   if (!slug) notFound();
-  const data = await loadCountryPageData(slug);
   const seeded = SEEDED.find((item) => item.slug === slug);
-
-  const country = data.country ||
-    (seeded
-      ? {
-          name: seeded.name,
-          title: seeded.name,
-          slug,
-        }
-      : {
-          name: countryLabelFromSlug(slug),
-          title: countryLabelFromSlug(slug),
-          slug,
-        });
+  const country = seeded
+    ? {
+        name: seeded.name,
+        title: seeded.name,
+        slug,
+      }
+    : {
+        name: countryLabelFromSlug(slug),
+        title: countryLabelFromSlug(slug),
+        slug,
+      };
 
   return (
     <PublicShell>
       <CountryPageContent
         slug={slug}
         country={country}
-        initialCategories={data.categories}
-        initialTours={data.tours}
-        initialParks={data.parks}
-        initialPlaces={data.places}
+        initialCategories={[]}
+        initialTours={[]}
+        initialParks={[]}
+        initialPlaces={[]}
       />
     </PublicShell>
   );

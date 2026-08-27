@@ -37,13 +37,17 @@ export default function ParksPageClient({
   }, [initialParks, initialTotal]);
 
   useEffect(() => {
-    if (live === 0) return;
+    let cancelled = false;
     fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 48, offset: 0 })
       .then((page) => {
+        if (cancelled) return;
         setParks(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error('[Supabase] Failed to load parks:', error));
+    return () => {
+      cancelled = true;
+    };
   }, [live]);
 
   async function loadMore() {

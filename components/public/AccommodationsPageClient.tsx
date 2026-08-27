@@ -37,13 +37,17 @@ export default function AccommodationsPageClient({
   }, [initialRows, initialTotal]);
 
   useEffect(() => {
-    if (live === 0) return;
+    let cancelled = false;
     fetchCollectionPage('accommodations', [], { limit: 48, offset: 0 })
       .then((page) => {
+        if (cancelled) return;
         setRows(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error(error));
+    return () => {
+      cancelled = true;
+    };
   }, [live]);
 
   async function loadMore() {

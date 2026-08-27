@@ -63,7 +63,7 @@ function ToursList({
   }, [q, destination, category]);
 
   useEffect(() => {
-    if (live === 0) return undefined;
+    let cancelled = false;
     Promise.all([
       fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
         page.rows.filter(isPublishedRecord)
@@ -72,12 +72,15 @@ function ToursList({
       fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
     ])
       .then(([tourRows, categoryRows, countryRows]) => {
+        if (cancelled) return;
         setTours(tourRows);
         setCategories(categoryRows);
         setCountries(countryRows.filter(isPublishedRecord));
       })
       .catch((error) => console.error(error));
-    return undefined;
+    return () => {
+      cancelled = true;
+    };
   }, [live]);
 
   const destinationOptions = useMemo(() => publicDestinationNames(mergePublicDestinations(countries)), [countries]);

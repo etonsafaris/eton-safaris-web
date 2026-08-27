@@ -39,14 +39,18 @@ export default function SafariUpdatesPageClient({
   }, [initialPosts, initialTotal]);
 
   useEffect(() => {
-    if (live === 0) return;
+    let cancelled = false;
     fetchCollectionPage('safari_updates', [], { limit: 48, offset: 0 })
       .then((page) => {
+        if (cancelled) return;
         const rows = page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
         setPosts(rows);
         setTotal(page.total);
       })
       .catch((error) => console.error(error));
+    return () => {
+      cancelled = true;
+    };
   }, [live]);
 
   async function loadMore() {

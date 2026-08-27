@@ -85,13 +85,12 @@ export default function CountryPageContent({
   }, [countryProp, initialCategories, initialParks, initialPlaces, initialTours]);
 
   useEffect(() => {
-    if (live === 0) return undefined;
     let cancelled = false;
     async function load() {
       try {
         const [countryRows, allCategories, countryTours, countryParks, allPlaces] = await Promise.all([
-          fetchCollectionRecords('countries'),
-          fetchCollectionRecords('categories'),
+          fetchCollectionRecords('countries', [], { maxRows: 48 }),
+          fetchCollectionRecords('categories', [], { maxRows: 64 }),
           fetchToursForCountryLabel(slug, 48),
           fetchParksForCountry(publicCountryLabel(countryProp, slug) || slug, 48),
           fetchCollectionPage('explore', [], {
@@ -119,7 +118,7 @@ export default function CountryPageContent({
     return () => {
       cancelled = true;
     };
-  }, [slug, live]);
+  }, [slug, live, countryProp]);
 
   const extras = parseCmsPageExtras(country, slug);
   const title = publicCountryLabel(country, slug);

@@ -39,17 +39,21 @@ function ExploreContent({
   }, [initialPlaces, initialTotal]);
 
   useEffect(() => {
-    if (live === 0) return;
+    let cancelled = false;
     fetchCollectionPage('explore', [], {
       limit: 48,
       offset: 0,
       filters: countryFilter ? { country: countryFilter } : undefined,
     })
       .then((page) => {
+        if (cancelled) return;
         setPlaces(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error('[Supabase] Failed to load explore places:', error));
+    return () => {
+      cancelled = true;
+    };
   }, [live, countryFilter]);
 
   async function loadMore() {

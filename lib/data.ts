@@ -312,10 +312,10 @@ export async function fetchCollectionPage(
     let parkColumnIndex = 0;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const parkColumn = parkFilter ? parkColumnFallbacks[parkColumnIndex] || '' : '';
-      const { data, error, count } = await withJwtRetry(() => {
+      const { data, error } = await withJwtRetry(() => {
         let query = dataClient()
           .from(name)
-          .select(selectColumns, { count: 'exact' })
+          .select(selectColumns)
           .range(offset, offset + limit - 1);
         if (countryFilter) query = query.ilike('country', `%${countryFilter}%`);
         if (categoryFilter) query = query.ilike('category', `%${categoryFilter}%`);
@@ -328,7 +328,9 @@ export async function fetchCollectionPage(
       if (!error) {
         const rows = asRows(data);
         if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
-        return { rows, total: count ?? rows.length };
+        // Avoid count: 'exact' — it scans huge tables and was timing out Vercel (504).
+        const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
+        return { rows, total };
       }
 
       const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
