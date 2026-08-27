@@ -5,6 +5,11 @@ import { fetchCollectionRecords, pickString, publicRecordSlug, recordPublishedAt
 import { mergePublicDestinations } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
+export const revalidate = 3600;
+
+const SITEMAP_COLUMNS =
+  'id,name,title,slug,seo_slug,country,category,created_date,updated_date,publish_date';
+
 function entry(
   path: string,
   lastModified = new Date(),
@@ -33,15 +38,16 @@ function recordDate(row: RecordRow) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const cols = { columns: SITEMAP_COLUMNS };
   const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
-    fetchCollectionRecords('tours').catch(() => []),
-    fetchCollectionRecords('national_park', ['national_parks', 'parks']).catch(() => []),
-    fetchCollectionRecords('accommodations').catch(() => []),
-    fetchCollectionRecords('safari_updates').catch(() => []),
-    fetchCollectionRecords('explore').catch(() => []),
-    fetchCollectionRecords('pages').catch(() => []),
-    fetchCollectionRecords('categories').catch(() => []),
-    fetchCollectionRecords('countries').catch(() => []),
+    fetchCollectionRecords('tours', [], cols).catch(() => []),
+    fetchCollectionRecords('national_park', ['national_parks', 'parks'], cols).catch(() => []),
+    fetchCollectionRecords('accommodations', [], cols).catch(() => []),
+    fetchCollectionRecords('safari_updates', [], cols).catch(() => []),
+    fetchCollectionRecords('explore', [], cols).catch(() => []),
+    fetchCollectionRecords('pages', [], cols).catch(() => []),
+    fetchCollectionRecords('categories', [], cols).catch(() => []),
+    fetchCollectionRecords('countries', [], cols).catch(() => []),
   ]);
   const publicDestinations = mergePublicDestinations(countries);
 

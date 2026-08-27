@@ -63,7 +63,7 @@ export function guestQuoteQuery(row: RecordRow) {
 async function loadTable(table: string) {
   const { data, error } = await supabase.from(table).select('*');
   if (error) return [] as RecordRow[];
-  return (data as RecordRow[]) || [];
+  return Array.isArray(data) ? (data as unknown as RecordRow[]) : [];
 }
 
 export async function fetchBookingsForAgent(agentEmail: string): Promise<RecordRow[]> {

@@ -10,9 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 function supabaseFetch(input: RequestInfo | URL, init?: RequestInit) {
-  if (typeof window === 'undefined') {
-    return fetch(input, { ...init, cache: 'no-store' });
-  }
+  // Do not force cache: 'no-store' here. Next.js throws
+  // "Dynamic server usage: no-store fetch" during static generation
+  // (sitemap, robots, contact), which emptied CMS URLs and failed deploys.
   return fetch(input, init);
 }
 

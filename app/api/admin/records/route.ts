@@ -49,7 +49,7 @@ async function loadAgentRows(client: SupabaseClient) {
       }
       continue;
     }
-    collected.push(...(((queried.data as RecordRow[] | null) || [])));
+    collected.push(...(Array.isArray(queried.data) ? (queried.data as unknown as RecordRow[]) : []));
   }
   if (collected.length === 0 && lastError) {
     return { data: [] as RecordRow[], error: lastError };

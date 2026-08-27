@@ -69,18 +69,22 @@ export async function loadCmsPage(slug: string) {
 
 export async function loadHomePageData() {
   noStore();
-  const [countries, tours, updates, parks, categories] = await Promise.all([
+  const parkPage = await fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+    columns: listColumns('national_park', ['national_parks', 'parks']),
+    limit: 24,
+    offset: 0,
+  }).catch(() => ({ rows: [] as RecordRow[], total: 0 }));
+  const [countries, tours, updates, categories] = await Promise.all([
     loadPublishedRecords('countries'),
     fetchFeaturedTours(24).catch(() => [] as RecordRow[]),
     loadPublishedRecords('safari_updates'),
-    loadPublishedRecords('national_park', ['national_parks', 'parks']),
     loadPublishedRecords('categories'),
   ]);
   return {
     countries,
     tours: tours.slice(0, 24),
     updates: updates.filter((row) => !isLanguagePost(row)).slice(0, 8),
-    parks: parks.slice(0, 24),
+    parks: parkPage.rows.filter(isPublishedRecord).slice(0, 24),
     categories,
   };
 }

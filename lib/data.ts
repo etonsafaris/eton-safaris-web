@@ -43,6 +43,15 @@ function isTransientFetchError(message?: string) {
   );
 }
 
+function asRows(data: unknown): RecordRow[] {
+  return Array.isArray(data) ? (data as RecordRow[]) : [];
+}
+
+function asRow(data: unknown): RecordRow | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  return data as RecordRow;
+}
+
 async function selectRange(
   tableName: string,
   selectColumns: string,
@@ -52,7 +61,7 @@ async function selectRange(
   let lastMessage = '';
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const { data, error } = await supabase.from(tableName).select(selectColumns).range(start, end);
-    if (!error) return { data: ((data as unknown as RecordRow[] | null) || []), error: null };
+    if (!error) return { data: asRows(data), error: null };
     const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
     lastMessage = error.message || detail || 'fetch failed';
     if (!isTransientFetchError(detail)) {
@@ -240,7 +249,7 @@ export async function fetchCollectionPage(
 
       const { data, error, count } = await query;
       if (!error) {
-        const rows = (data as RecordRow[] | null) || [];
+        const rows = asRows(data);
         if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
         return { rows, total: count ?? rows.length };
       }
@@ -284,7 +293,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
     .or('is_featured.eq.true,is_popular.eq.true,show_on_landing.eq.true')
     .limit(capped);
   if (!featured.error && featured.data && featured.data.length > 0) {
-    return (featured.data as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
+    return asRows(featured.data).filter(isPublishedRecord).slice(0, capped);
   }
 
   const { rows } = await fetchCollectionPage('tours', [], {
@@ -309,15 +318,17 @@ export async function fetchRecordByPublicSlug(
   for (const name of names) {
     for (const col of ['seo_slug', 'slug'] as const) {
       const { data, error } = await supabase.from(name).select(columns).eq(col, needle).limit(1).maybeSingle();
-      if (!error && data) {
-        rememberKnownColumns(name, Object.keys(data as RecordRow));
-        return data as RecordRow;
+      const row = asRow(data);
+      if (!error && row) {
+        rememberKnownColumns(name, Object.keys(row));
+        return row;
       }
     }
     const { data, error } = await supabase.from(name).select(columns).eq('id', slug).limit(1).maybeSingle();
-    if (!error && data) {
-      rememberKnownColumns(name, Object.keys(data as RecordRow));
-      return data as RecordRow;
+    const row = asRow(data);
+    if (!error && row) {
+      rememberKnownColumns(name, Object.keys(row));
+      return row;
     }
   }
   return null;
@@ -337,7 +348,7 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 12
     console.error('[Supabase] fetchToursForCountryLabel failed:', error.message);
     return [];
   }
-  return ((data as RecordRow[]) || []).filter(isPublishedRecord);
+  return asRows(data).filter(isPublishedRecord);
 }
 
 /** Load one full row for an admin editor — never download the whole table to find a single id. */
@@ -349,9 +360,10 @@ export async function fetchCollectionRecordById(
   const names = [table, ...aliases].filter(Boolean);
   for (const name of names) {
     const { data, error } = await supabase.from(name).select('*').eq('id', id).maybeSingle();
-    if (!error && data) {
-      rememberKnownColumns(name, Object.keys(data as RecordRow));
-      return data as RecordRow;
+    const row = asRow(data);
+    if (!error && row) {
+      rememberKnownColumns(name, Object.keys(row));
+      return row;
     }
     if (error && !/no rows|PGRST116/i.test(error.message || '')) {
       console.error(`[Supabase] Fetch "${name}" id=${id} failed:`, error);

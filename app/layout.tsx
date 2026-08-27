@@ -3,10 +3,6 @@ import './globals.css';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
 /**
  * System font stacks — Google Fonts were aborting/timing out and blocking every
  * Next.js page compile (Roboto / Inter / Merriweather / IM Fell DW Pica).

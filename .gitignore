@@ -41,6 +41,7 @@ yarn-error.log*
 .tools/
 /tmp/
 git-watch.log
+scripts/_tmp-*.mjs
 
 
 # vercel
