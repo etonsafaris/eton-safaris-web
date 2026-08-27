@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
+import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -14,8 +14,8 @@ export default function TourComparePage() {
   const [destination, setDestination] = useState('All');
 
   useEffect(() => {
-    fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS })
-      .then(setTours)
+    fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 })
+      .then((page) => setTours(page.rows))
       .catch((error) => console.error(error));
   }, [live]);
 

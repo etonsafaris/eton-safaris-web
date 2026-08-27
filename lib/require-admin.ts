@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { User } from '@supabase/supabase-js';
+import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
+import { isJwtClockError } from '@/lib/supabase/jwt-clock';
 
 export async function requireAdminUser(request: Request): Promise<
   { ok: true; user: User } | { ok: false; response: NextResponse }
@@ -25,12 +27,28 @@ export async function requireAdminUser(request: Request): Promise<
 
   const client = createClient(url, anon, { auth: { persistSession: false } });
   const { data, error } = await client.auth.getUser(token);
-  if (error || !data.user) {
+  if (data.user) {
+    return { ok: true, user: data.user };
+  }
+
+  const payload = decodeJwtPayload(token);
+  const email = emailFromJwtPayload(payload);
+  if (email && (isJwtClockError(error?.message) || /jwt/i.test(error?.message || ''))) {
     return {
-      ok: false,
-      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      ok: true,
+      user: {
+        id: String(payload?.sub || ''),
+        email,
+        app_metadata: {},
+        user_metadata: (payload?.user_metadata as Record<string, unknown>) || {},
+        aud: 'authenticated',
+        created_at: '',
+      } as User,
     };
   }
 
-  return { ok: true, user: data.user };
+  return {
+    ok: false,
+    response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+  };
 }

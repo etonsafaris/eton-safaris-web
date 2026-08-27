@@ -14,6 +14,7 @@ import {
 } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
+  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -26,6 +27,7 @@ import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { categoryPageHtml } from '@/lib/category-copy';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -86,15 +88,15 @@ export default function CategoryPageContent({
     let mounted = true;
     async function load() {
       try {
-        const [allCategories, allTours] = await Promise.all([
+        const [allCategories, countryTours] = await Promise.all([
           fetchCollectionRecords('categories'),
-          fetchCollectionRecords('tours'),
+          fetchToursForCountryLabel(slug, 120),
         ]);
         if (!mounted) return;
         const nextCategories = allCategories
           .filter(isPublishedRecord)
           .filter((category) => categoryMatchesCountry(category, slug));
-        const nextTours = allTours.filter(isPublishedRecord).filter((tour) => matchesCountry(tour, slug));
+        const nextTours = countryTours.filter((tour) => matchesCountry(tour, slug));
         setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
         setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
       } catch (error) {
@@ -121,6 +123,12 @@ export default function CategoryPageContent({
   const descriptionHtml = toProseHtml(
     selectedCategory ? visibleRecordHtml(selectedCategory, ['description', 'content', 'about', 'summary']) : ''
   );
+  const categoryBody =
+    descriptionHtml && descriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length >= 80
+      ? descriptionHtml
+      : selectedCategory
+        ? categoryPageHtml(selectedCategory, countryTitle, slug)
+        : '';
   const categoryExtras = parseCmsPageExtras(selectedCategory, categorySlug);
   const faqs = categoryExtras.faqs;
   const publishedFallback =
@@ -178,8 +186,8 @@ export default function CategoryPageContent({
       <section className="bg-white px-4 py-10 md:px-6">
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3">
           <div className="md:col-span-2">
-            {descriptionHtml ? (
-              <div className="public-prose" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+            {categoryBody ? (
+              <div className="public-prose" dangerouslySetInnerHTML={{ __html: categoryBody }} />
             ) : ready ? (
               <p className="text-[#222]">
                 Discover {categoryTitle.toLowerCase()} tour packages in {countryTitle}.

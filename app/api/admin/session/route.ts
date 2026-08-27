@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
+import { isJwtClockError } from '@/lib/supabase/jwt-clock';
 
 async function ensureOwnerAdminRecord(email: string) {
   try {
@@ -48,12 +50,17 @@ export async function POST(request: Request) {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) {
+    const payload = decodeJwtPayload(token);
+    const email = data.user?.email || emailFromJwtPayload(payload);
+    if (!email) {
       return NextResponse.json({ error: error?.message || 'Invalid session' }, { status: 401 });
     }
+    if (error && !data.user && !isJwtClockError(error.message) && !/jwt/i.test(error.message || '')) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
 
-    if (isOwnerAdminEmail(data.user.email)) {
-      await ensureOwnerAdminRecord(data.user.email || '');
+    if (isOwnerAdminEmail(email)) {
+      await ensureOwnerAdminRecord(email || '');
     }
 
     const response = NextResponse.json({ ok: true });

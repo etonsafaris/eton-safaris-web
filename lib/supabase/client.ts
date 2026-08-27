@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createSkewAwareFetch, isJwtClockError } from '@/lib/supabase/jwt-clock';
+import { createSkewAwareFetch } from '@/lib/supabase/jwt-clock';
 
 export const supabaseConfig = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -17,16 +17,6 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey,
     detectSessionInUrl: true,
   },
   global: {
-    fetch: createSkewAwareFetch(supabaseConfig.anonKey, () => {
-      void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-    }),
+    fetch: createSkewAwareFetch(supabaseConfig.anonKey),
   },
 });
-
-if (typeof window !== 'undefined') {
-  void supabase.auth.getSession().then(({ error }) => {
-    if (error && isJwtClockError(error.message)) {
-      void supabase.auth.signOut({ scope: 'local' });
-    }
-  });
-}

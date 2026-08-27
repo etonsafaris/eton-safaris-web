@@ -2,10 +2,10 @@
   "ok": true,
   "dryRun": false,
   "parks": 232,
-  "created": 717,
+  "created": 2318,
   "updated": 0,
   "skipped": 0,
-  "failed": 1603,
+  "failed": 0,
   "types": [
     "Luxury Lodge",
     "Mid-range Lodge",

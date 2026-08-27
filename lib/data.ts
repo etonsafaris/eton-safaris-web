@@ -64,7 +64,6 @@ function dataClient() {
 function switchToAnonOnJwtClock(detail?: string) {
   if (preferAnonFallback || !isJwtClockError(detail)) return false;
   preferAnonFallback = true;
-  void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
   return true;
 }
 
@@ -113,14 +112,21 @@ async function selectRange(
   return { data: null, error: { message: lastMessage || 'fetch failed' } };
 }
 
-export async function fetchAllRecords(tableName: string, columns = '*'): Promise<RecordRow[]> {
+export async function fetchAllRecords(
+  tableName: string,
+  columns = '*',
+  maxRows?: number
+): Promise<RecordRow[]> {
   const allRows: RecordRow[] = [];
   let start = 0;
   const cacheKey = `${tableName}::${columns}`;
   let selectColumns = resolvedSelects.get(cacheKey) || columns;
 
   while (true) {
-    const end = start + PAGE_SIZE - 1;
+    const remaining = maxRows ? maxRows - allRows.length : PAGE_SIZE;
+    if (maxRows && remaining <= 0) return allRows.slice(0, maxRows);
+    const page = Math.min(PAGE_SIZE, remaining);
+    const end = start + page - 1;
     const { data, error } = await selectRange(tableName, selectColumns, start, end);
 
     if (error) {
@@ -145,8 +151,8 @@ export async function fetchAllRecords(tableName: string, columns = '*'): Promise
     if (chunk[0]) rememberKnownColumns(tableName, Object.keys(chunk[0]));
     resolvedSelects.set(cacheKey, selectColumns);
 
-    if (chunk.length < PAGE_SIZE) break;
-    start += PAGE_SIZE;
+    if (chunk.length < page) break;
+    start += page;
   }
 
   return allRows;
@@ -197,14 +203,18 @@ export function publicListColumnsFor(table: string, aliases: string[] = []): str
 export async function fetchCollectionRecords(
   table: string,
   aliases: string[] = [],
-  options?: { columns?: string; full?: boolean }
+  options?: { columns?: string; full?: boolean; unlimited?: boolean; maxRows?: number }
 ): Promise<RecordRow[]> {
   // Default to light list columns — never pull full description HTML for whole tables unless asked.
   const columns =
     options?.full || options?.columns === '*'
       ? '*'
       : options?.columns || publicListColumnsFor(table, aliases) || '*';
-  const cacheKey = [table, columns, ...aliases].join('|');
+  const maxRows =
+    options?.unlimited || options?.full
+      ? undefined
+      : options?.maxRows ?? (table === 'tours' || aliases.includes('tours') ? 96 : undefined);
+  const cacheKey = [table, columns, maxRows ?? 'all', ...aliases].join('|');
   if (FETCH_CACHE_MS > 0) {
     const cached = getCachedCollection(cacheKey);
     if (cached) return cached as RecordRow[];
@@ -218,7 +228,7 @@ export async function fetchCollectionRecords(
 
     for (const name of names) {
       try {
-        const rows = await fetchAllRecords(name, columns);
+        const rows = await fetchAllRecords(name, columns, maxRows);
         if (FETCH_CACHE_MS > 0) {
           setCachedCollection(cacheKey, rows, FETCH_CACHE_MS);
         }
@@ -429,6 +439,79 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 12
     return [];
   }
   return asRows(data).filter(isPublishedRecord);
+}
+
+function sanitizeIlike(value: string) {
+  return String(value || '')
+    .trim()
+    .replace(/[%*,()'"\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Typeahead / filtered tour lists — never download the full tours table. */
+export async function searchTours(options: {
+  query?: string;
+  country?: string;
+  category?: string;
+  limit?: number;
+}): Promise<RecordRow[]> {
+  const capped = Math.max(1, Math.min(options.limit ?? 24, 96));
+  const query = sanitizeIlike(options.query || '');
+  const country = sanitizeIlike(options.country || '');
+  const category = sanitizeIlike((options.category || '').replace(/-/g, ' '));
+
+  let request = dataClient().from('tours').select(TOUR_LIST_COLUMNS);
+  if (query) {
+    const like = `%${query}%`;
+    request = request.or(`title.ilike.${like},slug.ilike.${like},country.ilike.${like},category.ilike.${like}`);
+  }
+  if (country && !/^all destinations$/i.test(country)) {
+    request = request.ilike('country', `%${country}%`);
+  }
+  if (category) {
+    request = request.ilike('category', `%${category}%`);
+  }
+
+  const { data, error } = await withJwtRetry(() => request.limit(capped));
+  if (error) {
+    console.error('[Supabase] searchTours failed:', error.message);
+    return [];
+  }
+  return asRows(data).filter(isPublishedRecord);
+}
+
+/** Park detail stays — filter in Supabase, never download the full accommodations table. */
+export async function fetchStaysForPark(parkName: string, limit = 10): Promise<RecordRow[]> {
+  const name = sanitizeIlike(parkName);
+  if (!name) return [];
+  const capped = Math.max(1, Math.min(limit, 10));
+  const like = `%${name}%`;
+  let selectColumns = 'id,name,seo_slug,location,country,type,image_url,social_image_url';
+
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const { data, error } = await withJwtRetry(() =>
+      dataClient().from('accommodations').select(selectColumns).ilike('location', like).limit(24)
+    );
+    if (!error) {
+      const needle = name.toLowerCase();
+      return asRows(data)
+        .filter(isPublishedRecord)
+        .filter((item) => pickString(item, ['location', 'name']).toLowerCase().includes(needle))
+        .slice(0, capped);
+    }
+    const missing = missingSelectColumn(error.message);
+    if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+      const next = dropColumnFromSelect(selectColumns, missing);
+      if (next && next !== selectColumns) {
+        selectColumns = next;
+        continue;
+      }
+    }
+    console.error('[Supabase] fetchStaysForPark failed:', error.message);
+    return [];
+  }
+  return [];
 }
 
 /** Load one full row for an admin editor — never download the whole table to find a single id. */

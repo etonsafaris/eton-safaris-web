@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { languagePostSearchCard, searchLanguagePosts } from '@/lib/content-search';
-import { fetchCollectionRecords, pickString, TOUR_LIST_COLUMNS } from '@/lib/data';
-import { useCmsLive } from '@/lib/cms-live';
+import { fetchCollectionPage, pickString, searchTours } from '@/lib/data';
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';
 
 export default function HeaderSearch() {
   const router = useRouter();
-  const live = useCmsLive();
   const [tours, setTours] = useState<RecordRow[]>([]);
   const [languagePosts, setLanguagePosts] = useState<RecordRow[]>([]);
   const [query, setQuery] = useState('');
@@ -20,19 +18,25 @@ export default function HeaderSearch() {
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
-      fetchCollectionRecords('safari_updates'),
-    ])
-      .then(([tourRows, postRows]) => {
-        setTours(tourRows);
-        setLanguagePosts(postRows);
-      })
-      .catch((error) => console.error('[Search] Failed to load search data:', error));
-  }, [live]);
+    const needle = query.trim();
+    if (needle.length < 2) {
+      setTours([]);
+      setLanguagePosts([]);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      void searchTours({ query: needle, limit: 8 })
+        .then(setTours)
+        .catch((error) => console.error('[Search] Failed to load tours:', error));
+      void fetchCollectionPage('safari_updates', [], { limit: 8, offset: 0 })
+        .then(({ rows }) => setLanguagePosts(searchLanguagePosts(rows, needle).slice(0, 4)))
+        .catch((error) => console.error('[Search] Failed to load guides:', error));
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   const suggestions = useMemo(() => suggestTours(tours, query), [tours, query]);
-  const guides = useMemo(() => searchLanguagePosts(languagePosts, query), [languagePosts, query]);
+  const guides = languagePosts;
   const hasResults = suggestions.length > 0 || guides.length > 0;
 
   useEffect(() => {

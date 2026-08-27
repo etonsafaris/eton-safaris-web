@@ -17,6 +17,7 @@ import { quoteRequestPath } from '@/lib/quote-request';
 import { reviewSourceBadges } from '@/lib/review-links';
 import {
   fetchCollectionRecords,
+  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -56,13 +57,13 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
   useEffect(() => {
     async function load() {
       try {
-        const [allTours, allReviews, allParks, allPlaces] = await Promise.all([
-          fetchCollectionRecords('tours'),
+        const [countryTours, allReviews, allParks, allPlaces] = await Promise.all([
+          fetchToursForCountryLabel(slug, 48),
           fetchCollectionRecords('reviews').catch(() => []),
           fetchCollectionRecords('national_park', ['national_parks', 'parks']).catch(() => []),
           fetchCollectionRecords('explore').catch(() => []),
         ]);
-        setTours(allTours.filter(isPublishedRecord).filter((tour) => matchesCountry(tour, slug)));
+        setTours(countryTours.filter((tour) => matchesCountry(tour, slug)));
         setReviews(allReviews);
         setParks(allParks.filter(isPublishedRecord).filter((park) => matchesCountry(park, slug)).slice(0, 8));
         setPlaces(allPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)).slice(0, 8));

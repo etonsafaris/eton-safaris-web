@@ -153,6 +153,7 @@ export default function QuotationPanel() {
       const [tourRows, quoteRows, inquiryRows] = await Promise.all([
         fetchCollectionRecords('tours', [], {
           columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
+          maxRows: 80,
         }).catch((tourError) => {
           console.warn('[Quotations] Tours load failed:', tourError);
           return [] as RecordRow[];

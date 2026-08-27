@@ -7,6 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { SITE } from '@/lib/collections';
 import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
+import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 import { findPublicAgentByEmail, saveAgentApplication } from '@/lib/agent-register';
 import { agentIsActive, isStaffRole, isTravelAgentRole } from '@/lib/find-agent';
 import { isOwnerAdminEmail } from '@/lib/inbox';
@@ -85,8 +86,10 @@ function LoginForm() {
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted || !data.session) return;
-      const synced = await syncAdminSessionCookie();
+      if (!mounted) return;
+      const token = data.session?.access_token || readStoredAccessToken();
+      if (!token) return;
+      const synced = await syncAdminSessionCookie(token);
       if (synced) router.replace(nextPath.startsWith('/admin') ? nextPath : '/admin');
     });
     return () => {
@@ -172,20 +175,30 @@ function LoginForm() {
     const authResult = await supabase.auth.signInWithPassword({ email, password });
 
     if (authResult.error) {
-      const account = await findPublicAgentByEmail(email);
-      if (account && !agentIsActive(account)) {
-        setError(
-          isStaffRole(account.role)
-            ? 'Your account is waiting for administrator approval. You will be emailed when it is activated.'
-            : 'Your agent application is waiting for administrator approval. You will be emailed when it is activated.'
-        );
-      } else {
-        setError(authResult.error.message);
+      const clockIssue = /issued at future|iat claim in the future/i.test(authResult.error.message || '');
+      const storedToken = readStoredAccessToken();
+      if (!(clockIssue && storedToken)) {
+        const account = await findPublicAgentByEmail(email);
+        if (account && !agentIsActive(account)) {
+          setError(
+            isStaffRole(account.role)
+              ? 'Your account is waiting for administrator approval. You will be emailed when it is activated.'
+              : 'Your agent application is waiting for administrator approval. You will be emailed when it is activated.'
+          );
+        } else {
+          setError(
+            clockIssue
+              ? 'Sign-in hit a clock mismatch. Check that this computer’s date and time are correct, then try again.'
+              : authResult.error.message
+          );
+        }
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-      return;
     }
 
+    const session = authResult.data.session;
+    const accessToken = session?.access_token || readStoredAccessToken();
     const account = await findPublicAgentByEmail(email);
     const roleValue = String(account?.role || authResult.data.user?.user_metadata?.role || '');
     const ownerAdmin = isOwnerAdminEmail(email);
@@ -212,7 +225,12 @@ function LoginForm() {
     else if (isStaff) destination = '/admin';
     else if (isAgent) destination = '/agents/portal';
 
-    await syncAdminSessionCookie();
+    const synced = await syncAdminSessionCookie(accessToken);
+    if (!synced) {
+      setError('Signed in, but the admin cookie could not be set. Check this computer’s date and time, then try again.');
+      setLoading(false);
+      return;
+    }
     router.refresh();
     router.replace(destination);
   }

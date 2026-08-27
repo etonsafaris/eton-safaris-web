@@ -1,14 +1,25 @@
 import type { MetadataRoute } from 'next';
 import { CORE_PAGE_SLUGS, countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, pickString, publicRecordSlug, recordPublishedAt } from '@/lib/data';
+import { fetchCollectionRecords, pickString, publicListColumnsFor, publicRecordSlug, recordPublishedAt } from '@/lib/data';
 import { mergePublicDestinations } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
 export const revalidate = 3600;
 
-const SITEMAP_COLUMNS =
-  'id,name,title,slug,seo_slug,country,category,created_date,updated_date,publish_date';
+function sitemapColumns(table: string, aliases: string[] = []) {
+  return (
+    publicListColumnsFor(table, aliases) ||
+    'id,name,title,slug,seo_slug,country,created_date,updated_date'
+  );
+}
+
+function sitemapFetch(table: string, aliases: string[] = []) {
+  return fetchCollectionRecords(table, aliases, {
+    columns: sitemapColumns(table, aliases),
+    unlimited: table === 'tours',
+  }).catch(() => [] as RecordRow[]);
+}
 
 function entry(
   path: string,
@@ -38,16 +49,15 @@ function recordDate(row: RecordRow) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const cols = { columns: SITEMAP_COLUMNS };
   const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
-    fetchCollectionRecords('tours', [], cols).catch(() => []),
-    fetchCollectionRecords('national_park', ['national_parks', 'parks'], cols).catch(() => []),
-    fetchCollectionRecords('accommodations', [], cols).catch(() => []),
-    fetchCollectionRecords('safari_updates', [], cols).catch(() => []),
-    fetchCollectionRecords('explore', [], cols).catch(() => []),
-    fetchCollectionRecords('pages', [], cols).catch(() => []),
-    fetchCollectionRecords('categories', [], cols).catch(() => []),
-    fetchCollectionRecords('countries', [], cols).catch(() => []),
+    sitemapFetch('tours'),
+    sitemapFetch('national_park', ['national_parks', 'parks']),
+    sitemapFetch('accommodations'),
+    sitemapFetch('safari_updates'),
+    sitemapFetch('explore'),
+    sitemapFetch('pages'),
+    sitemapFetch('categories'),
+    sitemapFetch('countries'),
   ]);
   const publicDestinations = mergePublicDestinations(countries);
 

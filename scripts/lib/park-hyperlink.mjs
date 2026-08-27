@@ -216,7 +216,7 @@ export function withEmbed(html, existingHtml) {
 }
 
 const PARKS_DIR_RE =
-  /<p>\s*<b>\s*National Parks in [^<]+<\/b>\s*<\/p>\s*(?:<p>[\s\S]*?<\/p>\s*)*/i;
+  /<(?:p|h[1-4])[^>]*>\s*(?:<(?:b|strong)>)?\s*(?:Park List|National Parks in)\b[\s\S]*$/i;
 
 /** Remove a previously appended National Parks directory block. */
 export function stripParksDirectory(html) {

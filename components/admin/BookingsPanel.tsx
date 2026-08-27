@@ -132,6 +132,7 @@ export default function BookingsPanel() {
         fetchAdminTable('tours').catch(() =>
           fetchCollectionRecords('tours', [], {
             columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
+            maxRows: 80,
           })
         ),
       ]);

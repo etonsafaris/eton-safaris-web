@@ -1,8 +1,12 @@
 import { supabase } from '@/lib/supabase/client';
+import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 
-export async function syncAdminSessionCookie() {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+export async function syncAdminSessionCookie(accessToken?: string) {
+  let token = accessToken || '';
+  if (!token) {
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token || readStoredAccessToken();
+  }
   if (!token) return false;
 
   const response = await fetch('/api/admin/session', {

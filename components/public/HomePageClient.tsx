@@ -23,6 +23,7 @@ import {
   publicDestinationNames,
 } from '@/lib/public-destinations';
 import {
+  fetchCollectionPage,
   fetchCollectionRecords,
   fetchFeaturedTours,
   getRecordImage,
@@ -142,7 +143,9 @@ export default function HomePageClient({
           console.error('[Supabase] Failed to load safari updates:', error);
           return [] as RecordRow[];
         }),
-        fetchCollectionRecords('national_park', ['national_parks', 'parks']).catch((error) => {
+        fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 24, offset: 0 })
+          .then((page) => page.rows)
+          .catch((error) => {
           console.error('[Supabase] Failed to load national parks:', error);
           return [] as RecordRow[];
         }),

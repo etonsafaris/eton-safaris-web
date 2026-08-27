@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearAdminSessionCookieServer, syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
+import { decodeJwtPayload, emailFromJwtPayload, readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 import type { User } from '@supabase/supabase-js';
 
 type UseAdminSessionOptions = {
@@ -46,17 +47,35 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
         const { data, error } = await supabase.auth.getSession();
         if (!mounted) return;
 
-        if (error || !data.session) {
-          if (error) {
+        let session = data.session;
+        if (!session) {
+          const token = readStoredAccessToken();
+          const email = emailFromJwtPayload(decodeJwtPayload(token));
+          if (token && email) {
+            const synced = await syncAdminSessionCookie(token);
+            if (synced) {
+              setUser({
+                id: String(decodeJwtPayload(token)?.sub || ''),
+                email,
+                app_metadata: {},
+                user_metadata: {},
+                aud: 'authenticated',
+                created_at: '',
+              } as User);
+              setReady(true);
+              return;
+            }
+          }
+          if (error && !/issued at future|iat claim in the future/i.test(error.message || '')) {
             console.error('[Auth] Admin session error:', error.message);
           }
           router.replace(redirectTo);
           return;
         }
 
-        setUser(data.session.user);
-        await syncAdminSessionCookie();
-        await enforcePasswordChange(data.session.user);
+        setUser(session.user);
+        await syncAdminSessionCookie(session.access_token);
+        await enforcePasswordChange(session.user);
       } catch (error) {
         console.error('[Auth] Failed to read admin session:', error);
         if (mounted) router.replace(redirectTo);
@@ -71,13 +90,29 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
       if (!mounted) return;
       void (async () => {
         if (!session) {
+          const token = readStoredAccessToken();
+          const email = emailFromJwtPayload(decodeJwtPayload(token));
+          if (token && email) {
+            const synced = await syncAdminSessionCookie(token);
+            if (synced) {
+              setUser({
+                id: String(decodeJwtPayload(token)?.sub || ''),
+                email,
+                app_metadata: {},
+                user_metadata: {},
+                aud: 'authenticated',
+                created_at: '',
+              } as User);
+              return;
+            }
+          }
           setUser(null);
           await clearAdminSessionCookieServer();
           router.replace(redirectTo);
           return;
         }
         setUser(session.user);
-        await syncAdminSessionCookie();
+        await syncAdminSessionCookie(session.access_token);
         await enforcePasswordChange(session.user);
       })();
     });

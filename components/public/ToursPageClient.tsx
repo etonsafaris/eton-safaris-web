@@ -11,7 +11,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import { SITE } from '@/lib/collections';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsLive } from '@/lib/cms-live';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
+import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';
 
@@ -19,10 +19,12 @@ function ToursList({
   initialTours,
   initialCategories,
   initialCountries,
+  initialTotal = 0,
 }: {
   initialTours: RecordRow[];
   initialCategories: RecordRow[];
   initialCountries: RecordRow[];
+  initialTotal?: number;
 }) {
   const searchParams = useSearchParams();
   const q = searchParams?.get('q') || '';
@@ -42,13 +44,30 @@ function ToursList({
   }, [initialTours, initialCategories, initialCountries]);
 
   useEffect(() => {
+    const filteredSearch = Boolean(q || (destination && destination !== 'All destinations') || category);
+    if (!filteredSearch) return undefined;
+    let cancelled = false;
+    void searchTours({
+      query: q,
+      country: destination,
+      category,
+      limit: 48,
+    }).then((rows) => {
+      if (!cancelled) setTours(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [q, destination, category]);
+
+  useEffect(() => {
     if (live === 0) return undefined;
     Promise.all([
-      fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }).then((rows) =>
-        rows.filter(isPublishedRecord)
+      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
+        page.rows.filter(isPublishedRecord)
       ),
-      fetchCollectionRecords('categories').catch(() => []),
-      fetchCollectionRecords('countries').catch(() => []),
+      fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
+      fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
     ])
       .then(([tourRows, categoryRows, countryRows]) => {
         setTours(tourRows);
@@ -73,7 +92,7 @@ function ToursList({
         subtitle={
           q || destination || category || days
             ? `${filtered.length.toLocaleString()} package${filtered.length === 1 ? '' : 's'}${q ? ` for “${q}”` : ''}${destination ? ` in ${destination}` : ''}${category ? ` · ${category}` : ''}${days ? ` · ${days} days` : ''}${depart ? ` · departing ${depart}` : ''}`
-            : `${filtered.length.toLocaleString()} Total Packages from the live database.`
+            : `${(initialTotal || filtered.length).toLocaleString()} Total Packages from the live database.`
         }
         image={filtered[0] ? getRecordImage(filtered[0]) : undefined}
       />
@@ -131,6 +150,7 @@ export default function ToursPageClient(props: {
   initialTours: RecordRow[];
   initialCategories: RecordRow[];
   initialCountries: RecordRow[];
+  initialTotal?: number;
 }) {
   return (
     <Suspense>

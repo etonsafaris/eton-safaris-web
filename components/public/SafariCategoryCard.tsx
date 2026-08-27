@@ -1,4 +1,5 @@
 import { getRecordImage, getRecordTitle, pickPlainText } from '@/lib/data';
+import { categoryCardDescription } from '@/lib/category-copy';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ type SafariCategoryCardProps = {
   onClick?: () => void;
   titleOnly?: boolean;
   href?: string;
+  countryName?: string;
 };
 
 const CARD_SHADOW =
@@ -20,8 +22,10 @@ export default function SafariCategoryCard({
   onClick,
   titleOnly = false,
   href,
+  countryName = '',
 }: SafariCategoryCardProps) {
-  const description = titleOnly ? '' : stripPublicMoney(pickPlainText(category, ['description', 'excerpt', 'summary']));
+  const stored = stripPublicMoney(pickPlainText(category, ['description', 'excerpt', 'summary']));
+  const description = titleOnly ? '' : stored || categoryCardDescription(category, countryName);
   const title = getRecordTitle(category);
   const image = getRecordImage(category);
 
@@ -34,8 +38,10 @@ export default function SafariCategoryCard({
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
         )}
       </div>
-      <h5 className="px-1 py-4 text-center text-[15px] font-medium leading-[18px] text-[#323637]">{title}</h5>
-      {description ? <p className="px-2 pb-3 text-center text-xs text-[#999]">{description}</p> : null}
+      <h5 className="px-1 pt-4 text-center text-[15px] font-medium leading-[18px] text-[#323637] underline decoration-[#00A651]/40 underline-offset-2">
+        {title}
+      </h5>
+      {description ? <p className="px-2 pb-3 pt-2 text-center text-xs text-[#999]">{description}</p> : null}
     </>
   );
 

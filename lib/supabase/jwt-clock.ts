@@ -1,8 +1,18 @@
-const JWT_CLOCK_PATTERN =
-  /issued at future|iat claim in the future|exp claim|token used before|not yet valid|clock skew|nbf/i;
+const JWT_CLOCK_PATTERN = /issued at future|iat claim in the future/i;
 
 export function isJwtClockError(message?: string | null) {
   return JWT_CLOCK_PATTERN.test(String(message || ''));
+}
+
+function requestUrl(input: RequestInfo | URL) {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  if (typeof Request !== 'undefined' && input instanceof Request) return input.url;
+  return String(input);
+}
+
+function isAuthRequest(input: RequestInfo | URL) {
+  return /\/auth\/v1\//i.test(requestUrl(input));
 }
 
 async function readErrorText(response: Response) {
@@ -20,14 +30,14 @@ async function readErrorText(response: Response) {
   }
 }
 
-/** If a stored user JWT has iat in the future, PostgREST rejects every query. Retry as anon. */
+/** Retry PostgREST reads as anon when a user JWT iat is ahead of the API clock. Never touch Auth. */
 export function createSkewAwareFetch(anonKey: string, onSkew?: () => void) {
   const nativeFetch = globalThis.fetch.bind(globalThis);
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     const response = await nativeFetch(input, init);
-    if (response.ok) return response;
+    if (response.ok || isAuthRequest(input) || !anonKey) return response;
     const text = await readErrorText(response);
-    if (!isJwtClockError(text) || !anonKey) return response;
+    if (!isJwtClockError(text)) return response;
     onSkew?.();
     const headers = new Headers(init?.headers);
     headers.set('apikey', anonKey);

@@ -9,8 +9,8 @@ import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionPage,
-  fetchCollectionRecords,
   fetchRecordByPublicSlug,
+  fetchStaysForPark,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -39,26 +39,22 @@ export default function ParkDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [full, parkPage, staysRows] = await Promise.all([
+        const [full, parkPage] = await Promise.all([
           fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
           fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
-          fetchCollectionRecords('accommodations').catch(() => [] as RecordRow[]),
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
-        setPark(published);
-        setOthers(
-          parkPage.rows
-            .filter(isPublishedRecord)
-            .filter((row) => String(row.id) !== String(published?.id || ''))
-            .slice(0, 20)
-        );
-        const parkName = published ? getRecordTitle(published) : '';
-        setStays(
-          staysRows.filter(isPublishedRecord).filter((item) => {
-            const name = pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']);
-            return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
-          })
-        );
+        if (published) {
+          setPark(published);
+          setOthers(
+            parkPage.rows
+              .filter(isPublishedRecord)
+              .filter((row) => String(row.id) !== String(published.id || ''))
+              .slice(0, 20)
+          );
+          const parkName = getRecordTitle(published);
+          setStays(await fetchStaysForPark(parkName, 10).catch(() => []));
+        }
       } catch (error) {
         console.error(error);
       } finally {

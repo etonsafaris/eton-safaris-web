@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore } from 'react';
 import { clearCollectionCache } from '@/lib/collection-cache';
-import { supabase } from '@/lib/supabase/client';
 
 const CHANNEL = 'eton-cms-live';
 
@@ -44,9 +43,9 @@ export function useCmsLive() {
 }
 
 /**
- * Live sync should only invalidate after real CMS changes.
- * Polling / focus used to clear caches every few seconds and force
- * re-downloading ~2900 tours — that looked like "all data failed to load".
+ * Live sync should only invalidate after a real CMS save in this browser.
+ * Do not subscribe to postgres_changes on the public site — every open tab
+ * was replicating the whole schema and exhausting Realtime + compute.
  */
 export function startCmsLiveSync() {
   if (started || typeof window === 'undefined') return () => undefined;
@@ -63,16 +62,11 @@ export function startCmsLiveSync() {
   }
 
   window.addEventListener(CHANNEL, onRemote);
-  const realtime = supabase
-    .channel('eton-public-cms')
-    .on('postgres_changes', { event: '*', schema: 'public' }, onRemote)
-    .subscribe();
 
   return () => {
     started = false;
     window.removeEventListener(CHANNEL, onRemote);
     channel?.removeEventListener('message', onRemote);
     channel?.close();
-    void supabase.removeChannel(realtime);
   };
 }

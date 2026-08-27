@@ -16,13 +16,11 @@ import {
   countryHeadline,
 } from './lib/country-category-copy.mjs';
 import {
-  appendParksDirectory,
   clip,
-  extractEmbed,
   hyperlinkParksInHtml,
   plainText,
   slugify,
-  stripEmbed,
+  stripParksDirectory,
   withEmbed,
 } from './lib/park-hyperlink.mjs';
 
@@ -264,10 +262,14 @@ for (const row of countries) {
       : catalogParks.map((p) => ({ name: p.name, seo_slug: slugify(p.name), country: name }));
 
   const existingPlainLen = plainText(row.description).length;
+  const genericFallback = new RegExp(
+    `${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} is a distinctive safari and travel destination`,
+    'i'
+  );
   let nextHtml;
   let mode;
 
-  if (existingPlainLen < THIN_COUNTRY) {
+  if (existingPlainLen < THIN_COUNTRY || genericFallback.test(plainText(row.description))) {
     nextHtml = withEmbed(buildCountryDescription(name), row.description);
     nextHtml = hyperlinkParksInHtml(nextHtml, linkParks);
     mode = 'rewrite';
@@ -278,21 +280,8 @@ for (const row of countries) {
     summary.countriesLinkedOnly.push(name);
   }
 
-  // Always refresh the full park directory from the catalog so every park is named and linked
-  const directorySource =
-    catalogParks.length > 0
-      ? catalogParks.map((park) => ({
-          name: park.name,
-          seo_slug: slugify(park.name),
-          hook: park.hook || '',
-        }))
-      : linkParks.map((park) => ({
-          name: park.name,
-          seo_slug: park.seo_slug || slugify(park.name),
-          hook: park.hook || '',
-        }));
-  nextHtml = appendParksDirectory(nextHtml, name, directorySource);
-  // Merge catalog names into link targets so directory + prose both hyperlink
+  nextHtml = stripParksDirectory(nextHtml);
+  // Merge catalog names into link targets so prose still hyperlinks park names in the article
   const linkTargets = [
     ...linkParks,
     ...catalogParks.map((park) => ({ name: park.name, seo_slug: slugify(park.name), country: name })),
@@ -317,6 +306,7 @@ for (const row of countries) {
     summary.seoUpdated.countries += 1;
     console.log(`${mode === 'rewrite' ? 'Rewrote' : 'Linked'} country: ${name}`);
   }
+  await new Promise((resolve) => setTimeout(resolve, 80));
 }
 
 // 3) Categories
@@ -366,6 +356,7 @@ for (const row of categories) {
     summary.seoUpdated.categories += 1;
     console.log(`${mode === 'rewrite' ? 'Rewrote' : 'Linked'} category: ${country}/${name}`);
   }
+  await new Promise((resolve) => setTimeout(resolve, 50));
 }
 
 const out = resolve(cacheDir, 'curate-country-category-result.json');

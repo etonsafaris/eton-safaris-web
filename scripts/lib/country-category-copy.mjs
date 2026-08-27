@@ -23,6 +23,46 @@ function countryShell(title, p1, p2) {
 
 /** @type {Record<string, { title: string, build: (parks: string[]) => string }>} */
 export const COUNTRY_COPY = {
+  Uganda: {
+    title: 'Explore Uganda, Pearl of Africa',
+    build() {
+      return countryShell(
+        this.title,
+        `Experience Uganda safari tours through stunning landscapes, diverse wildlife, and rich cultural experiences. Nestled in East Africa, Uganda is renowned for gorilla trekking, making it a must-visit destination for nature lovers and adventure seekers.`,
+        `With over half of the world's mountain gorillas living here, Uganda is rightly known as the Pearl of Africa. Beyond gorillas in Bwindi Impenetrable National Park and Mgahinga Gorilla National Park, guests find lions and elephants in Queen Elizabeth National Park, the Nile at Murchison Falls National Park, and chimpanzees in Kibale National Park. Eton Safaris times transfers, permits, and lodge bases so trekking and wildlife days stay focused rather than rushed.`
+      );
+    },
+  },
+  Kenya: {
+    title: 'Explore Kenya Safari Tours',
+    build() {
+      return countryShell(
+        this.title,
+        `Kenya safari tours combine savannahs, lakelands, the Great Rift Valley, and Indian Ocean shoreline. Wildlife concentrates in classic reserves, including the Masai Mara for wildebeest migration season and Amboseli for elephants with views toward Kilimanjaro.`,
+        `Year-round game viewing includes the Big Five across the Masai Mara, Amboseli, Tsavo, and the Chyulu Hills. Eton Safaris shapes Kenya itineraries around season, lodge style, and whether you want a safari-and-beach combination.`
+      );
+    },
+  },
+  Tanzania: {
+    title: 'Explore Tanzania Safari Tours',
+    build() {
+      return countryShell(
+        this.title,
+        `Tanzania safari tours take in three of Africa’s great lakes, the plains of the Serengeti, and Kilimanjaro. The country also offers tropical islands, from Mafia’s marine park to Zanzibar’s spice-island beaches.`,
+        `Eton Safaris plans northern and southern circuits with realistic driving or flight links, so you spend more hours in the field and fewer rearranging roads. Beach time on Zanzibar or Mafia is an easy finish after wildlife days.`
+      );
+    },
+  },
+  Rwanda: {
+    title: 'Explore Rwanda, Land of a Thousand Hills',
+    build() {
+      return countryShell(
+        this.title,
+        `Rwanda’s rolling hills, rainforest, and savanna support gorilla and golden monkey treks, chimpanzee tracking, and Big Five viewing. Kigali adds a thoughtful city start, with the genocide memorial as an important historical chapter.`,
+        `Volcanoes National Park is the gorilla-trekking heartland, Nyungwe offers chimpanzee treks and a canopy walk, and Akagera is Rwanda’s savanna park. Eton Safaris builds Rwanda trips around permits, pacing, and the right mix of forest and plains.`
+      );
+    },
+  },
   Namibia: {
     title: 'Explore Namibia, Land of Contrasts',
     build(parks) {

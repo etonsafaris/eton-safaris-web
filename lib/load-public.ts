@@ -13,6 +13,7 @@ import {
   fetchCollectionPage,
   fetchFeaturedTours,
   fetchRecordByPublicSlug,
+  fetchStaysForPark,
   fetchToursForCountryLabel,
   findRecordBySlug,
   getRecordTitle,
@@ -138,26 +139,18 @@ export async function loadTourDetail(slug: string) {
 
 export async function loadParkDetail(slug: string) {
   noStore();
-  const [park, accommodations, parkPage] = await Promise.all([
+  const [park, parkPage] = await Promise.all([
     fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
-    loadPublishedRecords('accommodations'),
     fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }).catch(() => ({
       rows: [] as RecordRow[],
       total: 0,
     })),
   ]);
   const parkName = park ? getRecordTitle(park) : '';
+  const stays = parkName ? await fetchStaysForPark(parkName, 10) : [];
   return {
     park: park && isPublishedRecord(park) ? park : null,
     others: parkPage.rows.filter((row) => String(row.id) !== String(park?.id || '')).slice(0, 20),
-    stays: accommodations.filter((item) => {
-      const name = pickStoredString(item, [
-        'national_park_name',
-        'national_park',
-        'park',
-        'park_name',
-      ]);
-      return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
-    }),
+    stays,
   };
 }

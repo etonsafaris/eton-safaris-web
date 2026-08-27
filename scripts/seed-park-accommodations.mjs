@@ -11,7 +11,7 @@
  */
 import { randomUUID } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 
 const SITE_URL = 'https://etonsafaris.com';
@@ -28,18 +28,18 @@ const ALL_TYPES = [
   'Mid-Range Banda',
 ];
 
-/** Slot plan: 8 unique types + 2 popular safari extras. */
+/** Slot plan: 8 unique types + 2 popular safari extras. All 10 sit inside the park. */
 const SLOT_PLAN = [
   { type: 'Luxury Lodge', placement: 'inside', label: 'Luxury Lodge' },
   { type: 'Mid-range Lodge', placement: 'inside', label: 'Mid-range Lodge' },
   { type: 'Luxury Tented Camp', placement: 'inside', label: 'Luxury Tented Camp' },
-  { type: 'Mid-Range Tented Camp', placement: 'edge', label: 'Mid-Range Tented Camp' },
-  { type: 'Luxury Hotel', placement: 'outside', label: 'Luxury Hotel' },
-  { type: 'Mid-Range Hotel', placement: 'outside', label: 'Mid-Range Hotel' },
-  { type: 'Luxury Banda', placement: 'edge', label: 'Luxury Banda' },
-  { type: 'Mid-Range Banda', placement: 'edge', label: 'Mid-Range Banda' },
-  { type: 'Luxury Lodge', placement: 'outside', label: 'Luxury Lodge' },
-  { type: 'Mid-Range Tented Camp', placement: 'outside', label: 'Mid-Range Tented Camp' },
+  { type: 'Mid-Range Tented Camp', placement: 'inside', label: 'Mid-Range Tented Camp' },
+  { type: 'Luxury Hotel', placement: 'inside', label: 'Luxury Hotel' },
+  { type: 'Mid-Range Hotel', placement: 'inside', label: 'Mid-Range Hotel' },
+  { type: 'Luxury Banda', placement: 'inside', label: 'Luxury Banda' },
+  { type: 'Mid-Range Banda', placement: 'inside', label: 'Mid-Range Banda' },
+  { type: 'Luxury Lodge', placement: 'inside', label: 'Luxury Lodge' },
+  { type: 'Mid-Range Tented Camp', placement: 'inside', label: 'Mid-Range Tented Camp' },
 ];
 
 const STYLE_WORDS = [
@@ -95,6 +95,29 @@ function clip(text, max) {
   const clean = String(text || '').replace(/\s+/g, ' ').trim();
   if (clean.length <= max) return clean;
   return `${clean.slice(0, max - 1).trim()}…`;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function loadRealCatalog() {
+  const dir = resolve(process.cwd(), 'data');
+  if (!existsSync(dir)) return [];
+  const files = readdirSync(dir).filter((f) => f.startsWith('real-park-accommodations-') && f.endsWith('.json'));
+  const rows = [];
+  for (const file of files) {
+    const parsed = JSON.parse(readFileSync(resolve(dir, file), 'utf8'));
+    if (Array.isArray(parsed)) rows.push(...parsed);
+  }
+  return rows.filter((row) => row?.name && row?.national_park && row?.country);
+}
+
+function parkNamesMatch(a, b) {
+  const left = slugify(a).replace(/-national-park|-national-reserve|-game-reserve|-conservation-area|-nature-reserve|-protected-area|-protectorate|-wildlife-reserve|-marine-national-park|-transfrontier-park/g, '');
+  const right = slugify(b).replace(/-national-park|-national-reserve|-game-reserve|-conservation-area|-nature-reserve|-protected-area|-protectorate|-wildlife-reserve|-marine-national-park|-transfrontier-park/g, '');
+  if (!left || !right) return false;
+  return left === right || left.includes(right) || right.includes(left);
 }
 
 function parseKeywords(value) {
@@ -206,6 +229,7 @@ function typeNoun(type) {
 }
 
 function stayName(parkName, slot, index) {
+  if (slot.realName) return slot.realName;
   const short = parkName
     .replace(/\b(National Park|National Reserve|Conservation Area|Game Reserve|Nature Reserve|Protected Area|Protectorate|Marine National Park|Transfrontier Park)\b/gi, '')
     .replace(/\s+/g, ' ')
@@ -343,11 +367,26 @@ const [parks, tours, keywordRows, existingStays] = await Promise.all([
   fetchAll(supabase, 'national_park', 'id,name,country,location,image_url,seo_slug'),
   fetchAll(supabase, 'tours', 'title,slug,country'),
   fetchAll(supabase, 'keywords', 'country,keywords'),
-  fetchAll(supabase, 'accommodations', 'id,name,country,type,description,location'),
+  fetchAll(supabase, 'accommodations', 'id,name,country,type,description,location').then(async (rows) => {
+    try {
+      return await fetchAll(
+        supabase,
+        'accommodations',
+        'id,name,country,type,description,location,national_park,park,park_name,national_park_name'
+      );
+    } catch {
+      return rows;
+    }
+  }),
 ]);
-console.log(`Loaded parks=${parks.length} tours=${tours.length} keywords=${keywordRows.length} stays=${existingStays.length}`);
+const realCatalog = loadRealCatalog();
+console.log(
+  `Loaded parks=${parks.length} tours=${tours.length} keywords=${keywordRows.length} stays=${existingStays.length} realCatalog=${realCatalog.length}`
+);
 
 function stayParkName(stay) {
+  const fromCol = String(stay.national_park || stay.national_park_name || stay.park || stay.park_name || '').trim();
+  if (fromCol) return fromCol;
   const fromLoc = String(stay.location || '').match(/\b(?:Inside|Edge of|Near)\s+(.+)$/i);
   if (fromLoc?.[1]) return fromLoc[1].trim();
   const embed = String(stay.description || '').match(/<!--ETON_CONTENT:([\s\S]*?)-->/);
@@ -363,11 +402,41 @@ function stayParkName(stay) {
   return '';
 }
 
+function slotsForPark(parkName, country) {
+  const real = realCatalog.filter(
+    (row) =>
+      String(row.country || '').toLowerCase() === country.toLowerCase() &&
+      parkNamesMatch(row.national_park, parkName)
+  );
+  const used = new Set();
+  return SLOT_PLAN.map((plan) => {
+    const matchIndex = real.findIndex((row, index) => !used.has(index) && String(row.type) === plan.type);
+    if (matchIndex >= 0) {
+      used.add(matchIndex);
+      const match = real[matchIndex];
+      return { ...plan, realName: match.name, website: match.website || '' };
+    }
+    const leftover = real.findIndex((_, index) => !used.has(index));
+    if (leftover >= 0 && /Lodge|Tented Camp/.test(plan.type)) {
+      used.add(leftover);
+      const match = real[leftover];
+      return { ...plan, type: match.type || plan.type, realName: match.name, website: match.website || '' };
+    }
+    return { ...plan, realName: '', website: '' };
+  });
+}
+
 const byParkKey = new Map();
+const staysByPark = new Map();
 for (const stay of existingStays) {
   const parkLabel = stayParkName(stay);
-  const key = `${String(stay.country || '').trim().toLowerCase()}||${parkLabel.toLowerCase()}||${String(stay.name || '').trim().toLowerCase()}`;
+  const countryKey = String(stay.country || '').trim().toLowerCase();
+  const key = `${countryKey}||${parkLabel.toLowerCase()}||${String(stay.name || '').trim().toLowerCase()}`;
   byParkKey.set(key, stay);
+  const parkKey = `${countryKey}||${parkLabel.toLowerCase()}`;
+  const list = staysByPark.get(parkKey) || [];
+  list.push(stay);
+  staysByPark.set(parkKey, list);
 }
 
 let parkList = parks.filter((p) =>
@@ -386,13 +455,31 @@ for (const park of parkList) {
   const parkName = String(park.name || '').trim();
   const country = String(park.country || '').trim();
   if (!parkName || !country) continue;
+  const parkKey = `${country.toLowerCase()}||${parkName.toLowerCase()}`;
+  const already = staysByPark.get(parkKey) || [];
+  if (already.length >= 10) {
+    skipped += 1;
+    console.log(`Skip (already ${already.length}): ${country} / ${parkName}`);
+    continue;
+  }
+
   const phrases = countryKeywords(country, keywordRows);
   const tourLinks = pickTourLinks(tours, country, 12);
   const location = String(park.location || '').trim() || country;
+  const haveTypes = new Set(already.map((stay) => String(stay.type || '').trim()));
+  const slots = slotsForPark(parkName, country);
+  const orderedSlots = [
+    ...slots.filter((slot) => !haveTypes.has(slot.type)),
+    ...slots.filter((slot) => haveTypes.has(slot.type)),
+  ];
+  const existingNames = new Set(already.map((stay) => String(stay.name || '').trim().toLowerCase()));
+  const needed = 10 - already.length;
+  let addedHere = 0;
 
-  for (let i = 0; i < SLOT_PLAN.length; i += 1) {
-    const slot = SLOT_PLAN[i];
+  for (let i = 0; i < orderedSlots.length && addedHere < needed; i += 1) {
+    const slot = orderedSlots[i];
     const name = stayName(parkName, slot, i);
+    if (existingNames.has(name.toLowerCase())) continue;
     const key = `${country.toLowerCase()}||${parkName.toLowerCase()}||${name.toLowerCase()}`;
     const existing = byParkKey.get(key);
     const { description, blocks } = buildStayContent({
@@ -407,7 +494,7 @@ for (const park of parkList) {
     const slug = slugify(`${name}-${country}`);
     const focus = `${name} ${parkName}`.toLowerCase().slice(0, 60);
     const meta = clip(
-      `${name} is a ${slot.type.toLowerCase()} ${placementCopy(slot.placement, parkName)}. Book with Eton Safaris.`,
+      `${name} is a ${slot.type.toLowerCase()} inside ${parkName}. Book with Eton Safaris.`,
       155
     );
     const seoTitle = clip(`${name} | Eton Safaris`, 60);
@@ -420,7 +507,8 @@ for (const park of parkList) {
       name,
       description: meta,
       image: imageUrl || undefined,
-      url: canonical,
+      url: slot.website || canonical,
+      sameAs: slot.website || undefined,
       address: { '@type': 'PostalAddress', addressCountry: country, addressRegion: location },
       _etonSeo: {
         canonical_url: canonical,
@@ -437,13 +525,15 @@ for (const park of parkList) {
       id: existing?.id || randomUUID(),
       name,
       seo_slug: slug,
-      location: `${slot.placement === 'outside' ? 'Near' : slot.placement === 'edge' ? 'Edge of' : 'Inside'} ${parkName}`,
+      location: `Inside ${parkName}`,
       description_title: 'Stay Overview',
       description: embedContent(description, blocks, {
         description_title: 'Stay Overview',
         type: slot.type,
         national_park: parkName,
         country,
+        website: slot.website || '',
+        placement: 'inside',
         published_at: stamp,
       }),
       type: slot.type,
@@ -451,6 +541,8 @@ for (const park of parkList) {
       national_park: parkName,
       park: parkName,
       park_name: parkName,
+      website: slot.website || '',
+      website_url: slot.website || '',
       image_url: imageUrl,
       social_image_url: imageUrl,
       accommodation_blocks: JSON.stringify(blocks),
@@ -467,6 +559,8 @@ for (const park of parkList) {
 
     if (dryRun) {
       created += 1;
+      addedHere += 1;
+      existingNames.add(name.toLowerCase());
       continue;
     }
 
@@ -476,12 +570,18 @@ for (const park of parkList) {
       console.warn('Failed', name, result.error);
     } else if (existing?.id) {
       updated += 1;
+      addedHere += 1;
+      existingNames.add(name.toLowerCase());
     } else {
       created += 1;
+      addedHere += 1;
+      existingNames.add(name.toLowerCase());
       byParkKey.set(key, { id: result.id, name, country, national_park: parkName });
     }
+    await sleep(80);
   }
-  console.log(`Park ready: ${country} / ${parkName} (10 stays)`);
+  console.log(`Park ready: ${country} / ${parkName} (${already.length + addedHere} stays)`);
+  await sleep(200);
 }
 
 const summary = {
