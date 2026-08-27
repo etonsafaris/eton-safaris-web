@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient, createServiceClient } from '@/lib/supabase/admin';
+import { createSkewAwareFetch } from '@/lib/supabase/jwt-clock';
 
 export function hasServiceRoleKey() {
   return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -27,7 +28,10 @@ export function createWriteClient(accessToken?: string): SupabaseClient {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (url && anon && accessToken) {
     return createClient(url, anon, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      global: {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        fetch: createSkewAwareFetch(anon),
+      },
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }

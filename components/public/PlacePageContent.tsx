@@ -7,11 +7,13 @@ import PageHero from '@/components/public/PageHero';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import RelatedSidebar from '@/components/public/RelatedSidebar';
 import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
-import { findPlaceBySlug, matchesCountry, publicCountryLabel } from '@/lib/country-utils';
+import { matchesCountry, publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
-  fetchCollectionRecords,
+  fetchCollectionPage,
+  fetchRecordByPublicSlug,
+  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -54,38 +56,29 @@ export default function PlacePageContent({
   const [ready, setReady] = useState(Boolean(initialPlace));
 
   useEffect(() => {
-    if (live === 0 && initialPlace) {
-      setPlace(initialPlace);
-      setReady(true);
-      return undefined;
-    }
     let mounted = true;
     async function load() {
       try {
-        const [allPlaces, allTours] = await Promise.all([
-          fetchCollectionRecords('explore'),
-          fetchCollectionRecords('tours'),
+        const [full, placePage] = await Promise.all([
+          initialPlace && live === 0
+            ? Promise.resolve(initialPlace)
+            : fetchRecordByPublicSlug('explore', placeSlug),
+          fetchCollectionPage('explore', [], { limit: 24, offset: 0 }),
         ]);
         if (!mounted) return;
-        const publishedPlaces = allPlaces.filter(isPublishedRecord);
-        const match =
-          initialPlace ||
-          findPlaceBySlug(publishedPlaces, placeSlug, countrySlugProp) ||
-          findPlaceBySlug(allPlaces, placeSlug, countrySlugProp);
+        const match = (full && isPublishedRecord(full) ? full : null) || initialPlace;
         setPlace(match);
         const countryKey =
           countrySlugProp ||
           pickStoredString(match, ['country', 'country_slug', 'destination', 'nation']);
-        const otherPlaces = publishedPlaces.filter((row) => row !== match && String(row.id) !== String(match?.id || ''));
+        const otherPlaces = placePage.rows
+          .filter(isPublishedRecord)
+          .filter((row) => String(row.id) !== String(match?.id || ''));
         const countryPlaces = countryKey
           ? otherPlaces.filter((row) => matchesCountry(row, countryKey))
           : [];
         setOthers((countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20));
-        setTours(
-          allTours
-            .filter(isPublishedRecord)
-            .filter((tour) => (countryKey ? matchesCountry(tour, countryKey) : false))
-        );
+        setTours(countryKey ? await fetchToursForCountryLabel(countryKey, 12) : []);
       } catch (error) {
         console.error('[Supabase] Failed to load place page data:', error);
       } finally {

@@ -8,9 +8,9 @@ import PublicShell from '@/components/public/PublicShell';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import TourItinerary from '@/components/public/TourItinerary';
 import {
-  fetchCollectionRecordById,
-  fetchCollectionRecords,
-  findRecordBySlug,
+  fetchFeaturedTours,
+  fetchRecordByPublicSlug,
+  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -19,11 +19,9 @@ import {
   pickString,
   publicRecordSlug,
   slugify,
-  TOUR_LIST_COLUMNS,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
-import { matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { stripPublicMoney } from '@/lib/public-money';
@@ -68,20 +66,14 @@ export default function TourDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const light = await fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS });
-        const match = findRecordBySlug(light, slug);
-        const full =
-          match?.id != null ? (await fetchCollectionRecordById('tours', String(match.id))) || match : match;
-        setTour(full && isPublishedRecord(full) ? full : null);
-        const country = full ? pickString(full, ['country']) : '';
-        const category = full ? pickString(full, ['category']) : '';
-        const sameCountry = light
-          .filter(isPublishedRecord)
-          .filter((row) => row !== match && (!country || matchesCountry(row, country)));
-        const sameCategory = category
-          ? sameCountry.filter((row) => matchesCategoryValue(row, category))
-          : [];
-        setRelated((sameCategory.length ? sameCategory : sameCountry).slice(0, 12));
+        const full = await fetchRecordByPublicSlug('tours', slug);
+        const published = full && isPublishedRecord(full) ? full : null;
+        setTour(published);
+        const country = published ? pickString(published, ['country']) : '';
+        const relatedRows = country
+          ? await fetchToursForCountryLabel(country, 12)
+          : await fetchFeaturedTours(12);
+        setRelated(relatedRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
       } catch (error) {
         console.error(error);
       } finally {

@@ -1,4 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createSkewAwareFetch } from '@/lib/supabase/jwt-clock';
+
+function clientOptions(key: string) {
+  return {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: createSkewAwareFetch(key) },
+  };
+}
 
 export function createAdminClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -6,9 +14,7 @@ export function createAdminClient(): SupabaseClient {
   if (!url || !key) {
     throw new Error('Missing Supabase admin credentials');
   }
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient(url, key, clientOptions(key));
 }
 
 export function createPrivilegedClient(): SupabaseClient {
@@ -17,9 +23,7 @@ export function createPrivilegedClient(): SupabaseClient {
   if (!url || !key) {
     throw new Error('Missing Supabase credentials');
   }
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient(url, key, clientOptions(key));
 }
 
 export function createServiceClient(): SupabaseClient {
@@ -30,7 +34,5 @@ export function createServiceClient(): SupabaseClient {
       'Missing SUPABASE_SERVICE_ROLE_KEY. Add it in .env.local from Supabase → Project Settings → API → service_role.'
     );
   }
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient(url, key, clientOptions(key));
 }

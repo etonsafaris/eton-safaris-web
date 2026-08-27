@@ -8,15 +8,15 @@ import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
-  fetchCollectionRecordById,
+  fetchCollectionPage,
   fetchCollectionRecords,
+  fetchRecordByPublicSlug,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickPlainText,
   pickStoredString,
   pickString,
-  publicListColumnsFor,
   publicRecordSlug,
   recordPublishedAt,
   visibleRecordHtml,
@@ -39,26 +39,22 @@ export default function ParkDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const parkCols = publicListColumnsFor('national_park', ['national_parks', 'parks']);
-        const stayCols = publicListColumnsFor('accommodations');
-        const [parks, accommodations] = await Promise.all([
-          fetchCollectionRecords('national_park', ['national_parks', 'parks'], parkCols ? { columns: parkCols } : undefined),
-          fetchCollectionRecords('accommodations', [], stayCols ? { columns: stayCols } : undefined),
+        const [full, parkPage, staysRows] = await Promise.all([
+          fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
+          fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
+          fetchCollectionRecords('accommodations').catch(() => [] as RecordRow[]),
         ]);
-        const match =
-          parks.find(
-            (row) => publicRecordSlug(row) === slug || pickString(row, ['slug', 'seo_slug']) === slug || String(row.id) === slug
-          ) || null;
-        const full =
-          match?.id != null
-            ? (await fetchCollectionRecordById('national_park', String(match.id), ['national_parks', 'parks'])) ||
-              match
-            : match;
-        setPark(full && isPublishedRecord(full) ? full : null);
-        setOthers(parks.filter(isPublishedRecord).filter((row) => row !== match).slice(0, 20));
-        const parkName = full ? getRecordTitle(full) : '';
+        const published = full && isPublishedRecord(full) ? full : null;
+        setPark(published);
+        setOthers(
+          parkPage.rows
+            .filter(isPublishedRecord)
+            .filter((row) => String(row.id) !== String(published?.id || ''))
+            .slice(0, 20)
+        );
+        const parkName = published ? getRecordTitle(published) : '';
         setStays(
-          accommodations.filter(isPublishedRecord).filter((item) => {
+          staysRows.filter(isPublishedRecord).filter((item) => {
             const name = pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']);
             return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
           })

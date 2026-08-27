@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseConfig } from '@/lib/supabase/client';
+import { isJwtClockError } from '@/lib/supabase/jwt-clock';
 import { extractEmbeddedContent, recordBodyHtml, stripEmbeddedContent } from '@/lib/embedded-content';
 import { decodeHtmlEntities } from '@/lib/sanitize-html';
 import { rememberKnownColumns } from '@/lib/supabase-payload';
@@ -43,6 +45,43 @@ function isTransientFetchError(message?: string) {
   );
 }
 
+let anonFallback: ReturnType<typeof createClient> | null = null;
+let preferAnonFallback = false;
+
+function publicAnonClient() {
+  if (!anonFallback) {
+    anonFallback = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return anonFallback;
+}
+
+function dataClient() {
+  return preferAnonFallback ? publicAnonClient() : supabase;
+}
+
+function switchToAnonOnJwtClock(detail?: string) {
+  if (preferAnonFallback || !isJwtClockError(detail)) return false;
+  preferAnonFallback = true;
+  void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+  return true;
+}
+
+async function withJwtRetry<T>(
+  run: () => PromiseLike<{ error?: { message?: string; details?: string; hint?: string; code?: string } | null } & T>
+): Promise<T> {
+  const first = (await run()) as T & {
+    error?: { message?: string; details?: string; hint?: string; code?: string } | null;
+  };
+  if (!first.error) return first;
+  const detail = [first.error.message, first.error.details, first.error.hint, first.error.code]
+    .filter(Boolean)
+    .join(' ');
+  if (!switchToAnonOnJwtClock(detail)) return first;
+  return (await run()) as T;
+}
+
 function asRows(data: unknown): RecordRow[] {
   return Array.isArray(data) ? (data as RecordRow[]) : [];
 }
@@ -60,7 +99,9 @@ async function selectRange(
 ): Promise<{ data: RecordRow[] | null; error: { message: string } | null }> {
   let lastMessage = '';
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    const { data, error } = await supabase.from(tableName).select(selectColumns).range(start, end);
+    const { data, error } = await withJwtRetry(() =>
+      dataClient().from(tableName).select(selectColumns).range(start, end)
+    );
     if (!error) return { data: asRows(data), error: null };
     const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
     lastMessage = error.message || detail || 'fetch failed';
@@ -121,15 +162,15 @@ export const TOUR_LIST_COLUMNS =
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    'id,name,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
   national_park:
-    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   national_parks:
-    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   parks:
-    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   explore:
-    'id,title,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+    'id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   safari_updates:
     'id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date',
   countries:
@@ -205,7 +246,9 @@ export async function countCollectionRecords(table: string, aliases: string[] = 
   const names = [table, ...aliases].filter(Boolean);
   let lastError: unknown = null;
   for (const name of names) {
-    const { count, error } = await supabase.from(name).select('id', { count: 'exact', head: true });
+    const { count, error } = await withJwtRetry(() =>
+      dataClient().from(name).select('id', { count: 'exact', head: true })
+    );
     if (!error) return count || 0;
     lastError = error;
     console.error(`[Supabase] Count "${name}" failed:`, error);
@@ -237,17 +280,16 @@ export async function fetchCollectionPage(
   for (const name of names) {
     let selectColumns = columns;
     for (let attempt = 0; attempt < 6; attempt += 1) {
-      let query = supabase
-        .from(name)
-        .select(selectColumns, { count: 'exact' })
-        .range(offset, offset + limit - 1);
-
-      // Prefer created_date (Base44); fall back to created_at / unordered.
-      if (orderBy) {
-        query = query.order(orderBy, { ascending });
-      }
-
-      const { data, error, count } = await query;
+      const { data, error, count } = await withJwtRetry(() => {
+        let query = dataClient()
+          .from(name)
+          .select(selectColumns, { count: 'exact' })
+          .range(offset, offset + limit - 1);
+        if (orderBy) {
+          query = query.order(orderBy, { ascending });
+        }
+        return query;
+      });
       if (!error) {
         const rows = asRows(data);
         if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
@@ -287,11 +329,13 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   const columns = TOUR_LIST_COLUMNS;
   const capped = Math.max(1, Math.min(limit, 48));
 
-  const featured = await supabase
-    .from('tours')
-    .select(columns)
-    .or('is_featured.eq.true,is_popular.eq.true,show_on_landing.eq.true')
-    .limit(capped);
+  const featured = await withJwtRetry(() =>
+    dataClient()
+      .from('tours')
+      .select(columns)
+      .or('is_featured.eq.true,is_popular.eq.true,show_on_landing.eq.true')
+      .limit(capped)
+  );
   if (!featured.error && featured.data && featured.data.length > 0) {
     return asRows(featured.data).filter(isPublishedRecord).slice(0, capped);
   }
@@ -305,30 +349,64 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   return rows.filter(isPublishedRecord).slice(0, capped);
 }
 
-/** Resolve one public record by slug/seo_slug without downloading the whole table. */
+function slugLookupValues(slug: string): string[] {
+  let raw = String(slug || '').trim();
+  try {
+    raw = decodeURIComponent(raw);
+  } catch {
+    // keep raw
+  }
+  raw = raw.replace(/^\/+|\/+$/g, '');
+  const needle = slugify(raw);
+  return Array.from(new Set([raw, needle, raw.toLowerCase()].filter(Boolean)));
+}
+
+/** Resolve one public record by slug/seo_slug/id without downloading the whole table. */
 export async function fetchRecordByPublicSlug(
   table: string,
   slug: string,
   aliases: string[] = [],
   columns = '*'
 ): Promise<RecordRow | null> {
-  const needle = slugify(slug);
-  if (!needle) return null;
+  const values = slugLookupValues(slug);
+  if (!values.length) return null;
   const names = [table, ...aliases].filter(Boolean);
+  const selectColumns = columns || '*';
+
+  async function hydrate(name: string, row: RecordRow | null): Promise<RecordRow | null> {
+    if (!row) return null;
+    rememberKnownColumns(name, Object.keys(row));
+    if (selectColumns !== '*' && row.id != null) {
+      const full = await fetchCollectionRecordById(name, String(row.id));
+      if (full) return full;
+    }
+    return row;
+  }
+
   for (const name of names) {
-    for (const col of ['seo_slug', 'slug'] as const) {
-      const { data, error } = await supabase.from(name).select(columns).eq(col, needle).limit(1).maybeSingle();
-      const row = asRow(data);
-      if (!error && row) {
-        rememberKnownColumns(name, Object.keys(row));
-        return row;
+    for (const value of values) {
+      for (const col of ['seo_slug', 'slug', 'id'] as const) {
+        const { data, error } = await withJwtRetry(() =>
+          dataClient().from(name).select(selectColumns).eq(col, value).limit(1)
+        );
+        if (error) continue;
+        const row = asRows(data)[0] || asRow(data);
+        if (row) return hydrate(name, row);
       }
     }
-    const { data, error } = await supabase.from(name).select(columns).eq('id', slug).limit(1).maybeSingle();
-    const row = asRow(data);
-    if (!error && row) {
-      rememberKnownColumns(name, Object.keys(row));
-      return row;
+
+    const label = values[0].replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+    if (label.length >= 4) {
+      for (const col of ['name', 'title'] as const) {
+        for (const pattern of [label, `%${label}%`] as const) {
+          const { data, error } = await withJwtRetry(() =>
+            dataClient().from(name).select(selectColumns).ilike(col, pattern).limit(1)
+          );
+          if (error) continue;
+          const row = asRows(data)[0] || asRow(data);
+          if (row) return hydrate(name, row);
+        }
+      }
     }
   }
   return null;
@@ -339,11 +417,13 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 12
   const label = String(countryLabel || '').trim();
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 200));
-  const { data, error } = await supabase
-    .from('tours')
-    .select(TOUR_LIST_COLUMNS)
-    .ilike('country', `%${label}%`)
-    .limit(capped);
+  const { data, error } = await withJwtRetry(() =>
+    dataClient()
+      .from('tours')
+      .select(TOUR_LIST_COLUMNS)
+      .ilike('country', `%${label}%`)
+      .limit(capped)
+  );
   if (error) {
     console.error('[Supabase] fetchToursForCountryLabel failed:', error.message);
     return [];
@@ -359,8 +439,10 @@ export async function fetchCollectionRecordById(
 ): Promise<RecordRow | null> {
   const names = [table, ...aliases].filter(Boolean);
   for (const name of names) {
-    const { data, error } = await supabase.from(name).select('*').eq('id', id).maybeSingle();
-    const row = asRow(data);
+    const { data, error } = await withJwtRetry(() =>
+      dataClient().from(name).select('*').eq('id', id).limit(1)
+    );
+    const row = asRows(data)[0] || asRow(data);
     if (!error && row) {
       rememberKnownColumns(name, Object.keys(row));
       return row;
@@ -431,8 +513,15 @@ function readableFieldValue(value: unknown): string {
   // Postgres/json arrays: use the first non-empty string entry — never index a string as [0].
   if (Array.isArray(value)) {
     for (const item of value) {
-      if (typeof item === 'string' && item.trim()) return item.trim();
-      if (typeof item === 'number' && Number.isFinite(item)) return String(item);
+      const nested = readableFieldValue(item);
+      if (nested) return nested;
+    }
+  }
+  if (value && typeof value === 'object') {
+    const rec = value as Record<string, unknown>;
+    for (const key of ['html', 'content', 'body', 'text', 'value', 'markdown', 'description']) {
+      const nested = rec[key];
+      if (typeof nested === 'string' && nested.trim()) return nested.trim();
     }
   }
   return '';
@@ -777,6 +866,6 @@ export function parseBlocksFromRecord(record: RecordRow | null | undefined): { t
   return extractEmbeddedContent(recordBodyHtml(record)).blocks || [];
 }
 
-export function visibleRecordHtml(record: RecordRow | null | undefined, keys: string[] = ['description', 'content', 'summary', 'excerpt']): string {
+export function visibleRecordHtml(record: RecordRow | null | undefined, keys: string[] = ['description', 'content', 'summary', 'excerpt', 'overview', 'about', 'body']): string {
   return stripEmbeddedContent(pickString(record || {}, keys));
 }

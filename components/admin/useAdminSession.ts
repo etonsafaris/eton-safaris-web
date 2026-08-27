@@ -47,6 +47,9 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
         if (!mounted) return;
 
         if (error || !data.session) {
+          if (error) {
+            console.error('[Auth] Admin session error:', error.message);
+          }
           router.replace(redirectTo);
           return;
         }

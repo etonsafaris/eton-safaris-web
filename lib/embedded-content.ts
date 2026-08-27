@@ -93,7 +93,7 @@ export function embedContent(html: string, data: EmbeddedContent): string {
 
 export function recordBodyHtml(record: Record<string, unknown> | null | undefined): string {
   if (!record) return '';
-  for (const key of ['description', 'content', 'summary', 'excerpt']) {
+  for (const key of ['description', 'content', 'summary', 'excerpt', 'overview', 'about', 'body']) {
     const value = record[key];
     if (typeof value === 'string' && value.trim()) return value;
   }

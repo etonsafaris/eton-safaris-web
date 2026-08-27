@@ -97,7 +97,8 @@ export async function loadCountryPageData(slug: string) {
     loadPublishedRecords('national_park', ['national_parks', 'parks']),
     loadPublishedRecords('explore'),
   ]);
-  const countryMeta = findCountryRecord(countries, slug);
+  const countryMeta =
+    findCountryRecord(countries, slug) || (await fetchRecordByPublicSlug('countries', slug));
   const country =
     countryMeta?.id != null
       ? (await fetchCollectionRecordById('countries', String(countryMeta.id))) || countryMeta
@@ -118,22 +119,7 @@ export async function loadCountryPageData(slug: string) {
 
 export async function loadTourDetail(slug: string) {
   noStore();
-  const tourMeta =
-    (await fetchRecordByPublicSlug('tours', slug, [], TOUR_LIST_COLUMNS)) ||
-    findRecordBySlug(
-      (
-        await fetchCollectionPage('tours', [], {
-          columns: TOUR_LIST_COLUMNS,
-          limit: 200,
-          offset: 0,
-        })
-      ).rows,
-      slug
-    );
-  const tour =
-    tourMeta?.id != null
-      ? (await fetchCollectionRecordById('tours', String(tourMeta.id))) || tourMeta
-      : tourMeta;
+  const tour = await fetchRecordByPublicSlug('tours', slug);
   if (tour && !isPublishedRecord(tour)) {
     return { tour: null, related: [] as RecordRow[] };
   }
@@ -152,22 +138,18 @@ export async function loadTourDetail(slug: string) {
 
 export async function loadParkDetail(slug: string) {
   noStore();
-  const [parksLight, accommodations] = await Promise.all([
-    loadPublishedRecords('national_park', ['national_parks', 'parks']),
+  const [park, accommodations, parkPage] = await Promise.all([
+    fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
     loadPublishedRecords('accommodations'),
+    fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }).catch(() => ({
+      rows: [] as RecordRow[],
+      total: 0,
+    })),
   ]);
-  const parkMeta = findRecordBySlug(parksLight, slug);
-  const park =
-    parkMeta?.id != null
-      ? (await fetchCollectionRecordById('national_park', String(parkMeta.id), [
-          'national_parks',
-          'parks',
-        ])) || parkMeta
-      : parkMeta;
   const parkName = park ? getRecordTitle(park) : '';
   return {
     park: park && isPublishedRecord(park) ? park : null,
-    others: parksLight.filter((row) => row !== parkMeta).slice(0, 20),
+    others: parkPage.rows.filter((row) => String(row.id) !== String(park?.id || '')).slice(0, 20),
     stays: accommodations.filter((item) => {
       const name = pickStoredString(item, [
         'national_park_name',

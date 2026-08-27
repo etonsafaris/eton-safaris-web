@@ -8,21 +8,20 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import {
-  fetchCollectionRecordById,
-  fetchCollectionRecords,
+  fetchCollectionPage,
+  fetchFeaturedTours,
+  fetchRecordByPublicSlug,
+  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isLanguagePost,
   isPublishedRecord,
   pickStoredString,
   pickString,
-  publicListColumnsFor,
   recordPublishedAt,
-  TOUR_LIST_COLUMNS,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
-import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
@@ -39,28 +38,23 @@ export default function SafariUpdateDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const updateCols = publicListColumnsFor('safari_updates');
-        const [rows, tourRows] = await Promise.all([
-          fetchCollectionRecords('safari_updates', [], updateCols ? { columns: updateCols } : undefined),
-          fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
+        const [full, updatePage] = await Promise.all([
+          fetchRecordByPublicSlug('safari_updates', slug),
+          fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
         ]);
-        const match =
-          rows.find((row) => pickString(row, ['slug', 'seo_slug']) === slug || String(row.id) === slug) || null;
-        const full =
-          match?.id != null
-            ? (await fetchCollectionRecordById('safari_updates', String(match.id))) || match
-            : match;
-        setPost(full && isPublishedRecord(full) ? full : null);
+        const published = full && isPublishedRecord(full) ? full : null;
+        setPost(published);
         setRelated(
-          rows.filter(isPublishedRecord).filter((row) => row !== match && !isLanguagePost(row)).slice(0, 20)
-        );
-        const country = full ? pickStoredString(full, ['country', 'category']) : '';
-        setTours(
-          tourRows
+          updatePage.rows
             .filter(isPublishedRecord)
-            .filter((tour) => (country ? matchesCountry(tour, country) : true))
-            .slice(0, 12)
+            .filter((row) => String(row.id) !== String(published?.id || '') && !isLanguagePost(row))
+            .slice(0, 20)
         );
+        const country = published ? pickStoredString(published, ['country', 'category']) : '';
+        const tourRows = country
+          ? await fetchToursForCountryLabel(country, 12)
+          : await fetchFeaturedTours(12);
+        setTours(tourRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
       } catch (error) {
         console.error(error);
       }

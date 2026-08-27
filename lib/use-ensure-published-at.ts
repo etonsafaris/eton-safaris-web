@@ -1,8 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { pickRecordId, recordPublishedAt } from '@/lib/data';
+import { recordPublishedAt } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
+
+function recordId(record: RecordRow | null | undefined): string | null {
+  if (!record || record.id == null) return null;
+  const value = String(record.id).trim();
+  if (!value || value.toLowerCase() === 'null' || value.toLowerCase() === 'undefined') return null;
+  return value;
+}
 
 export type EnsurePublishedTable =
   | 'categories'
@@ -26,7 +33,7 @@ export function useEnsurePublishedAt(
 ): string {
   const fromRecord = record ? recordPublishedAt(record) : '';
   const [override, setOverride] = useState('');
-  const id = pickRecordId(record);
+  const id = recordId(record);
   const onStampRef = useRef(onStamp);
   onStampRef.current = onStamp;
 

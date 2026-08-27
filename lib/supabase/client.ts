@@ -1,23 +1,32 @@
 import { createClient } from '@supabase/supabase-js';
+import { createSkewAwareFetch, isJwtClockError } from '@/lib/supabase/jwt-clock';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export const supabaseConfig = {
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.'
-  );
+if (!supabaseConfig.url || !supabaseConfig.anonKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-function supabaseFetch(input: RequestInfo | URL, init?: RequestInit) {
-  // Do not force cache: 'no-store' here. Next.js throws
-  // "Dynamic server usage: no-store fetch" during static generation
-  // (sitemap, robots, contact), which emptied CMS URLs and failed deploys.
-  return fetch(input, init);
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
   global: {
-    fetch: supabaseFetch,
+    fetch: createSkewAwareFetch(supabaseConfig.anonKey, () => {
+      void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    }),
   },
 });
+
+if (typeof window !== 'undefined') {
+  void supabase.auth.getSession().then(({ error }) => {
+    if (error && isJwtClockError(error.message)) {
+      void supabase.auth.signOut({ scope: 'local' });
+    }
+  });
+}
