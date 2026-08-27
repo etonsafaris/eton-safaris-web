@@ -123,14 +123,11 @@ export default function HomePageClient({
   }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
 
   useEffect(() => {
-    // First paint uses server-loaded props. Only re-fetch after a CMS live bump.
-    if (live === 0) return undefined;
-
     let cancelled = false;
 
     async function loadHero() {
       try {
-        const rows = await fetchCollectionRecords('countries');
+        const rows = await fetchCollectionRecords('countries', [], { maxRows: 48 });
         if (!cancelled) setCountries(rows.filter(isPublishedRecord));
       } catch (error) {
         console.error('[Supabase] Failed to load countries:', error);
@@ -139,36 +136,36 @@ export default function HomePageClient({
 
     async function loadRest() {
       const [tourRows, updateRows, parkRows, categoryRows] = await Promise.all([
-        fetchFeaturedTours(24).catch((error) => {
+        fetchFeaturedTours(12).catch((error) => {
           console.error('[Supabase] Failed to load tours:', error);
           return [] as RecordRow[];
         }),
-        fetchCollectionPage('safari_updates', [], { limit: 12, offset: 0 })
+        fetchCollectionPage('safari_updates', [], { limit: 8, offset: 0 })
           .then((page) => page.rows)
           .catch((error) => {
-          console.error('[Supabase] Failed to load safari updates:', error);
-          return [] as RecordRow[];
-        }),
-        fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 24, offset: 0 })
+            console.error('[Supabase] Failed to load safari updates:', error);
+            return [] as RecordRow[];
+          }),
+        fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 12, offset: 0 })
           .then((page) => page.rows)
           .catch((error) => {
-          console.error('[Supabase] Failed to load national parks:', error);
-          return [] as RecordRow[];
-        }),
-        fetchCollectionRecords('categories').catch((error) => {
+            console.error('[Supabase] Failed to load national parks:', error);
+            return [] as RecordRow[];
+          }),
+        fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
           console.error('[Supabase] Failed to load categories:', error);
           return [] as RecordRow[];
         }),
       ]);
       if (cancelled) return;
-      setTours(tourRows.slice(0, 24));
+      setTours(tourRows.slice(0, 12));
       setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
-      setParks(parkRows.filter(isPublishedRecord).slice(0, 24));
-      setCategories(categoryRows);
+      setParks(parkRows.filter(isPublishedRecord).slice(0, 12));
+      setCategories(categoryRows.filter(isPublishedRecord));
     }
 
-    loadHero();
-    loadRest();
+    void loadHero();
+    void loadRest();
     return () => {
       cancelled = true;
     };
