@@ -14,10 +14,10 @@ import {
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
-  pickPlainText,
   pickStoredString,
   pickString,
   publicRecordSlug,
+  recordCardBlurb,
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
@@ -26,6 +26,8 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import { useCmsLive } from '@/lib/cms-live';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
+import PageFaqList from '@/components/public/PageFaqList';
+import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function ParkDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -73,7 +75,7 @@ export default function ParkDetailPage() {
           image={getRecordImage(stay) || undefined}
           title={getRecordTitle(stay)}
           location={pickStoredString(stay, ['type', 'location'])}
-          description={pickPlainText(stay, ['description'])}
+          description={recordCardBlurb(stay)}
           cta="View Stay"
         />
       )),
@@ -142,6 +144,14 @@ export default function ParkDetailPage() {
           dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(park, ['description'])) }}
         />
         <ContentBlocks record={park} />
+        <PageFaqList
+          faqs={bestFaqsFor('park', {
+            countrySlug: pickString(park, ['country']),
+            countryName: pickString(park, ['country']),
+            title: parkName,
+          })}
+          tone="light"
+        />
       </ContentDetailLayout>
     </PublicShell>
   );

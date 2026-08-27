@@ -97,8 +97,13 @@ export default function AdminOverviewPage() {
                 </span>
               </div>
               <p className="mt-3 text-3xl font-bold text-[#111827] dark:text-white">
-                {item.table ? (loading ? '—' : (counts[item.id] || 0).toLocaleString()) : 'Open'}
+                {item.table ? (counts[item.id] || 0).toLocaleString() : 'Open'}
               </p>
+              {item.table ? (
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#94a3b8]">
+                  {(counts[item.id] || 0) === 1 ? 'item' : 'items'}
+                </p>
+              ) : null}
             </Link>
           );
         })}

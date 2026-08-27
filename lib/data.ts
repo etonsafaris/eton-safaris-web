@@ -168,7 +168,7 @@ export const TOUR_LIST_COLUMNS =
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park,national_park_id,national_park_name,seo_slug,created_date,updated_date',
   national_park:
     'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   national_parks:
@@ -277,6 +277,7 @@ export async function fetchCollectionPage(
     offset?: number;
     orderBy?: string;
     ascending?: boolean;
+    filters?: { country?: string; park?: string; category?: string };
   }
 ): Promise<{ rows: RecordRow[]; total: number }> {
   const columns = options?.columns || publicListColumnsFor(table, aliases) || '*';
@@ -284,17 +285,29 @@ export async function fetchCollectionPage(
   const offset = Math.max(0, options?.offset ?? 0);
   const orderBy = options?.orderBy === undefined ? 'created_date' : options.orderBy;
   const ascending = options?.ascending ?? false;
+  const countryFilter = sanitizeIlike(options?.filters?.country || '');
+  const parkFilter = sanitizeIlike(options?.filters?.park || '');
+  const categoryFilter = sanitizeIlike(options?.filters?.category || '');
   const names = [table, ...aliases].filter(Boolean);
   let lastError: unknown = null;
+  const parkColumnFallbacks =
+    table === 'accommodations' || aliases.includes('accommodations')
+      ? ['national_park_name', 'national_park', 'park_name', 'park', 'location']
+      : ['name'];
 
   for (const name of names) {
     let selectColumns = columns;
-    for (let attempt = 0; attempt < 6; attempt += 1) {
+    let parkColumnIndex = 0;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const parkColumn = parkFilter ? parkColumnFallbacks[parkColumnIndex] || '' : '';
       const { data, error, count } = await withJwtRetry(() => {
         let query = dataClient()
           .from(name)
           .select(selectColumns, { count: 'exact' })
           .range(offset, offset + limit - 1);
+        if (countryFilter) query = query.ilike('country', `%${countryFilter}%`);
+        if (categoryFilter) query = query.ilike('category', `%${categoryFilter}%`);
+        if (parkFilter && parkColumn) query = query.ilike(parkColumn, `%${parkFilter}%`);
         if (orderBy) {
           query = query.order(orderBy, { ascending });
         }
@@ -307,8 +320,12 @@ export async function fetchCollectionPage(
       }
 
       const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
-      const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
-      if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+      const missing = missingSelectColumn(error.message);
+      if (missing && parkFilter && parkColumnFallbacks.includes(missing) && parkColumnIndex < parkColumnFallbacks.length - 1) {
+        parkColumnIndex += 1;
+        continue;
+      }
+      if (missing && selectColumns !== '*' && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
         const next = dropColumnFromSelect(selectColumns, missing);
         if (next && next !== selectColumns) {
           selectColumns = next;
@@ -487,29 +504,103 @@ export async function fetchStaysForPark(parkName: string, limit = 10): Promise<R
   if (!name) return [];
   const capped = Math.max(1, Math.min(limit, 10));
   const like = `%${name}%`;
-  let selectColumns = 'id,name,seo_slug,location,country,type,image_url,social_image_url';
+  let selectColumns =
+    'id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_name,national_park';
+  const columns = ['national_park_name', 'national_park', 'location', 'name'];
+  const seen = new Set<string>();
+  const merged: RecordRow[] = [];
 
-  for (let attempt = 0; attempt < 6; attempt += 1) {
-    const { data, error } = await withJwtRetry(() =>
-      dataClient().from('accommodations').select(selectColumns).ilike('location', like).limit(24)
-    );
-    if (!error) {
-      const needle = name.toLowerCase();
-      return asRows(data)
-        .filter(isPublishedRecord)
-        .filter((item) => pickString(item, ['location', 'name']).toLowerCase().includes(needle))
-        .slice(0, capped);
-    }
-    const missing = missingSelectColumn(error.message);
-    if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
-      const next = dropColumnFromSelect(selectColumns, missing);
-      if (next && next !== selectColumns) {
-        selectColumns = next;
-        continue;
+  for (const column of columns) {
+    let cols = selectColumns;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const { data, error } = await withJwtRetry(() =>
+        dataClient().from('accommodations').select(cols).ilike(column, like).limit(24)
+      );
+      if (!error) {
+        for (const row of asRows(data)) {
+          const id = String(row.id || '');
+          if (id && seen.has(id)) continue;
+          if (id) seen.add(id);
+          merged.push(row);
+        }
+        break;
       }
+      const missing = missingSelectColumn(error.message);
+      if (missing === column) break;
+      if (missing && cols.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(cols, missing);
+        if (next && next !== cols) {
+          cols = next;
+          selectColumns = next;
+          continue;
+        }
+      }
+      break;
     }
-    console.error('[Supabase] fetchStaysForPark failed:', error.message);
-    return [];
+    if (merged.length >= 24) break;
+  }
+
+  const needle = name.toLowerCase();
+  return merged
+    .filter(isPublishedRecord)
+    .filter((item) => {
+      const hay = [
+        pickString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
+        pickString(item, ['location']),
+        pickString(item, ['name']),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(needle);
+    })
+    .slice(0, capped);
+}
+
+/** All parks in one country — used by admin filters and country pages. */
+export async function fetchParksForCountry(countryLabel: string): Promise<RecordRow[]> {
+  const label = sanitizeIlike(countryLabel);
+  if (!label) return [];
+  const names = ['national_park', 'national_parks', 'parks'];
+  let selectColumns =
+    publicListColumnsFor('national_park', ['national_parks', 'parks']) ||
+    'id,name,slug,seo_slug,location,country,image_url,social_image_url,description_title';
+  for (const name of names) {
+    let cols = selectColumns;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const collected: RecordRow[] = [];
+      let pageError: { message?: string } | null = null;
+      for (let from = 0; from < 5000; from += 1000) {
+        const { data, error } = await withJwtRetry(() =>
+          dataClient().from(name).select(cols).ilike('country', `%${label}%`).range(from, from + 999)
+        );
+        if (error) {
+          pageError = error;
+          break;
+        }
+        const rows = asRows(data);
+        collected.push(...rows);
+        if (rows.length < 1000) break;
+      }
+      if (!pageError) {
+        const seen = new Set<string>();
+        return collected.filter(isPublishedRecord).filter((row) => {
+          const key = String(row.id || getRecordTitle(row)).toLowerCase();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+      const missing = missingSelectColumn(pageError.message || '');
+      if (missing && cols.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(cols, missing);
+        if (next && next !== cols) {
+          cols = next;
+          selectColumns = next;
+          continue;
+        }
+      }
+      break;
+    }
   }
   return [];
 }
@@ -840,6 +931,28 @@ export function stripHtml(value: string): string {
 
 export function pickPlainText(record: RecordRow, keys: string[], fallback = ''): string {
   return stripHtml(pickString(record, keys, fallback));
+}
+
+/** Compact card copy for listings — never requires full HTML description columns. */
+export function recordCardBlurb(record: RecordRow): string {
+  const stored = pickPlainText(record, [
+    'excerpt',
+    'summary',
+    'tagline',
+    'description_title',
+    'subtitle',
+    'description',
+  ]);
+  if (stored.length >= 20) return stored.slice(0, 180);
+  const country = pickString(record, ['country']);
+  const category = pickString(record, ['category', 'type']);
+  const location = pickString(record, ['location']);
+  const days = pickNumber(record, ['duration_days', 'days', 'duration']);
+  const duration = pickString(record, ['duration_label']) || (days > 0 ? `${days} days` : '');
+  const bits = [duration, category, location, country].filter(Boolean);
+  if (bits.length) return bits.join(' · ');
+  const title = getRecordTitle(record);
+  return title ? `Discover ${title} with Eton Safaris.` : '';
 }
 
 const PUBLISHED_STATUSES = new Set([

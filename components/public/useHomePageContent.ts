@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useCmsLive } from '@/lib/cms-live';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
-import { fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
 import {
   DEFAULT_HOME_PAGE_CONTENT,
   HOME_PAGE_SLUG,
@@ -13,7 +13,6 @@ import {
 
 const EMPTY_UNTIL_LOADED: HomePageContent = {
   ...DEFAULT_HOME_PAGE_CONTENT,
-  videos: [],
 };
 
 export function useHomePageContent() {
@@ -25,14 +24,17 @@ export function useHomePageContent() {
     let cancelled = false;
     setReady(false);
     fetchCollectionRecords('pages')
-      .then((rows) => {
+      .then(async (rows) => {
         if (cancelled) return;
         const match =
           matchCmsRecord(rows, HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG).concat(['home', 'homepage'])) ||
           rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
           null;
         if (match && isPublishedRecord(match)) {
-          setContent(parseHomePageContent(match));
+          const id = String(match.id || '');
+          const full = id ? await fetchCollectionRecordById('pages', id) : match;
+          if (cancelled) return;
+          setContent(parseHomePageContent(full || match));
         } else {
           setContent(EMPTY_UNTIL_LOADED);
         }

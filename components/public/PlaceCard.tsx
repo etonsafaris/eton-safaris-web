@@ -22,12 +22,12 @@ export default function PlaceCard({
   cta?: string;
 }) {
   return (
-    <Link href={href} className="group flex h-full flex-col bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+    <Link href={href} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
           <ResponsiveImage
             src={image}
-            alt=""
+            alt={title}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
@@ -45,7 +45,7 @@ export default function PlaceCard({
           </p>
         ) : null}
         {description ? (
-          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[#555]">
+          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#555]">
             {stripPublicMoney(description)}
           </p>
         ) : null}

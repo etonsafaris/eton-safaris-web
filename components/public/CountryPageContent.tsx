@@ -18,23 +18,23 @@ import {
 import { useCmsLive } from '@/lib/cms-live';
 import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle, stripParkListFromCountryHtml } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
-import { mergeFaqs } from '@/lib/default-faqs';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
   fetchCollectionRecords,
   fetchToursForCountryLabel,
+  fetchParksForCountry,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
-  pickPlainText,
   pickString,
   publicRecordSlug,
+  recordCardBlurb,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PageFaqList from '@/components/public/PageFaqList';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { bestTimeToVisit } from '@/lib/country-planning';
 import type { RecordRow } from '@/lib/types';
 
@@ -64,12 +64,14 @@ export default function CountryPageContent({
   heroTitle,
   initialCategories = [],
   initialTours = [],
+  initialParks = [],
   initialPlaces = [],
 }: CountryPageContentProps) {
   const live = useCmsLive();
   const [country, setCountry] = useState<RecordRow | null>(countryProp);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
   const [ready, setReady] = useState(true);
 
@@ -77,18 +79,20 @@ export default function CountryPageContent({
     setCountry(countryProp);
     setCategories(initialCategories);
     setTours(initialTours);
+    setParks(initialParks);
     setPlaces(initialPlaces);
-  }, [countryProp, initialCategories, initialPlaces, initialTours]);
+  }, [countryProp, initialCategories, initialParks, initialPlaces, initialTours]);
 
   useEffect(() => {
     if (live === 0) return undefined;
     let cancelled = false;
     async function load() {
       try {
-        const [countryRows, allCategories, countryTours, allPlaces] = await Promise.all([
+        const [countryRows, allCategories, countryTours, countryParks, allPlaces] = await Promise.all([
           fetchCollectionRecords('countries'),
           fetchCollectionRecords('categories'),
           fetchToursForCountryLabel(slug, 120),
+          fetchParksForCountry(publicCountryLabel(countryProp, slug) || slug),
           fetchCollectionRecords('explore'),
         ]);
         if (cancelled) return;
@@ -98,6 +102,7 @@ export default function CountryPageContent({
           allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
         );
         setTours(countryTours.filter((tour) => matchesCountry(tour, slug)));
+        setParks(countryParks.filter(isPublishedRecord).filter((park) => matchesCountry(park, slug)));
         setPlaces(allPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)));
       } catch (error) {
         console.error('[Supabase] Failed to load country page data:', error);
@@ -115,7 +120,7 @@ export default function CountryPageContent({
   const title = publicCountryLabel(country, slug);
   const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
-  const faqs = mergeFaqs(extras.faqs, landingConversionCopy(slug, title).faqs);
+  const faqs = limitFaqs(extras.faqs, bestFaqsFor('country', { countrySlug: slug, countryName: title }));
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
   const published = useEnsurePublishedAt('countries', country, extras.published_at, (stamp) => {
     setCountry((row) => (row ? { ...row, published_at: stamp } : row));
@@ -135,7 +140,7 @@ export default function CountryPageContent({
     <SafariCategoryCard
       key={String(category.id ?? index)}
       category={category}
-      countryName={title}
+      titleOnly
       href={countryCategoryPath(slug, category)}
     />
   ));
@@ -193,6 +198,32 @@ export default function CountryPageContent({
         </div>
       </section>
 
+      <section className="bg-[#f3f3f3] py-12">
+        <div className="mx-auto max-w-[1200px] px-4 md:px-6">
+          <div className="dav-amazing-title">
+            <h3>National Parks in {title}</h3>
+            <span className="dav-amazing-underline" />
+          </div>
+          <div className="mt-10">
+            <Carousel
+              items={parks.map((park, index) => (
+                <PlaceCard
+                  key={String(park.id ?? index)}
+                  href={`/parks/${publicRecordSlug(park)}`}
+                  image={getRecordImage(park) || undefined}
+                  title={getRecordTitle(park)}
+                  location={pickString(park, ['location', 'country'])}
+                  description={recordCardBlurb(park)}
+                  cta="View Park"
+                />
+              ))}
+              itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+              emptyMessage="No records found in this collection."
+            />
+          </div>
+        </div>
+      </section>
+
       <section id="tour-packages" className="bg-[#f3f6f5]">
         <AmazingSafaris
           tours={tours}
@@ -216,7 +247,7 @@ export default function CountryPageContent({
                   image={getRecordImage(place) || undefined}
                   title={getRecordTitle(place)}
                   location={pickString(place, ['location', 'country'])}
-                  description={pickPlainText(place, ['description', 'excerpt', 'content'])}
+                  description={recordCardBlurb(place)}
                   cta="Read More"
                 />
               ))}

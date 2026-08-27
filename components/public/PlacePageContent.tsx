@@ -24,6 +24,8 @@ import {
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { useCmsLive } from '@/lib/cms-live';
+import PageFaqList from '@/components/public/PageFaqList';
+import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
 type PlacePageContentProps = {
@@ -137,6 +139,7 @@ export default function PlacePageContent({
               </p>
             ) : null}
             {place ? <ContentBlocks record={place} /> : null}
+            <PageFaqList faqs={bestFaqsFor('park', { countryName: countryTitle, title: placeTitle })} tone="light" />
           </div>
           <div className="md:col-span-1">
             <div className="md:sticky md:top-24">

@@ -8,11 +8,13 @@ import PageHero from '@/components/public/PageHero';
 import TourCard from '@/components/public/TourCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
+import PageFaqList from '@/components/public/PageFaqList';
 import { SITE } from '@/lib/collections';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsLive } from '@/lib/cms-live';
 import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
+import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
 function ToursList({
@@ -142,6 +144,9 @@ function ToursList({
           </div>
         )}
       </ListingSection>
+      <div className="mx-auto max-w-[1200px] px-4 pb-12">
+        <PageFaqList faqs={bestFaqsFor('tours')} tone="light" />
+      </div>
     </PublicShell>
   );
 }

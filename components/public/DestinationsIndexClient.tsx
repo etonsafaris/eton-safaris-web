@@ -8,8 +8,8 @@ import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
-  pickPlainText,
   pickString,
+  recordCardBlurb,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
@@ -55,7 +55,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
                   image={countryHeroImage(slug, country)}
                   title={title}
                   location={pickString(country, ['tagline', 'subtitle', 'headline'])}
-                  description={pickPlainText(country, ['summary', 'description', 'excerpt'])}
+                  description={recordCardBlurb(country)}
                   cta="Explore"
                 />
               );

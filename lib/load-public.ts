@@ -12,6 +12,7 @@ import {
   fetchCollectionRecords,
   fetchCollectionPage,
   fetchFeaturedTours,
+  fetchParksForCountry,
   fetchRecordByPublicSlug,
   fetchStaysForPark,
   fetchToursForCountryLabel,
@@ -92,10 +93,9 @@ export async function loadHomePageData() {
 
 export async function loadCountryPageData(slug: string) {
   noStore();
-  const [countries, categories, parks, places] = await Promise.all([
+  const [countries, categories, places] = await Promise.all([
     loadPublishedRecords('countries'),
     loadPublishedRecords('categories'),
-    loadPublishedRecords('national_park', ['national_parks', 'parks']),
     loadPublishedRecords('explore'),
   ]);
   const countryMeta =
@@ -108,7 +108,10 @@ export async function loadCountryPageData(slug: string) {
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
     slug;
-  const tours = await fetchToursForCountryLabel(countryName, 120).catch(() => [] as RecordRow[]);
+  const [tours, parks] = await Promise.all([
+    fetchToursForCountryLabel(countryName, 120).catch(() => [] as RecordRow[]),
+    fetchParksForCountry(countryName).catch(() => [] as RecordRow[]),
+  ]);
   return {
     country: country && isPublishedRecord(country) ? country : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),

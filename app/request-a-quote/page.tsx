@@ -6,6 +6,8 @@ import PublicShell from '@/components/public/PublicShell';
 import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
+import PageFaqList from '@/components/public/PageFaqList';
+import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function RequestQuotePage() {
   return (
@@ -74,6 +76,9 @@ export default function RequestQuotePage() {
               </div>
             </div>
           </div>
+        </div>
+        <div className="mx-auto max-w-[1200px] px-2.5">
+          <PageFaqList faqs={bestFaqsFor('contact')} tone="light" />
         </div>
       </section>
     </PublicShell>

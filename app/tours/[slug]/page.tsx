@@ -38,6 +38,8 @@ import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import type { RecordRow } from '@/lib/types';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import { useCmsLive } from '@/lib/cms-live';
+import PageFaqList from '@/components/public/PageFaqList';
+import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function TourDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -336,6 +338,16 @@ export default function TourDetailPage() {
                 ) : null}
               </div>
             ) : null}
+
+            <PageFaqList
+              faqs={bestFaqsFor('tour', {
+                countrySlug: countrySlug,
+                countryName,
+                categoryTitle: pickString(tour, ['category', 'category_name', 'title']) || getRecordTitle(tour),
+                title: getRecordTitle(tour),
+              })}
+              tone="light"
+            />
           </article>
 
           <aside className="space-y-8 lg:col-span-1 lg:sticky lg:top-6">

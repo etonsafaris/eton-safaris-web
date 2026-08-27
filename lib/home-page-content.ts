@@ -50,30 +50,24 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   setsApartIntro:
     'Our passionate and experienced African team combines local knowledge, professional expertise, and genuine hospitality to create meaningful journeys filled with discovery, comfort, and unforgettable memories.',
   features: DEFAULT_HOME_FEATURES,
-  videos: [],
+  videos: [SITE_MEDIA.gorillaVideo, SITE_MEDIA.gorillaVideoFallback].filter(Boolean),
   footerAbout:
     'Eton Safaris is a premier tours and travel agency based in Uganda, offering gorilla trekking, wildlife safaris, and cultural experiences across Africa. Tailor-made luxury expeditions for every clientele.',
 };
 
 export const HOME_PAGE_SLUG = 'home-page';
 
-/** Old hard-coded demo clips — never show these on the public home video section. */
-const LEGACY_HOME_VIDEO_URLS = new Set(
-  [SITE_MEDIA.gorillaVideo, SITE_MEDIA.gorillaVideoFallback].filter(Boolean)
-);
-
-function isLegacyHomeVideo(url: string) {
-  const value = String(url || '').trim();
-  if (!value) return true;
-  if (LEGACY_HOME_VIDEO_URLS.has(value)) return true;
-  return /videos\.pexels\.com/i.test(value);
-}
-
 function parseVideoList(value: unknown): string[] {
+  const collected: string[] = [];
+  const push = (item: string) => {
+    const url = String(item || '').trim();
+    if (!url) return;
+    if (collected.includes(url)) return;
+    collected.push(url);
+  };
   if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item || '').trim())
-      .filter((item) => item && !isLegacyHomeVideo(item));
+    value.forEach((item) => push(String(item || '')));
+    return collected;
   }
   if (typeof value === 'string' && value.trim()) {
     const raw = value.trim();
@@ -84,12 +78,9 @@ function parseVideoList(value: unknown): string[] {
         // fall through
       }
     }
-    return raw
-      .split(/[\n,|]+/)
-      .map((item) => item.trim())
-      .filter((item) => item && !isLegacyHomeVideo(item));
+    raw.split(/[\n,|]+/).forEach((item) => push(item));
   }
-  return [];
+  return collected;
 }
 
 function featuresFromBlocks(blocks: CmsContentBlock[]): HomeFeaturePoint[] {
@@ -126,33 +117,31 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
   const videos = parseVideoList(
     fields.home_videos || record?.home_videos || fields.video_url || extras.video_url || record?.video_url
   );
-  const brandTitle =
-    pickString(record || {}, ['brand_title', 'hero_title'], fields.brand_title || extras.hero_title) ||
-    DEFAULT_HOME_PAGE_CONTENT.brandTitle;
-  const brandDescription =
-    pickString(
-      record || {},
-      ['brand_description', 'excerpt'],
-      fields.brand_description || extras.excerpt || extras.subtitle
-    ) || DEFAULT_HOME_PAGE_CONTENT.brandDescription;
-  const setsApartHeading =
-    pickString(record || {}, ['sets_apart_heading'], fields.sets_apart_heading) ||
-    DEFAULT_HOME_PAGE_CONTENT.setsApartHeading;
-  const setsApartIntro =
-    pickString(record || {}, ['sets_apart_intro', 'subtitle'], fields.sets_apart_intro) ||
-    DEFAULT_HOME_PAGE_CONTENT.setsApartIntro;
-  const footerAbout =
-    pickString(record || {}, ['footer_about'], fields.footer_about) ||
-    DEFAULT_HOME_PAGE_CONTENT.footerAbout;
+  const cmsBrandTitle =
+    pickString(record || {}, ['brand_title', 'hero_title'], fields.brand_title || extras.hero_title);
+  const cmsBrandDescription = pickString(
+    record || {},
+    ['brand_description'],
+    fields.brand_description || ''
+  );
+  const cmsSetsApartHeading = pickString(record || {}, ['sets_apart_heading'], fields.sets_apart_heading);
+  const cmsSetsApartIntro = pickString(record || {}, ['sets_apart_intro'], fields.sets_apart_intro);
+  const cmsFooterAbout = pickString(record || {}, ['footer_about'], fields.footer_about);
+
+  const playableVideos = videos.filter((url) =>
+    /\.(mp4|webm|ogg)(\?|$)/i.test(url) || /pexels\.com\/video|youtube|vimeo|cloudinary/i.test(url)
+  );
 
   return {
-    brandTitle: brandTitle.toUpperCase(),
-    brandDescription,
-    setsApartHeading,
-    setsApartIntro,
+    brandTitle: (cmsBrandTitle || DEFAULT_HOME_PAGE_CONTENT.brandTitle).toUpperCase(),
+    brandDescription:
+      cmsBrandDescription.length >= 120 ? cmsBrandDescription : DEFAULT_HOME_PAGE_CONTENT.brandDescription,
+    setsApartHeading: cmsSetsApartHeading || DEFAULT_HOME_PAGE_CONTENT.setsApartHeading,
+    setsApartIntro:
+      cmsSetsApartIntro.length >= 40 ? cmsSetsApartIntro : DEFAULT_HOME_PAGE_CONTENT.setsApartIntro,
     features: featuresFromBlocks(parseCmsBlocks(record)),
-    videos,
-    footerAbout,
+    videos: playableVideos.length ? playableVideos : DEFAULT_HOME_PAGE_CONTENT.videos,
+    footerAbout: cmsFooterAbout || DEFAULT_HOME_PAGE_CONTENT.footerAbout,
   };
 }
 

@@ -10,6 +10,8 @@ import { SITE_MEDIA } from '@/lib/site-media';
 import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
+import PageFaqList from '@/components/public/PageFaqList';
+import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -293,6 +295,9 @@ export default function ContactPage() {
               </form>
             </div>
           </div>
+        </div>
+        <div className="mx-auto max-w-[1200px] px-2.5">
+          <PageFaqList faqs={bestFaqsFor('contact')} tone="light" />
         </div>
       </section>
     </PublicShell>

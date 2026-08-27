@@ -3,16 +3,18 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useCmsLive } from '@/lib/cms-live';
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
 import PublicShell from '@/components/public/PublicShell';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
+import PlaceCard from '@/components/public/PlaceCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
+import PageFaqList from '@/components/public/PageFaqList';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
@@ -33,11 +35,13 @@ import {
   pickString,
   pickPlainText,
   publicRecordSlug,
+  recordCardBlurb,
   recordPublishedAt,
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { stripPublicMoney } from '@/lib/public-money';
+import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
 const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: string }> = {
@@ -89,7 +93,7 @@ function HomeBrandAndFeatures() {
         heading={home.setsApartHeading}
         intro={home.setsApartIntro}
         features={home.features}
-        videos={home.ready ? home.videos : []}
+        videos={home.videos}
       />
     </>
   );
@@ -246,7 +250,10 @@ export default function HomePageClient({
           </div>
         </div>
         <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-[#666]">
-          {stripPublicMoney(pickPlainText(country, ['description', 'excerpt']))}
+          {stripPublicMoney(
+            pickPlainText(country, ['tagline', 'description_title', 'excerpt', 'description']) ||
+              recordCardBlurb(country as RecordRow)
+          )}
         </p>
         <span className="text-xs font-semibold uppercase tracking-widest text-moss group-hover:text-[#4a6b3a]">
           Popular Tour
@@ -258,28 +265,15 @@ export default function HomePageClient({
   const featuredParks = useMemo(() => parks.slice(0, 12), [parks]);
 
   const parkItems = featuredParks.map((park, index) => (
-    <Link
+    <PlaceCard
       key={String(park.id ?? index)}
       href={`/parks/${publicRecordSlug(park)}`}
-      className="block h-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-lg"
-    >
-      {getRecordImage(park) ? (
-        <ResponsiveImage
-          src={getRecordImage(park) || ''}
-          alt=""
-          className="aspect-[16/10] w-full object-cover"
-        />
-      ) : (
-        <div className="flex aspect-[16/10] items-center justify-center bg-gray-100 text-sm text-gray-400">No image</div>
-      )}
-      <div className="p-4 md:p-5">
-        <div className="mb-2 flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-moss" />
-          <h4 className="font-serif text-base font-bold text-[#333]">{getRecordTitle(park)}</h4>
-        </div>
-        <p className="line-clamp-3 text-sm text-[#666]">{stripPublicMoney(pickPlainText(park, ['description']))}</p>
-      </div>
-    </Link>
+      image={getRecordImage(park) || undefined}
+      title={getRecordTitle(park)}
+      location={pickString(park, ['location', 'country'])}
+      description={recordCardBlurb(park)}
+      cta="View Park"
+    />
   ));
 
   return (
@@ -357,7 +351,7 @@ export default function HomePageClient({
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Popular Tours" title="Explore Our Most Popular Tours" />
           <div className="mt-10">
-            <Carousel instant items={tourItems} itemsPerView={{ sm: 1, md: 2, lg: 3 }} emptyMessage="No records found in this collection." />
+            <Carousel instant items={tourItems} itemsPerView={{ sm: 1, md: 2, lg: 4 }} emptyMessage="No records found in this collection." />
           </div>
         </div>
       </section>
@@ -383,7 +377,7 @@ export default function HomePageClient({
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Wildlife" title="National Parks" />
           <div className="mt-10">
-            <Carousel instant items={parkItems} itemsPerView={{ sm: 1, md: 2, lg: 3 }} emptyMessage="No records found in this collection." />
+            <Carousel instant items={parkItems} itemsPerView={{ sm: 1, md: 2, lg: 4 }} emptyMessage="No records found in this collection." />
           </div>
           <div className="mt-10 text-center">
             <Link
@@ -441,6 +435,10 @@ export default function HomePageClient({
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-8">
+        <PageFaqList faqs={bestFaqsFor('home')} tone="light" />
       </section>
 
       <TestimonialsSection />

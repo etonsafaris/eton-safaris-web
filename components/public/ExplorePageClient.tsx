@@ -13,7 +13,8 @@ import {
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
-  pickPlainText,
+  pickString,
+  recordCardBlurb,
 } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -58,8 +59,8 @@ function ExploreContent({ initialPlaces }: { initialPlaces: RecordRow[] }) {
                 href={explorePlacePath(place)}
                 image={getRecordImage(place) || undefined}
                 title={getRecordTitle(place)}
-                location={pickPlainText(place, ['location', 'country']) || undefined}
-                description={pickPlainText(place, ['description', 'excerpt', 'content'])}
+                location={pickString(place, ['location', 'country']) || undefined}
+                description={recordCardBlurb(place)}
                 cta="Read More"
               />
             ))}

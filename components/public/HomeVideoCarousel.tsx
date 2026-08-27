@@ -29,7 +29,7 @@ export default function HomeVideoCarousel({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(true);
   const safeIndex = sources.length ? index % sources.length : 0;
   const current = sources[safeIndex] || '';
   const hasPlaylist = sources.length > 1;
@@ -62,7 +62,7 @@ export default function HomeVideoCarousel({
   useEffect(() => {
     const node = videoRef.current;
     if (!node || !active || !current) return;
-    node.loop = false;
+    node.loop = sources.length === 1;
     node.muted = muted;
     const play = node.play();
     if (play && typeof play.catch === 'function') play.catch(() => undefined);
@@ -95,7 +95,7 @@ export default function HomeVideoCarousel({
           muted={muted}
           playsInline
           preload="metadata"
-          loop={false}
+          loop={sources.length === 1}
           onEnded={handleEnded}
         />
       ) : poster ? (

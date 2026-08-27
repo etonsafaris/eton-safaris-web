@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, fetchParksForCountry, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -70,13 +70,23 @@ function SageSelect({
   onChange,
   options,
   placeholder,
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   placeholder: string;
+  disabled?: boolean;
 }) {
-  return <SearchableSelect value={value} onChange={onChange} options={options} placeholder={placeholder} />;
+  return (
+    <SearchableSelect
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder={placeholder}
+      disabled={disabled}
+    />
+  );
 }
 
 async function uploadAccommodationImage(file: File): Promise<string> {
@@ -109,18 +119,20 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
   const [publishedAt, setPublishedAt] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      fetchCollectionRecords('countries', [], {
-        columns: adminListColumnsFor('countries') || 'id,name,title,tagline,image_url,status',
-      }),
-      fetchCollectionRecords('national_park', ['national_parks', 'parks'], {
-        columns: adminListColumnsFor('national_park') || 'id,name,location,country,image_url,status',
-      }),
-    ]).then(([countryRows, parkRows]) => {
-      setCountries(countryRows);
-      setParks(parkRows);
-    });
+    fetchCollectionRecords('countries', [], {
+      columns: adminListColumnsFor('countries') || 'id,name,title,tagline,image_url,status',
+    }).then(setCountries);
   }, []);
+
+  useEffect(() => {
+    if (!country) {
+      setParks([]);
+      return;
+    }
+    fetchParksForCountry(country)
+      .then(setParks)
+      .catch(() => setParks([]));
+  }, [country]);
 
   useEffect(() => {
     if (!accommodationId) return;
@@ -157,17 +169,11 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
 
   const parkOptions = useMemo(
     () =>
-      parks
-        .filter((row) => {
-          if (!country) return true;
-          const parkCountry = String(row.country || '').toLowerCase();
-          return !parkCountry || parkCountry === country.toLowerCase();
-        })
-        .map((row) => ({
-          value: getRecordTitle(row),
-          label: getRecordTitle(row),
-        })),
-    [parks, country]
+      parks.map((row) => ({
+        value: getRecordTitle(row),
+        label: getRecordTitle(row),
+      })),
+    [parks]
   );
 
   function addBlock() {
@@ -357,7 +363,8 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
               value={nationalPark}
               onChange={setNationalPark}
               options={parkOptions}
-              placeholder={country ? 'Select park' : 'Select country first'}
+              placeholder={country ? 'Select park' : 'Type a country first'}
+              disabled={!country}
             />
           </div>
         </div>

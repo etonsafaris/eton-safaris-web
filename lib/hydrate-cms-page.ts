@@ -1,6 +1,7 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -74,7 +75,8 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
       image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
     };
   });
-  const faqs: PageFaq[] = mergeFaqs(extras.faqs, seeded?.faqs || []);
+  const cmsFallback = /contact/i.test(slug) ? bestFaqsFor('contact') : bestFaqsFor('home');
+  const faqs: PageFaq[] = limitFaqs(mergeFaqs(extras.faqs, seeded?.faqs || []), cmsFallback);
 
   return {
     title: extras.hero_title || (page ? getRecordTitle(page) : '') || seeded?.hero_title || seeded?.title || '',

@@ -10,6 +10,7 @@ import SafariTourReviews from '@/components/public/SafariTourReviews';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
 import { mergeFaqs } from '@/lib/default-faqs';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
 import { SITE } from '@/lib/collections';
 import { countryHeroImage } from '@/lib/country-heroes';
@@ -88,7 +89,7 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
       ? extras.cta_href
       : quoteRequestPath({ country: countryName });
   const image = getRecordImage(landing || {}) || countryHeroImage(slug, country);
-  const faqs = mergeFaqs(extras.faqs, copy.faqs);
+  const faqs = limitFaqs(mergeFaqs(extras.faqs, copy.faqs), bestFaqsFor('country', { countrySlug: slug, countryName }));
   const excerptText = extras.excerpt.replace(/<[^>]+>/g, ' ').trim();
   const articleHtml = toProseHtml(excerptText.length >= 40 && excerptText.length < 700 ? extras.excerpt : copy.seoIntro);
   const path = destinationPublicPath(slug);

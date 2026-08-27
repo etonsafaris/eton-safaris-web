@@ -10,7 +10,14 @@ export default function PageFaqList({
   tone?: 'dark' | 'light';
   className?: string;
 }) {
-  if (!faqs.length) return null;
+  const shown = (faqs || [])
+    .filter((faq) => faq?.question?.trim() && faq?.answer?.trim())
+    .filter((faq, index, all) => {
+      const key = faq.question.trim().toLowerCase();
+      return all.findIndex((item) => item.question.trim().toLowerCase() === key) === index;
+    })
+    .slice(0, 4);
+  if (!shown.length) return null;
   const dark = tone === 'dark';
   return (
     <section className={`mt-12 ${dark ? 'text-white' : 'text-[#222]'} ${className}`}>
@@ -18,7 +25,7 @@ export default function PageFaqList({
         Frequently asked questions
       </h2>
       <div className="mt-6 space-y-4">
-        {faqs.map((faq) => (
+        {shown.map((faq) => (
           <details
             key={faq.question}
             className={`rounded-xl border px-5 py-4 ${

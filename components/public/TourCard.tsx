@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Clock, Star } from 'lucide-react';
 import DavCtaButton from '@/components/public/DavCtaButton';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
-import { getRecordImage, getRecordTitle, pickNumber, pickPlainText, publicRecordSlug } from '@/lib/data';
+import { getRecordImage, getRecordTitle, pickNumber, publicRecordSlug, recordCardBlurb } from '@/lib/data';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -16,13 +16,14 @@ export default function TourCard({
   const slug = publicRecordSlug(tour);
   const days = pickNumber(tour, ['duration_days', 'days', 'duration']);
   const nights = days > 0 ? Math.max(days - 1, 0) : 0;
+  const image = getRecordImage(tour);
   return (
-    <Link href={`/tours/${slug}`} className="group flex h-full flex-col bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
-        {getRecordImage(tour) ? (
+    <Link href={`/tours/${slug}`} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        {image ? (
           <ResponsiveImage
-            src={getRecordImage(tour) || ''}
-            alt=""
+            src={image}
+            alt={getRecordTitle(tour)}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
@@ -41,8 +42,8 @@ export default function TourCard({
             <Clock className="h-3.5 w-3.5" /> {days} DAYS - {nights} NIGHTS
           </p>
         ) : null}
-        <p className="mt-2 line-clamp-3 public-article-body text-[13px] leading-relaxed text-[#555]">
-          {stripPublicMoney(pickPlainText(tour, ['description', 'excerpt']))}
+        <p className="mt-2 line-clamp-2 public-article-body text-[13px] leading-relaxed text-[#555]">
+          {stripPublicMoney(recordCardBlurb(tour))}
         </p>
         <div className="mt-auto flex items-end justify-between gap-2 pt-4">
           <div className="flex items-center gap-0.5">
