@@ -20,3 +20,4 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey,
     fetch: createSkewAwareFetch(supabaseConfig.anonKey),
   },
 });
+
