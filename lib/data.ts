@@ -97,7 +97,7 @@ async function selectRange(
   end: number
 ): Promise<{ data: RecordRow[] | null; error: { message: string } | null }> {
   let lastMessage = '';
-  for (let attempt = 0; attempt < 6; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const { data, error } = await withJwtRetry(() =>
       dataClient().from(tableName).select(selectColumns).range(start, end)
     );
@@ -107,7 +107,7 @@ async function selectRange(
     if (!isTransientFetchError(detail)) {
       return { data: null, error: { message: lastMessage } };
     }
-    await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+    await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)));
   }
   return { data: null, error: { message: lastMessage || 'fetch failed' } };
 }
@@ -310,7 +310,7 @@ export async function fetchCollectionPage(
   for (const name of names) {
     let selectColumns = columns;
     let parkColumnIndex = 0;
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       const parkColumn = parkFilter ? parkColumnFallbacks[parkColumnIndex] || '' : '';
       const { data, error, count } = await withJwtRetry(() => {
         let query = dataClient()
@@ -354,7 +354,7 @@ export async function fetchCollectionPage(
         lastError = error;
         break;
       }
-      await new Promise((resolve) => setTimeout(resolve, 400 * Math.pow(2, attempt)));
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
       lastError = error;
     }
   }
@@ -379,13 +379,13 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
     return asRows(featured.data).filter(isPublishedRecord).slice(0, capped);
   }
 
-  const { rows } = await fetchCollectionPage('tours', [], {
-    columns,
-    limit: capped,
-    offset: 0,
-    orderBy: 'created_date',
-  });
-  return rows.filter(isPublishedRecord).slice(0, capped);
+  const recent = await withJwtRetry(() =>
+    dataClient().from('tours').select(columns).order('created_date', { ascending: false }).limit(capped)
+  );
+  if (!recent.error) {
+    return asRows(recent.data).filter(isPublishedRecord).slice(0, capped);
+  }
+  return [];
 }
 
 function slugLookupValues(slug: string): string[] {

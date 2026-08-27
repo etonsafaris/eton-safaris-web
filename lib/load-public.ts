@@ -69,28 +69,65 @@ export async function loadCmsPage(slug: string) {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(fallback);
+      });
+  });
+}
+
 export async function loadHomePageData() {
-  noStore();
-  const parkPage = await fetchCollectionPage('national_park', ['national_parks', 'parks'], {
-    columns: listColumns('national_park', ['national_parks', 'parks']),
-    limit: 24,
-    offset: 0,
-  }).catch(() => ({ rows: [] as RecordRow[], total: 0 }));
-  const [countries, tours, updatesPage, categories] = await Promise.all([
-    loadPublishedRecords('countries'),
-    fetchFeaturedTours(24).catch(() => [] as RecordRow[]),
-    fetchCollectionPage('safari_updates', [], {
-      columns: listColumns('safari_updates'),
-      limit: 12,
-      offset: 0,
-    }).catch(() => ({ rows: [] as RecordRow[], total: 0 })),
-    loadPublishedRecords('categories'),
+  const emptyPage = { rows: [] as RecordRow[], total: 0 };
+  const [parkPage, countries, tours, updatesPage, categories] = await Promise.all([
+    withTimeout(
+      fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+        columns: listColumns('national_park', ['national_parks', 'parks']),
+        limit: 12,
+        offset: 0,
+      }),
+      5000,
+      emptyPage
+    ),
+    withTimeout(
+      fetchCollectionRecords('countries', [], {
+        columns: listColumns('countries'),
+        maxRows: 48,
+      }).then((rows) => rows.filter(isPublishedRecord)),
+      5000,
+      [] as RecordRow[]
+    ),
+    withTimeout(fetchFeaturedTours(12), 5000, [] as RecordRow[]),
+    withTimeout(
+      fetchCollectionPage('safari_updates', [], {
+        columns: listColumns('safari_updates'),
+        limit: 8,
+        offset: 0,
+      }),
+      5000,
+      emptyPage
+    ),
+    withTimeout(
+      fetchCollectionRecords('categories', [], {
+        columns: listColumns('categories'),
+        maxRows: 64,
+      }).then((rows) => rows.filter(isPublishedRecord)),
+      5000,
+      [] as RecordRow[]
+    ),
   ]);
   return {
     countries,
-    tours: tours.slice(0, 24),
+    tours: tours.slice(0, 12),
     updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
-    parks: parkPage.rows.filter(isPublishedRecord).slice(0, 24),
+    parks: parkPage.rows.filter(isPublishedRecord).slice(0, 12),
     categories,
   };
 }

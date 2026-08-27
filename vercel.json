@@ -4,5 +4,13 @@
       "path": "/api/cron/newsletter",
       "schedule": "0 8 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/page.tsx": {
+      "maxDuration": 15
+    },
+    "app/sitemap.ts": {
+      "maxDuration": 30
+    }
+  }
 }

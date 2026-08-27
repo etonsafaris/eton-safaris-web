@@ -1,8 +1,8 @@
 import HomePageClient from '@/components/public/HomePageClient';
 import { loadHomePageData } from '@/lib/load-public';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
+export const maxDuration = 15;
 
 export default async function HomePage() {
   const data = await loadHomePageData();
