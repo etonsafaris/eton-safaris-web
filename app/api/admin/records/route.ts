@@ -3,7 +3,7 @@ import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-table
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
-import { bearerTokenFromRequest, createWriteClient, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
+import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -74,7 +74,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const client = createWriteClient(bearerTokenFromRequest(request));
+    // Prefer service role for admin reads so RLS does not empty ops tables.
+    const client = hasServiceRoleKey()
+      ? createPrivilegedClient()
+      : createWriteClient(bearerTokenFromRequest(request));
     if (table === 'registered_agents') {
       const rows = await loadAgentRows(client);
       if (rows.error) {
@@ -86,9 +89,14 @@ export async function GET(request: Request) {
     const names = TABLE_ALIASES[table] || [table];
     let lastMessage = '';
     for (const name of names) {
-      const { data, error } = await client.from(name).select('*').order('created_at', { ascending: false });
-      if (!error) {
-        return NextResponse.json({ rows: jsonSafeRows(data || []) });
+      // Schema uses created_date (Base44 legacy), not created_at.
+      const orderedByDate = await client.from(name).select('*').order('created_date', { ascending: false });
+      if (!orderedByDate.error) {
+        return NextResponse.json({ rows: jsonSafeRows(orderedByDate.data || []) });
+      }
+      const orderedByAt = await client.from(name).select('*').order('created_at', { ascending: false });
+      if (!orderedByAt.error) {
+        return NextResponse.json({ rows: jsonSafeRows(orderedByAt.data || []) });
       }
       const fallback = await client.from(name).select('*');
       if (!fallback.error) {

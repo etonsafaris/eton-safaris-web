@@ -10,7 +10,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -66,9 +66,8 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('safari_updates').then((rows) => {
-      if (!postId) return;
-      const post = rows.find((row) => String(row.id) === postId);
+    if (!postId) return;
+    fetchCollectionRecordById('safari_updates', postId).then((post) => {
       if (!post) return;
 
       setTitle(String(post.title || ''));

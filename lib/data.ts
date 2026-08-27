@@ -3,12 +3,22 @@ import { extractEmbeddedContent, recordBodyHtml, stripEmbeddedContent } from '@/
 import { decodeHtmlEntities } from '@/lib/sanitize-html';
 import { rememberKnownColumns } from '@/lib/supabase-payload';
 import { isDeployableImageUrl, withImageCacheBust } from '@/lib/public-image';
+import {
+  clearCollectionCache,
+  clearInflightCollection,
+  getCachedCollection,
+  getInflightCollection,
+  setCachedCollection,
+  setInflightCollection,
+} from '@/lib/collection-cache';
 import type { RecordRow } from '@/lib/types';
+
+export { clearCollectionCache };
 
 const PAGE_SIZE = 1000;
 const FETCH_CACHE_MS = 60_000;
-const recordCache = new Map<string, { expires: number; rows: RecordRow[] }>();
-const inflight = new Map<string, Promise<RecordRow[]>>();
+/** Remember resolved select strings per table so missing-column drops are not repeated. */
+const resolvedSelects = new Map<string, string>();
 
 function missingSelectColumn(message?: string) {
   const text = String(message || '');
@@ -27,14 +37,41 @@ function dropColumnFromSelect(columns: string, column: string) {
     .join(',');
 }
 
+function isTransientFetchError(message?: string) {
+  return /timeout|terminated|fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|Connect Timeout|520|502|503|504|schema cache|PGRST002/i.test(
+    String(message || '')
+  );
+}
+
+async function selectRange(
+  tableName: string,
+  selectColumns: string,
+  start: number,
+  end: number
+): Promise<{ data: RecordRow[] | null; error: { message: string } | null }> {
+  let lastMessage = '';
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const { data, error } = await supabase.from(tableName).select(selectColumns).range(start, end);
+    if (!error) return { data: ((data as unknown as RecordRow[] | null) || []), error: null };
+    const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
+    lastMessage = error.message || detail || 'fetch failed';
+    if (!isTransientFetchError(detail)) {
+      return { data: null, error: { message: lastMessage } };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+  }
+  return { data: null, error: { message: lastMessage || 'fetch failed' } };
+}
+
 export async function fetchAllRecords(tableName: string, columns = '*'): Promise<RecordRow[]> {
   const allRows: RecordRow[] = [];
   let start = 0;
-  let selectColumns = columns;
+  const cacheKey = `${tableName}::${columns}`;
+  let selectColumns = resolvedSelects.get(cacheKey) || columns;
 
   while (true) {
     const end = start + PAGE_SIZE - 1;
-    const { data, error } = await supabase.from(tableName).select(selectColumns).range(start, end);
+    const { data, error } = await selectRange(tableName, selectColumns, start, end);
 
     if (error) {
       const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
@@ -43,18 +80,20 @@ export async function fetchAllRecords(tableName: string, columns = '*'): Promise
         if (next && next !== selectColumns) {
           console.warn(`[Supabase] Dropping missing column "${missing}" from "${tableName}" list select.`);
           selectColumns = next;
+          resolvedSelects.set(cacheKey, selectColumns);
           allRows.length = 0;
           start = 0;
           continue;
         }
       }
       console.error(`[Supabase] Error fetching "${tableName}" (rows ${start}–${end}):`, error);
-      throw error;
+      throw new Error(error.message);
     }
 
-    const chunk = (data as RecordRow[] | null) || [];
+    const chunk = data || [];
     allRows.push(...chunk);
     if (chunk[0]) rememberKnownColumns(tableName, Object.keys(chunk[0]));
+    resolvedSelects.set(cacheKey, selectColumns);
 
     if (chunk.length < PAGE_SIZE) break;
     start += PAGE_SIZE;
@@ -63,18 +102,64 @@ export async function fetchAllRecords(tableName: string, columns = '*'): Promise
   return allRows;
 }
 
+/** Lightweight columns for tour cards / listing pages (avoids huge description payloads).
+ * Must match real Supabase columns — wrong names cause retry storms on large tables.
+ */
+export const TOUR_LIST_COLUMNS =
+  'id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date';
+
+/** Shared list columns for admin grids and public listings (no description HTML). */
+export const ADMIN_LIST_COLUMNS: Record<string, string> = {
+  tours: TOUR_LIST_COLUMNS,
+  accommodations:
+    'id,name,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
+  national_park:
+    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+  national_parks:
+    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+  parks:
+    'id,name,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+  explore:
+    'id,title,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
+  safari_updates:
+    'id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date',
+  countries:
+    'id,name,slug,seo_slug,tagline,image_url,social_image_url,is_popular,description_title,created_date,updated_date',
+  categories:
+    'id,name,slug,seo_slug,country,image_url,social_image_url,description_title,created_date,updated_date',
+  pages: 'id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,created_date,updated_date',
+  landing_pages:
+    'id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,created_date,updated_date',
+  bookings:
+    'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
+};
+
+export const PUBLIC_LIST_COLUMNS = ADMIN_LIST_COLUMNS;
+
+export function adminListColumnsFor(table: string, aliases: string[] = []): string | undefined {
+  return ADMIN_LIST_COLUMNS[table] || aliases.map((alias) => ADMIN_LIST_COLUMNS[alias]).find(Boolean);
+}
+
+export function publicListColumnsFor(table: string, aliases: string[] = []): string | undefined {
+  return PUBLIC_LIST_COLUMNS[table] || aliases.map((alias) => PUBLIC_LIST_COLUMNS[alias]).find(Boolean);
+}
+
 export async function fetchCollectionRecords(
   table: string,
   aliases: string[] = [],
-  options?: { columns?: string }
+  options?: { columns?: string; full?: boolean }
 ): Promise<RecordRow[]> {
-  const columns = options?.columns || '*';
+  // Default to light list columns — never pull full description HTML for whole tables unless asked.
+  const columns =
+    options?.full || options?.columns === '*'
+      ? '*'
+      : options?.columns || publicListColumnsFor(table, aliases) || '*';
   const cacheKey = [table, columns, ...aliases].join('|');
   if (FETCH_CACHE_MS > 0) {
-    const cached = recordCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) return cached.rows;
+    const cached = getCachedCollection(cacheKey);
+    if (cached) return cached as RecordRow[];
   }
-  const pending = inflight.get(cacheKey);
+  const pending = getInflightCollection(cacheKey) as Promise<RecordRow[]> | undefined;
   if (pending) return pending;
 
   const request = (async () => {
@@ -85,7 +170,7 @@ export async function fetchCollectionRecords(
       try {
         const rows = await fetchAllRecords(name, columns);
         if (FETCH_CACHE_MS > 0) {
-          recordCache.set(cacheKey, { expires: Date.now() + FETCH_CACHE_MS, rows });
+          setCachedCollection(cacheKey, rows, FETCH_CACHE_MS);
         }
         return rows;
       } catch (error) {
@@ -98,40 +183,12 @@ export async function fetchCollectionRecords(
     return [];
   })();
 
-  inflight.set(cacheKey, request);
+  setInflightCollection(cacheKey, request);
   try {
     return await request;
   } finally {
-    inflight.delete(cacheKey);
+    clearInflightCollection(cacheKey);
   }
-}
-
-/** Lightweight columns for tour cards / listing pages (avoids huge description payloads). */
-export const TOUR_LIST_COLUMNS =
-  'id,title,slug,country,category,duration_days,duration_nights,price,image_url,cover_image,featured_image,social_image_url,published_at,status,is_featured,is_popular,show_on_landing';
-
-/** Admin grids only need identity + card fields — never pull full description HTML for thousands of rows.
- * Keep selects conservative: missing columns are stripped at runtime, but fewer misses = fewer retries.
- */
-export const ADMIN_LIST_COLUMNS: Record<string, string> = {
-  tours:
-    'id,title,country,category,duration_days,duration_nights,price,image_url,status,is_featured,is_popular,show_on_landing',
-  accommodations: 'id,name,location,country,type,image_url,description_title,status',
-  national_park: 'id,name,location,country,image_url,description_title,status',
-  national_parks: 'id,name,location,country,image_url,description_title,status',
-  parks: 'id,name,location,country,image_url,description_title,status',
-  explore: 'id,title,name,location,country,image_url,description_title,status',
-  safari_updates: 'id,title,excerpt,country,category,image_url,status',
-  countries: 'id,name,title,tagline,image_url,status',
-  categories: 'id,name,title,country,image_url,status',
-  pages: 'id,title,name,image_url,status',
-  landing_pages: 'id,title,name,country,image_url,status',
-  bookings:
-    'id,guest_name,email,tour,destination,status,travel_date,final_tour_price,amount_paid,remaining_balance,booking_code,payment_status',
-};
-
-export function adminListColumnsFor(table: string, aliases: string[] = []): string | undefined {
-  return ADMIN_LIST_COLUMNS[table] || aliases.map((alias) => ADMIN_LIST_COLUMNS[alias]).find(Boolean);
 }
 
 /** Exact row count without downloading row payloads (admin dashboard cards). */
@@ -146,6 +203,141 @@ export async function countCollectionRecords(table: string, aliases: string[] = 
   }
   if (lastError) throw lastError;
   return 0;
+}
+
+/** One page of light rows — use for admin grids / home carousels instead of full-table downloads. */
+export async function fetchCollectionPage(
+  table: string,
+  aliases: string[] = [],
+  options?: {
+    columns?: string;
+    limit?: number;
+    offset?: number;
+    orderBy?: string;
+    ascending?: boolean;
+  }
+): Promise<{ rows: RecordRow[]; total: number }> {
+  const columns = options?.columns || publicListColumnsFor(table, aliases) || '*';
+  const limit = Math.max(1, Math.min(options?.limit ?? 48, 200));
+  const offset = Math.max(0, options?.offset ?? 0);
+  const orderBy = options?.orderBy === undefined ? 'created_date' : options.orderBy;
+  const ascending = options?.ascending ?? false;
+  const names = [table, ...aliases].filter(Boolean);
+  let lastError: unknown = null;
+
+  for (const name of names) {
+    let selectColumns = columns;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      let query = supabase
+        .from(name)
+        .select(selectColumns, { count: 'exact' })
+        .range(offset, offset + limit - 1);
+
+      // Prefer created_date (Base44); fall back to created_at / unordered.
+      if (orderBy) {
+        query = query.order(orderBy, { ascending });
+      }
+
+      const { data, error, count } = await query;
+      if (!error) {
+        const rows = (data as RecordRow[] | null) || [];
+        if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
+        return { rows, total: count ?? rows.length };
+      }
+
+      const detail = [error.message, error.details, error.hint, error.code].filter(Boolean).join(' ');
+      const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
+      if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(selectColumns, missing);
+        if (next && next !== selectColumns) {
+          selectColumns = next;
+          continue;
+        }
+      }
+      if (/created_date/i.test(detail) && orderBy === 'created_date') {
+        return fetchCollectionPage(table, aliases, { ...options, orderBy: 'created_at' });
+      }
+      if (/created_at/i.test(detail) && orderBy === 'created_at') {
+        return fetchCollectionPage(table, aliases, { ...options, orderBy: '' });
+      }
+      if (!isTransientFetchError(detail)) {
+        lastError = error;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 400 * Math.pow(2, attempt)));
+      lastError = error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  return { rows: [], total: 0 };
+}
+
+/** Homepage / carousels: featured tours only — never page through all ~2900 rows. */
+export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
+  const columns = TOUR_LIST_COLUMNS;
+  const capped = Math.max(1, Math.min(limit, 48));
+
+  const featured = await supabase
+    .from('tours')
+    .select(columns)
+    .or('is_featured.eq.true,is_popular.eq.true,show_on_landing.eq.true')
+    .limit(capped);
+  if (!featured.error && featured.data && featured.data.length > 0) {
+    return (featured.data as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
+  }
+
+  const { rows } = await fetchCollectionPage('tours', [], {
+    columns,
+    limit: capped,
+    offset: 0,
+    orderBy: 'created_date',
+  });
+  return rows.filter(isPublishedRecord).slice(0, capped);
+}
+
+/** Resolve one public record by slug/seo_slug without downloading the whole table. */
+export async function fetchRecordByPublicSlug(
+  table: string,
+  slug: string,
+  aliases: string[] = [],
+  columns = '*'
+): Promise<RecordRow | null> {
+  const needle = slugify(slug);
+  if (!needle) return null;
+  const names = [table, ...aliases].filter(Boolean);
+  for (const name of names) {
+    for (const col of ['seo_slug', 'slug'] as const) {
+      const { data, error } = await supabase.from(name).select(columns).eq(col, needle).limit(1).maybeSingle();
+      if (!error && data) {
+        rememberKnownColumns(name, Object.keys(data as RecordRow));
+        return data as RecordRow;
+      }
+    }
+    const { data, error } = await supabase.from(name).select(columns).eq('id', slug).limit(1).maybeSingle();
+    if (!error && data) {
+      rememberKnownColumns(name, Object.keys(data as RecordRow));
+      return data as RecordRow;
+    }
+  }
+  return null;
+}
+
+/** Country-scoped tour cards — filter in Supabase instead of downloading all tours. */
+export async function fetchToursForCountryLabel(countryLabel: string, limit = 120): Promise<RecordRow[]> {
+  const label = String(countryLabel || '').trim();
+  if (!label) return [];
+  const capped = Math.max(1, Math.min(limit, 200));
+  const { data, error } = await supabase
+    .from('tours')
+    .select(TOUR_LIST_COLUMNS)
+    .ilike('country', `%${label}%`)
+    .limit(capped);
+  if (error) {
+    console.error('[Supabase] fetchToursForCountryLabel failed:', error.message);
+    return [];
+  }
+  return ((data as RecordRow[]) || []).filter(isPublishedRecord);
 }
 
 /** Load one full row for an admin editor — never download the whole table to find a single id. */
@@ -166,16 +358,6 @@ export async function fetchCollectionRecordById(
     }
   }
   return null;
-}
-
-export function clearCollectionCache(table?: string) {
-  if (!table) {
-    recordCache.clear();
-    return;
-  }
-  for (const key of recordCache.keys()) {
-    if (key === table || key.startsWith(`${table}|`)) recordCache.delete(key);
-  }
 }
 
 export function getDynamicColumns(records: RecordRow[]): string[] {
@@ -246,7 +428,7 @@ function readableFieldValue(value: unknown): string {
 
 /** Prefer a real label over a 1–2 character junk title/slug fragment (e.g. "M" vs "Madagascar"). */
 export function getRecordTitle(record: RecordRow): string {
-  const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'author', 'email'];
+  const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'customer_name', 'author', 'email'];
   const candidates = preferred
     .map((key) => readableFieldValue(record[key]))
     .filter(Boolean);
@@ -274,6 +456,17 @@ export function publicRecordSlug(record: RecordRow): string {
   const fromTitle = slugify(getRecordTitle(record));
   if (fromTitle && fromTitle !== 'untitled') return fromTitle;
   return String(record.id || '');
+}
+
+export function findRecordBySlug(rows: RecordRow[], slug: string) {
+  const needle = slugify(slug);
+  if (!needle) return null;
+  return (
+    rows.find((row) => slugify(pickString(row, ['slug', 'seo_slug'])) === needle) ||
+    rows.find((row) => publicRecordSlug(row) === needle) ||
+    rows.find((row) => String(row.id) === slug) ||
+    null
+  );
 }
 
 export function formatCellValue(value: unknown): string {

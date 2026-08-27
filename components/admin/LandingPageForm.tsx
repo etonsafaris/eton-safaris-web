@@ -13,7 +13,7 @@ import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { parseCmsPageExtras, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
 import { ALL_SEEDED_COUNTRIES } from '@/lib/cms-defaults';
-import { fetchCollectionRecords, getRecordTitle, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -79,10 +79,7 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
 
   useEffect(() => {
     if (!landingId) return;
-    fetchCollectionRecords('landing_pages').then((rows) => {
-      const landing = rows.find(
-        (row) => String(pickRecordId(row) ?? '') === String(landingId) || String(row.id) === String(landingId)
-      );
+    fetchCollectionRecordById('landing_pages', landingId).then((landing) => {
       if (!landing) return;
       const extras = parseCmsPageExtras(landing);
       setTitle(String(landing.title || landing.name || ''));

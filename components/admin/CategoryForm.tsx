@@ -10,6 +10,7 @@ import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
 import {
+  fetchCollectionRecordById,
   fetchCollectionRecords,
   getRecordTitle,
   pickRecordId,
@@ -78,11 +79,8 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('categories').then((rows) => {
-      if (!categoryId) return;
-      const category = rows.find(
-        (row) => String(pickRecordId(row) ?? '') === String(categoryId) || String(row.id) === String(categoryId)
-      );
+    if (!categoryId) return;
+    fetchCollectionRecordById('categories', categoryId).then((category) => {
       if (!category) return;
 
       setTitle(String(category.name || category.title || ''));

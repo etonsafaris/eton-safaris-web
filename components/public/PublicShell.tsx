@@ -1,11 +1,7 @@
-import dynamic from 'next/dynamic';
 import SiteHeader from '@/components/public/SiteHeader';
 import SiteFooter from '@/components/public/SiteFooter';
 import PageFavicon from '@/components/public/PageFavicon';
-
-const WhatsAppFloat = dynamic(() => import('@/components/public/WhatsAppFloat'), {
-  ssr: false,
-});
+import WhatsAppFloat from '@/components/public/WhatsAppFloat';
 
 export default function PublicShell({ children }: { children: React.ReactNode }) {
   return (

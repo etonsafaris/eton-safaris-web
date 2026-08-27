@@ -8,6 +8,7 @@ import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
+  fetchCollectionRecordById,
   fetchCollectionRecords,
   getRecordImage,
   getRecordTitle,
@@ -15,6 +16,7 @@ import {
   pickPlainText,
   pickStoredString,
   pickString,
+  publicListColumnsFor,
   publicRecordSlug,
   recordPublishedAt,
   visibleRecordHtml,
@@ -37,20 +39,27 @@ export default function ParkDetailPage() {
   useEffect(() => {
     async function load() {
       try {
+        const parkCols = publicListColumnsFor('national_park', ['national_parks', 'parks']);
+        const stayCols = publicListColumnsFor('accommodations');
         const [parks, accommodations] = await Promise.all([
-          fetchCollectionRecords('national_park', ['national_parks', 'parks']),
-          fetchCollectionRecords('accommodations'),
+          fetchCollectionRecords('national_park', ['national_parks', 'parks'], parkCols ? { columns: parkCols } : undefined),
+          fetchCollectionRecords('accommodations', [], stayCols ? { columns: stayCols } : undefined),
         ]);
         const match =
           parks.find(
             (row) => publicRecordSlug(row) === slug || pickString(row, ['slug', 'seo_slug']) === slug || String(row.id) === slug
           ) || null;
-        setPark(match);
+        const full =
+          match?.id != null
+            ? (await fetchCollectionRecordById('national_park', String(match.id), ['national_parks', 'parks'])) ||
+              match
+            : match;
+        setPark(full && isPublishedRecord(full) ? full : null);
         setOthers(parks.filter(isPublishedRecord).filter((row) => row !== match).slice(0, 20));
-        const parkName = match ? getRecordTitle(match) : '';
+        const parkName = full ? getRecordTitle(full) : '';
         setStays(
           accommodations.filter(isPublishedRecord).filter((item) => {
-            const name = pickStoredString(item, ['national_park', 'park', 'park_name']);
+            const name = pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']);
             return Boolean(parkName && name && name.toLowerCase() === parkName.toLowerCase());
           })
         );

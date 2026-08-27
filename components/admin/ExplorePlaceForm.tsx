@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -99,9 +99,8 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('explore').then((rows) => {
-      if (!placeId) return;
-      const place = rows.find((row) => String(row.id) === placeId);
+    if (!placeId) return;
+    fetchCollectionRecordById('explore', placeId).then((place) => {
       if (!place) return;
 
       setTitle(String(place.title || place.name || ''));

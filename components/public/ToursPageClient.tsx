@@ -11,7 +11,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import { SITE } from '@/lib/collections';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsLive } from '@/lib/cms-live';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';
 
@@ -44,7 +44,9 @@ function ToursList({
   useEffect(() => {
     if (live === 0) return undefined;
     Promise.all([
-      fetchCollectionRecords('tours').then((rows) => rows.filter(isPublishedRecord)),
+      fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }).then((rows) =>
+        rows.filter(isPublishedRecord)
+      ),
       fetchCollectionRecords('categories').catch(() => []),
       fetchCollectionRecords('countries').catch(() => []),
     ])

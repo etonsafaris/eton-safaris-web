@@ -8,7 +8,9 @@ import PublicShell from '@/components/public/PublicShell';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import TourItinerary from '@/components/public/TourItinerary';
 import {
+  fetchCollectionRecordById,
   fetchCollectionRecords,
+  findRecordBySlug,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -17,11 +19,11 @@ import {
   pickString,
   publicRecordSlug,
   slugify,
+  TOUR_LIST_COLUMNS,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCategoryValue, matchesCountry } from '@/lib/country-utils';
-import { findRecordBySlug } from '@/lib/load-public';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { stripPublicMoney } from '@/lib/public-money';
@@ -64,22 +66,29 @@ export default function TourDetailPage() {
   const live = useCmsLive();
 
   useEffect(() => {
-    fetchCollectionRecords('tours')
-      .then((rows) => {
-        const match = findRecordBySlug(rows, slug);
-        setTour(match);
-        const country = match ? pickString(match, ['country']) : '';
-        const category = match ? pickString(match, ['category']) : '';
-        const sameCountry = rows
+    async function load() {
+      try {
+        const light = await fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS });
+        const match = findRecordBySlug(light, slug);
+        const full =
+          match?.id != null ? (await fetchCollectionRecordById('tours', String(match.id))) || match : match;
+        setTour(full && isPublishedRecord(full) ? full : null);
+        const country = full ? pickString(full, ['country']) : '';
+        const category = full ? pickString(full, ['category']) : '';
+        const sameCountry = light
           .filter(isPublishedRecord)
           .filter((row) => row !== match && (!country || matchesCountry(row, country)));
         const sameCategory = category
           ? sameCountry.filter((row) => matchesCategoryValue(row, category))
           : [];
         setRelated((sameCategory.length ? sameCategory : sameCountry).slice(0, 12));
-      })
-      .catch((error) => console.error(error))
-      .finally(() => setReady(true));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setReady(true);
+      }
+    }
+    void load();
   }, [slug, live]);
 
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);

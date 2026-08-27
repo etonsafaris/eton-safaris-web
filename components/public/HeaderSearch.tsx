@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { languagePostSearchCard, searchLanguagePosts } from '@/lib/content-search';
-import { fetchCollectionRecords, pickString } from '@/lib/data';
+import { fetchCollectionRecords, pickString, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 import type { RecordRow } from '@/lib/types';
@@ -20,7 +20,10 @@ export default function HeaderSearch() {
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Promise.all([fetchCollectionRecords('tours'), fetchCollectionRecords('safari_updates')])
+    Promise.all([
+      fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
+      fetchCollectionRecords('safari_updates'),
+    ])
       .then(([tourRows, postRows]) => {
         setTours(tourRows);
         setLanguagePosts(postRows);

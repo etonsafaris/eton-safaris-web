@@ -24,7 +24,7 @@ import { faqsForEditor } from '@/lib/default-faqs';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
-import { fetchCollectionRecords, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   DEFAULT_HOME_FEATURES,
@@ -106,10 +106,7 @@ export default function PageForm({ pageId }: PageFormProps) {
 
   useEffect(() => {
     if (!pageId) return;
-    fetchCollectionRecords('pages').then((rows) => {
-      const page = rows.find(
-        (row) => String(pickRecordId(row) ?? '') === String(pageId) || String(row.id) === String(pageId)
-      );
+    fetchCollectionRecordById('pages', pageId).then((page) => {
       if (!page) return;
       const extras = parseCmsPageExtras(page);
       setTitle(String(page.title || page.name || ''));

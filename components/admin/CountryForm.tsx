@@ -8,7 +8,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { fetchCollectionRecords, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { isLocalOnlyImage } from '@/lib/public-image';
 import {
@@ -46,11 +46,8 @@ export default function CountryForm({ countryId }: CountryFormProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchCollectionRecords('countries').then((rows) => {
-      if (!countryId) return;
-      const country = rows.find(
-        (row) => String(pickRecordId(row) ?? '') === String(countryId) || String(row.id) === String(countryId)
-      );
+    if (!countryId) return;
+    fetchCollectionRecordById('countries', countryId).then((country) => {
       if (!country) return;
 
       setName(String(country.name || ''));

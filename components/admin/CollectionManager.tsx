@@ -9,6 +9,7 @@ import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTabl
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
 import {
   adminListColumnsFor,
+  fetchCollectionPage,
   fetchCollectionRecords,
   formatColumnLabel,
   getDynamicColumns,
@@ -104,6 +105,10 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [viewingNotice, setViewingNotice] = useState<RecordRow | null>(null);
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 48;
+  const [remoteTotal, setRemoteTotal] = useState(0);
+  const usesRemotePaging = isTours || isNationalPark || isAccommodations;
 
   async function load() {
     if (!config.table) {
@@ -119,27 +124,48 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       const listColumns = adminListColumnsFor(config.table, config.aliases || []);
       const listOptions = listColumns ? { columns: listColumns } : undefined;
       let data: RecordRow[] = [];
+      let total = 0;
       if (isOps) {
         try {
           data = await fetchAdminTable(config.table);
+          total = data.length;
         } catch {
           data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+          total = data.length;
         }
+      } else if (usesRemotePaging) {
+        const offset = (Math.max(1, page) - 1) * PAGE_SIZE;
+        const paged = await fetchCollectionPage(config.table, config.aliases || [], {
+          columns: listColumns,
+          limit: PAGE_SIZE,
+          offset,
+          orderBy: 'created_date',
+        });
+        data = paged.rows;
+        total = paged.total;
       } else {
         data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+        total = data.length;
       }
       if (config.id === 'pages') {
         const created = await ensureDefaultCmsPages();
-        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+        if (created > 0) {
+          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+          total = data.length;
+        }
       }
       if (config.id === 'landing_pages') {
         const created = await ensureDefaultLandingPages();
-        if (created > 0) data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+        if (created > 0) {
+          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+          total = data.length;
+        }
       }
+      setRemoteTotal(total);
       setRecords(
         data.slice().sort((a, b) => {
-          const aDate = String(a.created_at || '');
-          const bDate = String(b.created_at || '');
+          const aDate = String(a.created_date || a.created_at || '');
+          const bDate = String(b.created_date || b.created_at || '');
           return bDate.localeCompare(aDate);
         }).map((row) => {
           const id = pickRecordId(row);
@@ -154,6 +180,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       console.error(err);
       setError(message);
       setRecords([]);
+      setRemoteTotal(0);
     } finally {
       setLoading(false);
     }
@@ -162,7 +189,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.table]);
+  }, [config.table, usesRemotePaging ? page : 0]);
 
   const columns = useMemo(() => getDynamicColumns(records), [records]);
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -186,6 +213,22 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       return Object.keys(record).some((key) => String(record[key] ?? '').toLowerCase().includes(needle));
     });
   }, [records, query, countryFilter, categoryFilter, postKind, isSafariUpdates, isTours]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, countryFilter, categoryFilter, postKind, config.table]);
+
+  const listTotal = usesRemotePaging && !query && !countryFilter && !categoryFilter
+    ? remoteTotal
+    : filtered.length;
+  const totalPages = Math.max(1, Math.ceil(listTotal / PAGE_SIZE));
+  const paged = useMemo(() => {
+    if (usesRemotePaging && !query && !countryFilter && !categoryFilter) {
+      return filtered;
+    }
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page, usesRemotePaging, query, countryFilter, categoryFilter]);
 
   const categoryOptions = useMemo(() => {
     if (!isTours) return [];
@@ -967,40 +1010,73 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           onView={isNotifications ? (record) => void viewNotification(record) : undefined}
           onDelete={remove}
         />
-      ) : view === 'grid' ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {filtered.map((record, index) => (
-            <AdminItemCard
-              key={String(record.id ?? index)}
-              layout="grid"
-              href={publicHref(record)}
-              image={getRecordImage(record) || undefined}
-              badge={cardBadge()}
-              date={cardDate(record)}
-              title={getRecordTitle(record)}
-              onEdit={() => openEdit(record)}
-              onDelete={() => remove(record)}
-              extraActions={cardActions(record)}
-            />
-          ))}
-        </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((record, index) => (
-            <AdminItemCard
-              key={String(record.id ?? index)}
-              layout="list"
-              href={publicHref(record)}
-              image={getRecordImage(record) || undefined}
-              badge={cardBadge()}
-              date={cardDate(record)}
-              title={getRecordTitle(record)}
-              onEdit={() => openEdit(record)}
-              onDelete={() => remove(record)}
-              extraActions={cardActions(record)}
-            />
-          ))}
-        </div>
+        <>
+          {view === 'grid' ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {paged.map((record, index) => (
+                <AdminItemCard
+                  key={String(record.id ?? index)}
+                  layout="grid"
+                  href={publicHref(record)}
+                  image={getRecordImage(record) || undefined}
+                  badge={cardBadge()}
+                  date={cardDate(record)}
+                  title={getRecordTitle(record)}
+                  onEdit={() => openEdit(record)}
+                  onDelete={() => remove(record)}
+                  extraActions={cardActions(record)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {paged.map((record, index) => (
+                <AdminItemCard
+                  key={String(record.id ?? index)}
+                  layout="list"
+                  href={publicHref(record)}
+                  image={getRecordImage(record) || undefined}
+                  badge={cardBadge()}
+                  date={cardDate(record)}
+                  title={getRecordTitle(record)}
+                  onEdit={() => openEdit(record)}
+                  onDelete={() => remove(record)}
+                  extraActions={cardActions(record)}
+                />
+              ))}
+            </div>
+          )}
+          {totalPages > 1 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-[#161b22]">
+              <p className="text-gray-600 dark:text-gray-400">
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, listTotal)} of {listTotal.toLocaleString()}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 disabled:opacity-40 dark:border-white/10"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Page {page} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 disabled:opacity-40 dark:border-white/10"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </>
       )}
 
       {modalOpen && (

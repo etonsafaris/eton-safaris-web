@@ -8,6 +8,7 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import {
+  fetchCollectionRecordById,
   fetchCollectionRecords,
   getRecordImage,
   getRecordTitle,
@@ -15,7 +16,9 @@ import {
   isPublishedRecord,
   pickStoredString,
   pickString,
+  publicListColumnsFor,
   recordPublishedAt,
+  TOUR_LIST_COLUMNS,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -34,22 +37,35 @@ export default function SafariUpdateDetailPage() {
   const live = useCmsLive();
 
   useEffect(() => {
-    Promise.all([fetchCollectionRecords('safari_updates'), fetchCollectionRecords('tours')])
-      .then(([rows, tourRows]) => {
-        const match = rows.find(
-          (row) => pickString(row, ['slug']) === slug || String(row.id) === slug
+    async function load() {
+      try {
+        const updateCols = publicListColumnsFor('safari_updates');
+        const [rows, tourRows] = await Promise.all([
+          fetchCollectionRecords('safari_updates', [], updateCols ? { columns: updateCols } : undefined),
+          fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
+        ]);
+        const match =
+          rows.find((row) => pickString(row, ['slug', 'seo_slug']) === slug || String(row.id) === slug) || null;
+        const full =
+          match?.id != null
+            ? (await fetchCollectionRecordById('safari_updates', String(match.id))) || match
+            : match;
+        setPost(full && isPublishedRecord(full) ? full : null);
+        setRelated(
+          rows.filter(isPublishedRecord).filter((row) => row !== match && !isLanguagePost(row)).slice(0, 20)
         );
-        setPost(match || null);
-        setRelated(rows.filter(isPublishedRecord).filter((row) => row !== match && !isLanguagePost(row)).slice(0, 20));
-        const country = match ? pickStoredString(match, ['country']) : '';
+        const country = full ? pickStoredString(full, ['country', 'category']) : '';
         setTours(
           tourRows
             .filter(isPublishedRecord)
             .filter((tour) => (country ? matchesCountry(tour, country) : true))
             .slice(0, 12)
         );
-      })
-      .catch((error) => console.error(error));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    void load();
   }, [slug, live]);
 
   const country = post ? pickStoredString(post, ['country']) : '';

@@ -24,6 +24,7 @@ import {
 } from '@/lib/public-destinations';
 import {
   fetchCollectionRecords,
+  fetchFeaturedTours,
   getRecordImage,
   getRecordTitle,
   isLanguagePost,
@@ -117,12 +118,15 @@ export default function HomePageClient({
   }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
 
   useEffect(() => {
+    // First paint uses server-loaded props. Only re-fetch after a CMS live bump.
+    if (live === 0) return undefined;
+
     let cancelled = false;
 
     async function loadHero() {
       try {
         const rows = await fetchCollectionRecords('countries');
-        if (!cancelled) setCountries(rows);
+        if (!cancelled) setCountries(rows.filter(isPublishedRecord));
       } catch (error) {
         console.error('[Supabase] Failed to load countries:', error);
       }
@@ -130,7 +134,7 @@ export default function HomePageClient({
 
     async function loadRest() {
       const [tourRows, updateRows, parkRows, categoryRows] = await Promise.all([
-        fetchCollectionRecords('tours').catch((error) => {
+        fetchFeaturedTours(24).catch((error) => {
           console.error('[Supabase] Failed to load tours:', error);
           return [] as RecordRow[];
         }),
@@ -148,9 +152,9 @@ export default function HomePageClient({
         }),
       ]);
       if (cancelled) return;
-      setTours(tourRows.filter(isPublishedRecord));
-      setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)));
-      setParks(parkRows.filter(isPublishedRecord));
+      setTours(tourRows.slice(0, 24));
+      setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
+      setParks(parkRows.filter(isPublishedRecord).slice(0, 24));
       setCategories(categoryRows);
     }
 
@@ -200,7 +204,14 @@ export default function HomePageClient({
 
   const current = heroSlides[slide] || heroSlides[0];
 
-  const tourItems = tours.map((tour, index) => <TourCard key={String(tour.id ?? index)} tour={tour} />);
+  const featuredTours = useMemo(() => {
+    const preferred = tours.filter((tour) => tour.is_featured || tour.is_popular || tour.show_on_landing);
+    return (preferred.length ? preferred : tours).slice(0, 12);
+  }, [tours]);
+
+  const tourItems = featuredTours.map((tour, index) => (
+    <TourCard key={String(tour.id ?? index)} tour={tour} />
+  ));
 
   const destinationRows = useMemo(() => destinationListingRows(countries), [countries]);
 
@@ -241,7 +252,9 @@ export default function HomePageClient({
     );
   });
 
-  const parkItems = parks.map((park, index) => (
+  const featuredParks = useMemo(() => parks.slice(0, 12), [parks]);
+
+  const parkItems = featuredParks.map((park, index) => (
     <Link
       key={String(park.id ?? index)}
       href={`/parks/${publicRecordSlug(park)}`}

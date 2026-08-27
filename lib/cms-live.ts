@@ -1,11 +1,10 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { clearCollectionCache } from '@/lib/data';
+import { clearCollectionCache } from '@/lib/collection-cache';
 import { supabase } from '@/lib/supabase/client';
 
 const CHANNEL = 'eton-cms-live';
-const POLL_MS = 8_000;
 
 let version = 0;
 let started = false;
@@ -44,6 +43,11 @@ export function useCmsLive() {
   return useSyncExternalStore(subscribeCmsLive, getCmsLiveVersion, () => 0);
 }
 
+/**
+ * Live sync should only invalidate after real CMS changes.
+ * Polling / focus used to clear caches every few seconds and force
+ * re-downloading ~2900 tours — that looked like "all data failed to load".
+ */
 export function startCmsLiveSync() {
   if (started || typeof window === 'undefined') return () => undefined;
   started = true;
@@ -58,15 +62,7 @@ export function startCmsLiveSync() {
     channel = null;
   }
 
-  const onFocus = () => refreshLocal();
-  const onVisible = () => {
-    if (document.visibilityState === 'visible') refreshLocal();
-  };
-
-  window.addEventListener('focus', onFocus);
   window.addEventListener(CHANNEL, onRemote);
-  document.addEventListener('visibilitychange', onVisible);
-  const poll = window.setInterval(refreshLocal, POLL_MS);
   const realtime = supabase
     .channel('eton-public-cms')
     .on('postgres_changes', { event: '*', schema: 'public' }, onRemote)
@@ -74,10 +70,7 @@ export function startCmsLiveSync() {
 
   return () => {
     started = false;
-    window.removeEventListener('focus', onFocus);
     window.removeEventListener(CHANNEL, onRemote);
-    document.removeEventListener('visibilitychange', onVisible);
-    window.clearInterval(poll);
     channel?.removeEventListener('message', onRemote);
     channel?.close();
     void supabase.removeChannel(realtime);

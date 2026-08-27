@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 
       supabase.from('subscribers').select('id,email,last_digest_at'),
 
-      supabase.from('tours').select('title,slug,country').limit(6),
+      supabase.from('tours').select('id,title,slug,country').limit(6),
 
       supabase.from('safari_updates').select('title,slug').limit(5),
 

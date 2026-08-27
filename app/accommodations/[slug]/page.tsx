@@ -7,7 +7,20 @@ import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickStoredString, pickString, publicRecordSlug, recordPublishedAt, visibleRecordHtml } from '@/lib/data';
+import {
+  fetchCollectionRecordById,
+  fetchCollectionRecords,
+  getRecordImage,
+  getRecordTitle,
+  isPublishedRecord,
+  pickStoredString,
+  pickString,
+  publicListColumnsFor,
+  publicRecordSlug,
+  recordPublishedAt,
+  TOUR_LIST_COLUMNS,
+  visibleRecordHtml,
+} from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { matchesCountry } from '@/lib/country-utils';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -24,8 +37,13 @@ export default function AccommodationDetailPage() {
   const live = useCmsLive();
 
   useEffect(() => {
-    Promise.all([fetchCollectionRecords('accommodations'), fetchCollectionRecords('tours')])
-      .then(([rows, tourRows]) => {
+    async function load() {
+      try {
+        const stayCols = publicListColumnsFor('accommodations');
+        const [rows, tourRows] = await Promise.all([
+          fetchCollectionRecords('accommodations', [], stayCols ? { columns: stayCols } : undefined),
+          fetchCollectionRecords('tours', [], { columns: TOUR_LIST_COLUMNS }),
+        ]);
         const match =
           rows.find(
             (row) =>
@@ -33,17 +51,24 @@ export default function AccommodationDetailPage() {
               pickString(row, ['slug', 'seo_slug']) === slug ||
               String(row.id) === slug
           ) || null;
-        setItem(match);
+        const full =
+          match?.id != null
+            ? (await fetchCollectionRecordById('accommodations', String(match.id))) || match
+            : match;
+        setItem(full && isPublishedRecord(full) ? full : null);
         setOthers(rows.filter(isPublishedRecord).filter((row) => row !== match).slice(0, 20));
-        const country = match ? pickStoredString(match, ['country']) : '';
+        const country = full ? pickStoredString(full, ['country']) : '';
         setTours(
           tourRows
             .filter(isPublishedRecord)
             .filter((tour) => (country ? matchesCountry(tour, country) : true))
             .slice(0, 12)
         );
-      })
-      .catch((error) => console.error(error));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    void load();
   }, [slug, live]);
 
   const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { IM_Fell_DW_Pica, Inter, Merriweather, Roboto } from 'next/font/google';
 import './globals.css';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
@@ -8,43 +7,13 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-const roboto = Roboto({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-sans',
-  adjustFontFallback: true,
-});
-
-const imFell = IM_Fell_DW_Pica({
-  subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-serif',
-  adjustFontFallback: false,
-});
-
-const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-  preload: false,
-  variable: '--font-merry',
-  adjustFontFallback: true,
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  preload: false,
-  variable: '--font-ui',
-  adjustFontFallback: true,
-});
+/**
+ * System font stacks — Google Fonts were aborting/timing out and blocking every
+ * Next.js page compile (Roboto / Inter / Merriweather / IM Fell DW Pica).
+ * CSS still maps --font-* to sensible local fallbacks.
+ */
+const FONT_VARS =
+  '[--font-sans:system-ui,-apple-system,Roboto,"Helvetica Neue",sans-serif] [--font-serif:Georgia,"Times New Roman",serif] [--font-merry:Merriweather,Georgia,serif] [--font-ui:Inter,system-ui,sans-serif]';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -158,13 +127,13 @@ const SITE_GRAPH = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${roboto.variable} ${imFell.variable} ${merriweather.variable} ${inter.variable}`}>
+    <html lang="en" className={FONT_VARS}>
       <head>
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
       </head>
-      <body className={roboto.className}>
+      <body className="font-sans">
         <CmsLiveHost />
         {children}
       </body>

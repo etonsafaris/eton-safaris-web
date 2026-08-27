@@ -8,7 +8,7 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
@@ -99,9 +99,8 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
   }, []);
 
   useEffect(() => {
-    fetchCollectionRecords('national_park', ['national_parks', 'parks']).then((rows) => {
-      if (!parkId) return;
-      const park = rows.find((row) => String(row.id) === parkId);
+    if (!parkId) return;
+    fetchCollectionRecordById('national_park', parkId, ['national_parks', 'parks']).then((park) => {
       if (!park) return;
 
       setName(String(park.name || ''));
