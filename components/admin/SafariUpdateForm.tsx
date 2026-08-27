@@ -2,17 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
-import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
-import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchCollectionRecordById, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
-import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
   seoValuesFromRecord,
@@ -22,7 +20,6 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
-import type { RecordRow } from '@/lib/types';
 
 type PostBlock = {
   title: string;
@@ -47,13 +44,11 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   const [postType, setPostType] = useState<(typeof POST_TYPES)[number]>('Standard Posts');
   const [postTypeOpen, setPostTypeOpen] = useState(false);
   const [title, setTitle] = useState('');
-  const [country, setCountry] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [content, setContent] = useState('');
   const [blocks, setBlocks] = useState<PostBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [countries, setCountries] = useState<RecordRow[]>([]);
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('article'));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -62,17 +57,11 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   const [publishedAt, setPublishedAt] = useState('');
 
   useEffect(() => {
-    fetchCollectionRecords('countries').then(setCountries);
-  }, []);
-
-  useEffect(() => {
     if (!postId) return;
     fetchCollectionRecordById('safari_updates', postId).then((post) => {
       if (!post) return;
 
       setTitle(String(post.title || ''));
-      const embeddedCountry = extractEmbeddedContent(String(post.content || post.description || '')).fields?.country;
-      setCountry(String(post.country || embeddedCountry || ''));
       setCoverImage(String(post.image_url || ''));
       setContent(stripEmbeddedContent(String(post.content || post.description || '')));
       setPostType(isLanguagePost(post) ? 'Language Posts' : 'Standard Posts');
@@ -81,15 +70,6 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
       setBlocks(parseBlocksFromRecord(post));
     });
   }, [postId]);
-
-  const countryOptions = useMemo(() => {
-    const fromRecords = countries.map((row) => getRecordTitle(row)).filter(Boolean);
-    const defaults = [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => item.name);
-    return Array.from(new Set([...defaults, ...fromRecords])).map((name) => ({
-      value: name,
-      label: name,
-    }));
-  }, [countries]);
 
   function addBlock() {
     if (!draftBlock.title.trim() && !draftBlock.description.trim()) return;
@@ -154,7 +134,6 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
         content: embedContent(content, {
           blocks,
           fields: {
-            country,
             ...(stamp ? { published_at: stamp } : {}),
           },
         }),
@@ -162,7 +141,6 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
         image_url: coverImage,
         post_blocks: JSON.stringify(blocks),
         post_type: postType === 'Language Posts' ? 'language' : 'standard',
-        country,
         published_at: stamp,
         slug: seo.slug || slugify(title),
       },
@@ -274,16 +252,6 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
               setSeo((current) => ({ ...current, social_image_url: url }));
             }}
             previewClassName="h-[148px]"
-          />
-        </div>
-
-        <div className="mt-6">
-          <FieldLabel>Country</FieldLabel>
-          <SearchableSelect
-            value={country}
-            onChange={setCountry}
-            options={countryOptions}
-            placeholder="Select country"
           />
         </div>
 

@@ -26,8 +26,6 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
-import PageFaqList from '@/components/public/PageFaqList';
-import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function AccommodationDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -133,14 +131,6 @@ export default function AccommodationDetailPage() {
           dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(item, ['description'])) }}
         />
         <ContentBlocks record={item} />
-        <PageFaqList
-          faqs={bestFaqsFor('stay', {
-            countrySlug: pickString(item, ['country']),
-            countryName: pickString(item, ['country']),
-            title: getRecordTitle(item),
-          })}
-          tone="light"
-        />
       </ContentDetailLayout>
     </PublicShell>
   );

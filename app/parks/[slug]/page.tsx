@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Carousel from '@/components/public/Carousel';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
@@ -26,8 +27,6 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import { useCmsLive } from '@/lib/cms-live';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
-import PageFaqList from '@/components/public/PageFaqList';
-import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function ParkDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -54,9 +53,15 @@ export default function ParkDetailPage() {
               .filter((row) => String(row.id) !== String(published.id || ''))
               .slice(0, 20)
           );
+          setReady(true);
           const parkName = getRecordTitle(published);
-          setStays(await fetchStaysForPark(parkName, 10).catch(() => []));
+          const parkId = published.id != null ? String(published.id) : '';
+          setStays(await fetchStaysForPark(parkName, 24, parkId).catch(() => []));
+          return;
         }
+        setPark(null);
+        setOthers([]);
+        setStays([]);
       } catch (error) {
         console.error(error);
       } finally {
@@ -68,7 +73,7 @@ export default function ParkDetailPage() {
 
   const stayItems = useMemo(
     () =>
-      stays.slice(0, 10).map((stay, index) => (
+      stays.map((stay, index) => (
         <PlaceCard
           key={String(stay.id ?? index)}
           href={`/accommodations/${publicRecordSlug(stay)}`}
@@ -128,7 +133,15 @@ export default function ParkDetailPage() {
                   <h3>Where to Stay in {parkName}</h3>
                   <span className="dav-amazing-underline" />
                 </div>
-                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{stayItems}</div>
+                <div className="mt-8 px-2 sm:px-6">
+                  <Carousel
+                    items={stayItems}
+                    itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+                    autoPlayMs={4000}
+                    pauseOnHover
+                    emptyMessage="No records found in this collection."
+                  />
+                </div>
               </div>
             </section>
           ) : null
@@ -144,14 +157,6 @@ export default function ParkDetailPage() {
           dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(park, ['description'])) }}
         />
         <ContentBlocks record={park} />
-        <PageFaqList
-          faqs={bestFaqsFor('park', {
-            countrySlug: pickString(park, ['country']),
-            countryName: pickString(park, ['country']),
-            title: parkName,
-          })}
-          tone="light"
-        />
       </ContentDetailLayout>
     </PublicShell>
   );

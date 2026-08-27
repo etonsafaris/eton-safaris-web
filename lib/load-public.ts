@@ -76,16 +76,20 @@ export async function loadHomePageData() {
     limit: 24,
     offset: 0,
   }).catch(() => ({ rows: [] as RecordRow[], total: 0 }));
-  const [countries, tours, updates, categories] = await Promise.all([
+  const [countries, tours, updatesPage, categories] = await Promise.all([
     loadPublishedRecords('countries'),
     fetchFeaturedTours(24).catch(() => [] as RecordRow[]),
-    loadPublishedRecords('safari_updates'),
+    fetchCollectionPage('safari_updates', [], {
+      columns: listColumns('safari_updates'),
+      limit: 12,
+      offset: 0,
+    }).catch(() => ({ rows: [] as RecordRow[], total: 0 })),
     loadPublishedRecords('categories'),
   ]);
   return {
     countries,
     tours: tours.slice(0, 24),
-    updates: updates.filter((row) => !isLanguagePost(row)).slice(0, 8),
+    updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
     parks: parkPage.rows.filter(isPublishedRecord).slice(0, 24),
     categories,
   };
@@ -93,10 +97,15 @@ export async function loadHomePageData() {
 
 export async function loadCountryPageData(slug: string) {
   noStore();
-  const [countries, categories, places] = await Promise.all([
+  const [countries, categories, placesPage] = await Promise.all([
     loadPublishedRecords('countries'),
     loadPublishedRecords('categories'),
-    loadPublishedRecords('explore'),
+    fetchCollectionPage('explore', [], {
+      columns: listColumns('explore'),
+      limit: 48,
+      offset: 0,
+      filters: { country: slug },
+    }).catch(() => ({ rows: [] as RecordRow[], total: 0 })),
   ]);
   const countryMeta =
     findCountryRecord(countries, slug) || (await fetchRecordByPublicSlug('countries', slug));
@@ -109,15 +118,15 @@ export async function loadCountryPageData(slug: string) {
     pickString(country || {}, ['name', 'title']) ||
     slug;
   const [tours, parks] = await Promise.all([
-    fetchToursForCountryLabel(countryName, 120).catch(() => [] as RecordRow[]),
-    fetchParksForCountry(countryName).catch(() => [] as RecordRow[]),
+    fetchToursForCountryLabel(countryName, 48).catch(() => [] as RecordRow[]),
+    fetchParksForCountry(countryName, 48).catch(() => [] as RecordRow[]),
   ]);
   return {
     country: country && isPublishedRecord(country) ? country : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
     tours: tours.filter((row) => matchesCountry(row, slug)),
     parks: parks.filter((row) => matchesCountry(row, slug)),
-    places: places.filter((row) => matchesCountry(row, slug)),
+    places: placesPage.rows.filter(isPublishedRecord).filter((row) => matchesCountry(row, slug)),
   };
 }
 

@@ -143,7 +143,9 @@ export default function HomePageClient({
           console.error('[Supabase] Failed to load tours:', error);
           return [] as RecordRow[];
         }),
-        fetchCollectionRecords('safari_updates').catch((error) => {
+        fetchCollectionPage('safari_updates', [], { limit: 12, offset: 0 })
+          .then((page) => page.rows)
+          .catch((error) => {
           console.error('[Supabase] Failed to load safari updates:', error);
           return [] as RecordRow[];
         }),

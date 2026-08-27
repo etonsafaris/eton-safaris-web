@@ -168,7 +168,7 @@ export const TOUR_LIST_COLUMNS =
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park,national_park_id,national_park_name,seo_slug,created_date,updated_date',
+    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
   national_park:
     'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   national_parks:
@@ -200,6 +200,18 @@ export function publicListColumnsFor(table: string, aliases: string[] = []): str
   return PUBLIC_LIST_COLUMNS[table] || aliases.map((alias) => PUBLIC_LIST_COLUMNS[alias]).find(Boolean);
 }
 
+function defaultCollectionMaxRows(table: string, aliases: string[] = []): number | undefined {
+  const names = [table, ...aliases].map((name) => name.toLowerCase());
+  if (names.some((name) => name === 'tours')) return 96;
+  if (names.some((name) => name === 'safari_updates')) return 48;
+  if (names.some((name) => name === 'national_park' || name === 'national_parks' || name === 'parks')) {
+    return 96;
+  }
+  if (names.some((name) => name === 'accommodations')) return 96;
+  if (names.some((name) => name === 'explore')) return 96;
+  return undefined;
+}
+
 export async function fetchCollectionRecords(
   table: string,
   aliases: string[] = [],
@@ -213,7 +225,7 @@ export async function fetchCollectionRecords(
   const maxRows =
     options?.unlimited || options?.full
       ? undefined
-      : options?.maxRows ?? (table === 'tours' || aliases.includes('tours') ? 96 : undefined);
+      : options?.maxRows ?? defaultCollectionMaxRows(table, aliases);
   const cacheKey = [table, columns, maxRows ?? 'all', ...aliases].join('|');
   if (FETCH_CACHE_MS > 0) {
     const cached = getCachedCollection(cacheKey);
@@ -440,7 +452,7 @@ export async function fetchRecordByPublicSlug(
 }
 
 /** Country-scoped tour cards — filter in Supabase instead of downloading all tours. */
-export async function fetchToursForCountryLabel(countryLabel: string, limit = 120): Promise<RecordRow[]> {
+export async function fetchToursForCountryLabel(countryLabel: string, limit = 48): Promise<RecordRow[]> {
   const label = String(countryLabel || '').trim();
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 200));
@@ -499,67 +511,92 @@ export async function searchTours(options: {
 }
 
 /** Park detail stays — filter in Supabase, never download the full accommodations table. */
-export async function fetchStaysForPark(parkName: string, limit = 10): Promise<RecordRow[]> {
+export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: string): Promise<RecordRow[]> {
   const name = sanitizeIlike(parkName);
-  if (!name) return [];
-  const capped = Math.max(1, Math.min(limit, 10));
-  const like = `%${name}%`;
+  if (!name && !parkId) return [];
+  const capped = Math.max(1, Math.min(limit, 48));
+  const shortName = name
+    .replace(/\s+national\s+park$/i, '')
+    .replace(/\s+national\s+reserve$/i, '')
+    .replace(/\s+conservation\s+area$/i, '')
+    .replace(/\s+np$/i, '')
+    .trim();
+  const like = `%${shortName || name}%`;
   let selectColumns =
-    'id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_name,national_park';
-  const columns = ['national_park_name', 'national_park', 'location', 'name'];
+    'id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_name,national_park_id';
   const seen = new Set<string>();
   const merged: RecordRow[] = [];
 
-  for (const column of columns) {
+  function pushRows(rows: RecordRow[]) {
+    for (const row of rows) {
+      const id = String(row.id || '');
+      if (id && seen.has(id)) continue;
+      if (id) seen.add(id);
+      merged.push(row);
+    }
+  }
+
+  async function queryOnce(
+    run: (cols: string) => PromiseLike<{ data: unknown; error: { message?: string } | null }>
+  ) {
     let cols = selectColumns;
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      const { data, error } = await withJwtRetry(() =>
-        dataClient().from('accommodations').select(cols).ilike(column, like).limit(24)
-      );
+      const { data, error } = await withJwtRetry(() => run(cols));
       if (!error) {
-        for (const row of asRows(data)) {
-          const id = String(row.id || '');
-          if (id && seen.has(id)) continue;
-          if (id) seen.add(id);
-          merged.push(row);
-        }
-        break;
+        pushRows(asRows(data));
+        selectColumns = cols;
+        return;
       }
-      const missing = missingSelectColumn(error.message);
-      if (missing === column) break;
+      const missing = missingSelectColumn(error.message || '');
       if (missing && cols.split(',').map((part) => part.trim()).includes(missing)) {
         const next = dropColumnFromSelect(cols, missing);
         if (next && next !== cols) {
           cols = next;
-          selectColumns = next;
           continue;
         }
       }
-      break;
+      return;
     }
-    if (merged.length >= 24) break;
   }
 
-  const needle = name.toLowerCase();
+  const id = String(parkId || '').trim();
+  if (id) {
+    await queryOnce((cols) =>
+      dataClient().from('accommodations').select(cols).eq('national_park_id', id).limit(48)
+    );
+  }
+  if (merged.length < capped && (shortName || name)) {
+    await queryOnce((cols) =>
+      dataClient().from('accommodations').select(cols).ilike('location', like).limit(48)
+    );
+  }
+  if (merged.length < capped && (shortName || name)) {
+    await queryOnce((cols) =>
+      dataClient().from('accommodations').select(cols).ilike('national_park_name', like).limit(48)
+    );
+  }
+
+  const needle = (shortName || name).toLowerCase();
+  const fullNeedle = name.toLowerCase();
   return merged
     .filter(isPublishedRecord)
     .filter((item) => {
-      const hay = [
-        pickString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
-        pickString(item, ['location']),
-        pickString(item, ['name']),
-      ]
+      if (id && String(item.national_park_id || '') === id) return true;
+      if (!needle) return false;
+      const parkField = pickString(item, ['national_park_name', 'park', 'park_name']).toLowerCase();
+      const hay = [parkField, pickString(item, ['location']), pickString(item, ['name'])]
         .join(' ')
         .toLowerCase();
-      return hay.includes(needle);
+      return hay.includes(needle) || hay.includes(fullNeedle);
     })
     .slice(0, capped);
 }
 
-/** All parks in one country — used by admin filters and country pages. */
-export async function fetchParksForCountry(countryLabel: string): Promise<RecordRow[]> {
+/** Parks in one country — capped so admin filters / country pages stay fast. */
+export async function fetchParksForCountry(countryLabel: string, limit = 200): Promise<RecordRow[]> {
   const label = sanitizeIlike(countryLabel);
   if (!label) return [];
+  const capped = Math.max(1, Math.min(limit, 200));
   const names = ['national_park', 'national_parks', 'parks'];
   let selectColumns =
     publicListColumnsFor('national_park', ['national_parks', 'parks']) ||
@@ -567,30 +604,19 @@ export async function fetchParksForCountry(countryLabel: string): Promise<Record
   for (const name of names) {
     let cols = selectColumns;
     for (let attempt = 0; attempt < 6; attempt += 1) {
-      const collected: RecordRow[] = [];
-      let pageError: { message?: string } | null = null;
-      for (let from = 0; from < 5000; from += 1000) {
-        const { data, error } = await withJwtRetry(() =>
-          dataClient().from(name).select(cols).ilike('country', `%${label}%`).range(from, from + 999)
-        );
-        if (error) {
-          pageError = error;
-          break;
-        }
-        const rows = asRows(data);
-        collected.push(...rows);
-        if (rows.length < 1000) break;
-      }
-      if (!pageError) {
+      const { data, error } = await withJwtRetry(() =>
+        dataClient().from(name).select(cols).ilike('country', `%${label}%`).limit(capped)
+      );
+      if (!error) {
         const seen = new Set<string>();
-        return collected.filter(isPublishedRecord).filter((row) => {
+        return asRows(data).filter(isPublishedRecord).filter((row) => {
           const key = String(row.id || getRecordTitle(row)).toLowerCase();
           if (!key || seen.has(key)) return false;
           seen.add(key);
           return true;
         });
       }
-      const missing = missingSelectColumn(pageError.message || '');
+      const missing = missingSelectColumn(error.message || '');
       if (missing && cols.split(',').map((part) => part.trim()).includes(missing)) {
         const next = dropColumnFromSelect(cols, missing);
         if (next && next !== cols) {

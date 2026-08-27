@@ -9,7 +9,7 @@ import PublicShell from '@/components/public/PublicShell';
 import { explorePlacePath } from '@/lib/cms-routes';
 import { matchesCountry } from '@/lib/country-utils';
 import {
-  fetchCollectionRecords,
+  fetchCollectionPage,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -19,22 +19,61 @@ import {
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
-function ExploreContent({ initialPlaces }: { initialPlaces: RecordRow[] }) {
+function ExploreContent({
+  initialPlaces,
+  initialTotal = 0,
+}: {
+  initialPlaces: RecordRow[];
+  initialTotal?: number;
+}) {
   const searchParams = useSearchParams();
   const countryFilter = searchParams?.get('country') || '';
   const live = useCmsLive();
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
+  const [total, setTotal] = useState(initialTotal || initialPlaces.length);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     setPlaces(initialPlaces);
-  }, [initialPlaces]);
+    setTotal(initialTotal || initialPlaces.length);
+  }, [initialPlaces, initialTotal]);
 
   useEffect(() => {
     if (live === 0) return;
-    fetchCollectionRecords('explore')
-      .then((rows) => setPlaces(rows.filter(isPublishedRecord)))
+    fetchCollectionPage('explore', [], {
+      limit: 48,
+      offset: 0,
+      filters: countryFilter ? { country: countryFilter } : undefined,
+    })
+      .then((page) => {
+        setPlaces(page.rows.filter(isPublishedRecord));
+        setTotal(page.total);
+      })
       .catch((error) => console.error('[Supabase] Failed to load explore places:', error));
-  }, [live]);
+  }, [live, countryFilter]);
+
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const page = await fetchCollectionPage('explore', [], {
+        limit: 48,
+        offset: places.length,
+        filters: countryFilter ? { country: countryFilter } : undefined,
+      });
+      setPlaces((current) => {
+        const seen = new Set(current.map((row) => String(row.id || '')));
+        return [
+          ...current,
+          ...page.rows.filter(isPublishedRecord).filter((row) => !seen.has(String(row.id || ''))),
+        ];
+      });
+      setTotal(page.total);
+    } catch (error) {
+      console.error('[Supabase] Failed to load more explore places:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const filteredPlaces = useMemo(() => {
     if (!countryFilter) return places;
@@ -52,30 +91,50 @@ function ExploreContent({ initialPlaces }: { initialPlaces: RecordRow[] }) {
         {filteredPlaces.length === 0 ? (
           <p className="text-center text-gray-500">No records found in this collection.</p>
         ) : (
-          <ListingGrid>
-            {filteredPlaces.map((place, index) => (
-              <PlaceCard
-                key={String(place.id ?? index)}
-                href={explorePlacePath(place)}
-                image={getRecordImage(place) || undefined}
-                title={getRecordTitle(place)}
-                location={pickString(place, ['location', 'country']) || undefined}
-                description={recordCardBlurb(place)}
-                cta="Read More"
-              />
-            ))}
-          </ListingGrid>
+          <>
+            <ListingGrid>
+              {filteredPlaces.map((place, index) => (
+                <PlaceCard
+                  key={String(place.id ?? index)}
+                  href={explorePlacePath(place)}
+                  image={getRecordImage(place) || undefined}
+                  title={getRecordTitle(place)}
+                  location={pickString(place, ['location', 'country']) || undefined}
+                  description={recordCardBlurb(place)}
+                  cta="Read More"
+                />
+              ))}
+            </ListingGrid>
+            {!countryFilter && places.length < total ? (
+              <div className="mt-10 text-center">
+                <button
+                  type="button"
+                  onClick={() => void loadMore()}
+                  disabled={loadingMore}
+                  className="rounded-full bg-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a] disabled:opacity-60"
+                >
+                  {loadingMore ? 'Loading…' : `Load more places (${places.length} of ${total.toLocaleString()})`}
+                </button>
+              </div>
+            ) : null}
+          </>
         )}
       </ListingSection>
     </>
   );
 }
 
-export default function ExplorePageClient({ initialPlaces }: { initialPlaces: RecordRow[] }) {
+export default function ExplorePageClient({
+  initialPlaces,
+  initialTotal = 0,
+}: {
+  initialPlaces: RecordRow[];
+  initialTotal?: number;
+}) {
   return (
     <PublicShell>
       <Suspense fallback={<div className="py-24 text-center text-gray-500">Loading places…</div>}>
-        <ExploreContent initialPlaces={initialPlaces} />
+        <ExploreContent initialPlaces={initialPlaces} initialTotal={initialTotal} />
       </Suspense>
     </PublicShell>
   );

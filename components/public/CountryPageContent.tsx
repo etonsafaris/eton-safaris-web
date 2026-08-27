@@ -20,6 +20,7 @@ import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle, stripParkListFromCountryHtm
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
+  fetchCollectionPage,
   fetchCollectionRecords,
   fetchToursForCountryLabel,
   fetchParksForCountry,
@@ -91,9 +92,13 @@ export default function CountryPageContent({
         const [countryRows, allCategories, countryTours, countryParks, allPlaces] = await Promise.all([
           fetchCollectionRecords('countries'),
           fetchCollectionRecords('categories'),
-          fetchToursForCountryLabel(slug, 120),
-          fetchParksForCountry(publicCountryLabel(countryProp, slug) || slug),
-          fetchCollectionRecords('explore'),
+          fetchToursForCountryLabel(slug, 48),
+          fetchParksForCountry(publicCountryLabel(countryProp, slug) || slug, 48),
+          fetchCollectionPage('explore', [], {
+            limit: 48,
+            offset: 0,
+            filters: { country: slug },
+          }).then((page) => page.rows),
         ]);
         if (cancelled) return;
         const match = countryRows.find((row) => recordMatchesCountrySlug(row, slug)) || null;

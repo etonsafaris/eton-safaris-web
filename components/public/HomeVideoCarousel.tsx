@@ -83,7 +83,10 @@ export default function HomeVideoCarousel({
   }
 
   return (
-    <div ref={wrapRef} className={`relative aspect-[16/9] max-h-[340px] overflow-hidden rounded-2xl bg-black shadow-card ${className}`}>
+    <div
+      ref={wrapRef}
+      className={`relative mx-auto aspect-video w-full max-h-[220px] min-w-0 overflow-hidden rounded-xl bg-black shadow-card lg:max-h-[240px] ${className}`}
+    >
       {active && current ? (
         <video
           key={`${safeIndex}-${current}`}

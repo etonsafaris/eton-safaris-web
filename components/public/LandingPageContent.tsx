@@ -18,6 +18,7 @@ import { quoteRequestPath } from '@/lib/quote-request';
 import { reviewSourceBadges } from '@/lib/review-links';
 import {
   fetchCollectionRecords,
+  fetchParksForCountry,
   fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
@@ -58,16 +59,16 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
   useEffect(() => {
     async function load() {
       try {
-        const [countryTours, allReviews, allParks, allPlaces] = await Promise.all([
+        const [countryTours, allReviews, countryParks, countryPlaces] = await Promise.all([
           fetchToursForCountryLabel(slug, 48),
           fetchCollectionRecords('reviews').catch(() => []),
-          fetchCollectionRecords('national_park', ['national_parks', 'parks']).catch(() => []),
-          fetchCollectionRecords('explore').catch(() => []),
+          fetchParksForCountry(slug, 24).catch(() => []),
+          fetchCollectionRecords('explore', [], { maxRows: 48 }).catch(() => []),
         ]);
         setTours(countryTours.filter((tour) => matchesCountry(tour, slug)));
         setReviews(allReviews);
-        setParks(allParks.filter(isPublishedRecord).filter((park) => matchesCountry(park, slug)).slice(0, 8));
-        setPlaces(allPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)).slice(0, 8));
+        setParks(countryParks.filter(isPublishedRecord).filter((park) => matchesCountry(park, slug)).slice(0, 8));
+        setPlaces(countryPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)).slice(0, 8));
       } catch (error) {
         console.error('[Landing] Failed to load country landing data:', error);
       } finally {

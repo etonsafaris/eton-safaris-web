@@ -93,7 +93,7 @@ export default function TourSearchBar({
 
   useEffect(() => {
 
-    fetchCollectionRecords('safari_updates')
+    fetchCollectionRecords('safari_updates', [], { maxRows: 48 })
 
       .then(setLanguagePosts)
 

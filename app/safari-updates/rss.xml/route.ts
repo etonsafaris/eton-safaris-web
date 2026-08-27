@@ -22,7 +22,7 @@ function xmlEscape(value: string) {
 }
 
 export async function GET() {
-  const rows = await fetchCollectionRecords('safari_updates').catch(() => []);
+  const rows = await fetchCollectionRecords('safari_updates', [], { maxRows: 48 }).catch(() => []);
   const posts = rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 40);
   const items = posts
     .map((post) => {

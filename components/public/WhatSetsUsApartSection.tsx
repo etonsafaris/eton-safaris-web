@@ -28,27 +28,29 @@ export default function WhatSetsUsApartSection({
       <h3 className="mb-3 font-merry text-[32px] font-semibold italic text-[#588048]">{heading}</h3>
       <p className="mt-3 text-base leading-6 text-[#222]">{intro}</p>
 
-      <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-2">
-        <div className="grid gap-8 sm:grid-cols-2">
+      <div className="mt-8 grid items-center gap-6 overflow-hidden lg:grid-cols-2 lg:gap-6">
+        <div className="grid min-w-0 gap-5 sm:grid-cols-2">
           {points.map((feature, index) => {
             const Icon = ICONS[index % ICONS.length];
             return (
-              <div key={`${feature.title}-${index}`} className="flex gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sage/40 bg-sage/15 text-moss">
-                  <Icon className="h-5 w-5" />
+              <div key={`${feature.title}-${index}`} className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sage/40 bg-sage/15 text-moss">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div>
-                  <h4 className="mb-[15px] font-merry text-[1.4rem] font-semibold italic leading-[1.2] text-[#588048]">
+                <div className="min-w-0">
+                  <h4 className="mb-1.5 font-merry text-[1.15rem] font-semibold italic leading-[1.2] text-[#588048]">
                     {feature.title}
                   </h4>
-                  <p className="text-base leading-7 text-[#222]">{feature.description}</p>
+                  <p className="text-sm leading-6 text-[#222]">{feature.description}</p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <HomeVideoCarousel videos={videos} />
+        <div className="min-w-0 max-w-full overflow-hidden">
+          <HomeVideoCarousel videos={videos} />
+        </div>
       </div>
     </section>
   );

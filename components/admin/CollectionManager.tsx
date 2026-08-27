@@ -113,7 +113,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 48;
   const [remoteTotal, setRemoteTotal] = useState(0);
-  const usesRemotePaging = isTours || isNationalPark || isAccommodations;
+  const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
 
   async function load() {
     if (!config.table) {
@@ -138,9 +138,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
           total = data.length;
         }
-      } else if (isNationalPark && countryFilter) {
-        data = await fetchParksForCountry(countryFilter);
-        total = data.length;
       } else if (usesRemotePaging) {
         const offset = (Math.max(1, page) - 1) * PAGE_SIZE;
         const paged = await fetchCollectionPage(config.table, config.aliases || [], {
@@ -149,7 +146,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           offset,
           orderBy: 'created_date',
           filters: {
-            country: countryFilter || undefined,
+            country: isSafariUpdates ? undefined : countryFilter || undefined,
             park: isAccommodations ? parkFilter || undefined : undefined,
             category: isTours ? categoryFilter || undefined : undefined,
           },
@@ -967,7 +964,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       </div>
 
       <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row dark:border-white/10 dark:bg-[#161b22]">
-        {(isTours || isCountries || isNationalPark || isAccommodations || isExplore || isCategories || isSafariUpdates || isLandingPages) && (
+        {(isTours || isCountries || isNationalPark || isAccommodations || isExplore || isCategories || isLandingPages) && (
           <div className="w-full sm:w-56">
             <SearchableSelect
               value={countryFilter}

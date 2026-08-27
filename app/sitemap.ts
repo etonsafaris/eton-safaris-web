@@ -17,7 +17,7 @@ function sitemapColumns(table: string, aliases: string[] = []) {
 function sitemapFetch(table: string, aliases: string[] = []) {
   return fetchCollectionRecords(table, aliases, {
     columns: sitemapColumns(table, aliases),
-    unlimited: table === 'tours',
+    unlimited: true,
   }).catch(() => [] as RecordRow[]);
 }
 
