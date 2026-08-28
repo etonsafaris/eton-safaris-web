@@ -20,8 +20,10 @@ import {
   validateSeoSchema,
   type SeoContentType,
   type SeoValues,
+  seoValuesFromRecord,
 } from '@/lib/seo';
 import { IndexStatusBadge, indexStatusForDraft, seoContentTypeToIndexKind } from '@/components/admin/IndexStatusBadge';
+import GoogleIndexToggle from '@/components/admin/GoogleIndexToggle';
 import type { RecordRow } from '@/lib/types';
 
 type SeoPanelProps = {
@@ -41,6 +43,9 @@ type SeoPanelProps = {
   indexRecord?: RecordRow | null;
   forceNoindex?: boolean;
   forceNoindexReason?: string;
+  googleIndexCollectionId?: string;
+  googleIndexRecord?: RecordRow | null;
+  onGoogleIndexUpdated?: (record: RecordRow) => void;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -114,6 +119,9 @@ export default function SeoPanel({
   indexRecord = null,
   forceNoindex = false,
   forceNoindexReason = '',
+  googleIndexCollectionId = '',
+  googleIndexRecord = null,
+  onGoogleIndexUpdated,
 }: SeoPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'seo' | 'readability' | 'schema'>('seo');
@@ -302,7 +310,7 @@ export default function SeoPanel({
         onClick={() => setOpen((current) => !current)}
         className="flex w-full items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-5 py-4 text-left shadow-sm"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
               scorePercent >= 90 ? 'bg-green-100 text-green-700' : scorePercent >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
@@ -315,6 +323,16 @@ export default function SeoPanel({
             <span className="ml-2 text-sm text-[#6b7280]">{scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}</span>
           </div>
           {indexStatus ? <IndexStatusBadge status={indexStatus} size="md" /> : null}
+          {googleIndexCollectionId && googleIndexRecord ? (
+            <GoogleIndexToggle
+              collectionId={googleIndexCollectionId}
+              record={{ ...googleIndexRecord, robots_index: values.robots_index }}
+              onUpdated={(record) => {
+                onChange({ ...values, robots_index: seoValuesFromRecord(record).robots_index });
+                onGoogleIndexUpdated?.(record);
+              }}
+            />
+          ) : null}
         </div>
         <ChevronDown className={`h-5 w-5 text-[#6b7280] transition ${open ? 'rotate-180' : ''}`} />
       </button>

@@ -86,7 +86,7 @@ export function defaultSeoValues(contentType: SeoContentType = 'page'): SeoValue
     seo_schema: '',
     schema_type: CONTENT_SCHEMA_DEFAULTS[contentType],
     canonical_url: '',
-    robots_index: true,
+    robots_index: false,
     robots_follow: true,
     robots_advanced: [],
     breadcrumb_title: '',

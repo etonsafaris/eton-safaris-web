@@ -6,6 +6,7 @@ import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
+import GoogleIndexToggle from '@/components/admin/GoogleIndexToggle';
 import { IndexStatusBadge, indexStatusForCollectionRecord } from '@/components/admin/IndexStatusBadge';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
@@ -46,6 +47,7 @@ import {
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
+import { indexableKindForCollectionId } from '@/lib/public-indexing';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
 import { countryCategoryPath, canonicalCountrySlug, matchesCountry, publicCountrySlug } from '@/lib/country-utils';
@@ -479,9 +481,56 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     );
   }
 
+  function handleIndexUpdated(record: RecordRow) {
+    setRecords((current) =>
+      current.map((row) => (String(row.id) === String(record.id) ? { ...row, ...record } : row))
+    );
+  }
+
+  function supportsGoogleIndex() {
+    return Boolean(indexableKindForCollectionId(config.id) || config.id === 'landing_pages');
+  }
+
+  async function autoConfigureVisibleSeo() {
+    setActionError('');
+    setSaving(true);
+    try {
+      for (const record of paged) {
+        if (record.id == null) continue;
+        const headers = await adminAuthHeaders();
+        const response = await fetch('/api/admin/google-index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({
+            collectionId: config.id,
+            id: record.id,
+            configureOnly: true,
+          }),
+        });
+        if (!response.ok) {
+          const body = (await response.json()) as { error?: string };
+          throw new Error(body.error || 'Auto-configure failed');
+        }
+      }
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Auto-configure failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function cardActions(record: RecordRow) {
     return (
       <>
+        {supportsGoogleIndex() ? (
+          <GoogleIndexToggle
+            collectionId={config.id}
+            record={record}
+            compact
+            onUpdated={handleIndexUpdated}
+          />
+        ) : null}
         {config.id === 'bookings' && (
           <>
             <button type="button" onClick={() => confirmDownPayment(record)} className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300">
@@ -683,7 +732,13 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     if (typeof raw.content === 'string') {
       raw.content = embedContent(String(raw.content), embedData);
     }
-    const payload = buildSavePayload(table, raw, { seo, knownColumns: columns });
+    const payload = buildSavePayload(table, raw, {
+      seo,
+      knownColumns: columns,
+      existingRecord: editing,
+      publicPath: publicHref({ ...(editing || {}), ...raw } as RecordRow),
+      autoIndexSeo: true,
+    });
     const result = await saveWithColumnFallback(table, payload, editing?.id);
 
     if (result.error) {
@@ -967,6 +1022,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           >
             <RefreshCw className="h-4 w-4" /> Refresh
           </button>
+          {supportsGoogleIndex() && !isOps && config.id !== 'landing_pages' ? (
+            <button
+              type="button"
+              disabled={saving || paged.length === 0}
+              onClick={() => void autoConfigureVisibleSeo()}
+              className="inline-flex items-center gap-2 rounded-lg border border-[#00A651]/30 bg-[#ecfdf3] px-3 py-2 text-sm font-medium text-[#047857] hover:bg-[#d1fae5] disabled:opacity-50"
+            >
+              Auto-configure SEO (this page)
+            </button>
+          ) : null}
           {config.addLabel && (
             <button
               type="button"
@@ -1291,6 +1356,12 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                 indexRecord={{ ...(editing || {}), ...form } as RecordRow}
                 forceNoindex={config.id === 'landing_pages'}
                 forceNoindexReason="Conversion landing — admin preview only; public site uses the country page."
+                googleIndexCollectionId={config.id}
+                googleIndexRecord={{ ...(editing || {}), ...form, id: editing?.id } as RecordRow}
+                onGoogleIndexUpdated={(record) => {
+                  setSeo(seoValuesFromRecord(record));
+                  handleIndexUpdated(record);
+                }}
               />
             ) : null}
 

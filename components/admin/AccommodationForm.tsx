@@ -454,6 +454,14 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
           title: name,
           image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
         }}
+        googleIndexCollectionId="accommodations"
+        googleIndexRecord={{
+          id: accommodationId,
+          country,
+          name,
+          title: name,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
     </form>
   );

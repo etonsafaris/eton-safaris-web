@@ -1,6 +1,8 @@
 import { ALL_COLLECTIONS } from '@/lib/collections';
 import type { FormField } from '@/lib/types';
+import { autoIndexSeoForTable } from '@/lib/auto-index-seo';
 import { packSeoSettings, type SeoValues } from '@/lib/seo';
+import type { RecordRow } from '@/lib/types';
 
 /** Columns that must never be written (UI aliases or missing from Supabase). */
 const BLOCKED_COLUMNS = new Set([
@@ -345,11 +347,28 @@ export function sanitizePayload(
 export function buildSavePayload(
   table: string,
   payload: Record<string, unknown>,
-  options?: { seo?: SeoValues; knownColumns?: string[]; keepId?: boolean }
+  options?: {
+    seo?: SeoValues;
+    knownColumns?: string[];
+    keepId?: boolean;
+    existingRecord?: RecordRow | null;
+    publicPath?: string | null;
+    autoIndexSeo?: boolean;
+  }
 ): Record<string, unknown> {
-  const merged = options?.seo
-    ? { ...payload, ...seoValuesToTablePayload(table, options.seo) }
-    : { ...payload };
+  let payloadToSave = { ...payload };
+  let seo = options?.seo;
+
+  if (options?.autoIndexSeo !== false && CONTENT_TABLES.has(table)) {
+    const enriched = autoIndexSeoForTable(table, payloadToSave, seo, {
+      existingRecord: options?.existingRecord,
+      publicPath: options?.publicPath,
+    });
+    payloadToSave = enriched.payload;
+    seo = enriched.seo;
+  }
+
+  const merged = seo ? { ...payloadToSave, ...seoValuesToTablePayload(table, seo) } : { ...payloadToSave };
 
   const clean = sanitizePayload(table, merged, options?.knownColumns);
   if (options?.keepId && merged.id !== undefined && merged.id !== null && merged.id !== '') {
