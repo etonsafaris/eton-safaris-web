@@ -168,7 +168,7 @@ export const TOUR_LIST_COLUMNS =
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    'id,name,slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,seo_slug,created_date,updated_date',
+    'id,name,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,created_date,updated_date',
   national_park:
     'id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date',
   national_parks:
@@ -669,7 +669,15 @@ function isUsableImageUrl(value: unknown): value is string {
 }
 
 function recordStamp(record: RecordRow) {
-  return String(record.updated_at || record.updatedAt || record.modified_at || record.created_at || record.id || '');
+  return String(
+    record.updated_date ||
+      record.updated_at ||
+      record.updatedAt ||
+      record.modified_at ||
+      record.created_at ||
+      record.id ||
+      ''
+  );
 }
 
 export function getRecordImage(record: RecordRow): string | null {
