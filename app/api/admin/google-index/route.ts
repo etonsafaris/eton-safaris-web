@@ -3,11 +3,11 @@ import { revalidatePath } from 'next/cache';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { applyAutoIndexSeo, collectionIdToTable } from '@/lib/auto-index-seo';
 import { getCollection } from '@/lib/collections';
-import { bumpCmsLive } from '@/lib/cms-live';
 import { fetchCollectionRecordById, publicRecordSlug } from '@/lib/data';
 import { indexableContentKindForTable } from '@/lib/public-indexing';
 import { requireAdminUser } from '@/lib/require-admin';
 import { seoValuesFromRecord } from '@/lib/seo';
+import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
@@ -92,13 +92,15 @@ export async function POST(request: Request) {
       }
     );
 
-    const result = await saveWithColumnFallback(table, payload, id);
+    const result = await saveWithColumnFallback(table, payload, {
+      id,
+      client: createPrivilegedClient(),
+    });
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500 });
     }
 
     const saved = (result.data?.[0] || { ...full, ...payload, id }) as RecordRow;
-    bumpCmsLive();
     revalidatePath('/', 'layout');
     revalidatePath('/sitemap.xml');
 

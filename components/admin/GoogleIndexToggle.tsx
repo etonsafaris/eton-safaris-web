@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { adminAuthHeaders } from '@/lib/admin-records-client';
 import { seoValuesFromRecord } from '@/lib/seo';
 import type { RecordRow } from '@/lib/types';
 
@@ -25,9 +26,11 @@ export default function GoogleIndexToggle({
     setLoading(true);
     setError('');
     try {
+      const headers = await adminAuthHeaders();
       const response = await fetch('/api/admin/google-index', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({
           collectionId,
           id: record.id,
@@ -37,6 +40,13 @@ export default function GoogleIndexToggle({
       const body = (await response.json()) as { error?: string; record?: RecordRow };
       if (!response.ok) throw new Error(body.error || 'Could not update Google indexing');
       if (body.record) onUpdated?.(body.record);
+      const { bumpCmsLive } = await import('@/lib/cms-live');
+      bumpCmsLive();
+      try {
+        await fetch('/api/admin/revalidate', { method: 'POST', credentials: 'include' });
+      } catch {
+        /* optional */
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update Google indexing');
     } finally {
