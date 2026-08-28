@@ -17,7 +17,7 @@ import {
   recordPublishedAt,
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { SITE_MEDIA } from '@/lib/site-media';
 import type { RecordRow } from '@/lib/types';
 
@@ -28,7 +28,6 @@ export default function SafariUpdatesPageClient({
   initialPosts: RecordRow[];
   initialTotal?: number;
 }) {
-  const live = useCmsLive();
   const [posts, setPosts] = useState<RecordRow[]>(initialPosts);
   const [total, setTotal] = useState(initialTotal || initialPosts.length);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -38,20 +37,15 @@ export default function SafariUpdatesPageClient({
     setTotal(initialTotal || initialPosts.length);
   }, [initialPosts, initialTotal]);
 
-  useEffect(() => {
-    let cancelled = false;
+  useCmsPageReload(() => {
     fetchCollectionPage('safari_updates', [], { limit: 48, offset: 0 })
       .then((page) => {
-        if (cancelled) return;
         const rows = page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
         setPosts(rows);
         setTotal(page.total);
       })
       .catch((error) => console.error(error));
-    return () => {
-      cancelled = true;
-    };
-  }, [live]);
+  }, initialPosts.length > 0);
 
   async function loadMore() {
     setLoadingMore(true);

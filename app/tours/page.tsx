@@ -1,7 +1,7 @@
 import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export default async function ToursPage() {
   const { tours, total, categories, countries } = await loadToursPageData();

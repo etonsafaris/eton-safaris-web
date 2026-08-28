@@ -15,7 +15,7 @@ import {
   publicRecordSlug,
   recordCardBlurb,
 } from '@/lib/data';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
@@ -26,7 +26,6 @@ export default function ParksPageClient({
   initialParks: RecordRow[];
   initialTotal?: number;
 }) {
-  const live = useCmsLive();
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [total, setTotal] = useState(initialTotal || initialParks.length);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -36,19 +35,14 @@ export default function ParksPageClient({
     setTotal(initialTotal || initialParks.length);
   }, [initialParks, initialTotal]);
 
-  useEffect(() => {
-    let cancelled = false;
+  useCmsPageReload(() => {
     fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 48, offset: 0 })
       .then((page) => {
-        if (cancelled) return;
         setParks(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error('[Supabase] Failed to load parks:', error));
-    return () => {
-      cancelled = true;
-    };
-  }, [live]);
+  }, initialParks.length > 0);
 
   async function loadMore() {
     setLoadingMore(true);

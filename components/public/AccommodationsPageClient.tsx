@@ -15,7 +15,7 @@ import {
   publicRecordSlug,
   recordCardBlurb,
 } from '@/lib/data';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
@@ -26,7 +26,6 @@ export default function AccommodationsPageClient({
   initialRows: RecordRow[];
   initialTotal?: number;
 }) {
-  const live = useCmsLive();
   const [rows, setRows] = useState<RecordRow[]>(initialRows);
   const [total, setTotal] = useState(initialTotal || initialRows.length);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -36,20 +35,14 @@ export default function AccommodationsPageClient({
     setTotal(initialTotal || initialRows.length);
   }, [initialRows, initialTotal]);
 
-  useEffect(() => {
-    if (initialRows.length > 0) return undefined;
-    let cancelled = false;
+  useCmsPageReload(() => {
     fetchCollectionPage('accommodations', [], { limit: 48, offset: 0 })
       .then((page) => {
-        if (cancelled) return;
         setRows(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error(error));
-    return () => {
-      cancelled = true;
-    };
-  }, [live, initialRows.length]);
+  }, initialRows.length > 0);
 
   async function loadMore() {
     setLoadingMore(true);

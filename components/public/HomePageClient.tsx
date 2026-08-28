@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
@@ -16,6 +16,7 @@ import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import PageFaqList from '@/components/public/PageFaqList';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
+import type { HomePageContent } from '@/lib/home-page-content';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
@@ -77,10 +78,11 @@ type HomePageClientProps = {
   initialUpdates: RecordRow[];
   initialParks: RecordRow[];
   initialCategories: RecordRow[];
+  initialHomeContent?: HomePageContent | null;
 };
 
-function HomeBrandAndFeatures() {
-  const home = useHomePageContent();
+function HomeBrandAndFeatures({ initialHomeContent }: { initialHomeContent?: HomePageContent | null }) {
+  const home = useHomePageContent(initialHomeContent);
   return (
     <>
       <section className="px-[30px] py-16 text-center">
@@ -105,14 +107,15 @@ export default function HomePageClient({
   initialUpdates,
   initialParks,
   initialCategories,
+  initialHomeContent,
 }: HomePageClientProps) {
-  const live = useCmsLive();
   const [slide, setSlide] = useState(0);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [updates, setUpdates] = useState<RecordRow[]>(initialUpdates);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
+  const hasServerContent = initialCountries.length > 0 || initialTours.length > 0;
 
   useEffect(() => {
     setCountries(initialCountries);
@@ -122,54 +125,41 @@ export default function HomePageClient({
     setCategories(initialCategories);
   }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadHero() {
-      try {
-        const rows = await fetchCollectionRecords('countries', [], { maxRows: 48 });
-        if (!cancelled) setCountries(rows.filter(isPublishedRecord));
-      } catch (error) {
-        console.error('[Supabase] Failed to load countries:', error);
-      }
+  useCmsPageReload(async () => {
+    try {
+      const rows = await fetchCollectionRecords('countries', [], { maxRows: 48 });
+      setCountries(rows.filter(isPublishedRecord));
+    } catch (error) {
+      console.error('[Supabase] Failed to load countries:', error);
     }
 
-    async function loadRest() {
-      const [tourRows, updateRows, parkRows, categoryRows] = await Promise.all([
-        fetchFeaturedTours(12).catch((error) => {
-          console.error('[Supabase] Failed to load tours:', error);
+    const [tourRows, updateRows, parkRows, categoryRows] = await Promise.all([
+      fetchFeaturedTours(12).catch((error) => {
+        console.error('[Supabase] Failed to load tours:', error);
+        return [] as RecordRow[];
+      }),
+      fetchCollectionPage('safari_updates', [], { limit: 8, offset: 0 })
+        .then((page) => page.rows)
+        .catch((error) => {
+          console.error('[Supabase] Failed to load safari updates:', error);
           return [] as RecordRow[];
         }),
-        fetchCollectionPage('safari_updates', [], { limit: 8, offset: 0 })
-          .then((page) => page.rows)
-          .catch((error) => {
-            console.error('[Supabase] Failed to load safari updates:', error);
-            return [] as RecordRow[];
-          }),
-        fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 12, offset: 0 })
-          .then((page) => page.rows)
-          .catch((error) => {
-            console.error('[Supabase] Failed to load national parks:', error);
-            return [] as RecordRow[];
-          }),
-        fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
-          console.error('[Supabase] Failed to load categories:', error);
+      fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 12, offset: 0 })
+        .then((page) => page.rows)
+        .catch((error) => {
+          console.error('[Supabase] Failed to load national parks:', error);
           return [] as RecordRow[];
         }),
-      ]);
-      if (cancelled) return;
-      setTours(tourRows.slice(0, 12));
-      setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
-      setParks(parkRows.filter(isPublishedRecord).slice(0, 12));
-      setCategories(categoryRows.filter(isPublishedRecord));
-    }
-
-    void loadHero();
-    void loadRest();
-    return () => {
-      cancelled = true;
-    };
-  }, [live]);
+      fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
+        console.error('[Supabase] Failed to load categories:', error);
+        return [] as RecordRow[];
+      }),
+    ]);
+    setTours(tourRows.slice(0, 12));
+    setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
+    setParks(parkRows.filter(isPublishedRecord).slice(0, 12));
+    setCategories(categoryRows.filter(isPublishedRecord));
+  }, hasServerContent);
 
   const heroSlides = useMemo(() => {
     return NAV_COUNTRIES.map(({ slug, name }) => {
@@ -344,7 +334,7 @@ export default function HomePageClient({
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
 
-      <HomeBrandAndFeatures />
+      <HomeBrandAndFeatures initialHomeContent={initialHomeContent} />
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">

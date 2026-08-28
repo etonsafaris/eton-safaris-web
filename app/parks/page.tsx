@@ -1,6 +1,6 @@
 import ParksPageClient from '@/components/public/ParksPageClient';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 /** Avoid server-side park list queries — exact counts were timing out on Vercel. */
 export default function ParksPage() {

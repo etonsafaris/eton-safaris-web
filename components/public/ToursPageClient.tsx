@@ -11,7 +11,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageFaqList from '@/components/public/PageFaqList';
 import { SITE } from '@/lib/collections';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, publicRecordSlug, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import { bestFaqsFor } from '@/lib/best-faqs';
@@ -37,13 +37,28 @@ function ToursList({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
-  const live = useCmsLive();
 
   useEffect(() => {
     setTours(initialTours);
     setCategories(initialCategories);
     setCountries(initialCountries);
   }, [initialTours, initialCategories, initialCountries]);
+
+  useCmsPageReload(() => {
+    Promise.all([
+      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
+        page.rows.filter(isPublishedRecord)
+      ),
+      fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
+      fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
+    ])
+      .then(([tourRows, categoryRows, countryRows]) => {
+        setTours(tourRows);
+        setCategories(categoryRows);
+        setCountries(countryRows.filter(isPublishedRecord));
+      })
+      .catch((error) => console.error(error));
+  }, initialTours.length > 0);
 
   useEffect(() => {
     const filteredSearch = Boolean(q || (destination && destination !== 'All destinations') || category);
@@ -61,28 +76,6 @@ function ToursList({
       cancelled = true;
     };
   }, [q, destination, category]);
-
-  useEffect(() => {
-    if (initialTours.length > 0) return undefined;
-    let cancelled = false;
-    Promise.all([
-      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
-        page.rows.filter(isPublishedRecord)
-      ),
-      fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
-      fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
-    ])
-      .then(([tourRows, categoryRows, countryRows]) => {
-        if (cancelled) return;
-        setTours(tourRows);
-        setCategories(categoryRows);
-        setCountries(countryRows.filter(isPublishedRecord));
-      })
-      .catch((error) => console.error(error));
-    return () => {
-      cancelled = true;
-    };
-  }, [live, initialTours.length]);
 
   const destinationOptions = useMemo(() => publicDestinationNames(mergePublicDestinations(countries)), [countries]);
 

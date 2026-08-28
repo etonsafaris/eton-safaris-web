@@ -1,16 +1,18 @@
 import HomePageClient from '@/components/public/HomePageClient';
+import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
-/** Avoid server-side Supabase on the homepage — slow CMS reads were causing Vercel 504s. */
-export default function HomePage() {
+export default async function HomePage() {
+  const [data, homeContent] = await Promise.all([loadHomePageData(), loadHomePageContent()]);
   return (
     <HomePageClient
-      initialCountries={[]}
-      initialTours={[]}
-      initialUpdates={[]}
-      initialParks={[]}
-      initialCategories={[]}
+      initialCountries={data.countries}
+      initialTours={data.tours}
+      initialUpdates={data.updates}
+      initialParks={data.parks}
+      initialCategories={data.categories}
+      initialHomeContent={homeContent}
     />
   );
 }

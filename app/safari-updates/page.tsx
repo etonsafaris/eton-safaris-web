@@ -1,6 +1,6 @@
 import SafariUpdatesPageClient from '@/components/public/SafariUpdatesPageClient';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export default function SafariUpdatesPage() {
   return <SafariUpdatesPageClient initialPosts={[]} initialTotal={0} />;

@@ -1,7 +1,7 @@
 import AccommodationsPageClient from '@/components/public/AccommodationsPageClient';
 import { loadAccommodationsPageData } from '@/lib/load-public';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export default async function AccommodationsPage() {
   const { rows, total } = await loadAccommodationsPageData();

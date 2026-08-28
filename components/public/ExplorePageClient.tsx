@@ -16,7 +16,7 @@ import {
   pickString,
   recordCardBlurb,
 } from '@/lib/data';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import type { RecordRow } from '@/lib/types';
 
 function ExploreContent({
@@ -28,7 +28,6 @@ function ExploreContent({
 }) {
   const searchParams = useSearchParams();
   const countryFilter = searchParams?.get('country') || '';
-  const live = useCmsLive();
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
   const [total, setTotal] = useState(initialTotal || initialPlaces.length);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -38,23 +37,18 @@ function ExploreContent({
     setTotal(initialTotal || initialPlaces.length);
   }, [initialPlaces, initialTotal]);
 
-  useEffect(() => {
-    let cancelled = false;
+  useCmsPageReload(() => {
     fetchCollectionPage('explore', [], {
       limit: 48,
       offset: 0,
       filters: countryFilter ? { country: countryFilter } : undefined,
     })
       .then((page) => {
-        if (cancelled) return;
         setPlaces(page.rows.filter(isPublishedRecord));
         setTotal(page.total);
       })
       .catch((error) => console.error('[Supabase] Failed to load explore places:', error));
-    return () => {
-      cancelled = true;
-    };
-  }, [live, countryFilter]);
+  }, initialPlaces.length > 0, [countryFilter]);
 
   async function loadMore() {
     setLoadingMore(true);

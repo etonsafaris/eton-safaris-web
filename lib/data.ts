@@ -18,7 +18,8 @@ import type { RecordRow } from '@/lib/types';
 export { clearCollectionCache };
 
 const PAGE_SIZE = 1000;
-const FETCH_CACHE_MS = 60_000;
+/** Server renders must always hit Supabase; client cache is cleared on CMS saves. */
+const FETCH_CACHE_MS = typeof window === 'undefined' ? 0 : 60_000;
 /** Remember resolved select strings per table so missing-column drops are not repeated. */
 const resolvedSelects = new Map<string, string>();
 

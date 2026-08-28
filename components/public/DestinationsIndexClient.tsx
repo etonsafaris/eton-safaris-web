@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useCmsLive } from '@/lib/cms-live';
+import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
@@ -19,18 +19,17 @@ import { destinationListingRows } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
 export default function DestinationsIndexClient({ initialCountries }: { initialCountries: RecordRow[] }) {
-  const live = useCmsLive();
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
 
   useEffect(() => {
     setCountries(initialCountries);
   }, [initialCountries]);
 
-  useEffect(() => {
+  useCmsPageReload(() => {
     fetchCollectionRecords('countries', [], { maxRows: 48 })
       .then((rows) => setCountries(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
-  }, [live]);
+  }, initialCountries.length > 0);
 
   const items = useMemo(() => destinationListingRows(countries), [countries]);
 

@@ -5,7 +5,7 @@ import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { loadCountryPageData } from '@/lib/load-public';
 
-export const revalidate = 60;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);

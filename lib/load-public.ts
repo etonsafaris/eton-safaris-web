@@ -25,6 +25,7 @@ import {
   publicListColumnsFor,
   TOUR_LIST_COLUMNS,
 } from '@/lib/data';
+import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import type { RecordRow } from '@/lib/types';
 
 function listColumns(table: string, aliases: string[] = []) {
@@ -84,7 +85,26 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   });
 }
 
+export async function loadHomePageContent(): Promise<HomePageContent | null> {
+  noStore();
+  try {
+    const columns = listColumns('pages');
+    const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
+    const match =
+      matchCmsRecord(rows, HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG).concat(['home', 'homepage'])) ||
+      rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
+      null;
+    if (!match || !isPublishedRecord(match)) return null;
+    const id = String(match.id || '');
+    const full = id ? await fetchCollectionRecordById('pages', id) : match;
+    return parseHomePageContent(full || match);
+  } catch {
+    return null;
+  }
+}
+
 export async function loadHomePageData() {
+  noStore();
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
   const [parkPage, countries, tours, updatesPage, categories] = await Promise.all([
     withTimeout(
