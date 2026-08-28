@@ -42,6 +42,22 @@ export function imageLooksRisky(url) {
   );
 }
 
+export function normalizeImageSourceUrl(url) {
+  return String(url || '')
+    .trim()
+    .replace(/\?.*$/, '')
+    .replace(/#.*$/, '')
+    .toLowerCase();
+}
+
+/** Content hash embedded in uploaded WebP/JPG paths, or normalized URL fallback. */
+export function fingerprintFromUrl(url) {
+  const value = String(url || '').trim();
+  const match = value.match(/-([a-f0-9]{12})\.(webp|jpe?g|png|avif)$/i);
+  if (match) return match[1].toLowerCase();
+  return createHash('sha1').update(normalizeImageSourceUrl(value)).digest('hex').slice(0, 12);
+}
+
 export async function fetchAll(supabase, table, columns) {
   const pageSize = 1000;
   const rows = [];
@@ -68,9 +84,9 @@ export async function getVqd(query) {
   return match[1];
 }
 
-export async function searchDuckDuckGoImages(query, limit = 12) {
+export async function searchDuckDuckGoImages(query, limit = 12, page = 1) {
   const vqd = await getVqd(query);
-  const url = `https://duckduckgo.com/i.js?l=us-en&o=json&q=${encodeURIComponent(query)}&vqd=${encodeURIComponent(vqd)}&f=,,,,&p=1`;
+  const url = `https://duckduckgo.com/i.js?l=us-en&o=json&q=${encodeURIComponent(query)}&vqd=${encodeURIComponent(vqd)}&f=,,,,&p=${Math.max(1, page)}`;
   const response = await fetch(url, {
     headers: {
       'User-Agent':
@@ -169,10 +185,10 @@ export async function optimizeBuffer(buffer, contentType) {
   return { buffer, contentType };
 }
 
-export async function uploadBuffer(supabase, buffer, contentType, folder) {
+export async function uploadBuffer(supabase, buffer, contentType, folder, hashOverride = '') {
   const buckets = ['media', 'images', 'uploads', 'public'];
   const ext = contentType.includes('webp') ? 'webp' : contentType.includes('png') ? 'png' : 'jpg';
-  const hash = createHash('sha1').update(buffer).digest('hex').slice(0, 12);
+  const hash = hashOverride || createHash('sha1').update(buffer).digest('hex').slice(0, 12);
   const path = `${folder}/${Date.now()}-${hash}.${ext}`;
   let lastError = null;
   for (const bucket of buckets) {
@@ -188,13 +204,23 @@ export async function uploadBuffer(supabase, buffer, contentType, folder) {
   throw new Error(lastError?.message || 'Upload failed');
 }
 
-export async function resolveImageFromCandidates(supabase, candidates, folder) {
+export async function resolveImageFromCandidates(supabase, candidates, folder, options = {}) {
+  const usedFingerprints = options.usedFingerprints || null;
+  const usedSourceUrls = options.usedSourceUrls || null;
+
   for (const imageUrl of candidates) {
     if (!imageUrl || imageLooksRisky(imageUrl)) continue;
+    const normalizedSource = normalizeImageSourceUrl(imageUrl);
+    if (usedSourceUrls?.has(normalizedSource)) continue;
     try {
       const { buffer, contentType } = await downloadImage(imageUrl);
       const optimized = await optimizeBuffer(buffer, contentType);
-      return await uploadBuffer(supabase, optimized.buffer, optimized.contentType, folder);
+      const hash = createHash('sha1').update(optimized.buffer).digest('hex').slice(0, 12);
+      if (usedFingerprints?.has(hash)) continue;
+      const publicUrl = await uploadBuffer(supabase, optimized.buffer, optimized.contentType, folder, hash);
+      usedFingerprints?.add(hash);
+      usedSourceUrls?.add(normalizedSource);
+      return publicUrl;
     } catch {
       /* try next */
     }
