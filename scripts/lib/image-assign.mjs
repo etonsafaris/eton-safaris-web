@@ -112,6 +112,72 @@ export async function searchDuckDuckGoImages(query, limit = 12, page = 1) {
     .slice(0, limit);
 }
 
+function absolutizeImageUrl(url, base) {
+  let value = String(url || '').trim();
+  if (!value || value.startsWith('data:')) return '';
+  if (value.startsWith('//')) value = `https:${value}`;
+  if (value.startsWith('/')) return `${base.origin}${value}`;
+  if (value.startsWith('http')) return value;
+  return `${base.origin}/${value}`;
+}
+
+/** Official lodge photos from property website (og:image + gallery img tags). */
+export async function fetchWebsiteFacilityImages(website) {
+  if (!website) return [];
+  try {
+    const response = await fetch(website, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!response.ok) return [];
+    const html = await response.text();
+    const base = new URL(website);
+    const urls = [];
+
+    for (const pattern of [
+      /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/gi,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/gi,
+      /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/gi,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/gi,
+    ]) {
+      for (const match of html.matchAll(pattern)) {
+        const url = absolutizeImageUrl(match[1], base);
+        if (url) urls.push(url);
+      }
+    }
+
+    for (const match of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
+      const url = absolutizeImageUrl(match[1], base);
+      if (url) urls.push(url);
+    }
+    for (const match of html.matchAll(/srcset=["']([^"']+)["']/gi)) {
+      for (const part of match[1].split(',')) {
+        const src = part.trim().split(/\s+/)[0];
+        const url = absolutizeImageUrl(src, base);
+        if (url) urls.push(url);
+      }
+    }
+
+    return [...new Set(urls)]
+      .filter((url) => url.startsWith('http'))
+      .filter((url) => !imageLooksRisky(url))
+      .filter(
+        (url) =>
+          !/logo|icon|favicon|sprite|badge|avatar|map|payment|social|facebook|twitter|instagram|whatsapp|tripadvisor|booking\.com/i.test(
+            url
+          )
+      )
+      .slice(0, 24);
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchOgImage(website) {
   if (!website) return '';
   try {

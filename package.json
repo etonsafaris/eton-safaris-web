@@ -48,6 +48,8 @@
     "stays:replace-images": "node scripts/assign-accommodation-images.mjs --replace-all --ensure-unique",
     "stays:replace-images-dry": "node scripts/assign-accommodation-images.mjs --replace-all --dry-run",
     "stays:ensure-unique-images": "node scripts/assign-accommodation-images.mjs --ensure-unique",
+    "stays:fix-duplicate-images": "node scripts/fix-stay-duplicate-images.mjs",
+    "stays:fix-duplicate-images-dry": "node scripts/fix-stay-duplicate-images.mjs --dry-run",
     "stays:audit-image-dupes": "node scripts/audit-accommodation-image-dupes.mjs",
     "stays:curate-uganda": "node scripts/curate-uganda-accommodation-content.mjs",
     "stays:curate-uganda-dry": "node scripts/curate-uganda-accommodation-content.mjs --dry-run",
