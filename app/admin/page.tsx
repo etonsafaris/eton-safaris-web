@@ -4,54 +4,39 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { collectionIcon } from '@/lib/admin-icons';
+import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
-import {
-  fetchAdminCounts,
-  fetchAdminTable,
-} from '@/lib/admin-records-client';
-import { useAdminSession } from '@/components/admin/useAdminSession';
-import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
-import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
-import {
-  getRecordTitle,
-  pickString,
-} from '@/lib/data';
+import { fetchAdminTable } from '@/lib/admin-records-client';
+import { getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function AdminOverviewPage() {
   const { user } = useAdminSession();
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const { counts, loading: countsLoading } = useAdminCounts();
   const [bookings, setBookings] = useState<RecordRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const modules = [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter((item) => item.table);
-      try {
-        const [next, bookingRows] = await Promise.all([
-          fetchAdminCounts(
-            modules.map((item) => ({
-              id: item.id,
-              table: item.table,
-              aliases: item.aliases || [],
-            }))
-          ),
-          fetchAdminTable('bookings').catch(() => [] as RecordRow[]),
-        ]);
-        setCounts(next);
-        setBookings(bookingRows);
-      } catch (error) {
+    let mounted = true;
+    fetchAdminTable('bookings')
+      .then((bookingRows) => {
+        if (mounted) setBookings(bookingRows);
+      })
+      .catch((error) => {
         console.error(error);
-        setCounts({});
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+        if (mounted) setBookings([]);
+      })
+      .finally(() => {
+        if (mounted) setBookingsLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  const loading = countsLoading || bookingsLoading;
 
   const destinations: Record<string, number> = {};
   bookings.forEach((booking) => {
@@ -89,6 +74,7 @@ export default function AdminOverviewPage() {
         {overviewModules.map((item) => {
           const Icon = collectionIcon(item.icon);
           const href = `/admin/${item.id}`;
+          const total = item.table ? counts[item.id] ?? 0 : null;
           return (
             <Link
               key={item.id}
@@ -102,11 +88,11 @@ export default function AdminOverviewPage() {
                 </span>
               </div>
               <p className="mt-3 text-3xl font-bold text-[#111827] dark:text-white">
-                {item.table ? (counts[item.id] || 0).toLocaleString() : 'Open'}
+                {total != null ? total.toLocaleString() : 'Open'}
               </p>
-              {item.table ? (
+              {total != null ? (
                 <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#94a3b8]">
-                  {(counts[item.id] || 0) === 1 ? 'item' : 'items'}
+                  {total === 1 ? 'item' : 'items'}
                 </p>
               ) : null}
             </Link>

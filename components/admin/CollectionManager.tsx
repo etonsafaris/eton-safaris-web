@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
@@ -66,6 +67,7 @@ import { faqsForEditor } from '@/lib/default-faqs';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   const router = useRouter();
+  const { counts: adminCounts } = useAdminCounts();
   const isTours = config.id === 'tours';
   const isSafariUpdates = config.id === 'safari_updates';
   const isCountries = config.id === 'countries';
@@ -250,9 +252,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     setPage(1);
   }, [query, countryFilter, parkFilter, categoryFilter, postKind, config.table]);
 
-  const listTotal = usesRemotePaging && !query
-    ? remoteTotal
-    : filtered.length;
+  const hasListFilters = Boolean(
+    query || countryFilter || parkFilter || categoryFilter || (isSafariUpdates && postKind)
+  );
+  const moduleTotal = adminCounts[config.id] ?? 0;
+
+  const listTotal = hasListFilters
+    ? filtered.length
+    : usesRemotePaging
+      ? moduleTotal || remoteTotal
+      : moduleTotal || filtered.length;
   const totalPages = Math.max(1, Math.ceil(listTotal / PAGE_SIZE));
   const paged = useMemo(() => {
     if (usesRemotePaging && !query) {

@@ -1,16 +1,22 @@
 /**
- * Download real photos via DuckDuckGo image search and attach to tour packages.
- * Builds a per-category image pool, uploads to Supabase Storage, then assigns covers.
+ * Replace tour cover images with clean, category-aligned photos (no watermarks/logos).
+ * Uses curated Unsplash pools first, DuckDuckGo as fallback. Uploads optimized WebP to Supabase.
  *
  * Usage:
  *   node scripts/assign-tour-images-from-ddg.mjs --dry-run
- *   node scripts/assign-tour-images-from-ddg.mjs --limit 50
- *   node scripts/assign-tour-images-from-ddg.mjs
+ *   node scripts/assign-tour-images-from-ddg.mjs --replace-all
+ *   node scripts/assign-tour-images-from-ddg.mjs --replace-all --limit 100
+ *   node scripts/assign-tour-images-from-ddg.mjs --country Uganda --replace-all
  */
 import { createClient } from '@supabase/supabase-js';
-import { createHash, randomUUID } from 'crypto';
+import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
+import {
+  curatedUrlsForTheme,
+  imageLooksRisky,
+  themeForTour,
+} from './lib/tour-image-pools.mjs';
 
 function loadEnv() {
   const file = resolve(process.cwd(), '.env.local');
@@ -36,6 +42,14 @@ function sleep(ms) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
 }
 
+function slugSafe(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+}
+
 async function fetchAll(supabase, table, columns) {
   const pageSize = 1000;
   const rows = [];
@@ -48,17 +62,17 @@ async function fetchAll(supabase, table, columns) {
   return rows;
 }
 
-function searchQueryFor(country, category) {
-  const topic = String(category || '')
-    .replace(new RegExp(country, 'ig'), '')
-    .replace(/\b(safaris|safari|tours|tour|holidays|holiday|packages|package)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (/gorilla/i.test(category)) return `${country} mountain gorilla rainforest wildlife photograph -logo -watermark`;
-  if (/beach/i.test(category)) return `${country} tropical beach coastline scenic photograph -logo -watermark`;
-  if (/climb|mountain/i.test(category)) return `${country} mountain trekking landscape scenic photograph -logo -watermark`;
-  if (/wildlife|safari/i.test(category)) return `${country} African wildlife savannah game drive photograph -logo -watermark`;
-  return `${country} ${topic || 'safari'} nature landscape photograph -logo -watermark`;
+function searchQueryFor(country, category, title) {
+  const theme = themeForTour({ category, title, country });
+  const base = `${country} `;
+  if (theme === 'gorilla') return `${base}mountain gorilla rainforest wildlife photograph -logo -watermark`;
+  if (theme === 'chimp') return `${base}chimpanzee primate forest wildlife photograph -logo -watermark`;
+  if (theme === 'beach') return `${base}tropical beach coastline scenic photograph -logo -watermark`;
+  if (theme === 'mountain') return `${base}mountain trekking landscape scenic photograph -logo -watermark`;
+  if (theme === 'birding') return `${base}bird wildlife nature photograph -logo -watermark`;
+  if (theme === 'desert') return `${base}desert landscape scenic photograph -logo -watermark`;
+  if (theme === 'culture') return `${base}cultural landscape scenic photograph -logo -watermark`;
+  return `${base}African wildlife savannah game drive photograph -logo -watermark`;
 }
 
 async function getVqd(query) {
@@ -99,7 +113,7 @@ async function searchDuckDuckGoImages(query, limit = 20) {
     }))
     .filter((item) => item.image.startsWith('http'))
     .filter((item) => item.width >= 900 || item.height >= 600)
-    .filter((item) => !/logo|watermark|stamp|banner|flyer|brochure|badge/i.test(`${item.title} ${item.source} ${item.image}`))
+    .filter((item) => !imageLooksRisky(`${item.title} ${item.source} ${item.image}`))
     .slice(0, limit);
 }
 
@@ -120,16 +134,26 @@ async function downloadImage(url) {
   return { buffer, contentType };
 }
 
-function extensionFor(contentType) {
-  if (contentType.includes('png')) return 'png';
-  if (contentType.includes('webp')) return 'webp';
-  if (contentType.includes('gif')) return 'gif';
-  return 'jpg';
+async function optimizeBuffer(buffer, contentType) {
+  try {
+    const sharp = (await import('sharp')).default;
+    const optimized = await sharp(buffer)
+      .rotate()
+      .resize({ width: 1400, withoutEnlargement: true })
+      .webp({ quality: 78, effort: 4 })
+      .toBuffer();
+    if (optimized.length > 8_000) {
+      return { buffer: optimized, contentType: 'image/webp' };
+    }
+  } catch {
+    /* sharp optional — upload original */
+  }
+  return { buffer, contentType };
 }
 
 async function uploadBuffer(supabase, buffer, contentType, folder) {
   const buckets = ['media', 'images', 'uploads', 'public'];
-  const ext = extensionFor(contentType);
+  const ext = contentType.includes('webp') ? 'webp' : contentType.includes('png') ? 'png' : 'jpg';
   const hash = createHash('sha1').update(buffer).digest('hex').slice(0, 12);
   const path = `${folder}/${Date.now()}-${hash}.${ext}`;
   let lastError = null;
@@ -146,12 +170,77 @@ async function uploadBuffer(supabase, buffer, contentType, folder) {
   throw new Error(lastError?.message || 'Upload failed');
 }
 
+async function buildPoolForGroup({ supabase, country, category, theme, needed, cacheFile, force, dryRun }) {
+  if (!force && existsSync(cacheFile)) {
+    try {
+      const cached = JSON.parse(readFileSync(cacheFile, 'utf8'));
+      if (Array.isArray(cached) && cached.length >= Math.min(needed, 4)) {
+        return cached;
+      }
+    } catch {
+      /* rebuild */
+    }
+  }
+
+  if (dryRun) return [];
+
+  const uploaded = new Set();
+  const pool = [];
+
+  const curated = curatedUrlsForTheme(theme, needed);
+  for (const sourceUrl of curated) {
+    if (pool.length >= needed) break;
+    try {
+      const { buffer, contentType } = await downloadImage(sourceUrl);
+      const optimized = await optimizeBuffer(buffer, contentType);
+      const publicUrl = await uploadBuffer(supabase, optimized.buffer, optimized.contentType, 'tours');
+      if (uploaded.has(publicUrl)) continue;
+      uploaded.add(publicUrl);
+      pool.push(publicUrl);
+      console.log(`  curated ${pool.length}/${needed} (${theme})`);
+      await sleep(250);
+    } catch (error) {
+      console.warn('  skip curated:', error.message);
+    }
+  }
+
+  if (pool.length < needed) {
+    const query = searchQueryFor(country, category, '');
+    try {
+      const results = await searchDuckDuckGoImages(query, needed - pool.length + 8);
+      for (const result of results) {
+        if (pool.length >= needed) break;
+        try {
+          const { buffer, contentType } = await downloadImage(result.image);
+          const optimized = await optimizeBuffer(buffer, contentType);
+          const publicUrl = await uploadBuffer(supabase, optimized.buffer, optimized.contentType, 'tours');
+          if (uploaded.has(publicUrl)) continue;
+          uploaded.add(publicUrl);
+          pool.push(publicUrl);
+          console.log(`  ddg ${pool.length}/${needed}`);
+          await sleep(400);
+        } catch (error) {
+          console.warn('  skip ddg:', error.message);
+        }
+      }
+    } catch (error) {
+      console.warn('  ddg search failed:', error.message);
+    }
+  }
+
+  if (pool.length) writeFileSync(cacheFile, JSON.stringify(pool, null, 2));
+  return pool;
+}
+
 loadEnv();
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+const force = args.includes('--force');
+const replaceAll = args.includes('--replace-all');
 const limitIdx = args.indexOf('--limit');
 const limit = limitIdx >= 0 ? Number(args[limitIdx + 1]) || 0 : 0;
-const force = args.includes('--force');
+const countryIdx = args.indexOf('--country');
+const onlyCountry = countryIdx >= 0 ? String(args[countryIdx + 1] || '').trim() : '';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -159,93 +248,73 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-const cacheDir = resolve(process.cwd(), 'scripts', '.cache', 'ddg-images');
+const cacheDir = resolve(process.cwd(), 'scripts', '.cache', 'tour-images-v2');
 mkdirSync(cacheDir, { recursive: true });
 
 const tours = await fetchAll(
   supabase,
   'tours',
-  'id,title,country,category,image_url,social_image_url,seo_title,meta_description,slug'
+  'id,title,country,category,image_url,social_image_url,slug'
 );
 
-const needsImage = tours.filter((tour) => force || !String(tour.image_url || '').trim());
-const targetTours = limit > 0 ? needsImage.slice(0, limit) : needsImage;
-console.log(`Tours needing images: ${needsImage.length}; processing: ${targetTours.length}; dryRun=${dryRun}`);
+const filtered = tours.filter((tour) => {
+  const country = String(tour.country || '').trim();
+  if (onlyCountry && country.toLowerCase() !== onlyCountry.toLowerCase()) return false;
+  if (replaceAll) return true;
+  const image = String(tour.image_url || '').trim();
+  return force || !image || imageLooksRisky(image);
+});
 
-const byCategory = new Map();
+const targetTours = limit > 0 ? filtered.slice(0, limit) : filtered;
+console.log(
+  `Tours total=${tours.length}; candidates=${filtered.length}; processing=${targetTours.length}; replaceAll=${replaceAll}; dryRun=${dryRun}`
+);
+
+const byGroup = new Map();
 for (const tour of targetTours) {
-  const key = `${String(tour.country || '').trim()}||${String(tour.category || '').trim()}`;
-  if (!byCategory.has(key)) byCategory.set(key, []);
-  byCategory.get(key).push(tour);
+  const country = String(tour.country || '').trim();
+  const category = String(tour.category || '').trim();
+  const theme = themeForTour({ category, title: tour.title, country });
+  const key = `${country}||${category}||${theme}`;
+  if (!byGroup.has(key)) byGroup.set(key, { country, category, theme, tours: [] });
+  byGroup.get(key).tours.push(tour);
 }
 
-const poolByCategory = new Map();
+const poolByGroup = new Map();
 let uploaded = 0;
 let assigned = 0;
 let failed = 0;
 
-for (const [key, group] of byCategory) {
-  const [country, category] = key.split('||');
-  const query = searchQueryFor(country, category);
-  const needed = Math.min(24, Math.max(8, Math.ceil(group.length / 5)));
-  console.log(`\nPool for ${country} / ${category} → "${query}" (need ~${needed})`);
-
+for (const [key, group] of byGroup) {
+  const { country, category, theme, tours: groupTours } = group;
+  const needed = Math.min(30, Math.max(10, Math.ceil(groupTours.length / 4)));
   const cacheFile = resolve(cacheDir, `${slugSafe(key)}.json`);
-  let urls = [];
-  if (!force && existsSync(cacheFile)) {
-    try {
-      urls = JSON.parse(readFileSync(cacheFile, 'utf8'));
-    } catch {
-      urls = [];
-    }
-  }
+  console.log(`\nPool for ${country} / ${category} [${theme}] → need ~${needed}`);
 
-  if ((force || urls.length < needed) && !dryRun) {
-    urls = [];
-    try {
-      const results = await searchDuckDuckGoImages(query, needed + 10);
-      for (const result of results) {
-        if (urls.length >= needed) break;
-        try {
-          const { buffer, contentType } = await downloadImage(result.image);
-          const publicUrl = await uploadBuffer(supabase, buffer, contentType, 'tours');
-          urls.push(publicUrl);
-          uploaded += 1;
-          console.log(`  uploaded ${urls.length}/${needed}`);
-          await sleep(400);
-        } catch (error) {
-          console.warn('  skip image:', error.message);
-        }
-      }
-      writeFileSync(cacheFile, JSON.stringify(urls, null, 2));
-      await sleep(800);
-    } catch (error) {
-      console.warn('  search failed:', error.message);
-    }
-  } else if (dryRun) {
-    console.log(`  [dry-run] would search DDG and build pool of ${needed}`);
-  }
-
-  poolByCategory.set(key, urls);
+  const pool = await buildPoolForGroup({
+    supabase,
+    country,
+    category,
+    theme,
+    needed,
+    cacheFile,
+    force: force || replaceAll,
+    dryRun,
+  });
+  uploaded += pool.length;
+  poolByGroup.set(key, pool);
 }
 
-function slugSafe(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 80);
-}
-
-for (const [key, group] of byCategory) {
-  const pool = poolByCategory.get(key) || [];
+for (const [key, group] of byGroup) {
+  const pool = poolByGroup.get(key) || [];
+  const { tours: groupTours } = group;
   if (!pool.length && !dryRun) {
-    console.warn(`No images for ${key}; skipping ${group.length} tours`);
-    failed += group.length;
+    console.warn(`No images for ${key}; skipping ${groupTours.length} tours`);
+    failed += groupTours.length;
     continue;
   }
-  for (let i = 0; i < group.length; i += 1) {
-    const tour = group[i];
+  for (let i = 0; i < groupTours.length; i += 1) {
+    const tour = groupTours[i];
     const imageUrl = pool[i % Math.max(pool.length, 1)] || '';
     if (dryRun) {
       assigned += 1;
@@ -268,9 +337,24 @@ for (const [key, group] of byCategory) {
       console.warn('Assign failed', tour.id, error.message);
     } else {
       assigned += 1;
-      if (assigned % 50 === 0) console.log(`… assigned ${assigned}`);
+      if (assigned % 100 === 0) console.log(`… assigned ${assigned}`);
     }
   }
 }
 
-console.log(JSON.stringify({ ok: true, dryRun, uploaded, assigned, failed, processed: targetTours.length }, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      ok: true,
+      dryRun,
+      replaceAll,
+      uploaded,
+      assigned,
+      failed,
+      processed: targetTours.length,
+      groups: byGroup.size,
+    },
+    null,
+    2
+  )
+);

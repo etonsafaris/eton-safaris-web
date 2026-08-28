@@ -113,19 +113,6 @@ export default function AccommodationDetailPage() {
             {pickStoredString(item, ['description_title'])}
           </h2>
         )}
-        {(pickStoredString(item, ['website', 'website_url']) || '').startsWith('http') ? (
-          <p className="mb-4 text-sm text-[#374151]">
-            Official site:{' '}
-            <a
-              href={pickStoredString(item, ['website', 'website_url'])}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#00A651] hover:underline"
-            >
-              {pickStoredString(item, ['website', 'website_url']).replace(/^https?:\/\//, '')}
-            </a>
-          </p>
-        ) : null}
         <div
           className="public-prose max-w-none"
           dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(item, ['description'])) }}

@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { AdminCountsProvider, useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useAdminSession } from '@/components/admin/useAdminSession';
@@ -33,6 +34,7 @@ function NavLink({
   active,
   collapsed,
   badge,
+  countBadge,
   onNavigate,
   onGuard,
 }: {
@@ -42,6 +44,7 @@ function NavLink({
   active: boolean;
   collapsed?: boolean;
   badge?: number;
+  countBadge?: number;
   onNavigate?: () => void;
   onGuard: (event: React.MouseEvent, id: string) => void;
 }) {
@@ -81,11 +84,19 @@ function NavLink({
           {badge > 99 ? '99+' : badge}
         </span>
       ) : null}
+      {countBadge && !collapsed && !badge ? (
+        <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+          active ? 'bg-white/20 text-white' : 'bg-[#ecfdf3] text-[#00A651] dark:bg-white/10 dark:text-[#4ade80]'
+        }`}>
+          {countBadge > 9999 ? '9k+' : countBadge.toLocaleString()}
+        </span>
+      ) : null}
     </Link>
   );
 }
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+function AdminShellInner({ children }: { children: React.ReactNode }) {
+  const { counts: moduleCounts } = useAdminCounts();
   const router = useRouter();
   const pathname = usePathname();
   const { user, ready } = useAdminSession();
@@ -287,6 +298,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 active={Boolean(active)}
                 collapsed={collapsed}
                 badge={item.id === 'notifications' && unreadNotifications > 0 ? unreadNotifications : undefined}
+                countBadge={
+                  item.table && item.id !== 'notifications' && typeof moduleCounts[item.id] === 'number'
+                    ? moduleCounts[item.id]
+                    : undefined
+                }
                 onNavigate={() => setMenuOpen(false)}
                 onGuard={guard}
               />
@@ -414,6 +430,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                           label={item.label}
                           iconName={item.icon}
                           active={Boolean(active)}
+                          countBadge={
+                            item.table && typeof moduleCounts[item.id] === 'number'
+                              ? moduleCounts[item.id]
+                              : undefined
+                          }
                           onNavigate={() => setAdminMenuOpen(false)}
                           onGuard={guard}
                         />
@@ -455,5 +476,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">{children}</main>
       </div>
     </div>
+  );
+}
+
+export default function AdminShell({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminCountsProvider>
+      <AdminShellInner>{children}</AdminShellInner>
+    </AdminCountsProvider>
   );
 }
