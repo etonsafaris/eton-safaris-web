@@ -8,9 +8,13 @@ import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import {
-  adminListColumnsFor,
-  countCollectionRecords,
-  fetchCollectionRecords,
+  fetchAdminCounts,
+  fetchAdminTable,
+} from '@/lib/admin-records-client';
+import { useAdminSession } from '@/components/admin/useAdminSession';
+import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
+import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import {
   getRecordTitle,
   pickString,
 } from '@/lib/data';
@@ -24,26 +28,27 @@ export default function AdminOverviewPage() {
 
   useEffect(() => {
     async function load() {
-      const next: Record<string, number> = {};
-      await Promise.all(
-        [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS]
-          .filter((item) => item.table)
-          .map(async (item) => {
-            try {
-              // Counts only — never pull full description HTML for every collection on the dashboard.
-              next[item.id] = await countCollectionRecords(item.table, item.aliases || []);
-              if (item.id === 'bookings') {
-                const bookingColumns = adminListColumnsFor('bookings') || 'id,destination,country,tour,created_at';
-                setBookings(await fetchCollectionRecords(item.table, item.aliases || [], { columns: bookingColumns }));
-              }
-            } catch (error) {
-              console.error(error);
-              next[item.id] = 0;
-            }
-          })
-      );
-      setCounts(next);
-      setLoading(false);
+      const modules = [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter((item) => item.table);
+      try {
+        const [next, bookingRows] = await Promise.all([
+          fetchAdminCounts(
+            modules.map((item) => ({
+              id: item.id,
+              table: item.table,
+              aliases: item.aliases || [],
+            }))
+          ),
+          fetchAdminTable('bookings').catch(() => [] as RecordRow[]),
+        ]);
+        setCounts(next);
+        setBookings(bookingRows);
+      } catch (error) {
+        console.error(error);
+        setCounts({});
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
