@@ -37,6 +37,7 @@ export default function AccommodationsPageClient({
   }, [initialRows, initialTotal]);
 
   useEffect(() => {
+    if (initialRows.length > 0) return undefined;
     let cancelled = false;
     fetchCollectionPage('accommodations', [], { limit: 48, offset: 0 })
       .then((page) => {
@@ -48,7 +49,7 @@ export default function AccommodationsPageClient({
     return () => {
       cancelled = true;
     };
-  }, [live]);
+  }, [live, initialRows.length]);
 
   async function loadMore() {
     setLoadingMore(true);

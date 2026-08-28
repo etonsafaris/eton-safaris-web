@@ -180,7 +180,7 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   safari_updates:
     'id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date',
   countries:
-    'id,name,slug,seo_slug,tagline,image_url,social_image_url,is_popular,description_title,created_date,updated_date',
+    'id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,created_date,updated_date',
   categories:
     'id,name,slug,seo_slug,country,image_url,social_image_url,description_title,created_date,updated_date',
   pages: 'id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,created_date,updated_date',

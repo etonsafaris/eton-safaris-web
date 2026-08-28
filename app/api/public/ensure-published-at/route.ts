@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
+import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { publishStampForSave, recordPublishedAt } from '@/lib/data';
 import { embedContent, extractEmbeddedContent, recordBodyHtml } from '@/lib/embedded-content';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
+
+function hasAdminSession(request: Request) {
+  const cookie = request.headers.get('cookie') || '';
+  return cookie.split(';').some((part) => part.trim() === `${ADMIN_SESSION_COOKIE}=1`);
+}
 
 const TABLES = [
   'categories',
@@ -24,11 +30,13 @@ function bodyFieldForEmbed(row: RecordRow): 'description' | 'content' | 'summary
 }
 
 /**
- * Backfill missing published_at on CMS rows using created/updated stamps (or now).
- * Safe to call repeatedly — only writes when recordPublishedAt was empty.
- * If the published_at column is missing, stamps into the HTML embed fields instead.
+ * Backfill missing published_at on CMS rows — admin only (never from public page views).
+ * Only writes when recordPublishedAt was empty.
  */
 export async function POST(request: Request) {
+  if (!hasAdminSession(request)) {
+    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  }
   try {
     const body = (await request.json().catch(() => ({}))) as { table?: string; id?: string };
     const table = String(body.table || '').trim();

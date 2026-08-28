@@ -132,6 +132,45 @@ export async function loadHomePageData() {
   };
 }
 
+export async function loadAccommodationsPageData() {
+  noStore();
+  try {
+    const page = await fetchCollectionPage('accommodations', [], {
+      columns: listColumns('accommodations'),
+      limit: 48,
+      offset: 0,
+    });
+    const rows = page.rows.filter(isPublishedRecord);
+    return { rows, total: Math.max(page.total, rows.length) };
+  } catch {
+    return { rows: [] as RecordRow[], total: 0 };
+  }
+}
+
+export async function loadToursPageData() {
+  noStore();
+  try {
+    const [tourPage, categories, countries] = await Promise.all([
+      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }),
+      fetchCollectionRecords('categories', [], { columns: listColumns('categories'), maxRows: 80 }),
+      fetchCollectionRecords('countries', [], { columns: listColumns('countries'), maxRows: 48 }),
+    ]);
+    return {
+      tours: tourPage.rows.filter(isPublishedRecord),
+      total: Math.max(tourPage.total, tourPage.rows.length),
+      categories: categories.filter(isPublishedRecord),
+      countries: countries.filter(isPublishedRecord),
+    };
+  } catch {
+    return {
+      tours: [] as RecordRow[],
+      total: 0,
+      categories: [] as RecordRow[],
+      countries: [] as RecordRow[],
+    };
+  }
+}
+
 export async function loadCountryPageData(slug: string) {
   noStore();
   const [countries, categories, placesPage] = await Promise.all([

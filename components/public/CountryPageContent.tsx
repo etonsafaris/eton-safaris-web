@@ -16,11 +16,12 @@ import {
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import { useCmsLive } from '@/lib/cms-live';
-import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle, stripParkListFromCountryHtml } from '@/lib/country-landing-copy';
+import { COUNTRY_SPECIALISTS_LINE, countryArticleHtml, countryHeroTitle, stripParkListFromCountryHtml } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
   fetchCollectionPage,
+  fetchCollectionRecordById,
   fetchCollectionRecords,
   fetchToursForCountryLabel,
   fetchParksForCountry,
@@ -101,7 +102,15 @@ export default function CountryPageContent({
         ]);
         if (cancelled) return;
         const match = countryRows.find((row) => recordMatchesCountrySlug(row, slug)) || null;
-        if (match && isPublishedRecord(match)) setCountry(match);
+        let nextCountry = countryProp;
+        if (match) {
+          const full =
+            match.id != null
+              ? (await fetchCollectionRecordById('countries', String(match.id))) || match
+              : match;
+          if (isPublishedRecord(full)) nextCountry = full;
+        }
+        setCountry(nextCountry);
         setCategories(
           allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
         );
@@ -126,12 +135,14 @@ export default function CountryPageContent({
   const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
   const faqs = limitFaqs(extras.faqs, bestFaqsFor('country', { countrySlug: slug, countryName: title }));
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
-  const published = useEnsurePublishedAt('countries', country, extras.published_at, (stamp) => {
-    setCountry((row) => (row ? { ...row, published_at: stamp } : row));
-  });
+  const published = useEnsurePublishedAt('countries', country, extras.published_at);
 
   const countryHtml = stripParkListFromCountryHtml(
-    toProseHtml(country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '')
+    toProseHtml(
+      country
+        ? visibleRecordHtml(country, ['description', 'content', 'about']) || countryArticleHtml(slug)
+        : countryArticleHtml(slug)
+    )
   );
   const descriptionHtml = countryHtml;
   const summaryHtml = toProseHtml(extras.excerpt) || toProseHtml(country ? visibleRecordHtml(country, ['summary']) : '');

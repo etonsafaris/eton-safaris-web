@@ -1,15 +1,16 @@
 import ToursPageClient from '@/components/public/ToursPageClient';
+import { loadToursPageData } from '@/lib/load-public';
 
 export const revalidate = 60;
 
-/** Avoid server-side tour/count queries — they were 500/504 on Vercel. */
-export default function ToursPage() {
+export default async function ToursPage() {
+  const { tours, total, categories, countries } = await loadToursPageData();
   return (
     <ToursPageClient
-      initialTours={[]}
-      initialCategories={[]}
-      initialCountries={[]}
-      initialTotal={0}
+      initialTours={tours}
+      initialCategories={categories}
+      initialCountries={countries}
+      initialTotal={total}
     />
   );
 }

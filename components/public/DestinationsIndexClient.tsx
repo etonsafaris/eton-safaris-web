@@ -8,6 +8,7 @@ import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
+  isPublishedRecord,
   pickString,
   recordCardBlurb,
 } from '@/lib/data';
@@ -26,8 +27,8 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
   }, [initialCountries]);
 
   useEffect(() => {
-    fetchCollectionRecords('countries')
-      .then((rows) => setCountries(rows))
+    fetchCollectionRecords('countries', [], { maxRows: 48 })
+      .then((rows) => setCountries(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
   }, [live]);
 

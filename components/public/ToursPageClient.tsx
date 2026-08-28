@@ -63,6 +63,7 @@ function ToursList({
   }, [q, destination, category]);
 
   useEffect(() => {
+    if (initialTours.length > 0) return undefined;
     let cancelled = false;
     Promise.all([
       fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
@@ -81,7 +82,7 @@ function ToursList({
     return () => {
       cancelled = true;
     };
-  }, [live]);
+  }, [live, initialTours.length]);
 
   const destinationOptions = useMemo(() => publicDestinationNames(mergePublicDestinations(countries)), [countries]);
 
