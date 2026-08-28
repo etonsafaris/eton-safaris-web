@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     const { recordPatch, seo } = applyAutoIndexSeo(full, kind, {
       publicPath: publicPathForRecord(collectionId, full) || undefined,
-      enableGoogle: configureOnly ? seoValuesFromRecord(full).robots_index : enabled,
+      enableGoogle: configureOnly ? seoValuesFromRecord(full).robots_index === true : enabled,
     });
 
     const payload = buildSavePayload(

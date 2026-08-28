@@ -108,7 +108,7 @@ export function applyAutoIndexSeo(
   const focusKeyphrase =
     existing.focus_keyphrase.trim() ||
     `${title}${country ? ` ${country}` : ''}`.toLowerCase().replace(/\s+/g, ' ').trim();
-  const enableGoogle = options?.enableGoogle ?? existing.robots_index;
+  const enableGoogle = options?.enableGoogle === true;
 
   const seo: SeoValues = {
     ...defaultSeoValues(contentType),
@@ -202,7 +202,7 @@ export function autoIndexSeoForTable(
   const base = { ...(options?.existingRecord || {}), ...payload } as RecordRow;
   const result = applyAutoIndexSeo(base, kind, {
     publicPath: options?.publicPath || undefined,
-    enableGoogle: seo?.robots_index ?? Boolean(payload.robots_index),
+    enableGoogle: seo?.robots_index === true,
   });
   return {
     payload: { ...payload, ...result.recordPatch },

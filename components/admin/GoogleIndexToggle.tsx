@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { adminAuthHeaders } from '@/lib/admin-records-client';
 import { seoValuesFromRecord } from '@/lib/seo';
 import type { RecordRow } from '@/lib/types';
@@ -20,9 +20,14 @@ export default function GoogleIndexToggle({
 }: GoogleIndexToggleProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const enabled = seoValuesFromRecord(record).robots_index;
+  const [enabled, setEnabled] = useState(() => seoValuesFromRecord(record).robots_index === true);
+
+  useEffect(() => {
+    setEnabled(seoValuesFromRecord(record).robots_index === true);
+  }, [record]);
 
   async function toggle() {
+    const nextEnabled = !enabled;
     setLoading(true);
     setError('');
     try {
@@ -30,16 +35,19 @@ export default function GoogleIndexToggle({
       const response = await fetch('/api/admin/google-index', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           collectionId,
           id: record.id,
-          enabled: !enabled,
+          enabled: nextEnabled,
         }),
       });
       const body = (await response.json()) as { error?: string; record?: RecordRow };
       if (!response.ok) throw new Error(body.error || 'Could not update Google indexing');
-      if (body.record) onUpdated?.(body.record);
+      const saved = body.record || record;
+      const savedEnabled = seoValuesFromRecord(saved).robots_index === true;
+      setEnabled(savedEnabled);
+      onUpdated?.({ ...saved, robots_index: savedEnabled });
       const { bumpCmsLive } = await import('@/lib/cms-live');
       bumpCmsLive();
       try {
