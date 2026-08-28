@@ -9,6 +9,7 @@ type LayoutProps = {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   return publicRecordMetadata('national_park', params.slug, `/parks/${params.slug}`, {
     aliases: ['national_parks', 'parks'],
+    contentType: 'park',
   });
 }
 

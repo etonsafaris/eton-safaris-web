@@ -1,4 +1,5 @@
 import { jsonLdFromRecord, findPublicRecord } from '@/lib/seo-public';
+import { indexableContentKindForTable, shouldIndexPublicRecord } from '@/lib/public-indexing';
 import type { SeoSchemaType } from '@/lib/seo';
 
 export default async function JsonLd({
@@ -16,6 +17,8 @@ export default async function JsonLd({
 }) {
   try {
     const record = await findPublicRecord(table, slug, aliases);
+    const kind = indexableContentKindForTable(table);
+    if (kind && record && !shouldIndexPublicRecord(record, kind)) return null;
     const data = jsonLdFromRecord(record, { path, schemaHint, fallbackTitle: slug });
     if (!data) return null;
     return (

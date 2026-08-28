@@ -6,6 +6,7 @@ import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
+import { IndexStatusBadge, indexStatusForCollectionRecord } from '@/components/admin/IndexStatusBadge';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
 import {
@@ -332,6 +333,12 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     if (!config.publicPath) return null;
     if (!slug) return null;
     return `${config.publicPath.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`;
+  }
+
+  function cardIndexBadge(record: RecordRow) {
+    const status = indexStatusForCollectionRecord(record, config.id);
+    if (!status) return undefined;
+    return <IndexStatusBadge status={status} />;
   }
 
   function cardBadge() {
@@ -1098,6 +1105,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   href={publicHref(record)}
                   image={getRecordImage(record) || undefined}
                   badge={cardBadge()}
+                  indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
                   onEdit={() => openEdit(record)}
@@ -1115,6 +1123,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   href={publicHref(record)}
                   image={getRecordImage(record) || undefined}
                   badge={cardBadge()}
+                  indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
                   onEdit={() => openEdit(record)}
@@ -1279,6 +1288,9 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                                 ? 'article'
                                 : 'page'
                 }
+                indexRecord={{ ...(editing || {}), ...form } as RecordRow}
+                forceNoindex={config.id === 'landing_pages'}
+                forceNoindexReason="Conversion landing — admin preview only; public site uses the country page."
               />
             ) : null}
 

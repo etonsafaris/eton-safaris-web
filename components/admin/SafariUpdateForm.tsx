@@ -334,6 +334,11 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
         saving={saving}
         coverImageUrl={coverImage}
         contentType="article"
+        indexRecord={{
+          title,
+          name: title,
+          image_url: coverImage.startsWith('blob:') ? '' : coverImage,
+        }}
       />
     </form>
   );

@@ -21,6 +21,8 @@ import {
   type SeoContentType,
   type SeoValues,
 } from '@/lib/seo';
+import { IndexStatusBadge, indexStatusForDraft, seoContentTypeToIndexKind } from '@/components/admin/IndexStatusBadge';
+import type { RecordRow } from '@/lib/types';
 
 type SeoPanelProps = {
   values: SeoValues;
@@ -36,6 +38,9 @@ type SeoPanelProps = {
   contentType?: SeoContentType;
   keywordLibraryCountry?: string;
   keywordLibraryCategory?: string;
+  indexRecord?: RecordRow | null;
+  forceNoindex?: boolean;
+  forceNoindexReason?: string;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -106,6 +111,9 @@ export default function SeoPanel({
   contentType = 'page',
   keywordLibraryCountry = '',
   keywordLibraryCategory = '',
+  indexRecord = null,
+  forceNoindex = false,
+  forceNoindexReason = '',
 }: SeoPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'seo' | 'readability' | 'schema'>('seo');
@@ -133,6 +141,31 @@ export default function SeoPanel({
   const readability = useMemo(() => analyzeReadability(contentForReadability), [contentForReadability]);
   const flesch = useMemo(() => fleschReadingEase(contentForReadability), [contentForReadability]);
   const schemaCheck = useMemo(() => validateSeoSchema(values.seo_schema), [values.seo_schema]);
+  const indexKind = seoContentTypeToIndexKind(contentType);
+  const indexStatus = useMemo(() => {
+    if (!indexKind) return null;
+    return indexStatusForDraft(indexKind, {
+      baseRecord: indexRecord,
+      title: pageTitle,
+      description: contentForReadability,
+      imageUrl: coverImageUrl,
+      country: pickString(indexRecord || {}, ['country']),
+      robotsIndex: values.robots_index,
+      metaDescription: values.meta_description,
+      forceNoindex,
+      forceNoindexReason,
+    });
+  }, [
+    indexKind,
+    indexRecord,
+    pageTitle,
+    contentForReadability,
+    coverImageUrl,
+    values.robots_index,
+    values.meta_description,
+    forceNoindex,
+    forceNoindexReason,
+  ]);
 
   const previewTitle = values.seo_title.trim() || 'Please provide a meta title';
   const previewDescription =
@@ -281,12 +314,18 @@ export default function SeoPanel({
             <span className="font-bold text-[#111827]">SEO</span>
             <span className="ml-2 text-sm text-[#6b7280]">{scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}</span>
           </div>
+          {indexStatus ? <IndexStatusBadge status={indexStatus} size="md" /> : null}
         </div>
         <ChevronDown className={`h-5 w-5 text-[#6b7280] transition ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div className="mt-2 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+          {indexStatus ? (
+            <p className="border-b border-[#e5e7eb] bg-[#f8fafc] px-4 py-2.5 text-xs text-[#475569]">
+              Google: <strong>{indexStatus.label}</strong> — {indexStatus.reason}
+            </p>
+          ) : null}
           <div className="flex border-b border-[#e5e7eb] px-4">
             {(['seo', 'readability', 'schema'] as const).map((item) => (
               <button

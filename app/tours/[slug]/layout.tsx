@@ -7,7 +7,7 @@ type LayoutProps = {
 };
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`);
+  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
 }
 
 export default function TourSeoLayout({ children, params }: LayoutProps) {

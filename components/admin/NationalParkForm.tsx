@@ -368,6 +368,12 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="park"
+        indexRecord={{
+          country,
+          name,
+          title: name,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
     </form>
   );

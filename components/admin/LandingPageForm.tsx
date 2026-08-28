@@ -357,6 +357,13 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="country"
+        forceNoindex
+        forceNoindexReason="Conversion landing — admin preview only; public site uses the country page."
+        indexRecord={{
+          title,
+          name: title,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
       {seoSaved ? null : <p className="sr-only">SEO draft</p>}
     </form>

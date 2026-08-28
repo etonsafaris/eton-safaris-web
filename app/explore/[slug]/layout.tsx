@@ -7,7 +7,7 @@ type LayoutProps = {
 };
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return publicRecordMetadata('explore', params.slug, `/explore/${params.slug}`);
+  return publicRecordMetadata('explore', params.slug, `/explore/${params.slug}`, { contentType: 'place' });
 }
 
 export default function ExploreSeoLayout({ children, params }: LayoutProps) {

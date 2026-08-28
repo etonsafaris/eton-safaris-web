@@ -269,6 +269,12 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="category"
+        indexRecord={{
+          country,
+          title,
+          name: title,
+          image_url: categoryImage.startsWith('blob:') ? '' : categoryImage,
+        }}
       />
     </form>
   );

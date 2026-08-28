@@ -369,6 +369,12 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="place"
+        indexRecord={{
+          country,
+          title,
+          name: title,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
     </form>
   );

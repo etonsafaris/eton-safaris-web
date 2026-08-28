@@ -8,6 +8,7 @@ export default function AdminItemCard({
   href,
   image,
   badge,
+  indexBadge,
   date,
   title,
   onEdit,
@@ -18,6 +19,7 @@ export default function AdminItemCard({
   href?: string | null;
   image?: string;
   badge: string;
+  indexBadge?: React.ReactNode;
   date?: string;
   title: string;
   onEdit: () => void;
@@ -77,6 +79,7 @@ export default function AdminItemCard({
       <span className="absolute left-3 top-3 rounded bg-[#00A651] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
         {badge}
       </span>
+      {indexBadge ? <div className="absolute right-3 top-3 z-[2]">{indexBadge}</div> : null}
     </div>
   );
 

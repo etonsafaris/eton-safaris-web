@@ -3,6 +3,11 @@ import { CORE_PAGE_SLUGS, countryPlacePath, destinationPublicPath } from '@/lib/
 import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
 import { fetchCollectionRecords, pickString, publicListColumnsFor, publicRecordSlug, recordPublishedAt } from '@/lib/data';
 import { mergePublicDestinations } from '@/lib/public-destinations';
+import {
+  indexableContentKindForTable,
+  shouldIndexPublicRecord,
+  sitemapPriorityForRecord,
+} from '@/lib/public-indexing';
 import type { RecordRow } from '@/lib/types';
 
 export const revalidate = 3600;
@@ -51,6 +56,18 @@ function recordDate(row: RecordRow) {
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
+function indexableRow(
+  table: string,
+  row: RecordRow,
+  path: string,
+  basePriority: number,
+  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'weekly'
+) {
+  const kind = indexableContentKindForTable(table);
+  if (!kind || !shouldIndexPublicRecord(row, kind)) return null;
+  return entry(path, recordDate(row), sitemapPriorityForRecord(row, kind, basePriority), changeFrequency);
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
@@ -88,33 +105,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamicEntries = [
     ...tours.map((row) => {
       const path = recordPath('/tours', row);
-      return path ? entry(path, recordDate(row), 0.8) : null;
+      return path ? indexableRow('tours', row, path, 0.8) : null;
     }),
     ...parks.map((row) => {
       const path = recordPath('/parks', row);
-      return path ? entry(path, recordDate(row), 0.7) : null;
+      return path ? indexableRow('national_park', row, path, 0.7) : null;
     }),
     ...stays.map((row) => {
       const path = recordPath('/accommodations', row);
-      return path ? entry(path, recordDate(row), 0.6) : null;
+      return path ? indexableRow('accommodations', row, path, 0.6) : null;
     }),
     ...posts.map((row) => {
       const path = recordPath('/safari-updates', row);
-      return path ? entry(path, recordDate(row), 0.6, 'weekly') : null;
+      return path ? indexableRow('safari_updates', row, path, 0.6, 'weekly') : null;
     }),
     ...places.map((row) => {
       const country = canonicalCountrySlug(pickString(row, ['country']));
       const path = country ? countryPlacePath(country, row) : recordPath('/explore', row);
-      return path ? entry(path, recordDate(row), 0.6) : null;
+      return path ? indexableRow('explore', row, path, 0.6) : null;
     }),
     ...pages.map((row) => {
       const slug = pickString(row, ['slug']);
-      return slug ? entry(`/${slug.replace(/^\//, '')}`, recordDate(row), 0.8) : null;
+      return slug ? indexableRow('pages', row, `/${slug.replace(/^\//, '')}`, 0.8) : null;
     }),
     ...categories.map((row) => {
       const country = canonicalCountrySlug(pickString(row, ['country']));
       const path = country ? countryCategoryPath(country, row) : null;
-      return path ? entry(path, recordDate(row), 0.7) : null;
+      return path ? indexableRow('categories', row, path, 0.7) : null;
     }),
   ].filter((item): item is MetadataRoute.Sitemap[number] => Boolean(item));
 

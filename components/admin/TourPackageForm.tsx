@@ -713,6 +713,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
         contentType="tour"
         keywordLibraryCountry={form.country}
         keywordLibraryCategory={form.category}
+        indexRecord={form as unknown as RecordRow}
       />
     </form>
   );

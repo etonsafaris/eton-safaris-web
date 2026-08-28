@@ -11,6 +11,11 @@ import {
   type SeoSchemaType,
   type SeoValues,
 } from '@/lib/seo';
+import {
+  indexableContentKindForTable,
+  shouldIndexPublicRecord,
+  type IndexableContentKind,
+} from '@/lib/public-indexing';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { mergeFaqs } from '@/lib/default-faqs';
@@ -186,6 +191,18 @@ export function jsonLdFromRecord(
   return graph;
 }
 
+function resolveIndexableKind(table: string, contentType?: SeoContentType): IndexableContentKind | null {
+  if (contentType === 'tour') return 'tour';
+  if (contentType === 'park') return 'park';
+  if (contentType === 'stay') return 'stay';
+  if (contentType === 'place') return 'place';
+  if (contentType === 'article') return 'article';
+  if (contentType === 'category') return 'category';
+  if (contentType === 'country') return 'country';
+  if (contentType === 'page') return 'page';
+  return indexableContentKindForTable(table);
+}
+
 export async function publicRecordMetadata(
   table: string,
   slug: string,
@@ -196,6 +213,10 @@ export async function publicRecordMetadata(
     const record = await findPublicRecord(table, slug, options.aliases || []);
     if (!record) return { title: SITE.name };
     const values = seoValuesFromRecord(record as Record<string, unknown>);
+    const kind = resolveIndexableKind(table, options.contentType);
+    if (kind) {
+      values.robots_index = shouldIndexPublicRecord(record as RecordRow, kind);
+    }
     const title = values.seo_title || getRecordTitle(record);
     const description = values.meta_description || pickString(record, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
     return metadataFromSeo(values, {

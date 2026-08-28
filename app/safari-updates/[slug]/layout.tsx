@@ -7,7 +7,9 @@ type LayoutProps = {
 };
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return publicRecordMetadata('safari_updates', params.slug, `/safari-updates/${params.slug}`);
+  return publicRecordMetadata('safari_updates', params.slug, `/safari-updates/${params.slug}`, {
+    contentType: 'article',
+  });
 }
 
 export default function SafariUpdateSeoLayout({ children, params }: LayoutProps) {

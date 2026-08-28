@@ -259,6 +259,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="country"
+        indexRecord={{ name, title: name, image_url: featuredImage.startsWith('blob:') ? '' : featuredImage }}
       />
     </form>
   );

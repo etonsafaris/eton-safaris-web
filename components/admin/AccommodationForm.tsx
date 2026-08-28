@@ -448,6 +448,12 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="stay"
+        indexRecord={{
+          country,
+          name,
+          title: name,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
     </form>
   );

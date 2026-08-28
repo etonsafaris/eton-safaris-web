@@ -48,8 +48,8 @@ export default function WhatSetsUsApartSection({
           })}
         </div>
 
-        <div className="min-w-0 max-w-full overflow-hidden">
-          <HomeVideoCarousel videos={videos} />
+        <div className="min-w-0 self-stretch lg:flex lg:items-center">
+          <HomeVideoCarousel videos={videos} className="w-full" />
         </div>
       </div>
     </section>

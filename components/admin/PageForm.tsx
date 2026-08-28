@@ -596,6 +596,11 @@ export default function PageForm({ pageId }: PageFormProps) {
         onSave={() => setSeoSaved(true)}
         saving={saving}
         contentType="page"
+        indexRecord={{
+          title,
+          name: title,
+          image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+        }}
       />
       {seoSaved ? null : <p className="sr-only">SEO draft</p>}
     </form>
