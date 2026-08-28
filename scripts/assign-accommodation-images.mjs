@@ -289,59 +289,88 @@ console.log(
 let updated = 0;
 let failed = 0;
 let skippedDuplicate = 0;
+let cursor = 0;
+const CONCURRENCY = 4;
+const STAY_TIMEOUT_MS = 90_000;
 
-for (let index = 0; index < toProcess.length; index += 1) {
-  const stay = toProcess[index];
+let lock = Promise.resolve();
+function withMutex(fn) {
+  const run = lock.then(fn);
+  lock = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
+
+async function processStay(stay) {
   const name = String(stay.name || '').trim();
-
   if (dryRun) {
     updated += 1;
-    continue;
+    return;
   }
 
-  try {
-    const beforeFingerprints = new Set(usedFingerprints);
-    const imageUrl = await resolveStayCover(supabase, stay, catalog, cacheDir, {
-      force: force || replaceAll || ensureUnique,
-      usedFingerprints,
-      usedSourceUrls,
-    });
-    if (!imageUrl) {
-      failed += 1;
-      console.warn('No unique image', name);
-      continue;
-    }
+  await withMutex(async () => {
+    try {
+      const beforeFingerprints = new Set(usedFingerprints);
+      const imageUrl = await Promise.race([
+        resolveStayCover(supabase, stay, catalog, cacheDir, {
+          force: force || replaceAll || ensureUnique,
+          usedFingerprints,
+          usedSourceUrls,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Timed out after ${STAY_TIMEOUT_MS / 1000}s`)), STAY_TIMEOUT_MS)
+        ),
+      ]);
+      if (!imageUrl) {
+        failed += 1;
+        console.warn('No unique image', name);
+        return;
+      }
 
-    const fp = fingerprintFromUrl(imageUrl);
-    if (beforeFingerprints.has(fp)) {
-      skippedDuplicate += 1;
-      failed += 1;
-      console.warn('Still duplicate after search', name, fp);
-      continue;
-    }
+      const fp = fingerprintFromUrl(imageUrl);
+      if (beforeFingerprints.has(fp)) {
+        skippedDuplicate += 1;
+        failed += 1;
+        console.warn('Still duplicate after search', name, fp);
+        return;
+      }
 
-    const { error } = await supabase
-      .from('accommodations')
-      .update({
-        image_url: imageUrl,
-        social_image_url: imageUrl,
-        updated_date: new Date().toISOString(),
-      })
-      .eq('id', stay.id);
+      const { error } = await supabase
+        .from('accommodations')
+        .update({
+          image_url: imageUrl,
+          social_image_url: imageUrl,
+          updated_date: new Date().toISOString(),
+        })
+        .eq('id', stay.id);
 
-    if (error) {
+      if (error) {
+        failed += 1;
+        console.warn('Update failed', name, error.message);
+      } else {
+        updated += 1;
+        if (updated % 25 === 0) console.log(`… updated ${updated}/${toProcess.length}`);
+      }
+      await sleep(120);
+    } catch (error) {
       failed += 1;
-      console.warn('Update failed', name, error.message);
-    } else {
-      updated += 1;
-      if (updated % 25 === 0) console.log(`… updated ${updated}/${toProcess.length}`);
+      console.warn('Failed', name, error instanceof Error ? error.message : String(error));
     }
-    await sleep(280);
-  } catch (error) {
-    failed += 1;
-    console.warn('Failed', name, error.message);
+  });
+}
+
+async function worker() {
+  while (cursor < toProcess.length) {
+    const index = cursor;
+    cursor += 1;
+    if (index >= toProcess.length) break;
+    await processStay(toProcess[index]);
   }
 }
+
+await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
 console.log(
   JSON.stringify(
