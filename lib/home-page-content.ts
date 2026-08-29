@@ -1,8 +1,9 @@
 import { SITE } from '@/lib/collections';
-import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock } from '@/lib/cms-page-model';
+import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { extractEmbeddedContent } from '@/lib/embedded-content';
 import { pickString } from '@/lib/data';
 import { SITE_MEDIA } from '@/lib/site-media';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
 export type HomeFeaturePoint = {
@@ -18,6 +19,7 @@ export type HomePageContent = {
   features: HomeFeaturePoint[];
   videos: string[];
   footerAbout: string;
+  faqs: PageFaq[];
 };
 
 export const DEFAULT_HOME_FEATURES: HomeFeaturePoint[] = [
@@ -53,6 +55,7 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   videos: [SITE_MEDIA.gorillaVideo, SITE_MEDIA.gorillaVideoFallback].filter(Boolean),
   footerAbout:
     'Eton Safaris is a premier tours and travel agency based in Uganda, offering gorilla trekking, wildlife safaris, and cultural experiences across Africa. Tailor-made luxury expeditions for every clientele.',
+  faqs: bestFaqsFor('home'),
 };
 
 export const HOME_PAGE_SLUG = 'home-page';
@@ -142,6 +145,7 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
     features: featuresFromBlocks(parseCmsBlocks(record)),
     videos: playableVideos.length ? playableVideos : DEFAULT_HOME_PAGE_CONTENT.videos,
     footerAbout: cmsFooterAbout || DEFAULT_HOME_PAGE_CONTENT.footerAbout,
+    faqs: limitFaqs(extras.faqs, bestFaqsFor('home')),
   };
 }
 

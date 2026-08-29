@@ -42,7 +42,6 @@ import {
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { stripPublicMoney } from '@/lib/public-money';
-import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
 const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: string }> = {
@@ -98,6 +97,15 @@ function HomeBrandAndFeatures({ initialHomeContent }: { initialHomeContent?: Hom
         videos={home.videos}
       />
     </>
+  );
+}
+
+function HomeFaqs({ initialHomeContent }: { initialHomeContent?: HomePageContent | null }) {
+  const home = useHomePageContent(initialHomeContent);
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-8">
+      <PageFaqList faqs={home.faqs || []} tone="light" />
+    </section>
   );
 }
 
@@ -426,9 +434,7 @@ export default function HomePageClient({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-8">
-        <PageFaqList faqs={bestFaqsFor('home')} tone="light" />
-      </section>
+      <HomeFaqs initialHomeContent={initialHomeContent} />
 
       <TestimonialsSection />
       <PaymentsSection />

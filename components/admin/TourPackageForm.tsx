@@ -33,6 +33,8 @@ import { publicCountryLabel } from '@/lib/country-utils';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
+import { faqsForEditor } from '@/lib/default-faqs';
+import { serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 import type { RecordRow } from '@/lib/types';
 
 type ItineraryEntry = {
@@ -173,6 +175,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState('');
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -212,6 +215,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
         slug: String(tour.slug || ''),
       });
       setSeo(seoValuesFromRecord(tour as Record<string, unknown>));
+      setFaqs(faqsForEditor(tour, 'tours'));
       try {
         const days = parseItinerariesFromRecord(tour);
         setItineraries(
@@ -228,6 +232,21 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
       }
     });
   }, [tourId]);
+
+  useEffect(() => {
+    if (tourId) return;
+    setFaqs(
+      faqsForEditor(
+        {
+          title: form.title,
+          country: form.country,
+          category: form.category,
+          slug: form.slug,
+        } as RecordRow,
+        'tours'
+      )
+    );
+  }, [tourId, form.country, form.category]);
 
   const countryOptions = useMemo(
     () =>
@@ -324,6 +343,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
             highlights: form.highlights,
             price_includes: form.price_includes,
             price_excludes: form.price_excludes,
+            faqs: serializeFaqs(faqs),
             ...(stamp ? { published_at: stamp } : {}),
           },
         }),
@@ -403,6 +423,11 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
               value={form.description}
               onChange={(value) => updateField('description', value)}
               placeholder="Describe the experience..."
+              showFooter
+              faqs={faqs}
+              onFaqsChange={setFaqs}
+              faqTitle="Tour FAQ"
+              faqDescription="These are the same FAQs shown on the public tour page. Edit them here — they stay on the website."
             />
           </div>
         </section>

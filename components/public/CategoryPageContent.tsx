@@ -28,7 +28,7 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { categoryPageHtml } from '@/lib/category-copy';
-import { bestFaqsFor } from '@/lib/best-faqs';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -131,7 +131,10 @@ export default function CategoryPageContent({
         ? categoryPageHtml(selectedCategory, countryTitle, slug)
         : '';
   const categoryExtras = parseCmsPageExtras(selectedCategory, categorySlug);
-  const faqs = bestFaqsFor('category', { countrySlug: slug, countryName: countryTitle, categoryTitle });
+  const faqs = limitFaqs(
+    categoryExtras.faqs,
+    bestFaqsFor('category', { countrySlug: slug, countryName: countryTitle, categoryTitle })
+  );
   const publishedFallback =
     categoryExtras.published_at || (country ? recordPublishedAt(country) : '');
   const published = useEnsurePublishedAt(

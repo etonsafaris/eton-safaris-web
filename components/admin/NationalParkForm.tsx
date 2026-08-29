@@ -11,6 +11,8 @@ import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { faqsForEditor } from '@/lib/default-faqs';
+import { serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 import {
   defaultSeoValues,
   seoValuesFromRecord,
@@ -93,6 +95,7 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState('');
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);
@@ -112,8 +115,19 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
       setSeo(seoValuesFromRecord(park as Record<string, unknown>));
       setPublishedAt(recordPublishedAt(park));
       setBlocks(parseBlocksFromRecord(park));
+      setFaqs(faqsForEditor(park, 'national_park'));
     });
   }, [parkId]);
+
+  useEffect(() => {
+    if (parkId) return;
+    setFaqs(
+      faqsForEditor(
+        { name, title: name, country, slug: seo.slug } as RecordRow,
+        'national_park'
+      )
+    );
+  }, [parkId, country]);
 
   const countryOptions = useMemo(
     () =>
@@ -193,6 +207,7 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
             description_title: descriptionTitle,
             location,
             country,
+            faqs: serializeFaqs(faqs),
             ...(stamp ? { published_at: stamp } : {}),
           },
         }),
@@ -274,6 +289,10 @@ export default function NationalParkForm({ parkId }: NationalParkFormProps) {
             placeholder="Type national park description here..."
             minHeight={260}
             showFooter
+            faqs={faqs}
+            onFaqsChange={setFaqs}
+            faqTitle="Park FAQ"
+            faqDescription="These are the same FAQs shown on the public park page. Edit them here — they stay on the website."
           />
         </div>
 

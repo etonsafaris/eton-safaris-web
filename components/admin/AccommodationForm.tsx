@@ -11,6 +11,8 @@ import CoverImageField from '@/components/admin/CoverImageField';
 import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, fetchParksForCountry, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { faqsForEditor } from '@/lib/default-faqs';
+import { serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 import {
   defaultSeoValues,
   seoValuesFromRecord,
@@ -117,6 +119,7 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState('');
+  const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
   useEffect(() => {
     fetchCollectionRecords('countries', [], {
@@ -150,8 +153,19 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
       setSeo(seoValuesFromRecord(accommodation as Record<string, unknown>));
       setPublishedAt(recordPublishedAt(accommodation));
       setBlocks(parseBlocksFromRecord(accommodation));
+      setFaqs(faqsForEditor(accommodation, 'accommodations'));
     });
   }, [accommodationId]);
+
+  useEffect(() => {
+    if (accommodationId) return;
+    setFaqs(
+      faqsForEditor(
+        { name, title: name, country, slug: seo.slug } as RecordRow,
+        'accommodations'
+      )
+    );
+  }, [accommodationId, country]);
 
   const countryOptions = useMemo(
     () =>
@@ -247,6 +261,7 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
             national_park: nationalPark,
             location,
             country,
+            faqs: serializeFaqs(faqs),
             ...(stamp ? { published_at: stamp } : {}),
           },
         }),
@@ -331,6 +346,10 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
             placeholder="Type accommodation description here..."
             minHeight={260}
             showFooter
+            faqs={faqs}
+            onFaqsChange={setFaqs}
+            faqTitle="Stay FAQ"
+            faqDescription="These FAQs can be shown with this stay. Edit them here — they save with the accommodation."
           />
         </div>
 

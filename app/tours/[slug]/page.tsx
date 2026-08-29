@@ -39,7 +39,8 @@ import type { RecordRow } from '@/lib/types';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import { useCmsLive } from '@/lib/cms-live';
 import PageFaqList from '@/components/public/PageFaqList';
-import { bestFaqsFor } from '@/lib/best-faqs';
+import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
+import { parseCmsPageExtras } from '@/lib/cms-page-model';
 
 export default function TourDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -340,12 +341,15 @@ export default function TourDetailPage() {
             ) : null}
 
             <PageFaqList
-              faqs={bestFaqsFor('tour', {
-                countrySlug: countrySlug,
-                countryName,
-                categoryTitle: pickString(tour, ['category', 'category_name', 'title']) || getRecordTitle(tour),
-                title: getRecordTitle(tour),
-              })}
+              faqs={limitFaqs(
+                parseCmsPageExtras(tour, publicRecordSlug(tour) || '').faqs,
+                bestFaqsFor('tour', {
+                  countrySlug: countrySlug,
+                  countryName,
+                  categoryTitle: pickString(tour, ['category', 'category_name', 'title']) || getRecordTitle(tour),
+                  title: getRecordTitle(tour),
+                })
+              )}
               tone="light"
             />
           </article>
