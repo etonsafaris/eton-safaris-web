@@ -58,8 +58,7 @@ export function indexableContentKindForTable(table: string): IndexableContentKin
 }
 
 /**
- * Quality gate for Google indexing — keeps thin programmatic stays/parks out of
- * search while allowing hand-picked or substantive pages to rank.
+ * Quality hints for editors — optional, not used to override an explicit Google ON.
  */
 export function meetsIndexQuality(record: RecordRow, kind: IndexableContentKind): boolean {
   if (!isPublishedRecord(record)) return false;
@@ -89,11 +88,15 @@ export function meetsIndexQuality(record: RecordRow, kind: IndexableContentKind)
   return true;
 }
 
-/** Final index decision: admin noindex wins; otherwise quality rules apply. */
+/**
+ * Final index decision follows the admin Google toggle.
+ * Google ON → indexable (sitemap + robots). Google OFF → noindex.
+ */
 export function shouldIndexPublicRecord(record: RecordRow, kind: IndexableContentKind): boolean {
+  void kind;
   const seo = seoValuesFromRecord(record);
   if (!seo.robots_index) return false;
-  return meetsIndexQuality(record, kind);
+  return isPublishedRecord(record);
 }
 
 export function indexableKindForCollectionId(collectionId: string): IndexableContentKind | null {
@@ -117,38 +120,11 @@ export type PublicIndexStatus = {
 };
 
 function noindexReason(record: RecordRow, kind: IndexableContentKind): string {
+  void kind;
   const seo = seoValuesFromRecord(record);
   if (!isPublishedRecord(record)) return 'Not published — hidden from the public site.';
-  if (!seo.robots_index) return 'SEO panel is set to noindex.';
-  if (hasEditorialBoost(record)) return '';
-
-  const words = recordWordCount(record);
-  const minWords = MIN_WORDS[kind];
-  if (words < minWords) {
-    return `Needs more unique content (about ${minWords} words; currently ~${words}).`;
-  }
-
-  if (kind === 'stay') {
-    const title = getRecordTitle(record);
-    if (!title || title.length < 4) return 'Add a clear lodge name.';
-    if (!pickString(record, ['country'])) return 'Add a country.';
-    if (!isDeployableImageUrl(getRecordImage(record))) return 'Add a real cover image.';
-    if (seo.meta_description.trim().length < 70 && words < 140) {
-      return 'Add a meta description (70+ chars) or more body copy.';
-    }
-  }
-
-  if (kind === 'park' && seo.meta_description.trim().length < 50 && words < 90) {
-    return 'Add a meta description or more park description text.';
-  }
-
-  if (kind === 'place' && !pickString(record, ['country'])) return 'Add a country.';
-
-  if (kind === 'tour' && seo.meta_description.trim().length < 50 && words < 120) {
-    return 'Add a meta description or more tour detail.';
-  }
-
-  return 'Does not meet index quality rules yet.';
+  if (!seo.robots_index) return 'Google indexing is OFF for this item.';
+  return 'Excluded from Google indexing.';
 }
 
 export function getPublicIndexStatus(
@@ -164,10 +140,16 @@ export function getPublicIndexStatus(
     };
   }
   const indexable = shouldIndexPublicRecord(record, kind);
+  const seo = seoValuesFromRecord(record);
+  const qualityOk = meetsIndexQuality(record, kind);
   return {
     indexable,
     label: indexable ? 'Indexable' : 'Noindex',
-    reason: indexable ? 'Eligible for Google search and the public sitemap.' : noindexReason(record, kind),
+    reason: indexable
+      ? qualityOk
+        ? 'Google ON — eligible for search and the public sitemap.'
+        : 'Google ON — indexed. Tip: add more unique copy/meta for stronger SEO.'
+      : noindexReason(record, kind),
   };
 }
 
