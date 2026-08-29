@@ -105,8 +105,8 @@ export async function POST(request: Request) {
         publicPath: publicPathForRecord(collectionId, full) || undefined,
         enableGoogle: nextEnabled,
       });
-      const packed = packSeoSettings(seo);
-      let seoSchema = seo.seo_schema;
+      const packed = packSeoSettings({ ...seo, robots_index: nextEnabled, robots_follow: true });
+      let seoSchema = seo.seo_schema || String(full.seo_schema || '');
       try {
         const parsed = seoSchema
           ? (JSON.parse(seoSchema) as Record<string, unknown>)
@@ -114,21 +114,23 @@ export async function POST(request: Request) {
         parsed._etonSeo = JSON.parse(packed);
         seoSchema = JSON.stringify(parsed);
       } catch {
-        /* keep */
+        seoSchema = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': seo.schema_type || 'WebPage',
+          _etonSeo: JSON.parse(packed),
+        });
       }
+      // Persist Google flag in seo_schema._etonSeo — robots_index / seo_settings columns are absent.
       payload = {
-        ...recordPatch,
-        robots_index: nextEnabled,
-        robots_follow: true,
-        seo_settings: packed,
+        seo_title: recordPatch.seo_title,
+        meta_description: recordPatch.meta_description,
+        social_image_url: recordPatch.social_image_url,
         seo_schema: seoSchema,
+        ...(typeof recordPatch.description === 'string' ? { description: recordPatch.description } : {}),
       };
     } else {
       const patched = withRobotsFlags(full, false);
       payload = {
-        robots_index: false,
-        robots_follow: true,
-        seo_settings: patched.seo_settings,
         seo_schema: patched.seo_schema,
       };
     }
@@ -142,7 +144,11 @@ export async function POST(request: Request) {
     }
 
     const savedRaw = (result.data?.[0] || { ...full, ...payload, id }) as RecordRow;
-    const saved = withRobotsFlags(savedRaw, nextEnabled);
+    // Always return an explicit robots_index for the admin UI (column may not exist in DB).
+    const saved = {
+      ...withRobotsFlags(savedRaw, nextEnabled),
+      robots_index: nextEnabled,
+    } as RecordRow;
     revalidatePath('/', 'layout');
     revalidatePath('/sitemap.xml');
 

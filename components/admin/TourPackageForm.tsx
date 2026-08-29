@@ -329,6 +329,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
         }),
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         slug: tourSlug,
+        itinerary: JSON.stringify(itineraries),
         itineraries: JSON.stringify(itineraries),
         group_size: 'Flexible',
         published_at: stamp,

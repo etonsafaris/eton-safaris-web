@@ -55,6 +55,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'journey_map_url',
     'featured',
     'itineraries',
+    'itinerary',
     'group_size',
     'published_at',
   ],

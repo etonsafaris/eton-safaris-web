@@ -68,6 +68,11 @@ export default function GoogleIndexToggle({
         ...(body.record || record),
         id: record.id,
         robots_index: savedEnabled,
+        // Keep packed flag on the list row so refresh-less UI stays correct.
+        seo_schema:
+          (body.record && body.record.seo_schema) ||
+          record.seo_schema ||
+          undefined,
       } as RecordRow;
       setEnabled(savedEnabled);
       onUpdated?.(saved);

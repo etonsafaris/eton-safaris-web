@@ -483,7 +483,16 @@ export default function CollectionManager({ config }: { config: CollectionConfig
 
   function handleIndexUpdated(record: RecordRow) {
     setRecords((current) =>
-      current.map((row) => (String(row.id) === String(record.id) ? { ...row, ...record } : row))
+      current.map((row) => {
+        if (String(row.id) !== String(record.id)) return row;
+        return {
+          ...row,
+          ...record,
+          // Keep an explicit flag on the list row so badges/toggles match the saved choice.
+          robots_index: record.robots_index,
+          seo_schema: record.seo_schema ?? row.seo_schema,
+        };
+      })
     );
   }
 

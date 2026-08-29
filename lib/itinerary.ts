@@ -37,8 +37,12 @@ export function parseItineraries(value: unknown): ItineraryDay[] {
 
 export function parseItinerariesFromRecord(record: RecordRow | null | undefined): ItineraryDay[] {
   if (!record) return [];
-  const fromColumn = parseItineraries(record.itineraries);
-  const days = fromColumn.length > 0 ? fromColumn : extractEmbeddedContent(recordBodyHtml(record)).itineraries || [];
+  const fromColumn =
+    parseItineraries(record.itineraries).length > 0
+      ? parseItineraries(record.itineraries)
+      : parseItineraries(record.itinerary);
+  const fromEmbed = extractEmbeddedContent(recordBodyHtml(record)).itineraries || [];
+  const days = fromColumn.length > 0 ? fromColumn : fromEmbed;
   return sortItineraryDays(days);
 }
 

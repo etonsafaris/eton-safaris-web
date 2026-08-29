@@ -162,7 +162,7 @@ export async function fetchAllRecords(
 /** Lightweight columns for tour cards / listing pages (avoids huge description payloads).
  * Must match real Supabase columns — wrong names cause retry storms on large tables.
  */
-const SEO_INDEX_LIST_COLUMNS = 'robots_index,seo_settings,meta_description';
+const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
 
 export const TOUR_LIST_COLUMNS =
   `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
