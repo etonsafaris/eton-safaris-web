@@ -305,12 +305,12 @@ export default function SeoPanel({
 
   return (
     <div className={className}>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-5 py-4 text-left shadow-sm"
-      >
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-5 py-4 text-left shadow-sm">
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-left"
+        >
           <span
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
               scorePercent >= 90 ? 'bg-green-100 text-green-700' : scorePercent >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
@@ -323,6 +323,8 @@ export default function SeoPanel({
             <span className="ml-2 text-sm text-[#6b7280]">{scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}</span>
           </div>
           {indexStatus ? <IndexStatusBadge status={indexStatus} size="md" /> : null}
+        </button>
+        <div className="flex shrink-0 items-center gap-2">
           {googleIndexCollectionId && googleIndexRecord ? (
             <GoogleIndexToggle
               collectionId={googleIndexCollectionId}
@@ -333,9 +335,16 @@ export default function SeoPanel({
               }}
             />
           ) : null}
+          <button
+            type="button"
+            onClick={() => setOpen((current) => !current)}
+            aria-label={open ? 'Collapse SEO panel' : 'Expand SEO panel'}
+            className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6]"
+          >
+            <ChevronDown className={`h-5 w-5 transition ${open ? 'rotate-180' : ''}`} />
+          </button>
         </div>
-        <ChevronDown className={`h-5 w-5 text-[#6b7280] transition ${open ? 'rotate-180' : ''}`} />
-      </button>
+      </div>
 
       {open && (
         <div className="mt-2 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">

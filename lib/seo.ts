@@ -204,7 +204,11 @@ export function seoValuesFromRecord(record: Record<string, unknown> = {}): SeoVa
     seo_schema: String(merged.seo_schema || seoSchemaText || ''),
     schema_type: SEO_SCHEMA_TYPES.some((item) => item.value === schemaType) ? schemaType : 'WebPage',
     canonical_url: String(merged.canonical_url || record.canonical_url || ''),
-    robots_index: merged.robots_index ?? parseBool(record.robots_index ?? record.robots, false),
+    // Prefer an explicit column value when present so admin toggles / list rows win over stale seo_settings.
+    robots_index:
+      record.robots_index !== undefined && record.robots_index !== null && record.robots_index !== ''
+        ? parseBool(record.robots_index, false)
+        : merged.robots_index ?? parseBool(record.robots, false),
     robots_follow: merged.robots_follow ?? parseBool(record.robots_follow, true),
     robots_advanced: merged.robots_advanced || parseList(record.robots_advanced),
     breadcrumb_title: String(merged.breadcrumb_title || record.breadcrumb_title || ''),

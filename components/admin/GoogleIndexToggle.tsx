@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { adminAuthHeaders } from '@/lib/admin-records-client';
 import { seoValuesFromRecord } from '@/lib/seo';
 import type { RecordRow } from '@/lib/types';
@@ -12,6 +12,10 @@ type GoogleIndexToggleProps = {
   onUpdated?: (record: RecordRow) => void;
 };
 
+function isGoogleEnabled(record: RecordRow) {
+  return seoValuesFromRecord(record).robots_index === true;
+}
+
 export default function GoogleIndexToggle({
   collectionId,
   record,
@@ -20,16 +24,26 @@ export default function GoogleIndexToggle({
 }: GoogleIndexToggleProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [enabled, setEnabled] = useState(() => seoValuesFromRecord(record).robots_index === true);
+  const [enabled, setEnabled] = useState(() => isGoogleEnabled(record));
+  const recordId = record.id == null ? '' : String(record.id);
+  const skipSyncRef = useRef(false);
 
   useEffect(() => {
-    setEnabled(seoValuesFromRecord(record).robots_index === true);
-  }, [record]);
+    if (loading || skipSyncRef.current) return;
+    setEnabled(isGoogleEnabled(record));
+  }, [record, recordId, loading]);
 
-  async function toggle() {
+  async function toggle(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (loading || record.id == null) return;
+
     const nextEnabled = !enabled;
     setLoading(true);
     setError('');
+    setEnabled(nextEnabled);
+    skipSyncRef.current = true;
+
     try {
       const headers = await adminAuthHeaders();
       const response = await fetch('/api/admin/google-index', {
@@ -42,23 +56,38 @@ export default function GoogleIndexToggle({
           enabled: nextEnabled,
         }),
       });
-      const body = (await response.json()) as { error?: string; record?: RecordRow };
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        enabled?: boolean;
+        record?: RecordRow;
+      };
       if (!response.ok) throw new Error(body.error || 'Could not update Google indexing');
-      const saved = body.record || record;
-      const savedEnabled = seoValuesFromRecord(saved).robots_index === true;
+
+      const savedEnabled = typeof body.enabled === 'boolean' ? body.enabled : nextEnabled;
+      const saved = {
+        ...(body.record || record),
+        id: record.id,
+        robots_index: savedEnabled,
+      } as RecordRow;
       setEnabled(savedEnabled);
-      onUpdated?.({ ...saved, robots_index: savedEnabled });
-      const { bumpCmsLive } = await import('@/lib/cms-live');
-      bumpCmsLive();
+      onUpdated?.(saved);
+
       try {
+        const { bumpCmsLive } = await import('@/lib/cms-live');
+        bumpCmsLive();
         await fetch('/api/admin/revalidate', { method: 'POST', credentials: 'include' });
       } catch {
         /* optional */
       }
     } catch (err) {
+      setEnabled(!nextEnabled);
       setError(err instanceof Error ? err.message : 'Could not update Google indexing');
     } finally {
       setLoading(false);
+      // Allow parent record sync after the optimistic update settles.
+      window.setTimeout(() => {
+        skipSyncRef.current = false;
+      }, 0);
     }
   }
 
@@ -79,19 +108,22 @@ export default function GoogleIndexToggle({
     : 'border-[#e5e7eb] bg-white text-[#6b7280] hover:bg-[#f8fafc]';
 
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div
+      className="relative z-[3] flex flex-col items-start gap-1"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       <button
         type="button"
         disabled={loading || record.id == null}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void toggle();
-        }}
+        onClick={(event) => void toggle(event)}
         title={
           enabled
             ? 'Click to remove this page from Google search (noindex).'
-            : 'Click to auto-configure SEO and allow Google indexing.'
+            : 'Click to allow Google indexing for this page.'
         }
         className={`rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition disabled:opacity-50 ${tone} ${
           compact ? '' : 'min-w-[92px]'
@@ -99,7 +131,7 @@ export default function GoogleIndexToggle({
       >
         {loading ? 'Saving…' : label}
       </button>
-      {error ? <span className="max-w-[180px] text-[10px] text-red-600">{error}</span> : null}
+      {error ? <span className="max-w-[180px] text-[10px] leading-tight text-red-600">{error}</span> : null}
     </div>
   );
 }

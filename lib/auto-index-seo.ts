@@ -200,9 +200,22 @@ export function autoIndexSeoForTable(
   if (!kind) return { payload, seo };
 
   const base = { ...(options?.existingRecord || {}), ...payload } as RecordRow;
+  const payloadRobots =
+    payload.robots_index === undefined || payload.robots_index === null || payload.robots_index === ''
+      ? undefined
+      : payload.robots_index === true ||
+        payload.robots_index === 'true' ||
+        payload.robots_index === 1 ||
+        payload.robots_index === '1';
+  const enableGoogle =
+    seo?.robots_index === true ||
+    payloadRobots === true ||
+    (seo === undefined &&
+      payloadRobots === undefined &&
+      seoValuesFromRecord(options?.existingRecord || {}).robots_index === true);
   const result = applyAutoIndexSeo(base, kind, {
     publicPath: options?.publicPath || undefined,
-    enableGoogle: seo?.robots_index === true,
+    enableGoogle,
   });
   return {
     payload: { ...payload, ...result.recordPatch },

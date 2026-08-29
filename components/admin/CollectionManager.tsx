@@ -500,6 +500,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
         const headers = await adminAuthHeaders();
         const response = await fetch('/api/admin/google-index', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json', ...headers },
           body: JSON.stringify({
             collectionId: config.id,

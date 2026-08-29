@@ -385,7 +385,14 @@ export function prepareMutationPayload(
 ): Record<string, unknown> {
   const known = options?.knownColumns?.length ? options.knownColumns : getKnownColumns(table);
   if (known.length > 0) {
-    return buildSavePayload(table, payload, { knownColumns: known, keepId: options?.keepId });
+    // Sanitize only — never re-run auto SEO here. Callers that want enrichment
+    // must pass autoIndexSeo via buildSavePayload before saveWithColumnFallback.
+    // Re-running auto SEO wiped robots_index (forced OFF) on every admin save.
+    return buildSavePayload(table, payload, {
+      knownColumns: known,
+      keepId: options?.keepId,
+      autoIndexSeo: false,
+    });
   }
 
   const missing = getMissingColumns(table);
