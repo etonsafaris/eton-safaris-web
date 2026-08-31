@@ -17,7 +17,7 @@ import {
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { inferPageLayout } from '@/lib/cms-page-model';
-import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
+import { hydratePublicCmsPage, resolvePolicyPageContent } from '@/lib/hydrate-cms-page';
 import {
   fetchCollectionRecords,
   getRecordImage,
@@ -225,7 +225,9 @@ export default function CmsSlugClient({
     view.title ||
     (isPolicy ? fallback?.title : '') ||
     resolved.canonical.replace(/-/g, ' ');
-  const content = view.content || (!page && isPolicy ? fallback?.content || '' : '');
+  const content =
+    view.content ||
+    (isPolicy ? resolvePolicyPageContent(page, resolved.canonical) || fallback?.content || '' : '');
   const image = view.image || undefined;
   const blocks = view.blocks;
   const faqs = view.faqs;

@@ -107,11 +107,18 @@ export default function CmsPageView({
   const layout = variant === 'default' ? 'standard' : variant;
 
   if (layout === 'policy') {
+    const html = toHtml(content);
     return (
       <PublicShell>
         <PageHero title={title} image={image} variant="policy" />
         <section className="bg-[#edf2f2] pb-10">
-          <div className="dav-policies mx-4 bg-white p-[30px] lg:mx-[100px]" dangerouslySetInnerHTML={{ __html: html }} />
+          {html ? (
+            <div className="dav-policies mx-4 bg-white p-[30px] lg:mx-[100px]" dangerouslySetInnerHTML={{ __html: html }} />
+          ) : content.trim() ? (
+            <div className="dav-policies public-article-body mx-4 whitespace-pre-wrap bg-white p-[30px] lg:mx-[100px]">
+              {content}
+            </div>
+          ) : null}
           <div className="mx-4 mt-8 max-w-4xl lg:mx-[100px]">
             <PageFaqList faqs={faqs} tone="light" />
           </div>

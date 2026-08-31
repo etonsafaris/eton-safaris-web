@@ -62,9 +62,11 @@ export async function loadCmsPage(slug: string) {
     const match = matchCmsRecord(rows, slug, pageAliases(slug));
     if (!match || !isPublishedRecord(match)) return null;
     const id = String(match.id || '');
-    if (!id) return match;
+    if (!id) return null;
     const full = await fetchCollectionRecordById('pages', id);
-    return full && isPublishedRecord(full) ? full : match;
+    if (full && isPublishedRecord(full)) return full;
+    // Never return list rows — they omit the HTML body column.
+    return null;
   } catch {
     return null;
   }

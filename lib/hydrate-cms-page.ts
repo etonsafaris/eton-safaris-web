@@ -6,6 +6,7 @@ import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { resolvePublicImage } from '@/lib/public-image';
+import { STATIC_PAGES } from '@/lib/static-pages';
 import type { RecordRow } from '@/lib/types';
 
 function hasVisibleCopy(html: string) {
@@ -18,6 +19,15 @@ function hasVisibleCopy(html: string) {
 
 export function seededCmsPage(slug: string) {
   return DEFAULT_CMS_PAGES.find((item) => item.slug === slug);
+}
+
+/** Policy pages must always resolve visible HTML — CMS body first, then seeded/static fallback. */
+export function resolvePolicyPageContent(page: RecordRow | null | undefined, slug: string): string {
+  const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
+  if (hasVisibleCopy(cmsContent)) return cmsContent;
+  const seeded = seededCmsPage(slug);
+  if (seeded?.content && hasVisibleCopy(seeded.content)) return seeded.content;
+  return STATIC_PAGES[slug]?.content || '';
 }
 
 function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBlock[]): CmsContentBlock[] {
@@ -37,8 +47,13 @@ function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBl
 export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: string) {
   const seeded = seededCmsPage(slug);
   const extras = parseCmsPageExtras(page, slug);
+  const isPolicy = extras.layout === 'policy' || /privacy|terms/i.test(slug);
   const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
-  const content = hasVisibleCopy(cmsContent) ? cmsContent : seeded?.content || '';
+  const content = isPolicy
+    ? resolvePolicyPageContent(page, slug)
+    : hasVisibleCopy(cmsContent)
+      ? cmsContent
+      : seeded?.content || '';
   const seededBlocks = (seeded?.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
