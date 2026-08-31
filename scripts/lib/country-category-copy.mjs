@@ -1,6 +1,6 @@
 /**
- * Curated country & category HTML for destinations missing substantial descriptions.
- * Voice matches existing Uganda/Botswana CMS pages: bold title + two rich paragraphs naming parks.
+ * Curated country & category HTML — Uganda reference format:
+ * bold title + intro paragraph + flagship parks paragraph (names hyperlinked by curate script).
  */
 import { PARKS_BY_COUNTRY } from './national-parks-catalog.mjs';
 
@@ -21,138 +21,136 @@ function countryShell(title, p1, p2) {
 <p>${p2}</p>`;
 }
 
-/** @type {Record<string, { title: string, build: (parks: string[]) => string }>} */
-export const COUNTRY_COPY = {
+/** Second paragraph naming flagship parks (Uganda-style). */
+function flagshipParksParagraph(country, parks) {
+  const entries = (parks || []).slice(0, 6);
+  if (!entries.length) {
+    return `Eton Safaris times transfers, permits, and lodge bases so wildlife days across ${country} stay focused rather than rushed.`;
+  }
+
+  const highlights = entries.slice(0, 4).map((park) => {
+    const activity =
+      String(park.experiences || '')
+        .split(',')[0]
+        .trim() ||
+      String(park.hook || '')
+        .replace(/^a\s+/i, '')
+        .replace(/^an\s+/i, '')
+        .trim();
+    const label = activity.length > 8 && activity.length < 90 ? activity : `wildlife and scenery`;
+    return `${label} in ${park.name}`;
+  });
+
+  const also = entries.length > 4 ? joinParks(entries.slice(4).map((p) => p.name)) : '';
+  const alsoClause = also ? ` Further highlights include ${also}.` : '';
+
+  return `${country} rewards travellers who move beyond a single park. Signature experiences include ${joinParks(
+    highlights.slice(0, 2).map((h) => h.replace(/^(.+ in .+)$/, '$1'))
+  )}${highlights.length > 2 ? `, plus ${highlights.slice(2).join(', ')}` : ''}.${alsoClause} Eton Safaris times transfers, permits, and lodge bases so trekking and wildlife days stay focused rather than rushed.`;
+}
+
+function buildFromIntro(country, title, intro, parks) {
+  return countryShell(title, intro, flagshipParksParagraph(country, parks));
+}
+
+/** @type {Record<string, { title: string, intro: string }>} */
+const COUNTRY_INTROS = {
   Uganda: {
     title: 'Explore Uganda, Pearl of Africa',
-    build() {
-      return countryShell(
-        this.title,
-        `Experience Uganda safari tours through stunning landscapes, diverse wildlife, and rich cultural experiences. Nestled in East Africa, Uganda is renowned for gorilla trekking, making it a must-visit destination for nature lovers and adventure seekers.`,
-        `With over half of the world's mountain gorillas living here, Uganda is rightly known as the Pearl of Africa. Beyond gorillas in Bwindi Impenetrable National Park and Mgahinga Gorilla National Park, guests find lions and elephants in Queen Elizabeth National Park, the Nile at Murchison Falls National Park, and chimpanzees in Kibale National Park. Eton Safaris times transfers, permits, and lodge bases so trekking and wildlife days stay focused rather than rushed.`
-      );
-    },
+    intro: `Experience Uganda safari tours through stunning landscapes, diverse wildlife, and rich cultural experiences. Nestled in East Africa, Uganda is renowned for gorilla trekking, making it a must-visit destination for nature lovers and adventure seekers.`,
   },
   Kenya: {
     title: 'Explore Kenya Safari Tours',
-    build() {
-      return countryShell(
-        this.title,
-        `Kenya safari tours combine savannahs, lakelands, the Great Rift Valley, and Indian Ocean shoreline. Wildlife concentrates in classic reserves, including the Masai Mara for wildebeest migration season and Amboseli for elephants with views toward Kilimanjaro.`,
-        `Year-round game viewing includes the Big Five across the Masai Mara, Amboseli, Tsavo, and the Chyulu Hills. Eton Safaris shapes Kenya itineraries around season, lodge style, and whether you want a safari-and-beach combination.`
-      );
-    },
+    intro: `Kenya safari tours combine savannahs, lakelands, the Great Rift Valley, and Indian Ocean shoreline. Wildlife concentrates in classic reserves, including the Masai Mara for wildebeest migration season and Amboseli for elephants with views toward Kilimanjaro.`,
   },
   Tanzania: {
     title: 'Explore Tanzania Safari Tours',
-    build() {
-      return countryShell(
-        this.title,
-        `Tanzania safari tours take in three of Africa’s great lakes, the plains of the Serengeti, and Kilimanjaro. The country also offers tropical islands, from Mafia’s marine park to Zanzibar’s spice-island beaches.`,
-        `Eton Safaris plans northern and southern circuits with realistic driving or flight links, so you spend more hours in the field and fewer rearranging roads. Beach time on Zanzibar or Mafia is an easy finish after wildlife days.`
-      );
-    },
+    intro: `Tanzania safari tours take in three of Africa's great lakes, the plains of the Serengeti, and Kilimanjaro. The country also offers tropical islands, from Mafia's marine park to Zanzibar's spice-island beaches.`,
   },
   Rwanda: {
     title: 'Explore Rwanda, Land of a Thousand Hills',
-    build() {
-      return countryShell(
-        this.title,
-        `Rwanda’s rolling hills, rainforest, and savanna support gorilla and golden monkey treks, chimpanzee tracking, and Big Five viewing. Kigali adds a thoughtful city start, with the genocide memorial as an important historical chapter.`,
-        `Volcanoes National Park is the gorilla-trekking heartland, Nyungwe offers chimpanzee treks and a canopy walk, and Akagera is Rwanda’s savanna park. Eton Safaris builds Rwanda trips around permits, pacing, and the right mix of forest and plains.`
-      );
-    },
+    intro: `Rwanda's rolling hills, rainforest, and savanna support gorilla and golden monkey treks, chimpanzee tracking, and Big Five viewing. Kigali adds a thoughtful city start, with the genocide memorial as an important historical chapter.`,
+  },
+  Botswana: {
+    title: 'Explore Botswana, Delta and Desert Safaris',
+    intro: `Botswana is one of southern Africa's premier wilderness destinations, defined by the Okavango Delta, Kalahari sands, and low-volume, high-quality safari camps. Travellers come for mokoro channels, predator-rich plains, and some of the continent's most exclusive wildlife viewing.`,
   },
   Namibia: {
     title: 'Explore Namibia, Land of Contrasts',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Namibia is a southern African destination defined by open horizons, desert light, and wildlife that concentrates around scarce water. Travellers come for dune landscapes, Atlantic wilderness, and classic game viewing, with itineraries that often centre on ${joinParks(parks)}. The country’s scale rewards unhurried circuits, private guiding, and photography timed around sunrise and sunset.`,
-        `Etosha National Park anchors many Namibia wildlife safaris with waterhole drama, while Namib Naukluft National Park delivers the red dunes of Sossusvlei and Deadvlei. Skeleton Coast National Park adds a remote Atlantic edge of fog banks and shipwreck shores. Eton Safaris shapes Namibia routes around realistic driving days, lodge style, and the seasons that best match your interests.`
-      );
-    },
+    intro: `Namibia is defined by open horizons, desert light, and wildlife that concentrates around scarce water. Travellers come for dune landscapes, Atlantic wilderness, and classic game viewing across vast, lightly populated parks.`,
   },
   Zambia: {
     title: 'Explore Zambia, Home of the Walking Safari',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Zambia is one of Africa’s most authentic safari countries, known for walking safaris, river-focused game viewing, and camps that sit close to wilderness. Signature parks include ${joinParks(parks)}, each offering a different pace of bush time. Guests who value guiding quality and fewer crowds often place Zambia high on a southern Africa itinerary.`,
-        `South Luangwa National Park is famous for walking safaris and night drives, Lower Zambezi National Park pairs canoeing with riverbank wildlife, and Kafue National Park opens into vast plains and woodland. Many travellers also combine Zambia with Victoria Falls for a seamless safari-and-falls journey planned by Eton Safaris.`
-      );
-    },
+    intro: `Zambia is one of Africa's most authentic safari countries, known for walking safaris, river-focused game viewing, and camps that sit close to wilderness. Guests who value guiding quality and fewer crowds often place Zambia high on a southern Africa itinerary.`,
   },
   Zimbabwe: {
     title: 'Explore Zimbabwe, Falls and Wild Frontiers',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Zimbabwe blends one of the world’s great natural wonders with predator-rich parks and canoe country along the Zambezi. Core safari areas include ${joinParks(parks)}. The country suits travellers who want classic game drives, walking where permitted, and time at the falls in a single well-paced route.`,
-        `Hwange National Park delivers elephant gatherings and waterhole viewing, Mana Pools National Park is celebrated for canoeing and close walking encounters, and Matobo National Park adds rhino tracking among granite kopjes. Victoria Falls National Park protects the Zimbabwean viewpoints of the falls, making an ideal start or finish with Eton Safaris.`
-      );
-    },
+    intro: `Zimbabwe blends one of the world's great natural wonders with predator-rich parks and canoe country along the Zambezi. The country suits travellers who want classic game drives, walking where permitted, and time at the falls in a single well-paced route.`,
   },
   'South Africa': {
     title: 'Explore South Africa, Big Five and Beyond',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `South Africa combines reliable Big Five safari with city, coast, and wine country in one passport-friendly journey. Flagship protected areas include ${joinParks(parks)}. It is an excellent first safari destination and a flexible add-on to East or Southern Africa circuits.`,
-        `Kruger National Park remains the classic self-drive or guided Big Five reserve, Addo Elephant National Park highlights elephants and Eastern Cape wilderness, and Pilanesberg National Park is convenient for short safari breaks near Johannesburg. Table Mountain National Park frames Cape Town with fynbos, Cape Point, and peninsula scenery that Eton Safaris often pairs with wildlife days.`
-      );
-    },
+    intro: `South Africa combines reliable Big Five safari with city, coast, and wine country in one passport-friendly journey. It is an excellent first safari destination and a flexible add-on to East or Southern Africa circuits.`,
+  },
+  'DR Congo': {
+    title: 'Explore DR Congo, Rainforest and Volcano Safaris',
+    intro: `DR Congo offers some of Africa's most dramatic rainforest and volcano experiences, from mountain gorillas in Virunga to lowland gorillas in Kahuzi-Biega. Travel here rewards guests who want specialist guiding and carefully planned logistics.`,
+  },
+  Ethiopia: {
+    title: 'Explore Ethiopia, Highlands and Ancient Landscapes',
+    intro: `Ethiopia pairs highland trekking, endemic wildlife, and ancient cultural sites in one of Africa's most distinctive destinations. From Simien escarpments to Rift Valley lakes, the country suits adventurous travellers who want depth beyond classic savannah safari.`,
   },
   Malawi: {
     title: 'Explore Malawi, the Warm Heart of Africa',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Malawi pairs freshwater lake holidays with recovering wildlife parks and warm hospitality. Travellers explore ${joinParks(parks)} alongside beach time on Lake Malawi. The country works well as a compact safari-and-lake holiday or a softer-paced southern Africa extension.`,
-        `Liwonde National Park offers riverboat safaris and strong birding, Majete Wildlife Reserve is a Big Five conservation success story, and Nyika National Park brings highland grasslands and cooler plateau scenery. Eton Safaris designs Malawi itineraries that balance park game viewing with lake rest days.`
-      );
-    },
+    intro: `Malawi pairs freshwater lake holidays with recovering wildlife parks and warm hospitality. The country works well as a compact safari-and-lake holiday or a softer-paced southern Africa extension.`,
   },
   Mozambique: {
     title: 'Explore Mozambique, Safari Coast and Islands',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Mozambique is a coastline-and-wilderness destination where savannah parks meet Indian Ocean islands. Key protected areas include ${joinParks(parks)}. Guests often combine wildlife days with snorkelling, diving, and quiet beach lodges.`,
-        `Gorongosa National Park showcases a rebounding Rift Valley wilderness, Bazaruto Archipelago National Park delivers turquoise channels and marine life, and Maputo Special Reserve offers elephants and coastal lakes close to the capital. Eton Safaris builds Mozambique trips around seasonality, transfers, and the right mix of safari and beach.`
-      );
-    },
+    intro: `Mozambique is a coastline-and-wilderness destination where savannah parks meet Indian Ocean islands. Guests often combine wildlife days with snorkelling, diving, and quiet beach lodges.`,
+  },
+  Madagascar: {
+    title: 'Explore Madagascar, Lemurs and Unique Landscapes',
+    intro: `Madagascar is unlike anywhere else in Africa, with endemic lemurs, baobab avenues, and rainforest parks that reward patient exploration. It suits travellers who want nature-first itineraries with strong guiding and realistic road or flight planning.`,
   },
   Seychelles: {
     title: 'Explore Seychelles, Island Nature Escapes',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Seychelles is an Indian Ocean island destination of granite peaks, palm forests, and clear reefs. Nature time centres on ${joinParks(parks)}, ideal after an East African safari or as a standalone beach holiday. Trails, marine parks, and island hopping define the experience more than classic savannah game drives.`,
-        `Morne Seychellois National Park covers misty mountains on Mahé, Vallée de Mai Nature Reserve protects the coco de mer palm forest on Praslin, and Curieuse Marine National Park is known for giant tortoises and shallow reefs. Eton Safaris arranges island combinations with practical ferry and flight logistics.`
-      );
-    },
+    intro: `Seychelles is an Indian Ocean island destination of granite peaks, palm forests, and clear reefs. Nature time centres on national parks and marine reserves, ideal after an East African safari or as a standalone beach holiday.`,
+  },
+  Egypt: {
+    title: 'Explore Egypt, Nile Heritage and Desert Parks',
+    intro: `Egypt combines ancient monuments, Nile journeys, and Red Sea reefs with protected desert and marine areas. It works as a cultural journey, a diving holiday, or a North Africa complement to sub-Saharan safari routes.`,
   },
   Morocco: {
     title: 'Explore Morocco, Mountains, Medinas, and Coast',
-    build(parks) {
-      return countryShell(
-        this.title,
-        `Morocco offers Atlas trekking, imperial cities, and Atlantic birding within a single cultural journey. Outdoor highlights include ${joinParks(parks)}, often paired with Marrakech, Fes, or desert camps. It is a strong North Africa complement to sub-Saharan safari itineraries.`,
-        `Toubkal National Park is the gateway to North Africa’s highest peak and Berber villages, Ifrane National Park is known for cedar forests and Barbary macaques, and Souss Massa National Park protects coastal estuaries and rare northern bald ibis habitat. Eton Safaris plans Morocco routes with clear pacing between cities, mountains, and coast.`
-      );
-    },
+    intro: `Morocco offers Atlas trekking, imperial cities, and Atlantic birding within a single cultural journey. Outdoor highlights often pair Marrakech, Fes, or desert camps with national parks in the mountains and coast.`,
   },
 };
 
+export function buildCountryDescription(country) {
+  const parks = PARKS_BY_COUNTRY[country] || [];
+  const meta = COUNTRY_INTROS[country];
+  if (meta) {
+    return buildFromIntro(country, meta.title, meta.intro, parks);
+  }
+  const names = parkList(country);
+  return countryShell(
+    `Explore ${country} Safari Tours`,
+    `${country} is a distinctive safari and travel destination with protected areas that include ${joinParks(names.slice(0, 4))}. Eton Safaris plans private itineraries around seasonality, lodge style, and the experiences that matter most to you.`,
+    flagshipParksParagraph(country, parks)
+  );
+}
+
+export function countryHeadline(country) {
+  return COUNTRY_INTROS[country]?.title || `Explore ${country} Safari Tours`;
+}
+
 /**
- * Category descriptions for thin/empty category rows.
- * Mentions relevant parks so hyperlinking can attach /parks URLs.
+ * Category descriptions — Uganda-style title + two paragraphs naming relevant parks.
  */
 export function buildCategoryDescription(categoryName, country, parks) {
   const name = String(categoryName || '').trim();
-  const parkNames = parks.map((p) => p.name);
-  const listed = joinParks(parkNames);
+  const parkEntries = parks || [];
+  const parkNames = parkEntries.map((p) => (typeof p === 'string' ? p : p.name));
+  const listed = joinParks(parkNames.slice(0, 5));
   const lower = name.toLowerCase();
 
   if (/gorilla/i.test(lower)) {
@@ -160,18 +158,18 @@ export function buildCategoryDescription(categoryName, country, parks) {
     const focus = joinParks(gorillaParks.length ? gorillaParks : parkNames.slice(0, 2));
     return `<p><b>${name}</b></p>
 <p>${name} centre on permitted treks to habituated gorilla families, with logistics, permits, and lodge bases arranged around ${focus}. Eton Safaris times transfers realistically so trekking days stay focused on the forest rather than rushed road hours.</p>
-<p>Beyond the trek itself, many guests add neighbouring parks and cultural visits for a fuller ${country} journey. Clear briefings, fitness guidance, and transparent inclusions help first-time gorilla travellers feel prepared.</p>`;
+<p>Beyond the trek itself, many guests add neighbouring parks such as ${listed} for a fuller ${country} journey. Clear briefings, fitness guidance, and transparent inclusions help first-time gorilla travellers feel prepared.</p>`;
   }
 
   if (/beach|island/i.test(lower)) {
-    const coastal = parkNames.filter((p) => /bazaruto|curieuse|maputo|ras mohammed|table mountain|morne|vall/i.test(p));
-    const focus = joinParks(coastal.length ? coastal : parkNames);
+    const coastal = parkNames.filter((p) => /bazaruto|curieuse|maputo|ras mohammed|table mountain|morne|vall|zanzibar/i.test(p));
+    const focus = joinParks(coastal.length ? coastal : parkNames.slice(0, 3));
     return `<p><b>${name}</b></p>
-<p>${name} combine Indian Ocean or coastal downtime with carefully chosen nature experiences. Where protected areas frame the coast, guests often visit ${focus} for walks, reefs, or island scenery between beach days.</p>
+<p>${name} combine Indian Ocean or coastal downtime with carefully chosen nature experiences. Protected areas such as ${focus} frame reef walks, island scenery, and relaxed beach days.</p>
 <p>Eton Safaris links beach lodges with practical transfers and optional safari extensions in ${country}, keeping the holiday relaxed without losing the sense of place.</p>`;
   }
 
-  if (/mountain|climbing|kilimanjaro|trek/i.test(lower) && /tanzania|morocco|ethiopia/i.test(country)) {
+  if (/mountain|climbing|kilimanjaro|trek/i.test(lower) && /tanzania|morocco|ethiopia|uganda|rwanda|kenya/i.test(country)) {
     return `<p><b>${name}</b></p>
 <p>${name} focus on highland routes, summit attempts, and scenic walks supported by experienced mountain crews. In ${country}, itineraries often reference ${listed} for acclimatization days, forest approaches, or cultural side trips.</p>
 <p>Eton Safaris plans pacing, gear notes, and contingency days so climbers and trekkers balance challenge with recovery and safe mountain practice.</p>`;
@@ -180,26 +178,23 @@ export function buildCategoryDescription(categoryName, country, parks) {
   if (/tour|cultural/i.test(lower) && !/wildlife|safari/i.test(lower)) {
     return `<p><b>${name}</b></p>
 <p>${name} weave historic sites, local culture, and landscapes into a paced itinerary across ${country}. Nature chapters often include time near ${listed}, giving travellers wildlife or highland scenery alongside cities and heritage stops.</p>
-<p>With Eton Safaris, routing stays practical: fewer hotel changes where possible, clear inclusions, and guiding that connects cultural days with the country’s outdoor highlights.</p>`;
+<p>With Eton Safaris, routing stays practical: fewer hotel changes where possible, clear inclusions, and guiding that connects cultural days with the country's outdoor highlights.</p>`;
   }
 
-  // Default wildlife / safari category
+  const flagship = parkEntries.slice(0, 4);
+  const highlightLine =
+    flagship.length > 0
+      ? flagship
+          .map((park) => {
+            const pName = typeof park === 'string' ? park : park.name;
+            const act = typeof park === 'object' && park.experiences ? String(park.experiences).split(',')[0].trim() : '';
+            return act ? `${act} in ${pName}` : pName;
+          })
+          .slice(0, 3)
+          .join(', ')
+      : listed;
+
   return `<p><b>${name}</b></p>
 <p>${name} are built around ${country}'s strongest protected areas, including ${listed}. Days typically mix game drives, boat or walking activities where available, and lodge nights chosen for location as much as comfort.</p>
-<p>Eton Safaris designs these itineraries with realistic road or flight links, seasonal wildlife focus, and room to combine neighbouring parks without exhausting transfers. The goal is more time in the field and clearer logistics from the first planning call to departure.</p>`;
-}
-
-export function countryHeadline(country) {
-  return COUNTRY_COPY[country]?.title || `Explore ${country} Safari Tours`;
-}
-
-export function buildCountryDescription(country) {
-  const parks = parkList(country);
-  const entry = COUNTRY_COPY[country];
-  if (entry) return entry.build(parks);
-  return countryShell(
-    `Explore ${country}`,
-    `${country} is a distinctive safari and travel destination, with protected areas that include ${joinParks(parks)}. Eton Safaris plans private itineraries around seasonality, lodge style, and the experiences that matter most to you.`,
-    `From first enquiry to departure, our team handles park logistics, transfers, and guiding so you can focus on wildlife and landscape time in ${country}.`
-  );
+<p>Signature experiences often include ${highlightLine}. Eton Safaris designs these itineraries with realistic road or flight links, seasonal wildlife focus, and room to combine neighbouring parks without exhausting transfers.</p>`;
 }

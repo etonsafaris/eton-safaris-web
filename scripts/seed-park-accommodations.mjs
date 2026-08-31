@@ -199,13 +199,13 @@ function pickTourLinks(tours, country, count = 12) {
   return links;
 }
 
-/** Exactly one keyword hyperlink per paragraph. */
+/** One tour keyword link per paragraph — woven into the copy, not a repeated boilerplate line. */
 function paragraphWithOneLink(text, phrases, tourLinks, index) {
   const phrase = phrases[index % phrases.length];
   const tour = tourLinks[index % Math.max(tourLinks.length, 1)];
   let html = `<p>${text}`;
-  if (phrase && tour) {
-    html += ` Guests planning a <a href="/tours/${tour.slug}">${phrase}</a> often pair this stay with park activities arranged by Eton Safaris.`;
+  if (phrase && tour?.slug) {
+    html += ` Eton Safaris can include a <a href="/tours/${tour.slug}">${phrase}</a> when building your route.`;
   }
   html += `</p>`;
   return html;

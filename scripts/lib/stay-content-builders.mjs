@@ -26,7 +26,7 @@ export function paragraphWithOneLink(text, phrases, tourLinks, index) {
   const tour = tourLinks[index % Math.max(tourLinks.length, 1)];
   let html = `<p>${text}`;
   if (phrase && tour?.slug) {
-    html += ` Guests planning a <a href="/tours/${tour.slug}">${phrase}</a> often pair this stay with park activities arranged by Eton Safaris.`;
+    html += ` Eton Safaris can include a <a href="/tours/${tour.slug}">${phrase}</a> when building your route.`;
   }
   html += `</p>`;
   return html;

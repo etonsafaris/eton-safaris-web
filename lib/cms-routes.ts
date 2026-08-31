@@ -150,14 +150,24 @@ export function matchCmsRecord(rows: RecordRow[], canonical: string, aliases: st
       .map((item) => publicSlugFromInput(item) || normalizeSlug(item))
       .filter(Boolean)
   );
-  return (
+
+  const bySlug =
     rows.find((row) => {
       const slug =
         publicSlugFromInput(pickString(row, ['slug', 'seo_slug'])) ||
         normalizeSlug(pickString(row, ['slug', 'seo_slug']));
+      return wanted.has(slug);
+    }) || null;
+  if (bySlug) return bySlug;
+
+  const isCorePage = (CORE_PAGE_SLUGS as readonly string[]).includes(canonical);
+  if (isCorePage) return null;
+
+  return (
+    rows.find((row) => {
       const title = normalizeSlug(pickString(row, ['title', 'name']));
       const country = normalizeSlug(pickString(row, ['country']));
-      return wanted.has(slug) || wanted.has(title) || (country && wanted.has(country));
+      return wanted.has(title) || (country && wanted.has(country));
     }) || null
   );
 }

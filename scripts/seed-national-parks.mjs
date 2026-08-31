@@ -130,16 +130,10 @@ function linkPhrase(phrase, href) {
 
 function paragraphWithLinks(text, phrases, tourLinks, startIndex) {
   let html = `<p>${text}`;
-  const used = [];
-  for (let i = 0; i < 3; i += 1) {
-    const phrase = phrases[(startIndex + i) % phrases.length];
-    const tour = tourLinks[(startIndex + i) % Math.max(tourLinks.length, 1)];
-    if (!phrase || !tour) continue;
-    const href = `/tours/${tour.slug}`;
-    used.push(linkPhrase(phrase, href));
-  }
-  if (used.length) {
-    html += ` Travelers comparing ${used[0]}${used[1] ? `, ${used[1]}` : ''}${used[2] ? `, and ${used[2]}` : ''} often add this park into a broader itinerary with Eton Safaris.`;
+  const phrase = phrases[startIndex % phrases.length];
+  const tour = tourLinks[startIndex % Math.max(tourLinks.length, 1)];
+  if (phrase && tour?.slug) {
+    html += ` Eton Safaris also plans <a href="/tours/${tour.slug}">${phrase}</a> that include time in this park.`;
   }
   html += `</p>`;
   return html;
