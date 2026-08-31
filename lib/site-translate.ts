@@ -253,6 +253,25 @@ export function languageByCode(code: string): SiteLanguage | undefined {
   return LANGUAGE_BY_CODE.get(code);
 }
 
+export function sortedCountryGroups(): CountryLanguageGroup[] {
+  return [...COUNTRY_LANGUAGE_GROUPS].sort((a, b) => a.country.localeCompare(b.country));
+}
+
+/** Best-effort ISO-3166 alpha-2 from browser locale (e.g. en-US → us). */
+export function detectBrowserCountryIso(): string {
+  if (typeof navigator === 'undefined') return '';
+  const locales = navigator.languages?.length ? [...navigator.languages] : [navigator.language];
+  for (const locale of locales) {
+    const region = String(locale || '')
+      .split('-')[1]
+      ?.toLowerCase();
+    if (region && COUNTRY_LANGUAGE_GROUPS.some((group) => group.iso2 === region)) {
+      return region;
+    }
+  }
+  return '';
+}
+
 export function languagesForCountry(iso2: string): SiteLanguage[] {
   const group = COUNTRY_LANGUAGE_GROUPS.find((item) => item.iso2 === iso2.toLowerCase());
   if (!group) return [];

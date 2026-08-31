@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
-import SiteTranslateMount from '@/components/public/SiteTranslateMount';
+import SiteTranslateRoot from '@/components/public/SiteTranslateRoot';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
 
 /**
@@ -57,9 +57,9 @@ export const metadata: Metadata = {
     images: [SITE_LOGO],
   },
   icons: {
-    icon: [{ url: SITE_LOGO, type: 'image/png' }],
-    apple: SITE_LOGO,
-    shortcut: SITE_LOGO,
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+    shortcut: '/icon.png',
   },
   robots: { index: true, follow: true },
   other: {
@@ -76,8 +76,13 @@ const SITE_GRAPH = {
       url: SITE.url,
       email: SITE.email,
       telephone: SITE.phoneDisplay,
-      image: `${SITE.url}${SITE_LOGO}`,
-      logo: `${SITE.url}${SITE_LOGO}`,
+      image: `${SITE.url}/icon.png`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE.url}/icon.png`,
+        width: 512,
+        height: 512,
+      },
       sameAs: Object.values(SOCIAL_LINKS),
       priceRange: '$$',
       openingHours: 'Mo-Su 08:00-20:00',
@@ -126,14 +131,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
+        <link rel="icon" href="/icon.png" type="image/png" sizes="48x48" />
+        <link rel="icon" href="/icon.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
       </head>
       <body className="font-sans">
-        <CmsLiveHost />
-        <SiteTranslateMount />
-        {children}
+        <SiteTranslateRoot>
+          <CmsLiveHost />
+          {children}
+        </SiteTranslateRoot>
       </body>
     </html>
   );
