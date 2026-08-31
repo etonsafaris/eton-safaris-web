@@ -49,8 +49,9 @@ function flagshipParksParagraph(country, parks) {
   )}${highlights.length > 2 ? `, plus ${highlights.slice(2).join(', ')}` : ''}.${alsoClause} Eton Safaris times transfers, permits, and lodge bases so trekking and wildlife days stay focused rather than rushed.`;
 }
 
-function buildFromIntro(country, title, intro, parks) {
-  return countryShell(title, intro, flagshipParksParagraph(country, parks));
+function buildFromIntro(country, title, intro, parks, customP2) {
+  const p2 = customP2 || flagshipParksParagraph(country, parks);
+  return countryShell(title, intro, p2);
 }
 
 /** @type {Record<string, { title: string, intro: string }>} */
@@ -58,6 +59,7 @@ const COUNTRY_INTROS = {
   Uganda: {
     title: 'Explore Uganda, Pearl of Africa',
     intro: `Experience Uganda safari tours through stunning landscapes, diverse wildlife, and rich cultural experiences. Nestled in East Africa, Uganda is renowned for gorilla trekking, making it a must-visit destination for nature lovers and adventure seekers.`,
+    p2: `With over half the world's mountain gorillas, Uganda is Africa's premier gorilla trekking destination. Beyond gorillas in Bwindi Impenetrable National Park and Mgahinga Gorilla National Park, guests find lions and elephants in Queen Elizabeth National Park, the Nile at Murchison Falls National Park, and chimpanzees in Kibale National Park. Eton Safaris times transfers, permits, and lodge bases so wildlife days stay focused rather than rushed.`,
   },
   Kenya: {
     title: 'Explore Kenya Safari Tours',
@@ -129,7 +131,7 @@ export function buildCountryDescription(country) {
   const parks = PARKS_BY_COUNTRY[country] || [];
   const meta = COUNTRY_INTROS[country];
   if (meta) {
-    return buildFromIntro(country, meta.title, meta.intro, parks);
+    return buildFromIntro(country, meta.title, meta.intro, parks, meta.p2);
   }
   const names = parkList(country);
   return countryShell(

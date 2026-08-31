@@ -194,6 +194,7 @@ export default function PageForm({ pageId }: PageFormProps) {
             features: homeFeatures,
             videos: homeVideos,
             footerAbout,
+            faqs,
           })
         : null;
     const extras = cmsPageFieldPack({

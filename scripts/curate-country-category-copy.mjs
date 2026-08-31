@@ -203,6 +203,7 @@ async function updateWithFallback(supabase, table, id, payload) {
 
 loadEnv();
 const dryRun = process.argv.includes('--dry-run');
+const forceRewrite = process.argv.includes('--force');
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -220,6 +221,7 @@ const [countries, categories, parks] = await Promise.all([
 
 const summary = {
   dryRun,
+  forceRewrite,
   parksSlugUpdated: 0,
   countriesRewritten: [],
   countriesLinkedOnly: [],
@@ -269,7 +271,7 @@ for (const row of countries) {
   let nextHtml;
   let mode;
 
-  if (existingPlainLen < THIN_COUNTRY || genericFallback.test(plainText(row.description))) {
+  if (forceRewrite || existingPlainLen < THIN_COUNTRY || genericFallback.test(plainText(row.description))) {
     nextHtml = withEmbed(buildCountryDescription(name), row.description);
     nextHtml = hyperlinkParksInHtml(nextHtml, linkParks);
     mode = 'rewrite';
@@ -327,7 +329,7 @@ for (const row of categories) {
   let nextHtml;
   let mode;
 
-  if (existingPlainLen < THIN_CATEGORY) {
+  if (forceRewrite || existingPlainLen < THIN_CATEGORY) {
     nextHtml = withEmbed(buildCategoryDescription(name, country || 'Africa', linkParks), row.description);
     nextHtml = hyperlinkParksInHtml(nextHtml, linkParks);
     mode = 'rewrite';

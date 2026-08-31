@@ -2,8 +2,8 @@
   "name": "mynewrepository",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "20.x"
+    "engines": {
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -53,12 +53,15 @@
     "stays:audit-image-dupes": "node scripts/audit-accommodation-image-dupes.mjs",
     "stays:curate-uganda": "node scripts/curate-uganda-accommodation-content.mjs",
     "stays:curate-uganda-dry": "node scripts/curate-uganda-accommodation-content.mjs --dry-run",
+    "stays:curate": "node scripts/strip-stay-boilerplate.mjs && node scripts/curate-global-accommodation-content.mjs --force",
+    "stays:curate-dry": "node scripts/curate-global-accommodation-content.mjs --dry-run --force",
+    "stays:strip-boilerplate": "node scripts/strip-stay-boilerplate.mjs",
     "parks:seed": "node scripts/seed-national-parks.mjs",
     "parks:seed-dry": "node scripts/seed-national-parks.mjs --dry-run",
     "parks:content": "node scripts/seed-national-parks.mjs --content-only",
     "parks:new": "node scripts/seed-national-parks.mjs --new-only",
-    "copy:curate": "node scripts/curate-country-category-copy.mjs",
-    "copy:curate-dry": "node scripts/curate-country-category-copy.mjs --dry-run",
+    "copy:curate": "node scripts/curate-country-category-copy.mjs --force",
+    "copy:curate-dry": "node scripts/curate-country-category-copy.mjs --dry-run --force",
     "stays:seed": "node scripts/seed-park-accommodations.mjs",
     "stays:seed-dry": "node scripts/seed-park-accommodations.mjs --dry-run",
     "stays:real": "node scripts/seed-real-park-accommodations.mjs",

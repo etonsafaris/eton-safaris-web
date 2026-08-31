@@ -21,6 +21,32 @@ export function parseKeywords(value) {
   return value.split(/[,;\n]+/).map((item) => item.trim()).filter(Boolean);
 }
 
+const STAY_BOILERPLATE_PATTERNS = [
+  / Guests planning a <a[^>]+>[\s\S]*?<\/a> often pair this stay with park activities arranged by Eton Safaris\./gi,
+  / Travelers comparing [\s\S]*? often add this park into a broader itinerary with Eton Safaris\./gi,
+  / often pair this stay with park activities arranged by Eton Safaris\./gi,
+];
+
+export function stripStayBoilerplate(html) {
+  let next = String(html || '');
+  for (const pattern of STAY_BOILERPLATE_PATTERNS) {
+    next = next.replace(pattern, '.');
+  }
+  return next
+    .replace(/\.\./g, '.')
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/\s+\./g, '.')
+    .trim();
+}
+
+export function hasStayBoilerplate(html) {
+  const text = String(html || '');
+  return STAY_BOILERPLATE_PATTERNS.some((pattern) => {
+    pattern.lastIndex = 0;
+    return pattern.test(text);
+  });
+}
+
 export function paragraphWithOneLink(text, phrases, tourLinks, index) {
   const phrase = phrases[index % phrases.length];
   const tour = tourLinks[index % Math.max(tourLinks.length, 1)];
@@ -200,7 +226,9 @@ export function parseEmbed(description) {
   }
 }
 
-export function needsContentCuration(stay) {
+export function needsContentCuration(stay, { force = false } = {}) {
+  if (force) return true;
+  if (hasStayBoilerplate(stay.description)) return true;
   const { blocks, body } = parseEmbed(stay.description);
   const plain = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const words = plain ? plain.split(/\s+/).length : 0;

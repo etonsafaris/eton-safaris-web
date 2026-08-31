@@ -56,3 +56,5 @@ scripts/_tmp-*.mjs
 # local tools / capture frames
 .video-frames/
 .tools/
+
+.vercel
