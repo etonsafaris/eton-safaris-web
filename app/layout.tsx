@@ -58,11 +58,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
-      { url: '/favicon.ico', sizes: '48x48' },
+      { url: SITE_LOGO, type: 'image/png', sizes: '512x512' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
-    shortcut: '/icon.png',
+    apple: [{ url: SITE_LOGO, type: 'image/png', sizes: '180x180' }],
+    shortcut: SITE_LOGO,
   },
   robots: { index: true, follow: true },
   other: {
@@ -79,12 +79,12 @@ const SITE_GRAPH = {
       url: SITE.url,
       email: SITE.email,
       telephone: SITE.phoneDisplay,
-      image: `${SITE.url}/icon.png`,
+      image: `${SITE.url}${SITE_LOGO.split('?')[0]}`,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE.url}/icon.png`,
-        width: 192,
-        height: 192,
+        url: `${SITE.url}${SITE_LOGO.split('?')[0]}`,
+        width: 512,
+        height: 512,
       },
       sameAs: Object.values(SOCIAL_LINKS),
       priceRange: '$$',
@@ -134,9 +134,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
-        <link rel="icon" type="image/png" href="/icon.png" sizes="192x192" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
+        <link rel="icon" type="image/png" href={SITE_LOGO} sizes="512x512" />
+        <link rel="shortcut icon" type="image/png" href={SITE_LOGO} />
+        <link rel="apple-touch-icon" href={SITE_LOGO} sizes="180x180" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
