@@ -58,12 +58,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
       { url: '/favicon.ico', sizes: '48x48' },
-      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icon.png', type: 'image/png', sizes: '48x48' },
     ],
     apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
-    shortcut: '/favicon.ico',
+    shortcut: '/icon.png',
   },
   robots: { index: true, follow: true },
   other: {
@@ -80,10 +79,10 @@ const SITE_GRAPH = {
       url: SITE.url,
       email: SITE.email,
       telephone: SITE.phoneDisplay,
-      image: `${SITE.url}/icon-192.png`,
+      image: `${SITE.url}/icon.png`,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE.url}/icon-192.png`,
+        url: `${SITE.url}/icon.png`,
         width: 192,
         height: 192,
       },
@@ -135,8 +134,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="48x48" />
-        <link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192" />
+        <link rel="icon" type="image/png" href="/icon.png" sizes="192x192" />
+        <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />

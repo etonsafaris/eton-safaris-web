@@ -17,29 +17,21 @@ const root = path.resolve(__dirname, '..');
 const source = path.join(root, 'public', 'eton-safaris-gorilla.png');
 
 const publicDir = path.join(root, 'public');
+const appDir = path.join(root, 'app');
 
 if (!fs.existsSync(source)) {
   console.error('Missing logo:', source);
   process.exit(1);
 }
 
-/** Square crop for wide logos; pass-through when already square. */
+/** Fit the full logo in a square — keeps the gorilla mark readable in browser tabs. */
 async function squareLogo(input, size) {
-  const meta = await sharp(input).metadata();
-  const w = meta.width ?? 1;
-  const h = meta.height ?? 1;
-
-  let pipeline = sharp(input);
-  if (Math.abs(w - h) > 2) {
-    const side = Math.min(w, h);
-    const left = Math.min(Math.round(w * 0.02), Math.max(0, w - side));
-    const top = Math.max(0, Math.round((h - side) / 2));
-    pipeline = pipeline.extract({ left, top, width: side, height: side });
-  }
-
-  return pipeline
-    .resize(size, size, { fit: 'cover', position: 'centre' })
-    .png({ compressionLevel: 9, palette: true });
+  return sharp(input)
+    .resize(size, size, {
+      fit: 'contain',
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    })
+    .png({ compressionLevel: 9 });
 }
 
 async function writePng(pipeline, dest) {
@@ -52,19 +44,20 @@ async function main() {
   console.log('Generating site icons from', path.relative(root, source));
 
   const sizes = {
-    favicon: 48,
+    tab: 192,
     apple: 180,
-    pwa: 192,
+    google: 48,
   };
 
-  const faviconPipeline = await squareLogo(source, sizes.favicon);
+  const tabPipeline = await squareLogo(source, sizes.tab);
   const applePipeline = await squareLogo(source, sizes.apple);
-  const pwaPipeline = await squareLogo(source, sizes.pwa);
+  const googlePipeline = await squareLogo(source, sizes.google);
 
-  // Static public files — Google crawls these directly
-  await writePng(faviconPipeline, path.join(publicDir, 'icon.png'));
+  // Static public files — crawlers fetch these directly
+  await writePng(tabPipeline, path.join(publicDir, 'icon.png'));
+  await writePng(tabPipeline, path.join(publicDir, 'icon-192.png'));
   await writePng(applePipeline, path.join(publicDir, 'apple-icon.png'));
-  await writePng(pwaPipeline, path.join(publicDir, 'icon-192.png'));
+  await writePng(googlePipeline, path.join(publicDir, 'icon-48.png'));
 
   const icoBuffers = await Promise.all(
     [16, 32, 48].map((s) => squareLogo(source, s).then((p) => p.png().toBuffer())),
@@ -73,6 +66,10 @@ async function main() {
   const faviconPath = path.join(publicDir, 'favicon.ico');
   fs.writeFileSync(faviconPath, ico);
   console.log(`  ${path.relative(root, faviconPath)} (${ico.length} bytes)`);
+
+  // Next.js app icons — Chrome reads these from the document head
+  await writePng(tabPipeline, path.join(appDir, 'icon.png'));
+  await writePng(applePipeline, path.join(appDir, 'apple-icon.png'));
 
   console.log('Done.');
 }
