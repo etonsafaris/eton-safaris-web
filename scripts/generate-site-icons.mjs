@@ -1,6 +1,6 @@
 /**
  * Build square favicon assets from the official Eton Safaris logo.
- * Outputs app/icon.png, app/apple-icon.png, and public copies for /icon.png URLs.
+ * Outputs app/icon.png and app/apple-icon.png for Next.js file-based metadata.
  */
 import sharp from 'sharp';
 import { resolve } from 'path';
@@ -19,9 +19,7 @@ async function writeSquare(outPath, size) {
 async function main() {
   await writeSquare(resolve(root, 'app/icon.png'), 512);
   await writeSquare(resolve(root, 'app/apple-icon.png'), 180);
-  await writeSquare(resolve(root, 'public/icon.png'), 512);
-  await writeSquare(resolve(root, 'public/apple-icon.png'), 180);
-  console.log('Generated app/icon.png, app/apple-icon.png, public/icon.png, public/apple-icon.png');
+  console.log('Generated app/icon.png (512) and app/apple-icon.png (180) from public/eton-safaris-gorilla.png');
 }
 
 main().catch((error) => {
