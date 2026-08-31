@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
+import { normalizeSlug } from '@/lib/country-utils';
 import {
   categoryMatchesCountry,
   matchesCategoryValue,
@@ -58,14 +59,23 @@ export async function loadCmsPage(slug: string) {
   try {
     const columns = listColumns('pages');
     const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
-    // Need full content for the matched page only.
-    const match = matchCmsRecord(rows, slug, pageAliases(slug));
+    let match = matchCmsRecord(rows, slug, pageAliases(slug));
+
+    if (!match && (slug === 'terms-of-services' || slug === 'privacy-policies')) {
+      const needle = slug.includes('terms') ? 'terms' : 'privacy';
+      match =
+        rows.find((row) => {
+          const title = pickString(row, ['title', 'name', 'post_title']).toLowerCase();
+          const rowSlug = normalizeSlug(pickString(row, ['slug', 'seo_slug']));
+          return title.includes(needle) || rowSlug.includes(needle);
+        }) || null;
+    }
+
     if (!match || !isPublishedRecord(match)) return null;
     const id = String(match.id || '');
     if (!id) return null;
     const full = await fetchCollectionRecordById('pages', id);
     if (full && isPublishedRecord(full)) return full;
-    // Never return list rows — they omit the HTML body column.
     return null;
   } catch {
     return null;

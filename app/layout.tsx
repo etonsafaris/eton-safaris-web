@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
+import SiteTranslateMount from '@/components/public/SiteTranslateMount';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
 
 /**
@@ -131,6 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans">
         <CmsLiveHost />
+        <SiteTranslateMount />
         {children}
       </body>
     </html>

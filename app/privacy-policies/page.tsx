@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import PolicyPageClient from '@/components/public/PolicyPageClient';
+import PolicyPageView from '@/components/public/PolicyPageView';
 import JsonLd from '@/components/public/JsonLd';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { loadCmsPage } from '@/lib/load-public';
@@ -33,7 +33,7 @@ export default async function PrivacyPoliciesPage() {
   return (
     <>
       <JsonLd table="pages" slug={SLUG} path={`/${SLUG}`} schemaHint="WebPage" />
-      <PolicyPageClient slug={SLUG} initialPage={page} />
+      <PolicyPageView slug={SLUG} page={page} />
     </>
   );
 }

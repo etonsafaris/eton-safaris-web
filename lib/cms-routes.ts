@@ -161,7 +161,17 @@ export function matchCmsRecord(rows: RecordRow[], canonical: string, aliases: st
   if (bySlug) return bySlug;
 
   const isCorePage = (CORE_PAGE_SLUGS as readonly string[]).includes(canonical);
-  if (isCorePage) return null;
+  if (isCorePage) {
+    if (canonical === 'terms-of-services' || canonical === 'privacy-policies') {
+      const byTitle =
+        rows.find((row) => {
+          const title = normalizeSlug(pickString(row, ['title', 'name', 'post_title']));
+          return wanted.has(title);
+        }) || null;
+      if (byTitle) return byTitle;
+    }
+    return null;
+  }
 
   return (
     rows.find((row) => {

@@ -3,8 +3,8 @@ import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { mergeFaqs } from '@/lib/default-faqs';
-import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
-import { publicBodyHtml } from '@/lib/embedded-content';
+import { getRecordImage, getRecordTitle, pickStoredString, pickString } from '@/lib/data';
+import { publicBodyHtml, recordBodyHtml } from '@/lib/embedded-content';
 import { resolvePublicImage } from '@/lib/public-image';
 import { STATIC_PAGES } from '@/lib/static-pages';
 import type { RecordRow } from '@/lib/types';
@@ -23,8 +23,25 @@ export function seededCmsPage(slug: string) {
 
 /** Policy pages must always resolve visible HTML — CMS body first, then seeded/static fallback. */
 export function resolvePolicyPageContent(page: RecordRow | null | undefined, slug: string): string {
-  const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
+  const cmsContent =
+    (page ? pickStoredString(page, ['content', 'description', 'body']) : '') ||
+    (page ? recordBodyHtml(page) : '');
   if (hasVisibleCopy(cmsContent)) return cmsContent;
+
+  const blocks = parseCmsBlocks(page);
+  if (blocks.length) {
+    const blockHtml = blocks
+      .map((block) => {
+        const title = String(block.title || '').trim();
+        const body = String(block.description || '').trim();
+        if (!title && !body) return '';
+        return `${title ? `<h4>${title}</h4>` : ''}${body}`;
+      })
+      .filter(Boolean)
+      .join('');
+    if (hasVisibleCopy(blockHtml)) return blockHtml;
+  }
+
   const seeded = seededCmsPage(slug);
   if (seeded?.content && hasVisibleCopy(seeded.content)) return seeded.content;
   return STATIC_PAGES[slug]?.content || '';
