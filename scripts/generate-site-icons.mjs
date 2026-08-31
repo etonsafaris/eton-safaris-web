@@ -1,8 +1,8 @@
 /**
  * Build crawlable favicons for Google Search and browsers.
  *
- * Outputs static files in public/ (primary — always 200 OK for crawlers)
- * plus app/ metadata icons (small sizes to avoid serverless 500s).
+ * Outputs static files in public/ only — crawlers and browsers fetch these
+ * directly (no Next.js metadata route that can 500 in production).
  *
  * Run: npm run icons:generate
  */
@@ -17,24 +17,27 @@ const root = path.resolve(__dirname, '..');
 const source = path.join(root, 'public', 'eton-safaris-gorilla.png');
 
 const publicDir = path.join(root, 'public');
-const appDir = path.join(root, 'app');
 
 if (!fs.existsSync(source)) {
   console.error('Missing logo:', source);
   process.exit(1);
 }
 
-/** Crop to square around the gorilla mark (left portion of the wide logo). */
+/** Square crop for wide logos; pass-through when already square. */
 async function squareLogo(input, size) {
   const meta = await sharp(input).metadata();
   const w = meta.width ?? 1;
   const h = meta.height ?? 1;
-  const side = Math.min(w, h);
-  const left = Math.round(w * 0.02);
-  const top = Math.round((h - side) / 2);
 
-  return sharp(input)
-    .extract({ left, top, width: side, height: side })
+  let pipeline = sharp(input);
+  if (Math.abs(w - h) > 2) {
+    const side = Math.min(w, h);
+    const left = Math.min(Math.round(w * 0.02), Math.max(0, w - side));
+    const top = Math.max(0, Math.round((h - side) / 2));
+    pipeline = pipeline.extract({ left, top, width: side, height: side });
+  }
+
+  return pipeline
     .resize(size, size, { fit: 'cover', position: 'centre' })
     .png({ compressionLevel: 9, palette: true });
 }
@@ -52,13 +55,11 @@ async function main() {
     favicon: 48,
     apple: 180,
     pwa: 192,
-    app: 48,
   };
 
   const faviconPipeline = await squareLogo(source, sizes.favicon);
   const applePipeline = await squareLogo(source, sizes.apple);
   const pwaPipeline = await squareLogo(source, sizes.pwa);
-  const appPipeline = await squareLogo(source, sizes.app);
 
   // Static public files — Google crawls these directly
   await writePng(faviconPipeline, path.join(publicDir, 'icon.png'));
@@ -72,10 +73,6 @@ async function main() {
   const faviconPath = path.join(publicDir, 'favicon.ico');
   fs.writeFileSync(faviconPath, ico);
   console.log(`  ${path.relative(root, faviconPath)} (${ico.length} bytes)`);
-
-  // Next.js metadata icons (keep small)
-  await writePng(appPipeline, path.join(appDir, 'icon.png'));
-  await writePng(applePipeline, path.join(appDir, 'apple-icon.png'));
 
   console.log('Done.');
 }

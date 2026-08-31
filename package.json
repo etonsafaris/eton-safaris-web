@@ -2,12 +2,12 @@
   "name": "mynewrepository",
   "version": "0.1.0",
   "private": true,
-    "engines": {
+  "engines": {
     "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run icons:generate && next build",
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "start": "next start",
     "lint": "next lint",
@@ -104,8 +104,8 @@
     "eslint-config-next": "^14.2.28",
     "postcss": "^8.5.3",
     "sharp": "^0.35.4",
-    "to-ico": "^1.1.5",
     "tailwindcss": "^3.4.17",
+    "to-ico": "^1.1.5",
     "typescript": "^6.0.3"
   }
 }
