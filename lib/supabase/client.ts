@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import { supabase } from '@/lib/supabase/client';
+
 
 // 1. Fetch your master Aiven Service URI connection string safely
 const connectionString = process.env.DATABASE_URL;
