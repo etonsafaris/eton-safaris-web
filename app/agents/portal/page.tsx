@@ -11,7 +11,7 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { pickString } from '@/lib/data';
 import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
-import type { User } from '@supabase/supabase-js';
+type User = { id: string; email?: string; user_metadata?: Record<string, unknown> };
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import type { RecordRow } from '@/lib/types';
 

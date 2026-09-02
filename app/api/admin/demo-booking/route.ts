@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { DEMO_BOOKING_CODE } from '@/lib/ensure-demo-booking';

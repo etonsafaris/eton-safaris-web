@@ -2,24 +2,22 @@ import { Pool } from 'pg';
 
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  throw new Error('Missing DATABASE_URL connection string inside environment variables.');
-}
-
 // Global caching wrapper to protect your 20 max connection limits on Vercel
-let cachedPool: Pool;
+const cachedPool: Pool | null = connectionString
+  ? (global.aivenPool ||= new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 20,
+      idleTimeoutMillis: 30000,
+    }))
+  : null;
 
-if (!global.aivenPool) {
-  global.aivenPool = new Pool({
-    connectionString: connectionString,
-    ssl: { rejectUnauthorized: false },
-    max: 20,
-    idleTimeoutMillis: 30000,
-  });
-}
-cachedPool = global.aivenPool;
-
-export const db = cachedPool;
+export const db = {
+  async connect() {
+    if (!cachedPool) throw new Error('Aiven DATABASE_URL is not configured.');
+    return cachedPool.connect();
+  },
+};
 
 // Safe utility helper to handle simple data queries inside your backend
 export const aivenFetch = async (tableName: string, columns = '*') => {

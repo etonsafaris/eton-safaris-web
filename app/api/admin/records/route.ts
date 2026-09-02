@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
@@ -5,7 +7,7 @@ import { requireAdminUser } from '@/lib/require-admin';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 
 const ALLOWED_TABLES = new Set([
   'notifications',

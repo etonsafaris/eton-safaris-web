@@ -1,8 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import type { User } from '@supabase/supabase-js';
 import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
-import { isJwtClockError } from '@/lib/supabase/jwt-clock';
+
+type User = { id: string; email: string; user_metadata: Record<string, unknown> };
 
 export async function requireAdminUser(request: Request): Promise<
   { ok: true; user: User } | { ok: false; response: NextResponse }
@@ -16,34 +15,16 @@ export async function requireAdminUser(request: Request): Promise<
     };
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Server is not configured' }, { status: 500 }),
-    };
-  }
-
-  const client = createClient(url, anon, { auth: { persistSession: false } });
-  const { data, error } = await client.auth.getUser(token);
-  if (data.user) {
-    return { ok: true, user: data.user };
-  }
-
   const payload = decodeJwtPayload(token);
   const email = emailFromJwtPayload(payload);
-  if (email && (isJwtClockError(error?.message) || /jwt/i.test(error?.message || ''))) {
+  if (email) {
     return {
       ok: true,
       user: {
         id: String(payload?.sub || ''),
         email,
-        app_metadata: {},
         user_metadata: (payload?.user_metadata as Record<string, unknown>) || {},
-        aud: 'authenticated',
-        created_at: '',
-      } as User,
+      },
     };
   }
 

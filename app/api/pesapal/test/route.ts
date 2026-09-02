@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { isPesapalLive, pesapalToken } from '@/lib/pesapal';
 import { requireAdminUser } from '@/lib/require-admin';

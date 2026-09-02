@@ -1,6 +1,6 @@
 import { chipsFromKeywordRows, keywordRowMatchesScope, parseKeywordList, uniqueKeywords } from '@/lib/keywords';
 import { parseMissingColumn } from '@/lib/supabase-save';
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 
 export function normalizeKeywordPhrase(value: string): string {
   return String(value || '')

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { adminInbox } from '@/lib/email';
 import { requireAdminUser } from '@/lib/require-admin';

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';

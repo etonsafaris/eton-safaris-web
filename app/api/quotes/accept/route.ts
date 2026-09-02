@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { generateBookingCode } from '@/lib/booking-code';
 import { quoteFinalTourFee } from '@/lib/booking-status';

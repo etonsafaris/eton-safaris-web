@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { clearAdminSessionCookieServer, syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { decodeJwtPayload, emailFromJwtPayload, readStoredAccessToken } from '@/lib/supabase/jwt-payload';
-import type { User } from '@supabase/supabase-js';
+type User = { user_metadata?: Record<string, unknown> };
 
 type UseAdminSessionOptions = {
   redirectTo?: string;

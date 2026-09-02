@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 import { isDuplicateEmail, isDuplicateId, isMissingTable } from '@/lib/agent-tables';
 import { parseMissingColumn, type SaveResult } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';

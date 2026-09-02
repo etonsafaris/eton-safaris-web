@@ -1,10 +1,12 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey } from '@/lib/supabase/request-client';
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 
 const TABLE_ALIASES: Record<string, string[]> = {
   quotations_inquiries: ['quotations_inquiries', 'quotations'],

@@ -1,4 +1,5 @@
-import type { SupabaseClient, User } from '@supabase/supabase-js';
+type SupabaseClient = any;
+type User = { id: string; email?: string; user_metadata?: Record<string, unknown> };
 
 function asEmail(value: string) {
   return value.trim().toLowerCase();

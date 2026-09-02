@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { AGENT_TABLES, isDuplicateEmail, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
 import { insertAgentApplication, type AgentApplicationInput } from '@/lib/agent-row';

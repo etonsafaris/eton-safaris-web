@@ -1,5 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase as defaultClient } from '@/lib/supabase/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   CONTENT_TABLES,
   getKnownColumns,
@@ -17,10 +16,12 @@ export type SaveResult = {
 export type SaveOptions = {
   id?: string | number | null;
   eq?: { column: string; value: string | number };
-  client?: SupabaseClient;
+  client?: DatabaseClient;
   /** Keep `id` on insert (e.g. profiles keyed to auth.users). */
   keepId?: boolean;
 };
+
+type DatabaseClient = ReturnType<typeof createAdminClient>;
 
 function isSaveOptions(value: unknown): value is SaveOptions {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -28,14 +29,14 @@ function isSaveOptions(value: unknown): value is SaveOptions {
 
 function resolveOptions(
   idOrOptions?: string | number | SaveOptions | null,
-  client?: SupabaseClient
+  client?: DatabaseClient
 ): Required<Pick<SaveOptions, 'client'>> & SaveOptions {
   if (isSaveOptions(idOrOptions)) {
     return { ...idOrOptions, client: idOrOptions.client || client || defaultClient };
   }
   return {
     id: idOrOptions ?? undefined,
-    client: client || defaultClient,
+    client: client || createAdminClient(),
   };
 }
 
@@ -68,7 +69,7 @@ function normalizePayload(payload: Record<string, unknown>, keepId = false): Rec
 
 export async function discoverTableColumns(
   table: string,
-  client: SupabaseClient = defaultClient
+  client: DatabaseClient = createAdminClient()
 ): Promise<string[]> {
   const cached = getKnownColumns(table);
   if (cached.length > 0) return cached;
@@ -84,7 +85,7 @@ export async function discoverTableColumns(
 async function refetchRow(
   table: string,
   options: SaveOptions,
-  client: SupabaseClient
+  client: DatabaseClient
 ): Promise<Record<string, unknown>[] | null> {
   let query = client.from(table).select('*');
   if (options.id !== undefined && options.id !== null && options.id !== '') {
@@ -104,10 +105,10 @@ export async function saveWithColumnFallback(
   table: string,
   payload: Record<string, unknown>,
   idOrOptions?: string | number | SaveOptions | null,
-  clientArg?: SupabaseClient
+  clientArg?: DatabaseClient
 ): Promise<SaveResult> {
   const options = resolveOptions(idOrOptions, clientArg);
-  const client = options.client || defaultClient;
+  const client = options.client || createAdminClient();
   const isUpdate = hasRowFilter(options);
 
   if (isUpdate && (options.id === undefined || options.id === null || options.id === '') && !options.eq) {

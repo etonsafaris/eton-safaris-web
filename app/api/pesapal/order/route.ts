@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
 import { getPesapalIpnId, isPesapalLive, normalizePhone, pesapalPublicSiteUrl, pesapalRequest } from '@/lib/pesapal';

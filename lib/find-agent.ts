@@ -1,7 +1,7 @@
 import { AGENT_TABLES, isMissingTable, normalizeAgentEmail } from '@/lib/agent-tables';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 import type { RecordRow } from '@/lib/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 
 export async function findAgentRecord(
   client: SupabaseClient,
