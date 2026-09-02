@@ -25,7 +25,7 @@ import {
   pickString,
   publicListColumnsFor,
   TOUR_LIST_COLUMNS,
-} from '@/lib/data';
+} from '@/lib/data-server';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import type { RecordRow } from '@/lib/types';
 

@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server';
 import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { sendEmail } from '@/lib/email';
-
-import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
 
@@ -55,17 +53,24 @@ export async function GET(request: Request) {
 
   try {
 
-    const supabase = createAdminClient();
+    const db = require('@/lib/supabase/server.ts/server').db;
+    const client = await db.connect();
 
-    const [{ data: subscribers }, { data: tours }, { data: updates }] = await Promise.all([
+    const [subscribersResult, toursResult, updatesResult] = await Promise.all([
 
-      supabase.from('subscribers').select('id,email,last_digest_at'),
+      client.query('SELECT id,email,last_digest_at FROM subscribers'),
 
-      supabase.from('tours').select('id,title,slug,country').limit(6),
+      client.query('SELECT id,title,slug,country FROM tours LIMIT 6'),
 
-      supabase.from('safari_updates').select('title,slug').limit(5),
+      client.query('SELECT title,slug FROM safari_updates LIMIT 5'),
 
     ]);
+
+    client.release();
+
+    const subscribers = subscribersResult.rows;
+    const tours = toursResult.rows;
+    const updates = updatesResult.rows;
 
 
 
@@ -171,7 +176,7 @@ export async function GET(request: Request) {
 
       if (row.id) {
 
-        await saveWithColumnFallback('subscribers', { last_digest_at: now }, { id: row.id, client: supabase });
+        await saveWithColumnFallback('subscribers', { last_digest_at: now }, { id: row.id });
 
       }
 

@@ -1,10 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
+import { createSkewAwareFetch } from '@/lib/supabase/jwt-clock';
 
-// Safe placeholders to satisfy old browser hooks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'temporary-placeholder-key';
+export const supabaseConfig = {
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+};
 
-// This keeps the browser client happy without linking to server-side code
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: true }
+if (!supabaseConfig.url || !supabaseConfig.anonKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+}
+
+export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+  global: {
+    fetch: createSkewAwareFetch(supabaseConfig.anonKey),
+  },
 });
+
