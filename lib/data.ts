@@ -1,6 +1,17 @@
 // Client-side compatibility layer - redirects to server-side Aiven functions when running on server
 import type { RecordRow } from '@/lib/types';
 import { extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import {
+  fetchCollectionRecords as fetchCollectionRecordsServer,
+  fetchCollectionPage as fetchCollectionPageServer,
+  fetchCollectionRecordById as fetchCollectionRecordByIdServer,
+  fetchFeaturedTours as fetchFeaturedToursServer,
+  fetchParksForCountry as fetchParksForCountryServer,
+  fetchRecordByPublicSlug as fetchRecordByPublicSlugServer,
+  fetchStaysForPark as fetchStaysForParkServer,
+  fetchToursForCountryLabel as fetchToursForCountryLabelServer,
+  searchTours as searchToursServer,
+} from './data-server';
 
 // Re-export all server-side functions from data-server.ts
 export {
@@ -199,10 +210,14 @@ export async function searchTours(options: { query: string; limit?: number }) {
 
 export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {
   if (!browser()) return fetchCollectionRecordByIdServer(table, String(id), aliases);
-  const params = new URLSearchParams({ 'eq.id': String(id), limit: '1' });
-  const response = await fetch(dataUrl(table, params), { cache: 'no-store' });
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-  return body.data?.[0] || null;
+  for (const name of [table, ...aliases]) {
+    const params = new URLSearchParams({ 'eq.id': String(id), limit: '1' });
+    const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+    if (!response.ok) continue;
+    const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+    if (body.data?.[0]) return body.data[0];
+  }
+  return null;
 }
 
 // Keep utility functions that are used by client components
