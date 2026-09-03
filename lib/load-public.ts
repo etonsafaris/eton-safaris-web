@@ -229,7 +229,7 @@ export async function loadCountryPageData(slug: string) {
     slug;
   const [tours, parks] = await Promise.all([
     fetchToursForCountryLabel(countryName, 48).catch(() => [] as RecordRow[]),
-    fetchParksForCountry(countryName, 48).catch(() => [] as RecordRow[]),
+    fetchParksForCountry(countryName, 48, country?.id != null ? String(country.id) : undefined).catch(() => [] as RecordRow[]),
   ]);
   return {
     country: country && isPublishedRecord(country) ? country : null,
@@ -269,7 +269,7 @@ export async function loadParkDetail(slug: string) {
     })),
   ]);
   const parkName = park ? getRecordTitle(park) : '';
-  const stays = parkName ? await fetchStaysForPark(parkName, 10) : [];
+  const stays = parkName ? await fetchStaysForPark(parkName, 10, park?.id != null ? String(park.id) : undefined) : [];
   return {
     park: park && isPublishedRecord(park) ? park : null,
     others: parkPage.rows.filter((row) => String(row.id) !== String(park?.id || '')).slice(0, 20),

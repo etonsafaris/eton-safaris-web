@@ -94,7 +94,11 @@ export default function CountryPageContent({
         fetchCollectionRecords('countries', [], { maxRows: 48 }),
         fetchCollectionRecords('categories', [], { maxRows: 64 }),
         fetchToursForCountryLabel(slug, 48),
-        fetchParksForCountry(publicCountryLabel(countryProp, slug) || slug, 48),
+        fetchParksForCountry(
+          publicCountryLabel(countryProp, slug) || slug,
+          48,
+          countryProp?.id != null ? String(countryProp.id) : undefined
+        ),
         fetchCollectionPage('explore', [], {
           limit: 48,
           offset: 0,

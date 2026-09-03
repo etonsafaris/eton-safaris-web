@@ -818,8 +818,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     .replace(/\s+np$/i, '')
     .trim();
   const like = `%${shortName || name}%`;
-  let selectColumns =
-    'id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_name,national_park_id';
+  let selectColumns = '*';
   const seen = new Set<string>();
   const merged: RecordRow[] = [];
 
@@ -843,7 +842,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
 
   const id = String(parkId || '').trim();
   if (id) {
-    await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE national_park_id = $1 LIMIT 48`, [id]);
+    await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE national_park_id = $1 LIMIT ${capped}`, [id]);
   }
   if (merged.length < capped && (shortName || name)) {
     for (const column of ['national_park_name', 'national_park', 'park_name', 'park', 'location']) {
@@ -869,30 +868,30 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
 }
 
 /** Parks in one country — capped so admin filters / country pages stay fast. */
-export async function fetchParksForCountry(countryLabel: string, limit = 200): Promise<RecordRow[]> {
+export async function fetchParksForCountry(countryLabel: string, limit = 200, countryId?: string): Promise<RecordRow[]> {
   const label = sanitizeIlike(countryLabel);
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 200));
   const names = ['national_park', 'national_parks', 'parks'];
-  let selectColumns =
-    publicListColumnsFor('national_park', ['national_parks', 'parks']) ||
-    'id,name,slug,seo_slug,location,country,image_url,social_image_url,description_title';
+  const selectColumns = '*';
   for (const name of names) {
     const collected: RecordRow[] = [];
+    if (countryId) {
+      try {
+        const res = await db.query(`SELECT ${selectColumns} FROM ${name} WHERE country_id = $1 LIMIT ${capped}`, [countryId]);
+        collected.push(...(res.rows as RecordRow[]));
+      } catch (error: any) {
+        if (!/column .* does not exist|relation .* does not exist/i.test(error.message || '')) {
+          console.error(`[Aiven] Parks country_id query failed:`, error.message);
+        }
+      }
+    }
     for (const countryColumn of ['country', 'country_name', 'destination', 'location']) {
       try {
         const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${countryColumn} ILIKE $1 LIMIT ${capped}`;
         const res = await db.query(queryText, [`%${label}%`]);
         collected.push(...(res.rows as RecordRow[]));
       } catch (error: any) {
-        const missing = missingSelectColumn(error.message || '');
-        if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
-          const next = dropColumnFromSelect(selectColumns, missing);
-          if (next && next !== selectColumns) {
-            selectColumns = next;
-            break;
-          }
-        }
         if (!/column .* does not exist|relation .* does not exist/i.test(error.message || '')) {
           console.error(`[Aiven] Parks for country query failed:`, error.message);
         }

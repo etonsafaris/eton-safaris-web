@@ -115,10 +115,24 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   return body.data || [];
 }
 
-export async function fetchParksForCountry(countryLabel: string, limit = 200) {
+export async function fetchParksForCountry(countryLabel: string, limit = 200, countryId?: string) {
   if (!browser()) return fetchParksForCountryServer(countryLabel, limit);
   const rows: RecordRow[] = [];
   const seen = new Set<string>();
+  if (countryId) {
+    const params = new URLSearchParams({ limit: String(limit), 'eq.country_id': countryId });
+    const response = await fetch(dataUrl('national_park', params), { cache: 'no-store' });
+    if (response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+      for (const row of body.data || []) {
+        const key = String(row.id || getRecordTitle(row)).toLowerCase();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          rows.push(row);
+        }
+      }
+    }
+  }
   for (const column of ['country', 'country_name', 'destination', 'location']) {
     const params = new URLSearchParams({ limit: String(limit), [`ilike.${column}`]: `%${countryLabel}%` });
     const response = await fetch(dataUrl('national_park', params), { cache: 'no-store' });
@@ -140,10 +154,23 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
   if (!browser()) return fetchStaysForParkServer(parkName, limit, parkId);
   const rows: RecordRow[] = [];
   const seen = new Set<string>();
+  if (parkId) {
+    const idParams = new URLSearchParams({ limit: String(limit), 'eq.national_park_id': parkId });
+    const idResponse = await fetch(dataUrl('accommodations', idParams), { cache: 'no-store' });
+    if (idResponse.ok) {
+      const body = (await idResponse.json().catch(() => ({}))) as { data?: RecordRow[] };
+      for (const row of body.data || []) {
+        const key = String(row.id || getRecordTitle(row)).toLowerCase();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          rows.push(row);
+        }
+      }
+    }
+  }
   const columns = ['national_park_name', 'national_park', 'park_name', 'park', 'location'];
   for (const column of columns) {
     const params = new URLSearchParams({ limit: String(limit), [`ilike.${column}`]: `%${parkName}%` });
-    if (parkId && column === 'national_park_name') params.set('eq.national_park_id', parkId);
     const response = await fetch(dataUrl('accommodations', params), { cache: 'no-store' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
