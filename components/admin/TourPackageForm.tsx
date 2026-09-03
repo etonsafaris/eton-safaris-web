@@ -740,8 +740,6 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
         keywordLibraryCountry={form.country}
         keywordLibraryCategory={form.category}
         indexRecord={form as unknown as RecordRow}
-        googleIndexCollectionId="tours"
-        googleIndexRecord={form as unknown as RecordRow}
       />
     </form>
   );

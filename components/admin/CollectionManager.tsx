@@ -6,7 +6,6 @@ import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
-import GoogleIndexToggle from '@/components/admin/GoogleIndexToggle';
 import { IndexStatusBadge, indexStatusForCollectionRecord } from '@/components/admin/IndexStatusBadge';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
@@ -502,21 +501,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     );
   }
 
-  function handleIndexUpdated(record: RecordRow) {
-    setRecords((current) =>
-      current.map((row) => {
-        if (String(row.id) !== String(record.id)) return row;
-        return {
-          ...row,
-          ...record,
-          // Keep an explicit flag on the list row so badges/toggles match the saved choice.
-          robots_index: record.robots_index,
-          seo_schema: record.seo_schema ?? row.seo_schema,
-        };
-      })
-    );
-  }
-
   function supportsGoogleIndex() {
     return Boolean(indexableKindForCollectionId(config.id) || config.id === 'landing_pages');
   }
@@ -554,14 +538,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   function cardActions(record: RecordRow) {
     return (
       <>
-        {supportsGoogleIndex() ? (
-          <GoogleIndexToggle
-            collectionId={config.id}
-            record={record}
-            compact
-            onUpdated={handleIndexUpdated}
-          />
-        ) : null}
         {config.id === 'bookings' && (
           <>
             <button type="button" onClick={() => confirmDownPayment(record)} className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-semibold uppercase text-gray-300">
@@ -1055,16 +1031,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
           >
             <RefreshCw className="h-4 w-4" /> Refresh
           </button>
-          {supportsGoogleIndex() && !isOps && config.id !== 'landing_pages' ? (
-            <button
-              type="button"
-              disabled={saving || paged.length === 0}
-              onClick={() => void autoConfigureVisibleSeo()}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#00A651]/30 bg-[#ecfdf3] px-3 py-2 text-sm font-medium text-[#047857] hover:bg-[#d1fae5] disabled:opacity-50"
-            >
-              Auto-configure SEO (this page)
-            </button>
-          ) : null}
           {config.addLabel && (
             <button
               type="button"
@@ -1393,12 +1359,6 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                 indexRecord={{ ...(editing || {}), ...form } as RecordRow}
                 forceNoindex={config.id === 'landing_pages'}
                 forceNoindexReason="Conversion landing — admin preview only; public site uses the country page."
-                googleIndexCollectionId={config.id}
-                googleIndexRecord={{ ...(editing || {}), ...form, id: editing?.id } as RecordRow}
-                onGoogleIndexUpdated={(record) => {
-                  setSeo(seoValuesFromRecord(record));
-                  handleIndexUpdated(record);
-                }}
               />
             ) : null}
 

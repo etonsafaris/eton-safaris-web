@@ -20,10 +20,8 @@ import {
   validateSeoSchema,
   type SeoContentType,
   type SeoValues,
-  seoValuesFromRecord,
 } from '@/lib/seo';
 import { IndexStatusBadge, indexStatusForDraft, seoContentTypeToIndexKind } from '@/components/admin/IndexStatusBadge';
-import GoogleIndexToggle from '@/components/admin/GoogleIndexToggle';
 import type { RecordRow } from '@/lib/types';
 
 type SeoPanelProps = {
@@ -43,9 +41,6 @@ type SeoPanelProps = {
   indexRecord?: RecordRow | null;
   forceNoindex?: boolean;
   forceNoindexReason?: string;
-  googleIndexCollectionId?: string;
-  googleIndexRecord?: RecordRow | null;
-  onGoogleIndexUpdated?: (record: RecordRow) => void;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -119,9 +114,6 @@ export default function SeoPanel({
   indexRecord = null,
   forceNoindex = false,
   forceNoindexReason = '',
-  googleIndexCollectionId = '',
-  googleIndexRecord = null,
-  onGoogleIndexUpdated,
 }: SeoPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'seo' | 'readability' | 'schema'>('seo');
@@ -322,16 +314,6 @@ export default function SeoPanel({
           {indexStatus ? <IndexStatusBadge status={indexStatus} size="md" /> : null}
         </button>
         <div className="flex shrink-0 items-center gap-2">
-          {googleIndexCollectionId && googleIndexRecord ? (
-            <GoogleIndexToggle
-              collectionId={googleIndexCollectionId}
-              record={{ ...googleIndexRecord, robots_index: values.robots_index }}
-              onUpdated={(record) => {
-                onChange({ ...values, robots_index: seoValuesFromRecord(record).robots_index });
-                onGoogleIndexUpdated?.(record);
-              }}
-            />
-          ) : null}
           <button
             type="button"
             onClick={() => setOpen((current) => !current)}
@@ -514,28 +496,6 @@ export default function SeoPanel({
 
                 {advancedOpen && (
                   <div className="space-y-4 rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4">
-                    <div>
-                      <FieldLabel>Allow search engines to show this page in search results?</FieldLabel>
-                      <SearchableSelect
-                        value={values.robots_index ? 'yes' : 'no'}
-                        onChange={(value) => update('robots_index', value === 'yes')}
-                        options={[
-                          { value: 'yes', label: 'Yes (index)' },
-                          { value: 'no', label: 'No (noindex)' },
-                        ]}
-                      />
-                    </div>
-                    <div>
-                      <FieldLabel>Should search engines follow links on this page?</FieldLabel>
-                      <SearchableSelect
-                        value={values.robots_follow ? 'yes' : 'no'}
-                        onChange={(value) => update('robots_follow', value === 'yes')}
-                        options={[
-                          { value: 'yes', label: 'Yes (follow)' },
-                          { value: 'no', label: 'No (nofollow)' },
-                        ]}
-                      />
-                    </div>
                     <div>
                       <FieldLabel>Meta robots advanced</FieldLabel>
                       <div className="space-y-2">

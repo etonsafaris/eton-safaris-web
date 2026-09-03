@@ -84,7 +84,8 @@
     "seed:madagascar-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs madagascar",
     "seed:seychelles-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs seychelles",
     "cleanup:layouts": "node scripts/backup-and-normalize-layouts.js",
-    "diagnose:layouts": "node scripts/diagnose-layout-values.js"
+    "diagnose:layouts": "node scripts/diagnose-layout-values.js",
+    "seo:enable-all": "node scripts/enable-all-public-indexing.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
