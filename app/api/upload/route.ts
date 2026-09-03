@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const sizeLimit = isVideoFile(file) ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
 
     try {
-      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceClient() : createAdminClient();
+      const supabase = createAdminClient();
       const { data: bucketList } = await supabase.storage.listBuckets();
       const existing = new Set((bucketList || []).map((item) => item.name));
       let bucket = BUCKETS.find((name) => existing.has(name));
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              'Image upload needs a public Supabase Storage bucket. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then run scripts/fix-storage-rls.sql.',
+              'Image upload storage is not configured. Configure the application media storage provider.',
           },
           { status: 500 }
         );
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              'Image upload needs a public Supabase Storage bucket. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then run scripts/fix-storage-rls.sql.',
+              'Image upload storage is not configured. Configure the application media storage provider.',
           },
           { status: 500 }
         );

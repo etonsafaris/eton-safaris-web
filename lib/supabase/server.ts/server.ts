@@ -1,11 +1,14 @@
 import { Pool } from 'pg';
 
 const connectionString = process.env.DATABASE_URL;
+const normalizedConnectionString = connectionString
+  ? connectionString.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '')
+  : undefined;
 
 // Global caching wrapper to protect your 20 max connection limits on Vercel
-const cachedPool: Pool | null = connectionString
+const cachedPool: Pool | null = normalizedConnectionString
   ? (global.aivenPool ||= new Pool({
-      connectionString,
+      connectionString: normalizedConnectionString,
       ssl: { rejectUnauthorized: false },
       max: 20,
       idleTimeoutMillis: 30000,

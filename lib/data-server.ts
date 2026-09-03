@@ -258,15 +258,6 @@ export function recordBodyHtml(record: RecordRow | null | undefined): string {
   return '';
 }
 
-// Helper functions needed by server-side code only
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 function slugLookupValues(slug: string): string[] {
   let raw = String(slug || '').trim();
   try {
@@ -277,31 +268,6 @@ function slugLookupValues(slug: string): string[] {
   raw = raw.replace(/^\/+|\/+$/g, '');
   const needle = slugify(raw);
   return Array.from(new Set([raw, needle, raw.toLowerCase()].filter(Boolean)));
-}
-
-function pickString(record: RecordRow, keys: string[], fallback = ''): string {
-  for (const key of keys) {
-    const value = record[key];
-    if (value && typeof value === 'string') return value;
-  }
-  return fallback;
-}
-
-function getRecordTitle(record: RecordRow): string {
-  const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'customer_name', 'author', 'email'];
-  const candidates = preferred
-    .map((key) => pickString(record, [key]))
-    .filter(Boolean);
-  const solid = candidates.find((value) => value.length >= 3);
-  if (solid) return solid;
-  if (candidates[0]) return candidates[0];
-
-  for (const key of Object.keys(record)) {
-    if (preferred.includes(key) || key === 'slug' || key === 'seo_slug') continue;
-    const value = record[key];
-    if (value && typeof value === 'string' && value.length >= 3) return value;
-  }
-  return 'Untitled';
 }
 
 export { clearCollectionCache };

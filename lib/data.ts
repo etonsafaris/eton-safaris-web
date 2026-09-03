@@ -22,6 +22,8 @@ export {
   adminListColumnsFor,
   publicListColumnsFor,
   isPublishedRecord,
+  parseContentBlocks,
+  parseBlocksFromRecord,
 } from './data-server';
 
 // Keep utility functions that are used by client components
@@ -81,6 +83,35 @@ export function pickNumber(record: RecordRow, keys: string[], fallback = 0): num
     if (typeof value === 'string' && value && !Number.isNaN(Number(value))) return Number(value);
   }
   return fallback;
+}
+
+export function pickRecordId(record: RecordRow | null | undefined): string | number | null {
+  if (!record) return null;
+  return record.id ?? record.ID ?? record.Id ?? null;
+}
+
+export function pickDateValue(record: RecordRow, keys: string[], fallback = ''): string {
+  return pickString(record, keys, fallback);
+}
+
+export function recordPublishedAt(record: RecordRow | null | undefined): string {
+  return pickString(record || {}, ['published_at', 'publishedAt', 'published_date']);
+}
+
+export function publishStampForSave(value: string, isEdit: boolean): string {
+  return isEdit && value ? value : value || new Date().toISOString();
+}
+
+export function isLanguagePost(record: RecordRow): boolean {
+  return pickString(record, ['post_type', 'type']).toLowerCase().includes('language');
+}
+
+export function formatColumnLabel(column: string): string {
+  return column.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export function getDynamicColumns(records: RecordRow[]): string[] {
+  return Array.from(new Set(records.flatMap((record) => Object.keys(record))));
 }
 
 export function slugify(value: string): string {

@@ -6,9 +6,22 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   swcMinify: true,
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        dns: false,
+        tls: false,
+        'util/types': false,
+      };
+    }
+    return config;
+  },
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    serverComponentsExternalPackages: ['resend', '@react-email/render'],
+    serverComponentsExternalPackages: ['pg', 'resend', '@react-email/render'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
