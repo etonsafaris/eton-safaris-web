@@ -72,7 +72,14 @@ export const supabase = {
       return { data: body.session, error: null };
     },
     signOut: async () => {
-      if (typeof window !== 'undefined') window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+          const key = window.localStorage.key(index);
+          if (key && (/auth-token/i.test(key) || key === AUTH_STORAGE_KEY)) {
+            window.localStorage.removeItem(key);
+          }
+        }
+      }
       return { error: null };
     },
     onAuthStateChange: (callback: (event: string, session: AuthSession | null) => void) => ({

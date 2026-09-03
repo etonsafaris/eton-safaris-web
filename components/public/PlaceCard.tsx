@@ -3,6 +3,8 @@ import { MapPin, Star } from 'lucide-react';
 import DavCtaButton from '@/components/public/DavCtaButton';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import { stripPublicMoney } from '@/lib/public-money';
+import { formatPublishedDate } from '@/lib/data';
+import type { RecordRow } from '@/lib/types';
 
 export default function PlaceCard({
   href,
@@ -11,6 +13,7 @@ export default function PlaceCard({
   location,
   description,
   date,
+  record,
   cta = 'Read More',
 }: {
   href: string;
@@ -19,8 +22,10 @@ export default function PlaceCard({
   location?: string;
   description?: string;
   date?: string;
+  record?: RecordRow;
   cta?: string;
 }) {
+  const publishedDate = date || (record ? formatPublishedDate(record) : '');
   return (
     <Link href={href} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
@@ -35,8 +40,8 @@ export default function PlaceCard({
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        {date && date !== '—' ? (
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{date}</p>
+        {publishedDate ? (
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{publishedDate}</p>
         ) : null}
         <h2 className="text-[15px] font-bold leading-snug text-[#111]">{title}</h2>
         {location ? (

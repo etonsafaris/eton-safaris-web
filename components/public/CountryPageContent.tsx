@@ -226,6 +226,7 @@ export default function CountryPageContent({
                   href={`/parks/${publicRecordSlug(park)}`}
                   image={getRecordImage(park) || undefined}
                   title={getRecordTitle(park)}
+                  record={park}
                   location={pickString(park, ['location', 'country'])}
                   description={recordCardBlurb(park)}
                   cta="View Park"
@@ -260,6 +261,7 @@ export default function CountryPageContent({
                   href={countryPlacePath(slug, place)}
                   image={getRecordImage(place) || undefined}
                   title={getRecordTitle(place)}
+                  record={place}
                   location={pickString(place, ['location', 'country'])}
                   description={recordCardBlurb(place)}
                   cta="Read More"

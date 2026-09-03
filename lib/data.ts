@@ -274,7 +274,18 @@ export function pickDateValue(record: RecordRow, keys: string[], fallback = ''):
 }
 
 export function recordPublishedAt(record: RecordRow | null | undefined): string {
-  return pickString(record || {}, ['published_at', 'publishedAt', 'published_date']);
+  return pickString(record || {}, ['published_at', 'publishedAt', 'published_date', 'created_at', 'created_date']);
+}
+
+export function formatPublishedDate(record: RecordRow | null | undefined): string {
+  const value = recordPublishedAt(record);
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : `Published ${date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })}`;
 }
 
 export function publishStampForSave(value: string, isEdit: boolean): string {

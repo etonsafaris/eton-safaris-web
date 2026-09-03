@@ -97,6 +97,7 @@ function ExploreContent({
                   href={explorePlacePath(place)}
                   image={getRecordImage(place) || undefined}
                   title={getRecordTitle(place)}
+                  record={place}
                   location={pickString(place, ['location', 'country']) || undefined}
                   description={recordCardBlurb(place)}
                   cta="Read More"

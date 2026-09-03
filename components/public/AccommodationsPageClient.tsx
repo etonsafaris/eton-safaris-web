@@ -79,6 +79,7 @@ export default function AccommodationsPageClient({
                   href={`/accommodations/${publicRecordSlug(item)}`}
                   image={getRecordImage(item) || undefined}
                   title={getRecordTitle(item)}
+                  record={item}
                   location={pickString(item, ['type', 'location', 'country'])}
                   description={recordCardBlurb(item)}
                   cta="View Stay"

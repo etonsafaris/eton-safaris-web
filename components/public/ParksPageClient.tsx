@@ -85,6 +85,7 @@ export default function ParksPageClient({
                   href={`/parks/${publicRecordSlug(park)}`}
                   image={getRecordImage(park) || undefined}
                   title={getRecordTitle(park)}
+                  record={park}
                   location={pickString(park, ['location', 'country'])}
                   description={recordCardBlurb(park)}
                   cta="View Park"

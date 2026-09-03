@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Clock, Star } from 'lucide-react';
 import DavCtaButton from '@/components/public/DavCtaButton';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
-import { getRecordImage, getRecordTitle, pickNumber, publicRecordSlug, recordCardBlurb } from '@/lib/data';
+import { formatPublishedDate, getRecordImage, getRecordTitle, pickNumber, publicRecordSlug, recordCardBlurb } from '@/lib/data';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -37,6 +37,9 @@ export default function TourCard({
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="public-article-body text-[15px] font-bold leading-snug text-[#111]">{getRecordTitle(tour)}</h3>
+        {formatPublishedDate(tour) ? (
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{formatPublishedDate(tour)}</p>
+        ) : null}
         {!durationBadge && days > 0 ? (
           <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#00A651]">
             <Clock className="h-3.5 w-3.5" /> {days} DAYS - {nights} NIGHTS
