@@ -47,18 +47,18 @@ export default function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link href="/" className="site-header-logo shrink-0">
+      <Link prefetch={false} href="/" className="site-header-logo shrink-0">
         <BrandLogo size={72} />
       </Link>
 
       <nav className="hidden items-center lg:flex">
-        <Link href="/" className={navClass(homeActive)}>
+        <Link prefetch={false} href="/" className={navClass(homeActive)}>
           Home
         </Link>
         {primary.map((country) => {
           const href = destinationPublicPath(country.slug);
           return (
-            <Link key={country.slug} href={href} className={navClass(destinationActive(pathname, country))}>
+            <Link prefetch={false} key={country.slug} href={href} className={navClass(destinationActive(pathname, country))}>
               <Flag iso={country.iso} name={country.name} /> {country.name}
             </Link>
           );
@@ -69,6 +69,7 @@ export default function SiteHeader() {
             <div className="site-nav-dropdown">
               {more.map((destination) => (
                 <Link
+                  prefetch={false}
                   key={destination.slug}
                   href={destinationPublicPath(destination.slug)}
                   className="site-nav-dropdown-item"
@@ -79,14 +80,14 @@ export default function SiteHeader() {
             </div>
           </div>
         ) : null}
-        <Link href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
+        <Link prefetch={false} href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
           Safari Updates
         </Link>
-        <Link href="/community-support" className={navClass(pathname.startsWith('/community'))}>
+        <Link prefetch={false} href="/community-support" className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
         <SiteTranslateButton />
-        <Link href="/contact-us" className={navClass(pathname.startsWith('/contact'))}>
+        <Link prefetch={false} href="/contact-us" className={navClass(pathname.startsWith('/contact'))}>
           Talk to Us
         </Link>
       </nav>

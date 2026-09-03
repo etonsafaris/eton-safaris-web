@@ -18,7 +18,7 @@ export default function TourCard({
   const nights = days > 0 ? Math.max(days - 1, 0) : 0;
   const image = getRecordImage(tour);
   return (
-    <Link href={`/tours/${slug}`} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link prefetch={false} href={`/tours/${slug}`} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
           <ResponsiveImage
