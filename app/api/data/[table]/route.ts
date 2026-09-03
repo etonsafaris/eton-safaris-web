@@ -75,8 +75,15 @@ export async function GET(
         params
       );
     }
-    const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
-    return NextResponse.json({ data: result.rows, total: countResult.rows[0]?.total || 0 });
+    let total = result.rows.length;
+    if (url.searchParams.get('count') === '1') {
+      const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
+      total = countResult.rows[0]?.total || 0;
+    }
+    return NextResponse.json(
+      { data: result.rows, total },
+      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' } }
+    );
   } catch (error) {
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
     return NextResponse.json({ data: [], error: 'Could not load data' }, { status: 503 });

@@ -38,16 +38,17 @@ export async function fetchCollectionRecords(
   for (const name of [table, ...aliases]) {
     let offset = 0;
     const rows: RecordRow[] = [];
+    const pageSize = Math.min(options?.maxRows || 1000, 1000);
     while (true) {
-      const params = new URLSearchParams({ limit: '1000', range: `${offset}-${offset + 999}` });
+      const params = new URLSearchParams({ limit: String(pageSize), range: `${offset}-${offset + pageSize - 1}` });
       if (options?.columns) params.set('select', options.columns);
       const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
       if (!response.ok) break;
       const body = (await response.json()) as { data?: RecordRow[] };
       const chunk = body.data || [];
       rows.push(...chunk);
-      if (chunk.length < 1000 || (options?.maxRows && rows.length >= options.maxRows)) break;
-      offset += 1000;
+      if (chunk.length < pageSize || (options?.maxRows && rows.length >= options.maxRows)) break;
+      offset += pageSize;
     }
     if (rows.length > 0) return options?.maxRows ? rows.slice(0, options.maxRows) : rows;
     /* try aliases */
@@ -75,6 +76,7 @@ export async function fetchCollectionPage(
   if (options?.limit) params.set('limit', String(options.limit));
   if (options?.offset) params.set('range', `${options.offset}-${(options.offset + (options.limit || 48)) - 1}`);
   if (options?.orderBy) params.set('order', `${options.orderBy}.${options.ascending === false ? 'desc' : 'asc'}`);
+  params.set('count', '1');
   const filters = options?.filters || {};
   if (filters.country) params.set('ilike.country', `%${filters.country}%`);
   if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
