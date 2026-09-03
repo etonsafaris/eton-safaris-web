@@ -205,9 +205,9 @@ export async function loadToursPageData() {
 
 export async function loadCountryPageData(slug: string) {
   noStore();
-  const [countries, categories, placesPage] = await Promise.all([
-    loadPublishedRecords('countries'),
-    loadPublishedRecords('categories'),
+  const [countriesPage, categoriesPage, placesPage] = await Promise.all([
+    fetchCollectionPage('countries', [], { columns: listColumns('countries'), limit: 100, offset: 0 }),
+    fetchCollectionPage('categories', [], { columns: listColumns('categories'), limit: 100, offset: 0 }),
     fetchCollectionPage('explore', [], {
       columns: listColumns('explore'),
       limit: 48,
@@ -215,6 +215,8 @@ export async function loadCountryPageData(slug: string) {
       filters: { country: slug },
     }).catch(() => ({ rows: [] as RecordRow[], total: 0 })),
   ]);
+  const countries = countriesPage.rows.filter(isPublishedRecord);
+  const categories = categoriesPage.rows.filter(isPublishedRecord);
   const countryMeta =
     findCountryRecord(countries, slug) || (await fetchRecordByPublicSlug('countries', slug));
   const country =
@@ -233,7 +235,7 @@ export async function loadCountryPageData(slug: string) {
     country: country && isPublishedRecord(country) ? country : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
     tours: tours.filter((row) => matchesCountry(row, slug)),
-    parks: parks.filter((row) => matchesCountry(row, slug)),
+    parks: parks.filter(isPublishedRecord),
     places: placesPage.rows.filter(isPublishedRecord).filter((row) => matchesCountry(row, slug)),
   };
 }

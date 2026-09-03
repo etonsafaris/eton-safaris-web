@@ -115,7 +115,7 @@ export default function CountryPageContent({
         allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
       );
       setTours(countryTours.filter((tour) => matchesCountry(tour, slug)));
-      setParks(countryParks.filter(isPublishedRecord).filter((park) => matchesCountry(park, slug)));
+      setParks(countryParks.filter(isPublishedRecord));
       setPlaces(allPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)));
     } catch (error) {
       console.error('[Supabase] Failed to load country page data:', error);

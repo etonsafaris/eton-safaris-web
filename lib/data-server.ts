@@ -846,10 +846,10 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE national_park_id = $1 LIMIT 48`, [id]);
   }
   if (merged.length < capped && (shortName || name)) {
-    await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE location ILIKE $1 LIMIT 48`, [like]);
-  }
-  if (merged.length < capped && (shortName || name)) {
-    await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE national_park_name ILIKE $1 LIMIT 48`, [like]);
+    for (const column of ['national_park_name', 'national_park', 'park_name', 'park', 'location']) {
+      await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE ${column} ILIKE $1 LIMIT 48`, [like]);
+      if (merged.length >= capped) break;
+    }
   }
 
   const needle = (shortName || name).toLowerCase();

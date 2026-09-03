@@ -158,7 +158,9 @@ export function matchesCountry(record: RecordRow, countrySlug: string): boolean 
   const candidates = [
     ...recordCountryValues(record),
     canonicalCountrySlug(pickString(record, ['slug'])),
-    ...knownCountriesNamedIn(pickString(record, ['name', 'title'])),
+    ...knownCountriesNamedIn(
+      pickString(record, ['name', 'title', 'location', 'country', 'country_name', 'destination'])
+    ),
   ].filter(Boolean);
   return candidates.includes(target);
 }
