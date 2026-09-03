@@ -106,6 +106,21 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
       const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
       if (body.data?.[0]) return body.data[0];
     }
+    const label = decodeURIComponent(String(slug))
+      .replace(/-/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (label.length >= 4) {
+      for (const column of ['title', 'name']) {
+        const params = new URLSearchParams({
+          [`ilike.${column}`]: `%${label}%`,
+          limit: '1',
+        });
+        const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+        const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+        if (body.data?.[0]) return body.data[0];
+      }
+    }
   }
   return null;
 }
