@@ -3,15 +3,38 @@ import { revalidatePath } from 'next/cache';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { applyAutoIndexSeo, collectionIdToTable } from '@/lib/auto-index-seo';
 import { getCollection } from '@/lib/collections';
-import { fetchCollectionRecordById, publicRecordSlug } from '@/lib/data';
+import { publicRecordSlug } from '@/lib/data';
 import { indexableContentKindForTable } from '@/lib/public-indexing';
 import { requireAdminUser } from '@/lib/require-admin';
 import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
+import { db } from '@/lib/supabase/server.ts/server';
 
 export const dynamic = 'force-dynamic';
+
+function quoteIdentifier(value: string) {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) throw new Error('Invalid collection table');
+  return `"${value}"`;
+}
+
+async function findRecord(table: string, aliases: string[], id: string | number) {
+  for (const name of [table, ...aliases]) {
+    try {
+      const result = await db.query<RecordRow>(
+        `SELECT * FROM ${quoteIdentifier(name)} WHERE CAST(id AS text) = $1 LIMIT 1`,
+        [String(id)]
+      );
+      if (result.rows[0]) return result.rows[0];
+    } catch (error) {
+      if (!/relation .* does not exist|column .* does not exist/i.test(error instanceof Error ? error.message : '')) {
+        console.error(`[Google Index] Could not load ${name}:`, error);
+      }
+    }
+  }
+  return null;
+}
 
 async function allowAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || '';
@@ -87,7 +110,7 @@ export async function POST(request: Request) {
 
     const config = getCollection(collectionId);
     const aliases = config.aliases || [];
-    const full = await fetchCollectionRecordById(table, String(id), aliases);
+    const full = await findRecord(table, aliases, id);
     if (!full) {
       return NextResponse.json({ error: 'Record not found' }, { status: 404 });
     }
