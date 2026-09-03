@@ -8,7 +8,7 @@ import { fetchBookingsForAgent, guestQuoteQuery, guestRecordedFields } from '@/l
 import { agentDisplayName, agentIsActive, agentJoinedAt, isTravelAgentRow } from '@/lib/find-agent';
 import { pickRecordId, pickString } from '@/lib/data';
 import { generateBookingCode } from '@/lib/booking-code';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyWorkspace } from '@/lib/notify';
 import { SITE } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';

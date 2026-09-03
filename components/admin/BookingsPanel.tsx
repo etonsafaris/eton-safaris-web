@@ -30,7 +30,7 @@ import { clearCollectionCache, adminListColumnsFor, fetchCollectionRecords, getR
 import { notifyWorkspace } from '@/lib/notify';
 import { supabase } from '@/lib/supabase/client';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import type { RecordRow } from '@/lib/types';
 
 type TabId = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'all';

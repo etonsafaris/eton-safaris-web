@@ -32,7 +32,13 @@ import {
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
 import { notifyWorkspace } from '@/lib/notify';
 import NotificationDetailModal from '@/components/admin/NotificationDetailModal';
-import { adminAuthHeaders, fetchAdminTable } from '@/lib/admin-records-client';
+import {
+  adminAuthHeaders,
+  deleteAdminRecord,
+  fetchAdminTable,
+  saveAdminRecord,
+  saveWithColumnFallback,
+} from '@/lib/admin-records-client';
 import { bookingCalendarEvent, googleCalendarUrl } from '@/lib/calendar';
 import { supabase } from '@/lib/supabase/client';
 import SeoPanel from '@/components/admin/SeoPanel';
@@ -45,7 +51,6 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
 import { indexableKindForCollectionId } from '@/lib/public-indexing';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
@@ -749,11 +754,12 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       publicPath: publicHref({ ...(editing || {}), ...raw } as RecordRow),
       autoIndexSeo: true,
     });
-    const result = await saveWithColumnFallback(table, payload, editing?.id);
-
-    if (result.error) {
-      console.error('[Supabase] Save failed:', result.error);
-      setError(result.error.message);
+    let savedRows: Record<string, unknown>[];
+    try {
+      savedRows = await saveAdminRecord(table, payload, editing?.id);
+    } catch (error) {
+      console.error('[Aiven] Save failed:', error);
+      setError(error instanceof Error ? error.message : 'Could not save record');
       setSaving(false);
       return;
     }
@@ -761,7 +767,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     await notifyAdminItemSaved({
       module: config.label,
       action: editing?.id ? 'updated' : 'created',
-      item: { ...payload, ...(result.data?.[0] || {}), id: editing?.id || result.data?.[0]?.id },
+      item: { ...payload, ...(savedRows[0] || {}), id: editing?.id || savedRows[0]?.id },
     });
 
     if (table === 'bookings') {
@@ -803,10 +809,11 @@ export default function CollectionManager({ config }: { config: CollectionConfig
 
   async function remove(record: RecordRow) {
     if (!record.id || !confirm('Delete this record?')) return;
-    const { error: deleteError } = await supabase.from(config.table).delete().eq('id', record.id);
-    if (deleteError) {
-      console.error(deleteError);
-      setError(deleteError.message);
+    try {
+      await deleteAdminRecord(config.table, record.id);
+    } catch (error) {
+      console.error(error);
+      setError(error instanceof Error ? error.message : 'Could not delete record');
       return;
     }
     await publishPublicSite();

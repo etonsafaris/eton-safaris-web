@@ -10,7 +10,7 @@ import {
 } from '@/lib/keywords';
 import { clearCollectionCache, fetchCollectionRecords, pickString } from '@/lib/data';
 import { mergePublicDestinations } from '@/lib/public-destinations';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';

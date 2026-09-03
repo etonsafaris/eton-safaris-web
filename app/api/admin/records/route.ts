@@ -5,11 +5,23 @@ import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-table
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
 type SupabaseClient = any;
 
 const ALLOWED_TABLES = new Set([
+  'tours',
+  'national_park',
+  'accommodations',
+  'safari_updates',
+  'explore',
+  'countries',
+  'categories',
+  'pages',
+  'landing_pages',
+  'keywords',
+  'Agent',
   'notifications',
   'subscribers',
   'reviews',
@@ -117,6 +129,23 @@ export async function GET(request: Request) {
   }
 }
 
+export async function POST(request: Request) {
+  if (!(await allowAdmin(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const body = (await request.json()) as { table?: string; id?: string | number | null; payload?: Record<string, unknown> };
+    const table = body.table?.trim() || '';
+    if (!ALLOWED_TABLES.has(table)) return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
+    if (!body.payload || typeof body.payload !== 'object' || Array.isArray(body.payload)) {
+      return NextResponse.json({ error: 'A record payload is required' }, { status: 400 });
+    }
+    const result = await saveWithColumnFallback(table, body.payload, body.id);
+    if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
+    return NextResponse.json({ data: jsonSafeRows(result.data || []) });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not save record' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   if (!(await allowAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -128,6 +157,7 @@ export async function DELETE(request: Request) {
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
   }
+
   if (!id) {
     return NextResponse.json({ error: 'Record id is required' }, { status: 400 });
   }

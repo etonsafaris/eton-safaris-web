@@ -8,7 +8,7 @@ import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
 import { pickDateValue, pickNumber, pickRecordId, pickString } from '@/lib/data';
 import { REVIEW_SOURCE_LABELS, isWebsiteReview, reviewClickHref } from '@/lib/review-links';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 

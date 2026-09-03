@@ -18,7 +18,7 @@ import {
   QUOTE_TERMS_SUMMARY,
 } from '@/lib/quote-document';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import type { RecordRow } from '@/lib/types';
 
 type TabId = 'inquiry' | 'quoted' | 'all';
