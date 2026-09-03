@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { isOwnerAdminEmail } from '@/lib/inbox';
 
 function encode(value: unknown) {
   return Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -16,13 +17,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const client = createPrivilegedClient();
-    const result = await client.from('registered_agents').select('*').ilike('email', email).limit(1);
-    if (result.error) throw new Error(result.error.message);
-    const row = result.data?.[0] as Record<string, unknown> | undefined;
-    const storedPassword = String(row?.password || row?.password_hash || '');
-    if (!row || !storedPassword || storedPassword !== password) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    const configuredEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    const configuredPassword = process.env.ADMIN_PASSWORD || '';
+    let row: Record<string, unknown> | undefined;
+
+    // Keep the owner login available during an Aiven outage. Store this only in
+    // Vercel encrypted environment variables, never in the repository.
+    if (
+      isOwnerAdminEmail(email) &&
+      email === configuredEmail &&
+      configuredPassword.length >= 8 &&
+      password === configuredPassword
+    ) {
+      row = { id: `owner-${email}`, email, role: 'Admin', is_active: true };
+    } else {
+      const client = createPrivilegedClient();
+      const result = await client.from('registered_agents').select('*').ilike('email', email).limit(1);
+      if (result.error) throw new Error(result.error.message);
+      row = result.data?.[0] as Record<string, unknown> | undefined;
+      const storedPassword = String(row?.password || row?.password_hash || '');
+      if (!row || !storedPassword || storedPassword !== password) {
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      }
     }
 
     const user = {
