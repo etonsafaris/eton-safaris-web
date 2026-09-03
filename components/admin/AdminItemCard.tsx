@@ -11,6 +11,7 @@ export default function AdminItemCard({
   indexBadge,
   date,
   title,
+  keywords = [],
   onEdit,
   onDelete,
   extraActions,
@@ -22,6 +23,7 @@ export default function AdminItemCard({
   indexBadge?: React.ReactNode;
   date?: string;
   title: string;
+  keywords?: string[];
   onEdit: () => void;
   onDelete: () => void;
   extraActions?: React.ReactNode;
@@ -94,6 +96,11 @@ export default function AdminItemCard({
       <h3 className={`mt-2 font-bold leading-snug text-[#111827] dark:text-white ${layout === 'list' ? 'font-serif text-xl' : 'text-base'}`}>
         {title}
       </h3>
+      {keywords.length > 0 ? (
+        <p className="mt-2 line-clamp-2 text-xs text-gray-500" title={keywords.join(', ')}>
+          Keywords: {keywords.join(', ')}
+        </p>
+      ) : null}
       <div className="mt-auto flex items-end justify-between pt-4">
         {readMore || <span />}
         {actions}

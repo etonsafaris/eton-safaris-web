@@ -72,6 +72,7 @@ import {
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
+import { chipsFromKeywordRows, keywordRowMatchesScope } from '@/lib/keywords';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   const router = useRouter();
@@ -123,7 +124,22 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 48;
   const [remoteTotal, setRemoteTotal] = useState(0);
+  const [keywordRows, setKeywordRows] = useState<RecordRow[]>([]);
   const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
+
+  useEffect(() => {
+    if (!config.publicPath || config.id === 'keywords') return;
+    fetchCollectionRecords('keywords', ['keyword', 'seo_keywords'], { maxRows: 5000 })
+      .then(setKeywordRows)
+      .catch((error) => console.error('[Admin] Could not load keyword library:', error));
+  }, [config.id, config.publicPath]);
+
+  function keywordsForRecord(record: RecordRow) {
+    const country = pickString(record, ['country']);
+    const category = pickString(record, ['category']) || getRecordTitle(record);
+    if (!country || !category) return [];
+    return chipsFromKeywordRows(keywordRows.filter((row) => keywordRowMatchesScope(row, country, category)));
+  }
 
   async function load() {
     if (!config.table) {
@@ -1190,6 +1206,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
+                  keywords={keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1208,6 +1225,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
+                  keywords={keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1370,6 +1388,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                                 ? 'article'
                                 : 'page'
                 }
+                keywordLibraryCountry={pickString({ ...(editing || {}), ...form } as RecordRow, ['country'])}
+                keywordLibraryCategory={pickString({ ...(editing || {}), ...form } as RecordRow, ['category'])}
                 indexRecord={{ ...(editing || {}), ...form } as RecordRow}
                 forceNoindex={config.id === 'landing_pages'}
                 forceNoindexReason="Conversion landing — admin preview only; public site uses the country page."

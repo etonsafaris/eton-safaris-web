@@ -6,7 +6,7 @@ import KeywordTagBox from '@/components/admin/KeywordTagBox';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE_LOGO } from '@/lib/collections';
 import { clearCollectionCache, fetchCollectionRecords, pickString, slugify } from '@/lib/data';
-import { chipsFromKeywordRows } from '@/lib/keywords';
+import { chipsFromKeywordRows, keywordRowMatchesScope } from '@/lib/keywords';
 import {
   analyzeReadability,
   analyzeSeo,
@@ -243,13 +243,10 @@ export default function SeoPanel({
       .then((rows) => {
         const matched = chipsFromKeywordRows(
           rows.filter((row) => {
-            const matchesCountry = pickString(row, ['country']).toLowerCase() === keywordCountry.toLowerCase();
-            const rowCategory = pickString(row, ['category']);
-            const matchesCategory = rowCategory.toLowerCase() === keywordCategory.toLowerCase();
-            return matchesCountry && matchesCategory;
+            return keywordRowMatchesScope(row, keywordCountry, keywordCategory);
           })
         );
-        onChange({ ...values, focus_keywords: matched });
+        if (matched.length > 0) onChange({ ...values, focus_keywords: matched });
       })
       .catch((error) => console.error('[SEO] Keyword library load failed:', error));
     // eslint-disable-next-line react-hooks/exhaustive-deps
