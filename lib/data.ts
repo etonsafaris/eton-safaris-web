@@ -9,12 +9,12 @@ export {
   fetchCollectionRecords as fetchCollectionRecordsServer,
   fetchCollectionPage as fetchCollectionPageServer,
   fetchCollectionRecordById as fetchCollectionRecordByIdServer,
-  fetchFeaturedTours,
-  fetchParksForCountry,
-  fetchRecordByPublicSlug,
-  fetchStaysForPark,
-  fetchToursForCountryLabel,
-  searchTours,
+  fetchFeaturedTours as fetchFeaturedToursServer,
+  fetchParksForCountry as fetchParksForCountryServer,
+  fetchRecordByPublicSlug as fetchRecordByPublicSlugServer,
+  fetchStaysForPark as fetchStaysForParkServer,
+  fetchToursForCountryLabel as fetchToursForCountryLabelServer,
+  searchTours as searchToursServer,
   countCollectionRecords,
   ADMIN_LIST_COLUMNS,
   PUBLIC_LIST_COLUMNS,
@@ -36,7 +36,22 @@ export async function fetchCollectionRecords(
 ): Promise<RecordRow[]> {
   if (!browser()) return fetchCollectionRecordsServer(table, aliases, options);
   for (const name of [table, ...aliases]) {
-    const params = new URLSearchParams();
+    let offset = 0;
+    const rows: RecordRow[] = [];
+    while (true) {
+      const params = new URLSearchParams({ limit: '1000', range: `${offset}-${offset + 999}` });
+      if (options?.columns) params.set('select', options.columns);
+      const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+      if (!response.ok) break;
+      const body = (await response.json()) as { data?: RecordRow[] };
+      const chunk = body.data || [];
+      rows.push(...chunk);
+      if (chunk.length < 1000 || (options?.maxRows && rows.length >= options.maxRows)) break;
+      offset += 1000;
+    }
+    if (rows.length > 0) return options?.maxRows ? rows.slice(0, options.maxRows) : rows;
+    /* try aliases */
+    /*
     if (options?.columns) params.set('select', options.columns);
     if (options?.maxRows) params.set('limit', String(options.maxRows));
     const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
@@ -44,6 +59,7 @@ export async function fetchCollectionRecords(
       const body = (await response.json()) as { data?: RecordRow[] };
       return body.data || [];
     }
+    */
   }
   return [];
 }
@@ -59,9 +75,70 @@ export async function fetchCollectionPage(
   if (options?.limit) params.set('limit', String(options.limit));
   if (options?.offset) params.set('range', `${options.offset}-${(options.offset + (options.limit || 48)) - 1}`);
   if (options?.orderBy) params.set('order', `${options.orderBy}.${options.ascending === false ? 'desc' : 'asc'}`);
+  const filters = options?.filters || {};
+  if (filters.country) params.set('ilike.country', `%${filters.country}%`);
+  if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
+  if (filters.category) params.set('ilike.category', `%${filters.category}%`);
   const response = await fetch(dataUrl(table, params), { cache: 'no-store' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-  return { rows: body.data || [], total: body.data?.length || 0 };
+  return { rows: body.data || [], total: body.total ?? body.data?.length ?? 0 };
+}
+
+export async function fetchRecordByPublicSlug(table: string, slug: string, aliases: string[] = [], columns = '*') {
+  if (!browser()) return fetchRecordByPublicSlugServer(table, slug, aliases, columns);
+  for (const name of [table, ...aliases]) {
+    for (const column of ['slug', 'seo_slug', 'id']) {
+      const params = new URLSearchParams({ [`eq.${column}`]: slug, limit: '1' });
+      const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+      const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+      if (body.data?.[0]) return body.data[0];
+    }
+  }
+  return null;
+}
+
+export async function fetchFeaturedTours(limit = 24) {
+  if (!browser()) return fetchFeaturedToursServer(limit);
+  const params = new URLSearchParams({ limit: String(limit), 'eq.is_featured': 'true' });
+  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data || [];
+}
+
+export async function fetchToursForCountryLabel(countryLabel: string, limit = 48) {
+  if (!browser()) return fetchToursForCountryLabelServer(countryLabel, limit);
+  const params = new URLSearchParams({ limit: String(limit), 'ilike.country': `%${countryLabel}%` });
+  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data || [];
+}
+
+export async function fetchParksForCountry(countryLabel: string, limit = 200) {
+  if (!browser()) return fetchParksForCountryServer(countryLabel, limit);
+  const params = new URLSearchParams({ limit: String(limit), 'ilike.country': `%${countryLabel}%` });
+  const response = await fetch(dataUrl('national_park', params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data || [];
+}
+
+export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: string) {
+  if (!browser()) return fetchStaysForParkServer(parkName, limit, parkId);
+  const params = new URLSearchParams({ limit: String(limit), 'ilike.national_park_name': `%${parkName}%` });
+  if (parkId) params.set('eq.national_park_id', parkId);
+  const response = await fetch(dataUrl('accommodations', params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data || [];
+}
+
+export async function searchTours(options: { query: string; limit?: number }) {
+  if (!browser()) return searchToursServer(options);
+  const params = new URLSearchParams({
+    limit: String(options.limit || 24),
+    'ilike.title': `%${options.query}%`,
+  });
+  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data || [];
 }
 
 export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {

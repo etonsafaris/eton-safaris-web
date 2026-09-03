@@ -61,11 +61,22 @@ export async function GET(
   let client;
   try {
     client = await db.connect();
-    const result = await client.query(
-      `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
-      params
-    );
-    return NextResponse.json({ data: result.rows });
+    let result;
+    try {
+      result = await client.query(
+        `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
+        params
+      );
+    } catch (error) {
+      if (columns === '*') throw error;
+      console.warn(`[Aiven] Falling back to all columns for ${table}:`, error);
+      result = await client.query(
+        `SELECT * FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
+        params
+      );
+    }
+    const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
+    return NextResponse.json({ data: result.rows, total: countResult.rows[0]?.total || 0 });
   } catch (error) {
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
     return NextResponse.json({ data: [], error: 'Could not load data' }, { status: 503 });
