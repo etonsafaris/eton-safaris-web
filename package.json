@@ -82,7 +82,9 @@
     "seed:ethiopia-tours-keywords": "node scripts/seed-remaining-country-keywords.mjs ethiopia",
     "seed:mozambique-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs mozambique",
     "seed:madagascar-wildlife-keywords": "node scripts/seed-remaining-country-keywords.mjs madagascar",
-    "seed:seychelles-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs seychelles"
+    "seed:seychelles-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs seychelles",
+    "cleanup:layouts": "node scripts/backup-and-normalize-layouts.js",
+    "diagnose:layouts": "node scripts/diagnose-layout-values.js"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
