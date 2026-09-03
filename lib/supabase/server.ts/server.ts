@@ -5,13 +5,15 @@ const normalizedConnectionString = connectionString
   ? connectionString.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '')
   : undefined;
 
-// Global caching wrapper to protect your 20 max connection limits on Vercel
+// Keep the pool below Aiven's plan limit; serverless instances can overlap.
 const cachedPool: Pool | null = normalizedConnectionString
   ? (global.aivenPool ||= new Pool({
       connectionString: normalizedConnectionString,
       ssl: { rejectUnauthorized: false },
-      max: 20,
+      max: 2,
       idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+      maxLifetimeSeconds: 60,
     }))
   : null;
 
@@ -20,16 +22,23 @@ export const db = {
     if (!cachedPool) throw new Error('Aiven DATABASE_URL is not configured.');
     return cachedPool.connect();
   },
+  async query<T = any>(text: string, values?: unknown[]) {
+    if (!cachedPool) throw new Error('Aiven DATABASE_URL is not configured.');
+    return cachedPool.query<T>(text, values);
+  },
 };
 
 // Safe utility helper to handle simple data queries inside your backend
 export const aivenFetch = async (tableName: string, columns = '*') => {
   try {
     const client = await db.connect();
-    const queryText = `SELECT ${columns} FROM ${tableName}`;
-    const res = await client.query(queryText);
-    client.release();
-    return { data: res.rows, error: null };
+    try {
+      const queryText = `SELECT ${columns} FROM ${tableName}`;
+      const res = await client.query(queryText);
+      return { data: res.rows, error: null };
+    } finally {
+      client.release();
+    }
   } catch (error: any) {
     console.error(`Aiven server query error on [${tableName}]:`, error.message);
     return { data: null, error };

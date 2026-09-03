@@ -319,12 +319,10 @@ async function selectRange(
   let lastMessage = '';
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const client = await db.connect();
       const offset = start;
       const limit = end - start + 1;
       const queryText = `SELECT ${selectColumns} FROM ${tableName} OFFSET ${offset} LIMIT ${limit}`;
-      const res = await client.query(queryText);
-      client.release();
+      const res = await db.query(queryText);
       return { data: res.rows as RecordRow[], error: null };
     } catch (error: any) {
       lastMessage = error.message || 'fetch failed';
@@ -496,10 +494,8 @@ export async function countCollectionRecords(table: string, aliases: string[] = 
   let lastError: unknown = null;
   for (const name of names) {
     try {
-      const client = await db.connect();
       const queryText = `SELECT COUNT(*) as count FROM ${name}`;
-      const res = await client.query(queryText);
-      client.release();
+      const res = await db.query(queryText);
       return parseInt(res.rows[0].count, 10) || 0;
     } catch (error: any) {
       lastError = error;
@@ -552,7 +548,6 @@ export async function fetchCollectionPage(
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const parkColumn = parkFilter ? parkColumnFallbacks[parkColumnIndex] || '' : '';
       try {
-        const client = await db.connect();
         let whereClauses: string[] = [];
         let params: any[] = [];
         let paramIndex = 1;
@@ -577,8 +572,7 @@ export async function fetchCollectionPage(
         const orderClause = orderBy ? `ORDER BY ${orderBy} ${ascending ? 'ASC' : 'DESC'}` : '';
         const queryText = `SELECT ${selectColumns} FROM ${name} ${whereClause} ${orderClause} OFFSET ${offset} LIMIT ${limit}`;
         
-        const res = await client.query(queryText, params);
-        client.release();
+        const res = await db.query(queryText, params);
         
         const rows = res.rows as RecordRow[];
         if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
@@ -625,10 +619,8 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   const capped = Math.max(1, Math.min(limit, 48));
 
   try {
-    const client = await db.connect();
     const queryText = `SELECT ${columns} FROM tours WHERE is_featured = true OR is_popular = true OR show_on_landing = true LIMIT ${capped}`;
-    const res = await client.query(queryText);
-    client.release();
+    const res = await db.query(queryText);
     if (res.rows && res.rows.length > 0) {
       return (res.rows as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
     }
@@ -637,10 +629,8 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   }
 
   try {
-    const client = await db.connect();
     const queryText = `SELECT ${columns} FROM tours ORDER BY created_date DESC LIMIT ${capped}`;
-    const res = await client.query(queryText);
-    client.release();
+    const res = await db.query(queryText);
     return (res.rows as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
   } catch (error: any) {
     console.error('[Aiven] Recent tours query failed:', error.message);
@@ -727,10 +717,8 @@ export async function fetchRecordByPublicSlug(
     for (const value of values) {
       for (const col of ['seo_slug', 'slug', 'id'] as const) {
         try {
-          const client = await db.connect();
           const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} = $1 LIMIT 1`;
-          const res = await client.query(queryText, [value]);
-          client.release();
+          const res = await db.query(queryText, [value]);
           const row = (res.rows as RecordRow[])[0] || null;
           if (row) return hydrate(name, row);
         } catch (error: any) {
@@ -744,10 +732,8 @@ export async function fetchRecordByPublicSlug(
       for (const col of ['name', 'title'] as const) {
         for (const pattern of [label, `%${label}%`] as const) {
           try {
-            const client = await db.connect();
             const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} ILIKE $1 LIMIT 1`;
-            const res = await client.query(queryText, [pattern]);
-            client.release();
+            const res = await db.query(queryText, [pattern]);
             const row = (res.rows as RecordRow[])[0] || null;
             if (row) return hydrate(name, row);
           } catch (error: any) {
@@ -766,10 +752,8 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 200));
   try {
-    const client = await db.connect();
     const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours WHERE country ILIKE $1 LIMIT ${capped}`;
-    const res = await client.query(queryText, [`%${label}%`]);
-    client.release();
+    const res = await db.query(queryText, [`%${label}%`]);
     return (res.rows as RecordRow[]).filter(isPublishedRecord);
   } catch (error: any) {
     console.error('[Aiven] fetchToursForCountryLabel failed:', error.message);
@@ -790,7 +774,6 @@ export async function searchTours(options: {
   const category = sanitizeIlike((options.category || '').replace(/-/g, ' '));
 
   try {
-    const client = await db.connect();
     let whereClauses: string[] = [];
     let params: any[] = [];
     let paramIndex = 1;
@@ -815,8 +798,7 @@ export async function searchTours(options: {
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
     const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours ${whereClause} LIMIT ${capped}`;
     
-    const res = await client.query(queryText, params);
-    client.release();
+    const res = await db.query(queryText, params);
     return (res.rows as RecordRow[]).filter(isPublishedRecord);
   } catch (error: any) {
     console.error('[Aiven] searchTours failed:', error.message);
@@ -852,9 +834,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
 
   async function queryOnce(queryText: string, params: any[] = []) {
     try {
-      const client = await db.connect();
-      const res = await client.query(queryText, params);
-      client.release();
+      const res = await db.query(queryText, params);
       pushRows(res.rows as RecordRow[]);
     } catch (error: any) {
       console.error('[Aiven] Park stays query failed:', error.message);
@@ -899,10 +879,8 @@ export async function fetchParksForCountry(countryLabel: string, limit = 200): P
     'id,name,slug,seo_slug,location,country,image_url,social_image_url,description_title';
   for (const name of names) {
     try {
-      const client = await db.connect();
       const queryText = `SELECT ${selectColumns} FROM ${name} WHERE country ILIKE $1 LIMIT ${capped}`;
-      const res = await client.query(queryText, [`%${label}%`]);
-      client.release();
+      const res = await db.query(queryText, [`%${label}%`]);
       const seen = new Set<string>();
       return (res.rows as RecordRow[]).filter(isPublishedRecord).filter((row) => {
         const key = String(row.id || getRecordTitle(row)).toLowerCase();
@@ -934,10 +912,8 @@ export async function fetchCollectionRecordById(
   const names = [table, ...aliases].filter(Boolean);
   for (const name of names) {
     try {
-      const client = await db.connect();
       const queryText = `SELECT * FROM ${name} WHERE id = $1 LIMIT 1`;
-      const res = await client.query(queryText, [id]);
-      client.release();
+      const res = await db.query(queryText, [id]);
       const row = (res.rows as RecordRow[])[0] || null;
       if (row) {
         rememberKnownColumns(name, Object.keys(row));
