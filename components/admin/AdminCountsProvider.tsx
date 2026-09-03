@@ -26,15 +26,21 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const next = await fetchAdminCounts(buildAdminCountItems());
-      setCounts(next);
-    } catch (error) {
-      console.error('[Admin] Could not load collection counts:', error);
-      setError(error instanceof Error ? error.message : 'Could not load collection counts');
-    } finally {
-      setLoading(false);
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const next = await fetchAdminCounts(buildAdminCountItems());
+        setCounts((current) => ({ ...current, ...next }));
+        setLoading(false);
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));
+      }
     }
+    console.error('[Admin] Could not load collection counts:', lastError);
+    setError(lastError instanceof Error ? lastError.message : 'Could not load collection counts');
+    setLoading(false);
   }, []);
 
   useEffect(() => {

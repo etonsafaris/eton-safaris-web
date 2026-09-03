@@ -87,7 +87,12 @@ export async function POST(request: Request) {
     const counts: Record<string, number> = {};
     await mapInChunks(items, async (item) => {
       if (!item?.id || !item?.table) return;
-      counts[item.id] = await countTable(item.table, item.aliases || []);
+      try {
+        counts[item.id] = await countTable(item.table, item.aliases || []);
+      } catch (error) {
+        console.error(`[Admin] Could not count ${item.table}:`, error);
+        counts[item.id] = 0;
+      }
     }, 4);
 
     return NextResponse.json({ counts });

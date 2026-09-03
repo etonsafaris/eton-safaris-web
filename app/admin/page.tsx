@@ -36,7 +36,7 @@ export default function AdminOverviewPage() {
     };
   }, []);
 
-  const loading = countsLoading || bookingsLoading;
+  const loading = countsLoading && bookingsLoading;
 
   const destinations: Record<string, number> = {};
   bookings.forEach((booking) => {
