@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
@@ -29,6 +29,7 @@ import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const slug = params?.slug || '';
   const [item, setItem] = useState<RecordRow | null>(null);
   const [others, setOthers] = useState<RecordRow[]>([]);
@@ -43,6 +44,10 @@ export default function AccommodationDetailPage() {
           fetchCollectionPage('accommodations', [], { limit: 20, offset: 0 }),
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
+        if (!published) {
+          router.replace('/404');
+          return;
+        }
         setItem(published);
         setOthers(
           stayPage.rows
@@ -56,11 +61,15 @@ export default function AccommodationDetailPage() {
           : await fetchFeaturedTours(12);
         setTours(tourRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
       } catch (error) {
-        console.error(error);
+        console.error('[Accommodation detail] Failed to load stay:', error);
+        setItem(null);
+        setOthers([]);
+        setTours([]);
+        router.replace('/404');
       }
     }
     void load();
-  }, [slug, live]);
+  }, [slug, live, router]);
 
   const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {
     setItem((row) => (row ? { ...row, published_at: stamp } : row));

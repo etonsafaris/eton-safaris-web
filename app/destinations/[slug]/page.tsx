@@ -11,7 +11,14 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   const slug = countrySlugFromLanding(params.slug);
   if (!slug) notFound();
 
-  const data = await loadCountryPageData(slug);
+  let data;
+  try {
+    data = await loadCountryPageData(slug);
+  } catch (error) {
+    console.error('[Destination detail] Failed to load country:', error);
+    notFound();
+  }
+  if (!data.country) notFound();
   const country =
     data.country ||
     ({

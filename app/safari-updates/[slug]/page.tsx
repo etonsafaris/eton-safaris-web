@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
@@ -29,6 +29,7 @@ import type { RecordRow } from '@/lib/types';
 
 export default function SafariUpdateDetailPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const slug = params?.slug || '';
   const [post, setPost] = useState<RecordRow | null>(null);
   const [related, setRelated] = useState<RecordRow[]>([]);
@@ -43,6 +44,10 @@ export default function SafariUpdateDetailPage() {
           fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
+        if (!published) {
+          router.replace('/404');
+          return;
+        }
         setPost(published);
         setRelated(
           updatePage.rows
@@ -56,11 +61,15 @@ export default function SafariUpdateDetailPage() {
           : await fetchFeaturedTours(12);
         setTours(tourRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
       } catch (error) {
-        console.error(error);
+        console.error('[Safari update detail] Failed to load post:', error);
+        setPost(null);
+        setRelated([]);
+        setTours([]);
+        router.replace('/404');
       }
     }
     void load();
-  }, [slug, live]);
+  }, [slug, live, router]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = post ? getRecordImage(post) || undefined : undefined;

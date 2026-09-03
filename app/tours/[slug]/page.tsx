@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Check, Star, X } from 'lucide-react';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
@@ -44,6 +44,7 @@ import { parseCmsPageExtras } from '@/lib/cms-page-model';
 
 export default function TourDetailPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const slug = params?.slug || '';
   const [tour, setTour] = useState<RecordRow | null>(null);
   const [related, setRelated] = useState<RecordRow[]>([]);
@@ -71,6 +72,10 @@ export default function TourDetailPage() {
       try {
         const full = await fetchRecordByPublicSlug('tours', slug);
         const published = full && isPublishedRecord(full) ? full : null;
+        if (!published) {
+          router.replace('/404');
+          return;
+        }
         setTour(published);
         const country = published ? pickString(published, ['country']) : '';
         const relatedRows = country
@@ -78,13 +83,16 @@ export default function TourDetailPage() {
           : await fetchFeaturedTours(12);
         setRelated(relatedRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
       } catch (error) {
-        console.error(error);
+        console.error('[Tour detail] Failed to load tour:', error);
+        setTour(null);
+        setRelated([]);
+        router.replace('/404');
       } finally {
         setReady(true);
       }
     }
     void load();
-  }, [slug, live]);
+  }, [slug, live, router]);
 
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);
   const highlights = useMemo(

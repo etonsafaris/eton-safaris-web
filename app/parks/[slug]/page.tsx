@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Carousel from '@/components/public/Carousel';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
@@ -30,6 +30,7 @@ import type { RecordRow } from '@/lib/types';
 
 export default function ParkDetailPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const slug = params?.slug || '';
   const [park, setPark] = useState<RecordRow | null>(null);
   const [others, setOthers] = useState<RecordRow[]>([]);
@@ -59,17 +60,22 @@ export default function ParkDetailPage() {
           setStays(await fetchStaysForPark(parkName, 24, parkId).catch(() => []));
           return;
         }
+        router.replace('/404');
         setPark(null);
         setOthers([]);
         setStays([]);
       } catch (error) {
-        console.error(error);
+        console.error('[Park detail] Failed to load park:', error);
+        setPark(null);
+        setOthers([]);
+        setStays([]);
+        router.replace('/404');
       } finally {
         setReady(true);
       }
     }
     load();
-  }, [slug, live]);
+  }, [slug, live, router]);
 
   const stayItems = useMemo(
     () =>
