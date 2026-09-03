@@ -206,8 +206,14 @@ export async function loadToursPageData() {
 export async function loadCountryPageData(slug: string) {
   noStore();
   const [countriesPage, categoriesPage, placesPage] = await Promise.all([
-    fetchCollectionPage('countries', [], { columns: listColumns('countries'), limit: 100, offset: 0 }),
-    fetchCollectionPage('categories', [], { columns: listColumns('categories'), limit: 100, offset: 0 }),
+    fetchCollectionPage('countries', [], { columns: listColumns('countries'), limit: 100, offset: 0 }).catch(() => ({
+      rows: [] as RecordRow[],
+      total: 0,
+    })),
+    fetchCollectionPage('categories', [], { columns: listColumns('categories'), limit: 100, offset: 0 }).catch(() => ({
+      rows: [] as RecordRow[],
+      total: 0,
+    })),
     fetchCollectionPage('explore', [], {
       columns: listColumns('explore'),
       limit: 48,
@@ -218,10 +224,11 @@ export async function loadCountryPageData(slug: string) {
   const countries = countriesPage.rows.filter(isPublishedRecord);
   const categories = categoriesPage.rows.filter(isPublishedRecord);
   const countryMeta =
-    findCountryRecord(countries, slug) || (await fetchRecordByPublicSlug('countries', slug));
+    findCountryRecord(countries, slug) ||
+    (await fetchRecordByPublicSlug('countries', slug).catch(() => null));
   const country =
     countryMeta?.id != null
-      ? (await fetchCollectionRecordById('countries', String(countryMeta.id))) || countryMeta
+      ? (await fetchCollectionRecordById('countries', String(countryMeta.id)).catch(() => null)) || countryMeta
       : countryMeta;
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') ||
