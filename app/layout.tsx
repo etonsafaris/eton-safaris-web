@@ -58,11 +58,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: SITE_LOGO, type: 'image/png', sizes: '512x512' },
       { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
-    apple: [{ url: SITE_LOGO, type: 'image/png', sizes: '180x180' }],
-    shortcut: SITE_LOGO,
+    apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '512x512' }],
+    shortcut: '/icon.png',
   },
   robots: { index: true, follow: true },
   other: {
@@ -134,9 +134,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
-        <link rel="icon" type="image/png" href={SITE_LOGO} sizes="512x512" />
-        <link rel="shortcut icon" type="image/png" href={SITE_LOGO} />
-        <link rel="apple-touch-icon" href={SITE_LOGO} sizes="180x180" />
+        <link rel="icon" type="image/png" href="/icon.png" sizes="512x512" />
+        <link rel="shortcut icon" type="image/png" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="512x512" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
       </head>
