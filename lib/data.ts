@@ -6,9 +6,9 @@ import { extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-con
 export {
   clearCollectionCache,
   fetchAllRecords,
-  fetchCollectionRecords,
-  fetchCollectionPage,
-  fetchCollectionRecordById,
+  fetchCollectionRecords as fetchCollectionRecordsServer,
+  fetchCollectionPage as fetchCollectionPageServer,
+  fetchCollectionRecordById as fetchCollectionRecordByIdServer,
   fetchFeaturedTours,
   fetchParksForCountry,
   fetchRecordByPublicSlug,
@@ -25,6 +25,52 @@ export {
   parseContentBlocks,
   parseBlocksFromRecord,
 } from './data-server';
+
+const browser = () => typeof window !== 'undefined';
+const dataUrl = (table: string, params: URLSearchParams) => `/api/data/${encodeURIComponent(table)}?${params}`;
+
+export async function fetchCollectionRecords(
+  table: string,
+  aliases: string[] = [],
+  options?: { columns?: string; full?: boolean; unlimited?: boolean; maxRows?: number }
+): Promise<RecordRow[]> {
+  if (!browser()) return fetchCollectionRecordsServer(table, aliases, options);
+  for (const name of [table, ...aliases]) {
+    const params = new URLSearchParams();
+    if (options?.columns) params.set('select', options.columns);
+    if (options?.maxRows) params.set('limit', String(options.maxRows));
+    const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+    if (response.ok) {
+      const body = (await response.json()) as { data?: RecordRow[] };
+      return body.data || [];
+    }
+  }
+  return [];
+}
+
+export async function fetchCollectionPage(
+  table: string,
+  aliases: string[] = [],
+  options?: { columns?: string; limit?: number; offset?: number; orderBy?: string; ascending?: boolean; filters?: { country?: string; park?: string; category?: string } }
+): Promise<{ rows: RecordRow[]; total: number }> {
+  if (!browser()) return fetchCollectionPageServer(table, aliases, options);
+  const params = new URLSearchParams();
+  if (options?.columns) params.set('select', options.columns);
+  if (options?.limit) params.set('limit', String(options.limit));
+  if (options?.offset) params.set('range', `${options.offset}-${(options.offset + (options.limit || 48)) - 1}`);
+  if (options?.orderBy) params.set('order', `${options.orderBy}.${options.ascending === false ? 'desc' : 'asc'}`);
+  const response = await fetch(dataUrl(table, params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return { rows: body.data || [], total: body.data?.length || 0 };
+}
+
+export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {
+  if (!browser()) return fetchCollectionRecordByIdServer(table, String(id), aliases);
+  const params = new URLSearchParams({ 'eq.id': String(id), limit: '1' });
+  const response = await fetch(dataUrl(table, params), { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  return body.data?.[0] || null;
+}
 
 // Keep utility functions that are used by client components
 export function getRecordImage(record: RecordRow): string | null {
