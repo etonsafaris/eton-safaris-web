@@ -2,7 +2,15 @@ import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import type { RecordRow } from '@/lib/types';
 import { getRecordTitle, pickString, slugify } from '@/lib/data';
 
-const COUNTRY_ASSIGNMENT_KEYS = ['country', 'country_slug', 'nation', 'countries'];
+const COUNTRY_ASSIGNMENT_KEYS = [
+  'country',
+  'country_name',
+  'country_slug',
+  'nation',
+  'countries',
+  'destination',
+  'location',
+];
 
 const COUNTRY_ALIASES: Record<string, string> = {
   'republic-of-uganda': 'uganda',

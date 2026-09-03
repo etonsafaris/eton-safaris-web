@@ -878,26 +878,34 @@ export async function fetchParksForCountry(countryLabel: string, limit = 200): P
     publicListColumnsFor('national_park', ['national_parks', 'parks']) ||
     'id,name,slug,seo_slug,location,country,image_url,social_image_url,description_title';
   for (const name of names) {
-    try {
-      const queryText = `SELECT ${selectColumns} FROM ${name} WHERE country ILIKE $1 LIMIT ${capped}`;
-      const res = await db.query(queryText, [`%${label}%`]);
+    const collected: RecordRow[] = [];
+    for (const countryColumn of ['country', 'country_name', 'destination', 'location']) {
+      try {
+        const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${countryColumn} ILIKE $1 LIMIT ${capped}`;
+        const res = await db.query(queryText, [`%${label}%`]);
+        collected.push(...(res.rows as RecordRow[]));
+      } catch (error: any) {
+        const missing = missingSelectColumn(error.message || '');
+        if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+          const next = dropColumnFromSelect(selectColumns, missing);
+          if (next && next !== selectColumns) {
+            selectColumns = next;
+            break;
+          }
+        }
+        if (!/column .* does not exist|relation .* does not exist/i.test(error.message || '')) {
+          console.error(`[Aiven] Parks for country query failed:`, error.message);
+        }
+      }
+    }
+    if (collected.length > 0) {
       const seen = new Set<string>();
-      return (res.rows as RecordRow[]).filter(isPublishedRecord).filter((row) => {
+      return collected.filter(isPublishedRecord).filter((row) => {
         const key = String(row.id || getRecordTitle(row)).toLowerCase();
         if (!key || seen.has(key)) return false;
         seen.add(key);
         return true;
-      });
-    } catch (error: any) {
-      const missing = missingSelectColumn(error.message || '');
-      if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
-        const next = dropColumnFromSelect(selectColumns, missing);
-        if (next && next !== selectColumns) {
-          selectColumns = next;
-          continue;
-        }
-      }
-      console.error(`[Aiven] Parks for country query failed:`, error.message);
+      }).slice(0, capped);
     }
   }
   return [];
