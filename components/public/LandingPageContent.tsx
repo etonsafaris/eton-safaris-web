@@ -11,7 +11,7 @@ import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
 import { mergeFaqs } from '@/lib/default-faqs';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
-import { countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
+import { countryPlacePath } from '@/lib/cms-routes';
 import { SITE } from '@/lib/collections';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { quoteRequestPath } from '@/lib/quote-request';
@@ -93,57 +93,10 @@ export default function LandingPageContent({ slug, country, landing, heroTitle }
   const faqs = limitFaqs(mergeFaqs(extras.faqs, copy.faqs), bestFaqsFor('country', { countrySlug: slug, countryName }));
   const excerptText = extras.excerpt.replace(/<[^>]+>/g, ' ').trim();
   const articleHtml = toProseHtml(excerptText.length >= 40 && excerptText.length < 700 ? extras.excerpt : copy.seoIntro);
-  const path = destinationPublicPath(slug);
-  const absolute = `${SITE.url.replace(/\/$/, '')}${path}`;
-
   const sources = useMemo(() => reviewSourceBadges(reviews), [reviews]);
-
-  const jsonLd = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
-        { '@type': 'ListItem', position: 2, name: countryName, item: absolute },
-      ],
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'TouristDestination',
-      name: h1,
-      description: extras.excerpt || copy.seoIntro,
-      url: absolute,
-      touristType: 'Safari traveller',
-      containedInPlace: { '@type': 'Country', name: countryName },
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      name: copy.toursHeading,
-      numberOfItems: tours.length,
-      itemListElement: tours.slice(0, 20).map((tour, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        url: `https://etonsafaris.com/tours/${publicRecordSlug(tour)}`,
-        name: getRecordTitle(tour),
-      })),
-    },
-    faqs.length
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: faqs.map((faq) => ({
-            '@type': 'Question',
-            name: faq.question,
-            acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-          })),
-        }
-      : null,
-  ].filter(Boolean);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <LandingHero
         title={h1}
         offerLine={offerLine}

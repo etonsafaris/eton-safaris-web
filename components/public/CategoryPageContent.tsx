@@ -155,26 +155,8 @@ export default function CategoryPageContent({
     [ready, tours, selectedCategory, categorySlug]
   );
 
-  const faqJsonLd = faqs.length
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faqs.map((faq) => ({
-          '@type': 'Question',
-          name: faq.question,
-          acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-        })),
-      }
-    : null;
-
   return (
     <>
-      {faqJsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, '\\u003c') }}
-        />
-      ) : null}
       <PageHero
         title={categoryTitle}
         image={heroImage}

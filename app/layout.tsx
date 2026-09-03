@@ -139,7 +139,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href={SITE_LOGO} sizes="180x180" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
       </head>
       <body className="font-sans">
         <SiteTranslateRoot>
