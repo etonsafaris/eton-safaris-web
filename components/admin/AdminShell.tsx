@@ -138,7 +138,10 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       .select('email,role,allowed_modules,status,is_active')
       .ilike('email', email)
       .limit(8)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[Admin] Could not load access profile:', error.message);
+        }
         const rows = (data as Array<{ email?: string; role?: string; allowed_modules?: unknown }> | null) || [];
         const row =
           rows.find((item) => String(item.email || '').toLowerCase() === email.toLowerCase()) || rows[0];
@@ -149,6 +152,10 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
         const isStaff = /admin|full access|tour operator|content manager|limited access|\(user\)|^user$/i.test(nextRole);
         if (isStaff) return;
         if (row) router.replace('/agents/portal');
+      })
+      .catch((error) => {
+        console.error('[Admin] Could not load access profile:', error);
+        setAccessReady(true);
       });
   }, [user]);
 
