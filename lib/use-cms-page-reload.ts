@@ -16,13 +16,26 @@ export function useCmsPageReload(
 ) {
   const live = useCmsLive();
   const prevLive = useRef(live);
+  const isReloading = useRef(false);
 
   useEffect(() => {
     const isLiveUpdate = live !== prevLive.current;
     prevLive.current = live;
+    
+    // Skip if we have server content and this isn't a live update
     if (!isLiveUpdate && hasServerContent) return;
-    if (isLiveUpdate) clearCollectionCache();
-    void reload();
+    
+    // Prevent concurrent reloads
+    if (isReloading.current) return;
+    
+    if (isLiveUpdate) {
+      clearCollectionCache();
+    }
+    
+    isReloading.current = true;
+    void reload().finally(() => {
+      isReloading.current = false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, hasServerContent, ...deps]);
 }

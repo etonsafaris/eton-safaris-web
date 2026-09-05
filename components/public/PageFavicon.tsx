@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { SITE, SITE_LOGO } from '@/lib/collections';
+import { SITE } from '@/lib/collections';
 
 function tabTitle(name?: string | null) {
   const clean = String(name || '')
@@ -14,27 +14,11 @@ function tabTitle(name?: string | null) {
   return `${clean} | ${SITE.name}`;
 }
 
-function applySiteLogoIcon() {
-  if (typeof document === 'undefined') return;
-  const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
-  rels.forEach((rel) => {
-    document.querySelectorAll(`link[rel="${rel}"]`).forEach((node) => node.remove());
-    const link = document.createElement('link');
-    link.rel = rel;
-    link.href = SITE_LOGO;
-    link.type = 'image/png';
-    document.head.appendChild(link);
-  });
-}
-
 export default function PageFavicon({ title }: { title?: string | null }) {
   const pathname = usePathname() || '/';
 
   useEffect(() => {
-    applySiteLogoIcon();
-  }, []);
-
-  useEffect(() => {
+    if (typeof document === 'undefined') return;
     if (pathname === '/') {
       document.title = `${SITE.name} | ${SITE.tagline}`;
       return;

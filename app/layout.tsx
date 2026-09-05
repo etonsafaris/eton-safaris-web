@@ -79,10 +79,10 @@ const SITE_GRAPH = {
       url: SITE.url,
       email: SITE.email,
       telephone: SITE.phoneDisplay,
-      image: `${SITE.url}${SITE_LOGO.split('?')[0]}`,
+      image: `${SITE.url}${SITE_LOGO}`,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE.url}${SITE_LOGO.split('?')[0]}`,
+        url: `${SITE.url}${SITE_LOGO}`,
         width: 512,
         height: 512,
       },
