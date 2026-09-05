@@ -428,4 +428,4 @@ export const OTHER_DESTINATIONS = [
   { name: 'Zimbabwe', slug: 'zimbabwe', flag: '🇿🇼', iso: 'zw' },
 ];
 
-export const SITE_LOGO = '/eton-safaris-gorilla.png?v=green-type';
+export const SITE_LOGO = '/eton-safaris-gorilla.png';
