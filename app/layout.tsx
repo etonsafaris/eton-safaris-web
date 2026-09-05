@@ -57,8 +57,12 @@ export const metadata: Metadata = {
     images: [SITE_LOGO],
   },
   icons: {
-    // Keep one authoritative tab icon, generated from the official Gorilla mark.
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' }],
+    // Keep the official Gorilla mark available through every browser favicon path.
+    icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' },
+      { url: '/eton-safaris-gorilla.png', type: 'image/png', sizes: '1024x1024' },
+    ],
     apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
   },
   robots: { index: true, follow: true },
@@ -131,6 +135,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/icon.png" sizes="512x512" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
       </head>
