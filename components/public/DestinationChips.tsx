@@ -44,7 +44,7 @@ export default function DestinationChips({
             }
           >
             {flag ? (
-              <img src={flag} alt="" width={28} height={20} className="h-5 w-7 rounded-sm object-cover" />
+              <img src={flag} alt="" width={28} height={20} loading="lazy" decoding="async" className="h-5 w-7 rounded-sm object-cover" />
             ) : null}
             {name}
           </Link>

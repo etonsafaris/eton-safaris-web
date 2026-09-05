@@ -46,7 +46,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|jpg|jpeg|png|webp|avif|woff2|mp4|webm|mov)$).*)',
+        source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:ico|svg|jpg|jpeg|png|webp|avif|woff|woff2|mp4|webm|mov)$).*)',
         headers: [{ key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' }],
       },
       {
@@ -58,7 +58,7 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|woff2|mp4|webm|mov)',
+        source: '/:all*(ico|svg|jpg|jpeg|png|webp|avif|woff|woff2|mp4|webm|mov)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
       },
     ];

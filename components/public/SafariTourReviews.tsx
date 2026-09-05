@@ -93,7 +93,7 @@ function ReviewCard({
       </button>
       <div className="mt-auto flex items-center gap-3 pt-4">
         {photo ? (
-          <img src={photo} alt="" className="h-10 w-10 rounded-full object-cover" />
+          <img src={photo} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 rounded-full object-cover" />
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A651] text-sm font-bold text-white">
             {author.charAt(0).toUpperCase()}

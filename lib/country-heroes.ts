@@ -8,15 +8,15 @@ const FILES: Record<string, string> = {
   uganda: '/heroes/uganda.jpg',
   kenya: '/heroes/kenya.jpg',
   tanzania: '/heroes/tanzania.jpg',
-  rwanda: '/heroes/rwanda.jpg',
+  rwanda: '/heroes/rwanda.webp',
   botswana: '/heroes/botswana.jpg',
-  egypt: '/heroes/egypt.jpg',
+  egypt: '/heroes/egypt.webp',
   namibia: '/heroes/namibia.jpg',
-  'south-africa': '/heroes/south-africa.jpg',
+  'south-africa': '/heroes/south-africa.webp',
   'dr-congo': '/heroes/dr-congo.jpg',
   ethiopia: '/heroes/ethiopia.jpg',
-  malawi: '/heroes/malawi.jpg',
-  zambia: '/heroes/zambia.jpg',
+  malawi: '/heroes/malawi.webp',
+  zambia: '/heroes/zambia.webp',
 };
 
 export const DEFAULT_COUNTRY_HERO = '/heroes/kenya.jpg';

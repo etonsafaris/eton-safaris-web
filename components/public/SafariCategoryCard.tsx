@@ -28,7 +28,15 @@ export default function SafariCategoryCard({
     <>
       <div className="h-[130px] overflow-hidden rounded-[15px] bg-gray-100">
         {image ? (
-          <img src={image} alt={title} className="h-full w-full object-cover" />
+          <img
+            src={image}
+            alt={title}
+            width={320}
+            height={130}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
         )}

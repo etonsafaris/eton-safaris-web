@@ -343,7 +343,7 @@ export default function TourDetailPage() {
                   />
                 ) : null}
                 {journeyMap ? (
-                  <img src={journeyMap} alt="Journey map" className="mt-4 w-full rounded-xl object-cover" />
+                  <img src={journeyMap} alt="Journey map" width={1200} height={675} loading="lazy" decoding="async" className="mt-4 w-full rounded-xl object-cover" />
                 ) : null}
               </div>
             ) : null}

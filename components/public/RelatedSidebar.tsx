@@ -34,6 +34,8 @@ export default function RelatedSidebar({
                     <img
                       src={item.image}
                       alt=""
+                      width={72}
+                      height={56}
                       loading="lazy"
                       decoding="async"
                       className="h-14 w-[72px] shrink-0 rounded object-cover"

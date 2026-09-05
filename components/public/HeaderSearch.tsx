@@ -91,7 +91,7 @@ export default function HeaderSearch() {
                       className="flex gap-3 border-b px-3 py-2 hover:bg-cream"
                     >
                       {card.image ? (
-                        <img src={card.image} alt="" className="h-12 w-14 shrink-0 rounded-md object-cover" />
+                        <img src={card.image} alt="" width={56} height={48} loading="lazy" decoding="async" className="h-12 w-14 shrink-0 rounded-md object-cover" />
                       ) : (
                         <div className="h-12 w-14 shrink-0 rounded-md bg-gray-100" />
                       )}

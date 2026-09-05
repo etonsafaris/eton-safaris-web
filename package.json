@@ -7,8 +7,9 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "npm run icons:generate && next build",
+    "build": "npm run images:optimize && npm run icons:generate && next build",
     "icons:generate": "node scripts/generate-site-icons.mjs",
+    "images:optimize": "node scripts/optimize-static-images.mjs",
     "start": "next start",
     "lint": "next lint",
     "seed:admin": "node scripts/seed-admin.mjs",

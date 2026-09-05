@@ -30,6 +30,10 @@ export default function SpeakToExpertCard({
           <img
             src={SITE_LOGO}
             alt={SITE.name}
+            width={80}
+            height={80}
+            loading="lazy"
+            decoding="async"
             className="mr-4 h-20 w-20 shrink-0 object-contain"
           />
           <p className="text-base leading-6 text-[#222]">
@@ -77,7 +81,7 @@ export default function SpeakToExpertCard({
 
   return (
     <aside className={`border border-gray-100 bg-white p-5 shadow-card ${className || 'rounded-xl'}`}>
-      <img src={SITE_LOGO} alt={SITE.name} className="mx-auto mb-3 h-14 w-auto object-contain" />
+      <img src={SITE_LOGO} alt={SITE.name} width={224} height={56} loading="lazy" decoding="async" className="mx-auto mb-3 h-14 w-auto object-contain" />
       <h3 className="mb-0.5 text-center font-serif text-sm font-bold text-[#333]">Speak to an Expert</h3>
       <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-widest text-sage">
         We&apos;re here to help

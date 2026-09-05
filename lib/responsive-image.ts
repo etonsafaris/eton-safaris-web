@@ -12,6 +12,9 @@ function withSearchParams(src: string, params: Record<string, string>) {
 
 export function sizedImageUrl(src: string, width: number, quality = 70): string {
   if (!src) return src;
+  if (/^\/heroes\/.*\.(?:png|jpe?g|webp)$/i.test(src)) {
+    return src.replace(/\.(?:png|jpe?g|webp)$/i, `-${width}.webp`);
+  }
   if (src.includes('images.unsplash.com')) {
     return withSearchParams(src, {
       auto: 'format',
@@ -29,7 +32,7 @@ export function sizedImageUrl(src: string, width: number, quality = 70): string 
 
 export function imageSrcSet(src: string, widths: number[] = DEFAULT_WIDTHS): string {
   if (!src) return '';
-  if (!src.includes('images.unsplash.com') && !src.includes('res.cloudinary.com')) return '';
+  if (!src.includes('images.unsplash.com') && !src.includes('res.cloudinary.com') && !/^\/heroes\//.test(src)) return '';
   return widths.map((width) => `${sizedImageUrl(src, width)} ${width}w`).join(', ');
 }
 

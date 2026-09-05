@@ -245,7 +245,7 @@ export default function TourSearchBar({
 
                           {card.image ? (
 
-                            <img src={card.image} alt="" className="h-14 w-16 shrink-0 object-cover" />
+                            <img src={card.image} alt="" width={64} height={56} loading="lazy" decoding="async" className="h-14 w-16 shrink-0 object-cover" />
 
                           ) : (
 

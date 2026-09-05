@@ -23,11 +23,19 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
             <img
               src="https://www.pesapal.com/wp-content/uploads/2021/06/norton-secured.png"
               alt="Norton Secured"
+              width={128}
+              height={32}
+              loading="lazy"
+              decoding="async"
               className="h-8 object-contain opacity-80"
             />
             <img
               src="https://www.pesapal.com/wp-content/uploads/2021/06/pci-dss.png"
               alt="PCI DSS"
+              width={128}
+              height={32}
+              loading="lazy"
+              decoding="async"
               className="h-8 object-contain opacity-80"
             />
           </div>
