@@ -19,11 +19,14 @@ export default function PageFavicon({ title }: { title?: string | null }) {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    if (pathname === '/') {
+    if (title) {
+      document.title = tabTitle(title);
+    } else if (pathname === '/') {
       document.title = `${SITE.name} | ${SITE.tagline}`;
-      return;
+    } else {
+      // Never leave the previous route's title behind after client navigation.
+      document.title = SITE.name;
     }
-    if (title) document.title = tabTitle(title);
   }, [pathname, title]);
 
   return null;

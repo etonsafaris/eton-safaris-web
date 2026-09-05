@@ -12,7 +12,9 @@ const cachedPool: Pool | null = normalizedConnectionString
       ssl: { rejectUnauthorized: false },
       max: 2,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      // Keep an unreachable database from holding a page past the five-second target.
+      connectionTimeoutMillis: 4500,
+      statement_timeout: 4500,
       maxLifetimeSeconds: 60,
     }))
   : null;

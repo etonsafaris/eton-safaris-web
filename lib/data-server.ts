@@ -273,8 +273,8 @@ function slugLookupValues(slug: string): string[] {
 export { clearCollectionCache };
 
 const PAGE_SIZE = 1000;
-/** Server renders must always hit Aiven database; client cache is cleared on CMS saves. */
-const FETCH_CACHE_MS = 0; // Always 0 for server-side
+/** Short cache avoids duplicate refresh/metadata queries while keeping CMS edits responsive. */
+const FETCH_CACHE_MS = 30_000;
 /** Remember resolved select strings per table so missing-column drops are not repeated. */
 const resolvedSelects = new Map<string, string>();
 
@@ -317,7 +317,7 @@ async function selectRange(
   end: number
 ): Promise<{ data: RecordRow[] | null; error: { message: string } | null }> {
   let lastMessage = '';
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const offset = start;
       const limit = end - start + 1;
@@ -329,7 +329,7 @@ async function selectRange(
       if (!isTransientFetchError(lastMessage)) {
         return { data: null, error: { message: lastMessage } };
       }
-      await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)));
+      await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
     }
   }
   return { data: null, error: { message: lastMessage || 'fetch failed' }};

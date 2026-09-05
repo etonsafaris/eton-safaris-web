@@ -167,11 +167,15 @@ export async function loadHomePageData() {
 export async function loadAccommodationsPageData() {
   noStore();
   try {
-    const page = await fetchCollectionPage('accommodations', [], {
-      columns: listColumns('accommodations'),
-      limit: 48,
-      offset: 0,
-    });
+    const page = await withTimeout(
+      fetchCollectionPage('accommodations', [], {
+        columns: listColumns('accommodations'),
+        limit: 48,
+        offset: 0,
+      }),
+      4500,
+      { rows: [] as RecordRow[], total: 0 }
+    );
     const rows = page.rows.filter(isPublishedRecord);
     return { rows, total: Math.max(page.total, rows.length) };
   } catch {
@@ -183,9 +187,21 @@ export async function loadToursPageData() {
   noStore();
   try {
     const [tourPage, categories, countries] = await Promise.all([
-      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }),
-      fetchCollectionRecords('categories', [], { columns: listColumns('categories'), maxRows: 80 }),
-      fetchCollectionRecords('countries', [], { columns: listColumns('countries'), maxRows: 48 }),
+      withTimeout(
+        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }),
+        4500,
+        { rows: [] as RecordRow[], total: 0 }
+      ),
+      withTimeout(
+        fetchCollectionRecords('categories', [], { columns: listColumns('categories'), maxRows: 80 }),
+        4500,
+        [] as RecordRow[]
+      ),
+      withTimeout(
+        fetchCollectionRecords('countries', [], { columns: listColumns('countries'), maxRows: 48 }),
+        4500,
+        [] as RecordRow[]
+      ),
     ]);
     return {
       tours: tourPage.rows.filter(isPublishedRecord),
@@ -249,14 +265,14 @@ export async function loadCountryPageData(slug: string) {
 
 export async function loadTourDetail(slug: string) {
   noStore();
-  const tour = await fetchRecordByPublicSlug('tours', slug);
+  const tour = await withTimeout(fetchRecordByPublicSlug('tours', slug), 4500, null);
   if (tour && !isPublishedRecord(tour)) {
     return { tour: null, related: [] as RecordRow[] };
   }
   const country = tour ? pickString(tour, ['country']) : '';
   const category = tour ? pickString(tour, ['category']) : '';
   const relatedPool = country
-    ? await fetchToursForCountryLabel(country, 40).catch(() => [] as RecordRow[])
+    ? await withTimeout(fetchToursForCountryLabel(country, 40), 1200, [] as RecordRow[])
     : [];
   const sameCountry = relatedPool.filter((row) => String(row.id) !== String(tour?.id || ''));
   const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
@@ -269,14 +285,21 @@ export async function loadTourDetail(slug: string) {
 export async function loadParkDetail(slug: string) {
   noStore();
   const [park, parkPage] = await Promise.all([
-    fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
-    fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }).catch(() => ({
-      rows: [] as RecordRow[],
-      total: 0,
-    })),
+    withTimeout(fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']), 4500, null),
+    withTimeout(
+      fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
+      4500,
+      { rows: [] as RecordRow[], total: 0 }
+    ),
   ]);
   const parkName = park ? getRecordTitle(park) : '';
-  const stays = parkName ? await fetchStaysForPark(parkName, 10, park?.id != null ? String(park.id) : undefined) : [];
+  const stays = parkName
+    ? await withTimeout(
+        fetchStaysForPark(parkName, 10, park?.id != null ? String(park.id) : undefined),
+        1200,
+        [] as RecordRow[]
+      )
+    : [];
   return {
     park: park && isPublishedRecord(park) ? park : null,
     others: parkPage.rows.filter((row) => String(row.id) !== String(park?.id || '')).slice(0, 20),
