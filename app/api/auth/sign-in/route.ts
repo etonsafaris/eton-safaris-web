@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 
 function encode(value: unknown) {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     ) {
       row = { id: `owner-${email}`, email, role: 'Admin', is_active: true };
     } else {
-      const client = createPrivilegedClient();
+      const client = createAdminClient();
       const result = await client.from('registered_agents').select('*').ilike('email', email).limit(1);
       if (result.error) throw new Error(result.error.message);
       row = result.data?.[0] as Record<string, unknown> | undefined;

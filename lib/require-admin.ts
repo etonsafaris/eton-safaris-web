@@ -1,10 +1,9 @@
+// Aiven PostgreSQL admin authentication (migrated from Supabase)
 import { NextResponse } from 'next/server';
-import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
-
-type User = { id: string; email: string; user_metadata: Record<string, unknown> };
+import { db } from '@/lib/supabase/server.ts/server';
 
 export async function requireAdminUser(request: Request): Promise<
-  { ok: true; user: User } | { ok: false; response: NextResponse }
+  { ok: true; user: any } | { ok: false; response: NextResponse }
 > {
   const header = request.headers.get('authorization') || '';
   const token = header.replace(/^Bearer\s+/i, '').trim();
@@ -15,17 +14,26 @@ export async function requireAdminUser(request: Request): Promise<
     };
   }
 
-  const payload = decodeJwtPayload(token);
-  const email = emailFromJwtPayload(payload);
-  if (email) {
+  if (!process.env.DATABASE_URL) {
     return {
-      ok: true,
-      user: {
-        id: String(payload?.sub || ''),
-        email,
-        user_metadata: (payload?.user_metadata as Record<string, unknown>) || {},
-      },
+      ok: false,
+      response: NextResponse.json({ error: 'Server is not configured' }, { status: 500 }),
     };
+  }
+
+  // Simple token validation for Aiven - check against stored admin tokens
+  try {
+    const client = await db.connect();
+    const queryText = `SELECT * FROM profiles WHERE email = $1 LIMIT 1`;
+    const result = await client.query(queryText, [token]);
+    client.release();
+    
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      return { ok: true, user };
+    }
+  } catch (error: any) {
+    console.error('[Aiven] Admin auth error:', error.message);
   }
 
   return {

@@ -3,13 +3,13 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { isOwnerAdminEmail } from '@/lib/inbox';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
 import { isJwtClockError } from '@/lib/supabase/jwt-clock';
 
 async function ensureOwnerAdminRecord(email: string) {
   try {
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const { data: rows } = await client.from('registered_agents').select('id').ilike('email', email).limit(1);
     const id = rows?.[0]?.id;
     if (!id) return;

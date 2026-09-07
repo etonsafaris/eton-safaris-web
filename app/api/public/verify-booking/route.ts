@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Enter your booking or payment code.' }, { status: 400 });
     }
 
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const { data: byCode } = await client.from('bookings').select('*').ilike('booking_code', code).limit(1);
     let booking = (byCode || [])[0] || null;
 

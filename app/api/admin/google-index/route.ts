@@ -7,7 +7,7 @@ import { publicRecordSlug } from '@/lib/data';
 import { indexableContentKindForTable } from '@/lib/public-indexing';
 import { requireAdminUser } from '@/lib/require-admin';
 import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
 import { db } from '@/lib/supabase/server.ts/server';
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
 
     const result = await saveWithColumnFallback(table, payload, {
       id,
-      client: createPrivilegedClient(),
+      client: createAdminClient(),
     });
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500 });

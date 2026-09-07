@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
   try {
     // Prefer service role for admin reads so RLS does not empty ops tables.
     const client = hasServiceRoleKey()
-      ? createPrivilegedClient()
+      ? createAdminClient()
       : createWriteClient(bearerTokenFromRequest(request));
     if (table === 'registered_agents') {
       const rows = await loadAgentRows(client);
@@ -164,7 +164,7 @@ export async function DELETE(request: Request) {
 
   try {
     // Prefer service role so admins can delete bookings even when RLS blocks anon/auth deletes.
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const names = TABLE_ALIASES[table] || [table];
     let lastMessage = '';
 

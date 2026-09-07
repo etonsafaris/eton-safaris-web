@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
 export async function POST(request: Request) {
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Country of residence is required' }, { status: 400 });
     }
 
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const saved = await saveWithColumnFallback(
       'reviews',
       {

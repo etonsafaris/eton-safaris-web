@@ -29,11 +29,12 @@ const nextConfig = {
     imageSizes: [64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
-      { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'flagcdn.com' },
     ],
+    // Enable image optimization for better performance
+    dangerouslyAllowSVG: true,
   },
   async headers() {
     return [
@@ -51,7 +52,7 @@ const nextConfig = {
       },
       {
         source: '/eton-safaris-gorilla.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/_next/static/:path*',

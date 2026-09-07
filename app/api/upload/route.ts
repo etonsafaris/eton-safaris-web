@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { createAdminClient, createServiceClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const BUCKETS = ['media', 'images', 'uploads', 'public'];
 
@@ -56,68 +56,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Files must be 50 MB or smaller.' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = extensionFor(file);
-    const objectPath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const contentType = file.type || (isVideoFile(file) ? `video/${ext}` : `image/${ext}`);
-    const sizeLimit = isVideoFile(file) ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
-
-    try {
-      const supabase = createAdminClient();
-      const { data: bucketList } = await supabase.storage.listBuckets();
-      const existing = new Set((bucketList || []).map((item) => item.name));
-      let bucket = BUCKETS.find((name) => existing.has(name));
-
-      if (!bucket) {
-        const created = await supabase.storage.createBucket('media', { public: true, fileSizeLimit: sizeLimit });
-        if (created.error && !/already exists/i.test(created.error.message)) {
-          throw created.error;
-        }
-        bucket = 'media';
-      }
-
-      let { error } = await supabase.storage.from(bucket).upload(objectPath, buffer, {
-        contentType,
-        upsert: true,
-      });
-
-      if (error && /row-level security|rls/i.test(error.message)) {
-        await supabase.storage.updateBucket(bucket, { public: true, fileSizeLimit: sizeLimit }).catch(() => null);
-        const retry = await supabase.storage.from(bucket).upload(objectPath, buffer, {
-          contentType,
-          upsert: true,
-        });
-        error = retry.error;
-      }
-
-      if (!error) {
-        const publicUrl = supabase.storage.from(bucket).getPublicUrl(objectPath).data.publicUrl;
-        return NextResponse.json({ url: publicUrl });
-      }
-
-      console.error('[Upload] Storage upload failed:', error.message);
-      if (process.env.VERCEL) {
-        return NextResponse.json(
-          {
-            error:
-              'Image upload storage is not configured. Configure the application media storage provider.',
-          },
-          { status: 500 }
-        );
-      }
-    } catch (storageError) {
-      console.error('[Upload] Storage upload failed, using local media folder:', storageError);
-      if (process.env.VERCEL) {
-        return NextResponse.json(
-          {
-            error:
-              'Image upload storage is not configured. Configure the application media storage provider.',
-          },
-          { status: 500 }
-        );
-      }
-    }
-
+    // Use local file storage with Aiven (no Supabase storage)
     const localUrl = await saveLocalFile(file, folder);
     return NextResponse.json({ url: localUrl });
   } catch (error) {

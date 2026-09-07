@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { ensureConfirmedAuthUser } from '@/lib/ensure-auth-user';
 import { findAgentRecord, isStaffRole } from '@/lib/find-agent';
 import { updateAgentFields } from '@/lib/agent-row';
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   if (!token) return NextResponse.json({ error: 'Invite token is required.' }, { status: 400 });
 
   try {
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const found = await findAgentRecord(client, { token });
     if (!found || !isStaffRole(found.row.role)) {
       return NextResponse.json({ error: 'This invite link is invalid or has expired.' }, { status: 404 });
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     if (name.length < 2) return NextResponse.json({ error: 'Enter your full name.' }, { status: 400 });
     if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
 
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const found = await findAgentRecord(client, { token });
     if (!found || !isStaffRole(found.row.role)) {
       return NextResponse.json({ error: 'This invite link is invalid or has expired.' }, { status: 404 });

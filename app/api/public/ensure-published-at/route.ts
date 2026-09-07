@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { createPrivilegedClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { publishStampForSave, recordPublishedAt } from '@/lib/data';
 import { embedContent, extractEmbeddedContent, recordBodyHtml } from '@/lib/embedded-content';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Record id is required' }, { status: 400 });
     }
 
-    const client = createPrivilegedClient();
+    const client = createAdminClient();
     const { data, error } = await client.from(table).select('*').eq('id', id).maybeSingle();
     if (error || !data) {
       return NextResponse.json({ error: error?.message || 'Record not found' }, { status: 404 });
