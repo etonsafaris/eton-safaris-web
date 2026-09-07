@@ -14,8 +14,7 @@ type PageProps = {
   params: { slug: string };
 };
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolved = resolvePublicSlug(params.slug);

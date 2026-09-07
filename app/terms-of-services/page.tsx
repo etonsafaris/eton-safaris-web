@@ -10,8 +10,7 @@ import { metadataFromSeo } from '@/lib/seo-public';
 
 const SLUG = 'terms-of-services';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata(): Promise<Metadata> {
   const row = await loadCmsPage(SLUG);

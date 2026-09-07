@@ -125,9 +125,14 @@ export function countryPlacePath(countrySlug: string, place: RecordRow): string 
   return `/explore/${placeSlug}`;
 }
 
+const RESERVED_PUBLIC_FILES = /^(favicon\.ico|icon\.png|apple-icon\.png|icon-192\.png|manifest\.webmanifest|robots\.txt|sitemap\.xml)$/i;
+
 export function resolvePublicSlug(raw: string): ResolvedCmsSlug | null {
   const slug = publicSlugFromInput(raw);
   if (!slug) return null;
+  if (RESERVED_PUBLIC_FILES.test(slug) || /\.(ico|png|jpe?g|webp|svg|xml|txt|webmanifest)$/i.test(slug)) {
+    return null;
+  }
 
   if (PAGE_ALIASES[slug]) {
     return { kind: 'page', canonical: PAGE_ALIASES[slug] };

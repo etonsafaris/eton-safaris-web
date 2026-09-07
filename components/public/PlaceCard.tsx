@@ -27,7 +27,7 @@ export default function PlaceCard({
 }) {
   const publishedDate = date || (record ? formatPublishedDate(record) : '');
   return (
-    <Link prefetch={false} href={href} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link href={href} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
           <ResponsiveImage

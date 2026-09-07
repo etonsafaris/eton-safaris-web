@@ -1,4 +1,8 @@
-/** Public CMS pages always read fresh data — avoids stale HTML on tab refresh. */
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+/**
+ * Public pages use a short ISR window so clicks can reuse a warm HTML/RSC
+ * payload instead of blocking on a fresh CMS round-trip every time.
+ * Admin saves still refresh in the same browser via cms-live.
+ */
+export const dynamic = 'auto';
+export const revalidate = 60;
+export const fetchCache = 'default';

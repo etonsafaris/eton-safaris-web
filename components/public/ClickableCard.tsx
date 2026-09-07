@@ -15,7 +15,7 @@ export default function ClickableCard({ href, onClick, children, className = '' 
 
   if (href) {
     return (
-      <Link prefetch={false} href={href} className={classes}>
+      <Link href={href} className={classes}>
         {children}
       </Link>
     );

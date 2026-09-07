@@ -57,12 +57,12 @@ export const metadata: Metadata = {
     images: [SITE_LOGO],
   },
   icons: {
-    // Keep the official Gorilla mark available through every browser favicon path.
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
     ],
     apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
+    shortcut: '/favicon.ico',
   },
   robots: { index: true, follow: true },
   other: {
@@ -79,12 +79,12 @@ const SITE_GRAPH = {
       url: SITE.url,
       email: SITE.email,
       telephone: SITE.phoneDisplay,
-      image: `${SITE.url}${SITE_LOGO}`,
+      image: `${SITE.url}/eton-safaris-gorilla.png`,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE.url}${SITE_LOGO}`,
-        width: 512,
-        height: 512,
+        url: `${SITE.url}/eton-safaris-gorilla.png`,
+        width: 1024,
+        height: 1024,
       },
       sameAs: Object.values(SOCIAL_LINKS),
       priceRange: '$$',
@@ -133,14 +133,8 @@ const SITE_GRAPH = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={FONT_VARS}>
-      <head>
-        <link rel="icon" type="image/png" href="/eton-safaris-gorilla.png" sizes="1024x1024" />
-        <link rel="icon" type="image/png" href="/icon.png" sizes="512x512" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link rel="preconnect" href="https://images.unsplash.com" />
-      </head>
-      <body className="font-sans">
+      <body className="bg-white font-sans">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
         <SiteTranslateRoot>
           <CmsLiveHost />
           {children}
