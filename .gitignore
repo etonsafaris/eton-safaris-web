@@ -43,19 +43,3 @@ yarn-error.log*
 git-watch.log
 scripts/_tmp-*.mjs
 scripts/backups/
-
-
-# vercel
-.vercel
-
-# uploaded cover images (local fallback)
-/public/media/
-
-# typescript
-*.tsbuildinfo
-
-# local tools / capture frames
-.video-frames/
-.tools/
-
-.vercel

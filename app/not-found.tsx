@@ -1,24 +1,16 @@
 import Link from 'next/link';
-import PageHero from '@/components/public/PageHero';
-import PublicShell from '@/components/public/PublicShell';
 
 export default function NotFound() {
   return (
-    <PublicShell>
-      <PageHero
-        title="Page not found"
-        subtitle="This page is missing or has been moved. Return home to continue planning your safari."
-      />
-      <section className="flex min-h-[40vh] items-center justify-center px-4 py-16">
-        <div className="max-w-lg text-center">
-          <Link
-            href="/"
-            className="inline-flex rounded-full bg-moss-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white hover:bg-forest"
-          >
-            Go Home
-          </Link>
-        </div>
-      </section>
-    </PublicShell>
+    <main className="flex min-h-screen items-center justify-center bg-[#fafcf9] px-4 py-16 text-center">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#00A651]">Eton Safaris</p>
+        <h1 className="mt-3 font-serif text-4xl font-bold">404 — Page not found</h1>
+        <p className="mt-3 text-gray-600">This page is missing or has been moved.</p>
+        <Link href="/" className="mt-6 inline-flex rounded-full bg-[#00A651] px-6 py-3 text-sm font-semibold text-white">
+          Go Home
+        </Link>
+      </div>
+    </main>
   );
 }

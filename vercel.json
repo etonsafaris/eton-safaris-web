@@ -7,10 +7,16 @@
   ],
   "functions": {
     "app/page.tsx": {
-      "maxDuration": 15
+      "maxDuration": 30
     },
     "app/sitemap.ts": {
+      "maxDuration": 60
+    },
+    "app/api/**": {
       "maxDuration": 30
     }
-  }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
 }

@@ -49,5 +49,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/landing', '/landing/:path*', '/api/settings/status', '/api/pesapal/test'],
+  matcher: [
+    '/admin/:path*', 
+    '/landing', 
+    '/landing/:path*', 
+    '/api/settings/status', 
+    '/api/pesapal/test',
+    '/home-page',
+    '/homepage', 
+    '/home'
+  ],
 };
