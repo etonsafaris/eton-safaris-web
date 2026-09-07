@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   icons: {
     // Keep the official Gorilla mark available through every browser favicon path.
     icon: [
-      { url: '/eton-safaris-gorilla.png', type: 'image/png', sizes: '1024x1024' },
+      { url: '/favicon.ico', sizes: 'any' },
       { url: '/icon.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
