@@ -95,7 +95,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/request-a-quote', now, 0.9),
     entry('/explore', now, 0.7),
     entry('/destinations', now, 0.7),
-    entry('/verify', now, 0.6),
     ...CORE_PAGE_SLUGS.map((slug) =>
       entry(`/${slug}`, now, slug === 'about-us' ? 0.9 : 0.8)
     ),

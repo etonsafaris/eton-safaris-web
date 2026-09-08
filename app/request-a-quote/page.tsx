@@ -8,15 +8,6 @@ import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor } from '@/lib/best-faqs';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Request a Safari Quote | Eton Safaris',
-  description: 'Request a custom safari quote for gorilla trekking and wildlife expeditions across Uganda, Kenya, Tanzania, and Rwanda. Get personalized itineraries and pricing.',
-  alternates: {
-    canonical: 'https://etonsafaris.com/request-a-quote',
-  },
-};
 
 export default function RequestQuotePage() {
   return (
