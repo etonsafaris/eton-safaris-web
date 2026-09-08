@@ -6,6 +6,7 @@ import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { sendEmail } from '@/lib/email';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
+import { db } from '@/lib/supabase/pool';
 
 
 
@@ -55,7 +56,6 @@ export async function GET(request: Request) {
 
   try {
 
-    const db = require('@/lib/supabase/server.ts/server').db;
     const client = await db.connect();
 
     const [subscribersResult, toursResult, updatesResult] = await Promise.all([

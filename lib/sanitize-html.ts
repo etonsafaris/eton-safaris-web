@@ -89,7 +89,7 @@ export function sanitizeWordHtml(input: string): string {
       const src = attr(rest, 'src').replace(/"/g, '');
       if (!src || /^(javascript|data):/i.test(src)) return '';
       const alt = attr(rest, 'alt').replace(/"/g, '');
-      return `<img src="${src}" alt="${alt}" style="max-width:100%" />`;
+      return `<img src="${src}" alt="${alt}" style="max-width:100%" loading="lazy" decoding="async" />`;
     }
 
     if (tag === 'video') {

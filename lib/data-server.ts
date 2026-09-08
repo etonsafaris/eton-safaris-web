@@ -1,4 +1,4 @@
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 import {
   extractEmbeddedContent,
   stripEmbeddedContent,

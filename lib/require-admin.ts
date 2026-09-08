@@ -1,6 +1,6 @@
 // Aiven PostgreSQL admin authentication (migrated from Supabase)
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 
 export async function requireAdminUser(request: Request): Promise<
   { ok: true; user: any } | { ok: false; response: NextResponse }

@@ -1,5 +1,5 @@
 // Aiven PostgreSQL admin client for elevated operations
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 
 export function createAdminClient() {
   // Aiven uses the same pool with elevated privileges via DATABASE_URL
@@ -21,14 +21,17 @@ class AivenAdminTableQuery {
   constructor(private table: string) {
     this._select = '*';
     this._filters = [];
+    this._orFilters = [];
     this._data = null;
     this._operation = 'select';
   }
 
   private _select: string;
   private _filters: { column: string; operator: string; value: any }[];
+  private _orFilters: { column: string; operator: string; value: any }[][];
   private _data: Record<string, any> | null;
   private _operation: 'select' | 'insert' | 'update' | 'delete';
+  private _limit: number | null = null;
 
   select(columns: string) {
     this._select = columns;
@@ -37,6 +40,51 @@ class AivenAdminTableQuery {
 
   eq(column: string, value: any) {
     this._filters.push({ column, operator: '=', value });
+    return this;
+  }
+
+  neq(column: string, value: any) {
+    this._filters.push({ column, operator: '!=', value });
+    return this;
+  }
+
+  ilike(column: string, value: any) {
+    this._filters.push({ column, operator: 'ILIKE', value });
+    return this;
+  }
+
+  gt(column: string, value: any) {
+    this._filters.push({ column, operator: '>', value });
+    return this;
+  }
+
+  lt(column: string, value: any) {
+    this._filters.push({ column, operator: '<', value });
+    return this;
+  }
+
+  gte(column: string, value: any) {
+    this._filters.push({ column, operator: '>=', value });
+    return this;
+  }
+
+  lte(column: string, value: any) {
+    this._filters.push({ column, operator: '<=', value });
+    return this;
+  }
+
+  or(filters: { column: string; operator?: string; value: any }[]) {
+    const normalized = filters.map((f) => ({
+      column: f.column,
+      operator: f.operator || '=',
+      value: f.value,
+    }));
+    this._orFilters.push(normalized);
+    return this;
+  }
+
+  limit(n: number) {
+    this._limit = n;
     return this;
   }
 
@@ -77,6 +125,13 @@ class AivenAdminTableQuery {
     }));
   }
 
+  single() {
+    return this.then((result: { data: any[] | null; error: { message: string } | null }) => ({
+      data: result.data?.[0] || null,
+      error: result.error,
+    }));
+  }
+
   async execute() {
     let client;
     try {
@@ -84,43 +139,39 @@ class AivenAdminTableQuery {
       let query = '';
       const params: any[] = [];
       let paramIndex = 1;
+      const buildWhere = () => this.buildFullWhere(params, () => paramIndex++);
 
       if (this._operation === 'delete') {
         query = `DELETE FROM ${this.table}`;
-        if (this._filters.length > 0) {
-          query += ` WHERE ${this.whereClause(params, () => paramIndex++)}`;
-        }
+        const where = buildWhere();
+        if (where) query += ` WHERE ${where}`;
         query += ' RETURNING *';
       } else if (this._data) {
-        // INSERT or UPDATE
         const columns = Object.keys(this._data);
         const values = Object.values(this._data);
-        
-        if (this._filters.length > 0) {
-          // UPDATE
-          const setClause = columns.map((col, i) => `${col} = $${paramIndex++}`).join(', ');
-          const whereClause = this.whereClause(params, () => paramIndex++);
-          
-          query = `UPDATE ${this.table} SET ${setClause} WHERE ${whereClause} RETURNING *`;
+
+        if (this._filters.length > 0 || this._orFilters.length > 0) {
+          const setClause = columns.map((col) => `${col} = $${paramIndex++}`).join(', ');
+          const where = buildWhere();
+          query = `UPDATE ${this.table} SET ${setClause} WHERE ${where} RETURNING *`;
           params.unshift(...values);
         } else {
-          // INSERT
           const placeholders = columns.map(() => `$${paramIndex++}`).join(', ');
           query = `INSERT INTO ${this.table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`;
           params.push(...values);
         }
-      } else if (this._filters.length > 0) {
-        // SELECT with filters
-        query = `SELECT ${this._select} FROM ${this.table}`;
-        const whereClause = this.whereClause(params, () => paramIndex++);
-        query += ` WHERE ${whereClause}`;
       } else {
-        // SELECT all
         query = `SELECT ${this._select} FROM ${this.table}`;
+        const where = buildWhere();
+        if (where) query += ` WHERE ${where}`;
       }
 
       if (this._orderBy && this._operation === 'select') {
         query += ` ORDER BY ${this._orderBy.column} ${this._orderBy.ascending ? 'ASC' : 'DESC'}`;
+      }
+
+      if (this._limit && this._operation === 'select') {
+        query += ` LIMIT ${Number(this._limit)}`;
       }
 
       const result = await client.query(query, params);
@@ -133,20 +184,32 @@ class AivenAdminTableQuery {
     }
   }
 
-  private whereClause(params: any[], nextParam: () => number) {
-    return this._filters.map((filter) => {
-      if (filter.operator === 'IN') {
-        const values = Array.isArray(filter.value) ? filter.value : [];
-        if (values.length === 0) return 'FALSE';
-        const placeholders = values.map((value) => {
-          params.push(value);
-          return `$${nextParam()}`;
-        });
-        return `${filter.column} IN (${placeholders.join(', ')})`;
-      }
-      params.push(filter.value);
-      return `${filter.column} ${filter.operator} $${nextParam()}`;
-    }).join(' AND ');
+  private renderFilter(
+    filter: { column: string; operator: string; value: any },
+    params: any[],
+    nextParam: () => number,
+  ): string {
+    if (filter.operator === 'IN') {
+      const values = Array.isArray(filter.value) ? filter.value : [];
+      if (values.length === 0) return 'FALSE';
+      const placeholders = values.map((value) => {
+        params.push(value);
+        return `$${nextParam()}`;
+      });
+      return `${filter.column} IN (${placeholders.join(', ')})`;
+    }
+    params.push(filter.value);
+    return `${filter.column} ${filter.operator} $${nextParam()}`;
+  }
+
+  private buildFullWhere(params: any[], nextParam: () => number): string {
+    const andParts = this._filters.map((f) => this.renderFilter(f, params, nextParam));
+    const orParts = this._orFilters.map((group) => {
+      const inner = group.map((f) => this.renderFilter(f, params, nextParam)).join(' OR ');
+      return group.length > 1 ? `(${inner})` : inner;
+    });
+    const all = [...andParts, ...orParts].filter(Boolean);
+    return all.length ? all.join(' AND ') : '';
   }
 
   then<TResult1 = { data: any[] | null; error: { message: string } | null }, TResult2 = never>(

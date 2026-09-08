@@ -5,4 +5,4 @@
  */
 export const dynamic = 'auto';
 export const revalidate = 60;
-export const fetchCache = 'default';
+export const fetchCache = 'auto';

@@ -4,7 +4,12 @@ import type { ReactNode } from 'react';
 import PublicErrorBoundary from '@/components/public/PublicErrorBoundary';
 import PublicNavLoader from '@/components/public/PublicNavLoader';
 
-export function useSiteTranslate() {
+export type SiteTranslateApi = {
+  openMenu: () => void;
+  activeLanguageLabel: string;
+};
+
+export function useSiteTranslate(): SiteTranslateApi | null {
   return null;
 }
 

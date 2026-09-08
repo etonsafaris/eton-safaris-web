@@ -67,7 +67,7 @@ export default function SavedBlocksGrid({
               className="flex min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:border-[#66bb9a] hover:shadow-md"
             >
               {image ? (
-                <img src={image} alt="" className="h-36 w-full object-cover" />
+                <img src={image} alt="" className="h-36 w-full object-cover" loading="lazy" decoding="async" />
               ) : null}
               <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-start gap-3">

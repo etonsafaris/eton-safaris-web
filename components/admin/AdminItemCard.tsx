@@ -74,7 +74,7 @@ export default function AdminItemCard({
   const imageBlock = (
     <div className={`relative overflow-hidden bg-[#1a1f26] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
       {image ? (
-        <img src={image} alt="" className="h-full w-full object-cover" />
+        <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : (
         <div className="flex h-full items-center justify-center text-xs text-white/30">No image</div>
       )}

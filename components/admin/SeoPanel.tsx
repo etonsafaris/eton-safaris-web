@@ -375,7 +375,7 @@ export default function SeoPanel({
                   </div>
                   <div className="rounded-lg border border-[#e5e7eb] bg-white p-4">
                     <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                      <img src={SITE_LOGO} alt="" className="h-5 w-5 object-contain" />
+                      <img src={SITE_LOGO} alt="" className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
                       <span>
                         {siteName} · {siteUrl} › {previewSlug}
                       </span>
@@ -430,7 +430,7 @@ export default function SeoPanel({
                   />
                   {socialImageUrl ? (
                     <div className="mt-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#fafafa]">
-                      <img src={socialImageUrl} alt="" className="h-36 w-full object-cover" />
+                      <img src={socialImageUrl} alt="" className="h-36 w-full object-cover" loading="lazy" decoding="async" />
                     </div>
                   ) : null}
                   <p className="mt-1.5 text-xs text-[#6b7280]">

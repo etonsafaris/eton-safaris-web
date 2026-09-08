@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 
 const TABLE_ALIASES: Record<string, string[]> = {
   quotations_inquiries: ['quotations_inquiries', 'quotations'],

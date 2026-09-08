@@ -10,7 +10,7 @@ import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
 // Aiven PostgreSQL request client for API routes
-import { db } from '@/lib/supabase/server.ts/server';
+import { db } from '@/lib/supabase/pool';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export function hasServiceRoleKey() {

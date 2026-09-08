@@ -54,7 +54,7 @@ export default function CoverImageField({
         className={`group relative flex ${previewClassName} flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[#00A651] hover:bg-[#f0fdf4]`}
       >
         {value && !value.startsWith('blob:') ? (
-          <img src={value} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={value} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <>
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#00A651]">

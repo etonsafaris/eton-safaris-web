@@ -184,7 +184,7 @@ export default function RichTextEditor({
         selected.setAttribute('src', url);
         emit();
       } else if (kind === 'image') {
-        insertHtml(`<img src="${url}" alt="" style="max-width:100%" />`);
+        insertHtml(`<img src="${url}" alt="" style="max-width:100%" loading="lazy" decoding="async" />`);
       } else {
         insertHtml(`<p><video src="${url}" controls style="max-width:100%"></video></p>`);
       }
