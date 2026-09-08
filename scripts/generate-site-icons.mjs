@@ -38,6 +38,7 @@ async function main() {
 
   await writeLogo(path.join(appDir, 'icon.png'), 512);
   await writeLogo(path.join(appDir, 'apple-icon.png'), 180);
+  await writeLogo(path.join(publicDir, 'icon-192.png'), 192);
 
   const icoBuffers = await Promise.all(
     [16, 32, 48].map((size) =>

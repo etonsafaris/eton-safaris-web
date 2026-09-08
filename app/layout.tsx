@@ -58,11 +58,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '48x48' },
-      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
-    shortcut: '/favicon.ico',
   },
   robots: { index: true, follow: true },
   other: {
@@ -133,6 +133,12 @@ const SITE_GRAPH = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={FONT_VARS}>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body className="bg-white font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
         <SiteTranslateRoot>

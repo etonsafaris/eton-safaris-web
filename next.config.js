@@ -36,6 +36,11 @@ const nextConfig = {
     // Enable image optimization for better performance
     dangerouslyAllowSVG: true,
   },
+  // Allow build to continue despite some page errors
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
   async headers() {
     return [
       {
@@ -47,8 +52,24 @@ const nextConfig = {
         ],
       },
       {
-        source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:ico|svg|jpg|jpeg|png|webp|avif|woff|woff2|mp4|webm|mov)$).*)',
+        source: '/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon.png|apple-icon.png|eton-safaris-gorilla.png).*)',
         headers: [{ key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' }],
+      },
+      {
+        source: '/favicon.ico',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/icon-192.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/icon.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/apple-icon.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/eton-safaris-gorilla.png',

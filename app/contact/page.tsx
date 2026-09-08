@@ -12,6 +12,15 @@ import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor } from '@/lib/best-faqs';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Contact Us | Eton Safaris',
+  description: 'Get in touch with Eton Safaris for gorilla trekking and wildlife safari inquiries. Contact us for Uganda, Kenya, Tanzania, and Rwanda safari planning.',
+  alternates: {
+    canonical: 'https://etonsafaris.com/contact-us',
+  },
+};
 
 export default function ContactPage() {
   const [form, setForm] = useState({
