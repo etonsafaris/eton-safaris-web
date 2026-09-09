@@ -1,20 +1,14 @@
-import JsonLd from '@/components/public/JsonLd';
-import { publicRecordMetadata } from '@/lib/seo-public';
+import { Metadata } from 'next';
+import { ReactNode } from 'react';
 
-type LayoutProps = {
-  children: React.ReactNode;
-  params: { slug: string };
+export const metadata: Metadata = {
+  title: 'Safari Tours | Eton Safaris',
+  description: 'Explore our detailed safari tour packages for gorilla trekking, wildlife viewing, and adventure experiences across East Africa.',
+  alternates: {
+    canonical: 'https://etonsafaris.com/tours',
+  },
 };
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
-}
-
-export default function TourSeoLayout({ children, params }: LayoutProps) {
-  return (
-    <>
-      <JsonLd table="tours" slug={params.slug} path={`/tours/${params.slug}`} schemaHint="TouristTrip" />
-      {children}
-    </>
-  );
+export default function TourDetailLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

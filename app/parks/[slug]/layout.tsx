@@ -1,29 +1,14 @@
-import JsonLd from '@/components/public/JsonLd';
-import { publicRecordMetadata } from '@/lib/seo-public';
+import { Metadata } from 'next';
+import { ReactNode } from 'react';
 
-type LayoutProps = {
-  children: React.ReactNode;
-  params: { slug: string };
+export const metadata: Metadata = {
+  title: 'National Parks | Eton Safaris',
+  description: 'Discover detailed information about Africa\'s national parks and wildlife reserves with Eton Safaris.',
+  alternates: {
+    canonical: 'https://etonsafaris.com/parks',
+  },
 };
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return publicRecordMetadata('national_park', params.slug, `/parks/${params.slug}`, {
-    aliases: ['national_parks', 'parks'],
-    contentType: 'park',
-  });
-}
-
-export default function ParkSeoLayout({ children, params }: LayoutProps) {
-  return (
-    <>
-      <JsonLd
-        table="national_park"
-        slug={params.slug}
-        path={`/parks/${params.slug}`}
-        aliases={['national_parks', 'parks']}
-        schemaHint="TouristAttraction"
-      />
-      {children}
-    </>
-  );
+export default function ParkDetailLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }
