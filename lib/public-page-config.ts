@@ -1,8 +1,7 @@
 /**
- * Public pages use a short ISR window so clicks can reuse a warm HTML/RSC
- * payload instead of blocking on a fresh CMS round-trip every time.
- * Admin saves still refresh in the same browser via cms-live.
+ * Public pages use dynamic rendering to ensure changes appear immediately.
+ * This prevents caching issues where deployed changes don't reflect on the live site.
  */
-export const dynamic = 'auto';
-export const revalidate = 60;
-export const fetchCache = 'auto';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';

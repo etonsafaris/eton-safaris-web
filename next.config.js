@@ -53,35 +53,35 @@ const nextConfig = {
       },
       {
         source: '/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon.png|apple-icon.png|eton-safaris-gorilla.png).*)',
-        headers: [{ key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' }],
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
       {
         source: '/favicon.ico',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/icon-192.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/icon.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/apple-icon.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/eton-safaris-gorilla.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/robots.txt',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, s-maxage=3600' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/sitemap.xml',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=1800' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=600' }],
       },
       {
         source: '/_next/static/:path*',
@@ -89,7 +89,7 @@ const nextConfig = {
       },
       {
         source: '/:all*(ico|svg|jpg|jpeg|png|webp|avif|woff|woff2|mp4|webm|mov)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
     ];
   },

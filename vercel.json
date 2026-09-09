@@ -10,7 +10,7 @@
       "maxDuration": 30
     },
     "app/sitemap.ts": {
-      "maxDuration": 60
+      "maxDuration": 30
     },
     "app/api/**": {
       "maxDuration": 30
@@ -19,5 +19,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
 }
