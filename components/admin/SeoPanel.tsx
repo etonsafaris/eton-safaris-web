@@ -285,6 +285,19 @@ export default function SeoPanel({
   }, [pageTitle]);
 
   useEffect(() => {
+    if (forceNoindex) {
+      if (values.robots_index || values.robots_follow) {
+        onChange({ ...values, robots_index: false, robots_follow: false });
+      }
+      return;
+    }
+    if (!values.robots_index || !values.robots_follow) {
+      onChange({ ...values, robots_index: true, robots_follow: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceNoindex]);
+
+  useEffect(() => {
     if (!values.meta_description && contentForReadability) {
       const text = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 155);
       if (text) onChange({ ...values, meta_description: text });
@@ -496,6 +509,58 @@ export default function SeoPanel({
 
                 {advancedOpen && (
                   <div className="space-y-4 rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4">
+                    <div>
+                      <FieldLabel>Robots Meta</FieldLabel>
+                      <p className="mb-2 text-xs text-[#6b7280]">
+                        {forceNoindex
+                          ? forceNoindexReason || 'This URL stays out of Google.'
+                          : 'Allow search engines to show this page in search results and follow its links.'}
+                      </p>
+                      <div className="flex flex-wrap gap-5">
+                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                          <input
+                            type="radio"
+                            name="robots-index"
+                            checked={forceNoindex ? false : values.robots_index}
+                            disabled={forceNoindex}
+                            onChange={() => update('robots_index', true)}
+                          />
+                          Index
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                          <input
+                            type="radio"
+                            name="robots-index"
+                            checked={forceNoindex ? true : !values.robots_index}
+                            disabled={forceNoindex}
+                            onChange={() => update('robots_index', false)}
+                          />
+                          No Index
+                        </label>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-5">
+                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                          <input
+                            type="radio"
+                            name="robots-follow"
+                            checked={values.robots_follow}
+                            disabled={forceNoindex}
+                            onChange={() => update('robots_follow', true)}
+                          />
+                          Follow
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                          <input
+                            type="radio"
+                            name="robots-follow"
+                            checked={!values.robots_follow}
+                            disabled={forceNoindex}
+                            onChange={() => update('robots_follow', false)}
+                          />
+                          No Follow
+                        </label>
+                      </div>
+                    </div>
                     <div>
                       <FieldLabel>Meta robots advanced</FieldLabel>
                       <div className="space-y-2">

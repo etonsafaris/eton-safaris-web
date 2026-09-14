@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { SITE } from '@/lib/collections';
+import { SITE, SITE_LOGO } from '@/lib/collections';
 
 function tabTitle(name?: string | null) {
   const clean = String(name || '')
@@ -14,8 +14,34 @@ function tabTitle(name?: string | null) {
   return `${clean} | ${SITE.name}`;
 }
 
+function applyGorillaFavicon() {
+  if (typeof document === 'undefined') return;
+  document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach((node) => {
+    const href = (node as HTMLLinkElement).href || '';
+    if (href.includes('icon-192') || /\/favicon\.ico(\?|$)/.test(href)) {
+      node.remove();
+    }
+  });
+  const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
+  rels.forEach((rel) => {
+    let link = document.querySelector(`link[rel="${rel}"][data-eton-logo="1"]`) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = rel;
+      link.setAttribute('data-eton-logo', '1');
+      document.head.appendChild(link);
+    }
+    link.type = 'image/png';
+    link.href = SITE_LOGO;
+  });
+}
+
 export default function PageFavicon({ title }: { title?: string | null }) {
   const pathname = usePathname() || '/';
+
+  useEffect(() => {
+    applyGorillaFavicon();
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -24,7 +50,6 @@ export default function PageFavicon({ title }: { title?: string | null }) {
     } else if (pathname === '/') {
       document.title = `${SITE.name} | ${SITE.tagline}`;
     } else {
-      // Never leave the previous route's title behind after client navigation.
       document.title = SITE.name;
     }
   }, [pathname, title]);

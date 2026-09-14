@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unsupported content type' }, { status: 400 });
     }
 
-    const nextEnabled = configureOnly ? seoValuesFromRecord(full).robots_index === true : enabled;
+    const nextEnabled = configureOnly ? true : enabled;
     let payload: Record<string, unknown>;
 
     if (configureOnly || nextEnabled) {

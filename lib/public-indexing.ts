@@ -89,14 +89,14 @@ export function meetsIndexQuality(record: RecordRow, kind: IndexableContentKind)
 }
 
 /**
- * Final index decision follows the admin Google toggle.
- * Google ON → indexable (sitemap + robots). Google OFF → noindex.
+ * Published public content is indexable so Google can crawl every live page.
+ * Drafts stay out. Advanced SEO can still set No Index on a saved item.
  */
 export function shouldIndexPublicRecord(record: RecordRow, kind: IndexableContentKind): boolean {
   void kind;
+  if (!isPublishedRecord(record)) return false;
   const seo = seoValuesFromRecord(record);
-  if (!seo.robots_index) return false;
-  return isPublishedRecord(record);
+  return seo.robots_index !== false;
 }
 
 export function indexableKindForCollectionId(collectionId: string): IndexableContentKind | null {
@@ -123,7 +123,7 @@ function noindexReason(record: RecordRow, kind: IndexableContentKind): string {
   void kind;
   const seo = seoValuesFromRecord(record);
   if (!isPublishedRecord(record)) return 'Not published — hidden from the public site.';
-  if (!seo.robots_index) return 'Google indexing is OFF for this item.';
+  if (!seo.robots_index) return 'Advanced SEO is set to No Index.';
   return 'Excluded from Google indexing.';
 }
 
@@ -147,8 +147,8 @@ export function getPublicIndexStatus(
     label: indexable ? 'Indexable' : 'Noindex',
     reason: indexable
       ? qualityOk
-        ? 'Google ON — eligible for search and the public sitemap.'
-        : 'Google ON — indexed. Tip: add more unique copy/meta for stronger SEO.'
+        ? 'Index + Follow — eligible for Google Search and the public sitemap.'
+        : 'Index + Follow — listed for Google. Tip: add more unique copy/meta for stronger SEO.'
       : noindexReason(record, kind),
   };
 }

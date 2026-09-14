@@ -15,18 +15,14 @@ export const revalidate = 3600;
 function sitemapColumns(table: string, aliases: string[] = []) {
   return (
     publicListColumnsFor(table, aliases) ||
-    'id,name,title,slug,seo_slug,country,created_date,updated_date'
+    'id,name,title,slug,seo_slug,country,status,published,is_published,created_date,updated_date,seo_schema,meta_description'
   );
 }
 
 function sitemapFetch(table: string, aliases: string[] = []) {
-  // Cap rows so Vercel builds do not time out paging entire CMS tables.
-  // Tours/parks/stays can be large; sitemap still covers the latest public URLs.
-  const heavy = ['tours', 'national_park', 'national_parks', 'parks', 'accommodations', 'explore', 'safari_updates'];
-  const isHeavy = [table, ...aliases].some((name) => heavy.includes(name.toLowerCase()));
   return fetchCollectionRecords(table, aliases, {
     columns: sitemapColumns(table, aliases),
-    maxRows: isHeavy ? 500 : undefined,
+    unlimited: true,
   }).catch(() => [] as RecordRow[]);
 }
 

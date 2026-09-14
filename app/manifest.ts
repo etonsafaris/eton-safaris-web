@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { SITE_LOGO } from '@/lib/collections';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -12,20 +11,16 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#00A651',
     icons: [
       {
-        src: SITE_LOGO,
+        src: '/eton-safaris-gorilla.png',
+        sizes: '1024x1024',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any maskable',
-      },
-      {
-        src: '/icon-192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/favicon.ico',
-        sizes: '48x48',
-        type: 'image/x-icon',
       },
     ],
   };

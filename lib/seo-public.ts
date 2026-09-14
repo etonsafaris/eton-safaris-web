@@ -215,7 +215,9 @@ export async function publicRecordMetadata(
     const values = seoValuesFromRecord(record as Record<string, unknown>);
     const kind = resolveIndexableKind(table, options.contentType);
     if (kind) {
-      values.robots_index = shouldIndexPublicRecord(record as RecordRow, kind);
+      const indexable = shouldIndexPublicRecord(record as RecordRow, kind);
+      values.robots_index = indexable;
+      if (indexable) values.robots_follow = true;
     }
     const title = values.seo_title || getRecordTitle(record);
     const description = values.meta_description || pickString(record, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
