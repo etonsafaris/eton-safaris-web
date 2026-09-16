@@ -274,7 +274,7 @@ export { clearCollectionCache };
 
 const PAGE_SIZE = 1000;
 /** Short cache avoids duplicate refresh/metadata queries while keeping CMS edits responsive. */
-const FETCH_CACHE_MS = 30_000;
+const FETCH_CACHE_MS = 90_000;
 /** Remember resolved select strings per table so missing-column drops are not repeated. */
 const resolvedSelects = new Map<string, string>();
 

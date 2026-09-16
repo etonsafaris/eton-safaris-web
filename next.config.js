@@ -52,8 +52,24 @@ const nextConfig = {
         ],
       },
       {
-        source: '/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon.png|apple-icon.png|eton-safaris-gorilla.png).*)',
-        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+        source: '/admin/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
+      },
+      {
+        source: '/login',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
+      },
+      {
+        source: '/api/media/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/api/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
+      },
+      {
+        source: '/((?!_next/static|_next/image|admin|login|api|favicon.ico|icon-192.png|icon.png|apple-icon.png|eton-safaris-gorilla.png).*)',
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' }],
       },
       {
         source: '/favicon.ico',
@@ -126,13 +142,14 @@ const nextConfig = {
       { source: '/request-quote', destination: '/request-a-quote', permanent: true },
       { source: '/quote-request', destination: '/request-a-quote', permanent: true },
       { source: '/get-a-quote', destination: '/request-a-quote', permanent: true },
+      { source: '/tour/:slug', destination: '/tours/:slug', permanent: true },
+      { source: '/national-park/:slug', destination: '/parks/:slug', permanent: true },
+      { source: '/safari-update/:slug', destination: '/safari-updates/:slug', permanent: true },
     ];
   },
   async rewrites() {
     return [
-      { source: '/tour/:slug', destination: '/tours/:slug' },
-      { source: '/national-park/:slug', destination: '/parks/:slug' },
-      { source: '/safari-update/:slug', destination: '/safari-updates/:slug' },
+      { source: '/cms-media/:id', destination: '/api/media/:id' },
       { source: '/contact-us', destination: '/contact' },
       { source: '/community-support', destination: '/community' },
     ];

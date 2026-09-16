@@ -24,6 +24,7 @@ import { uploadOptimizedImage } from '@/lib/upload-media';
 type PostBlock = {
   title: string;
   description: string;
+  image_url?: string;
 };
 
 type SafariUpdateFormProps = {
@@ -47,7 +48,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   const [coverImage, setCoverImage] = useState('');
   const [content, setContent] = useState('');
   const [blocks, setBlocks] = useState<PostBlock[]>([]);
-  const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '' });
+  const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '', image_url: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('article'));
   const [saving, setSaving] = useState(false);
@@ -72,14 +73,14 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   }, [postId]);
 
   function addBlock() {
-    if (!draftBlock.title.trim() && !draftBlock.description.trim()) return;
+    if (!draftBlock.title.trim() && !draftBlock.description.trim() && !String(draftBlock.image_url || '').trim()) return;
     setBlocks((current) => {
       if (editingIndex !== null) {
         return current.map((block, index) => (index === editingIndex ? draftBlock : block));
       }
       return [...current, draftBlock];
     });
-    setDraftBlock({ title: '', description: '' });
+    setDraftBlock({ title: '', description: '', image_url: '' });
     setEditingIndex(null);
   }
 
@@ -93,7 +94,7 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
   function deleteBlock(index: number) {
     setBlocks((current) => current.filter((_, itemIndex) => itemIndex !== index));
     if (editingIndex === index) {
-      setDraftBlock({ title: '', description: '' });
+      setDraftBlock({ title: '', description: '', image_url: '' });
       setEditingIndex(null);
     } else if (editingIndex !== null && editingIndex > index) {
       setEditingIndex(editingIndex - 1);
@@ -285,6 +286,16 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
                 value={draftBlock.title}
                 onChange={(event) => setDraftBlock({ ...draftBlock, title: event.target.value })}
                 className="w-full rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm outline-none transition focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
+              />
+            </div>
+
+            <div>
+              <CoverImageField
+                label="Block Image"
+                folder="safari-updates"
+                value={draftBlock.image_url || ''}
+                onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
+                previewClassName="h-[148px]"
               />
             </div>
 

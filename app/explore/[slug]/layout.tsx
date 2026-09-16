@@ -1,14 +1,10 @@
-import { Metadata } from 'next';
-import { ReactNode } from 'react';
+import type { Metadata } from 'next';
+import { publicRecordMetadata } from '@/lib/seo-public';
 
-export const metadata: Metadata = {
-  title: 'Explore Places | Eton Safaris',
-  description: 'Discover amazing places and destinations across East Africa with Eton Safaris.',
-  alternates: {
-    canonical: 'https://etonsafaris.com/explore',
-  },
-};
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  return publicRecordMetadata('explore', params.slug, `/explore/${params.slug}`, { contentType: 'place' });
+}
 
-export default function ExploreDetailLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+export default function ExploreDetailLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

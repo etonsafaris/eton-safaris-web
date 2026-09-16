@@ -37,7 +37,7 @@ async function uploadViaApi(file: File, folder: string) {
   const body = new FormData();
   body.append('file', file);
   body.append('folder', folder);
-  const response = await fetch('/api/upload', { method: 'POST', body });
+  const response = await fetch('/api/upload', { method: 'POST', body, credentials: 'include' });
   const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
   if (!response.ok || !payload.url) {
     throw new Error(payload.error || 'Image upload failed. Check storage permissions.');

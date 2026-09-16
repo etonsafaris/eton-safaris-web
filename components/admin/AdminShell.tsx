@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import AdminFavicon from '@/components/admin/AdminFavicon';
 import { AdminCountsProvider, useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import NotificationBell from '@/components/admin/NotificationBell';
@@ -253,6 +254,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh overflow-hidden bg-[#f3f4f6] font-ui text-[#111827] dark:bg-[#0a0c10] dark:text-white">
+      <AdminFavicon />
       {accessAlert && (
         <div className="fixed right-6 top-6 z-50 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
           {accessAlert}

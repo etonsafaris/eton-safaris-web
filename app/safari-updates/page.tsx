@@ -1,7 +1,7 @@
 import SafariUpdatesPageClient from '@/components/public/SafariUpdatesPageClient';
 import { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Safari Updates | Eton Safaris',

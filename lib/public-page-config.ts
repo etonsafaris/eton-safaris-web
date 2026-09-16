@@ -1,7 +1,7 @@
 /**
- * Public pages use dynamic rendering to ensure changes appear immediately.
- * This prevents caching issues where deployed changes don't reflect on the live site.
+ * Public pages use short ISR so Google and visitors get a fast first byte,
+ * while CMS edits still appear within two minutes.
  */
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+export const revalidate = 120;
+export const dynamic = 'auto';
+export const fetchCache = 'default';

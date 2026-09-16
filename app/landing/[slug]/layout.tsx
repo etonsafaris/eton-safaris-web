@@ -2,7 +2,7 @@ import JsonLd from '@/components/public/JsonLd';
 import {
   countrySlugFromLanding,
   landingCmsSlug,
-  landingPublicPath,
+  landingPreviewPath,
   matchCmsRecord,
 } from '@/lib/cms-routes';
 import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
           values.meta_description || extras.excerpt || copy.seoIntro || seeded?.meta_description || '',
           160
         ),
-        path: landingPublicPath(canonical),
+        path: `/landing/${canonical}`,
         image: (landing && getRecordImage(landing)) || (country && getRecordImage(country)) || seeded?.image_url,
       }),
       robots: { index: false, follow: false },
@@ -69,7 +69,7 @@ export default function LandingSeoLayout({ children, params }: LayoutProps) {
       <JsonLd
         table="landing_pages"
         slug={canonical}
-        path={landingPublicPath(canonical)}
+        path={landingPreviewPath(canonical)}
         schemaHint="TouristDestination"
       />
       {children}

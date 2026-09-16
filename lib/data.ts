@@ -1,6 +1,7 @@
 // Client-side compatibility layer - redirects to server-side Aiven functions when running on server
 import type { RecordRow } from '@/lib/types';
-import { extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { getCachedCollection, setCachedCollection } from '@/lib/collection-cache';
+import { stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   fetchCollectionRecords as fetchCollectionRecordsServer,
   fetchCollectionPage as fetchCollectionPageServer,
@@ -39,6 +40,7 @@ export {
 
 const browser = () => typeof window !== 'undefined';
 const dataUrl = (table: string, params: URLSearchParams) => `/api/data/${encodeURIComponent(table)}?${params}`;
+const CLIENT_CACHE_MS = 60_000;
 
 export async function fetchCollectionRecords(
   table: string,
@@ -46,6 +48,9 @@ export async function fetchCollectionRecords(
   options?: { columns?: string; full?: boolean; unlimited?: boolean; maxRows?: number }
 ): Promise<RecordRow[]> {
   if (!browser()) return fetchCollectionRecordsServer(table, aliases, options);
+  const cacheKey = ['client', table, options?.columns || '', options?.maxRows ?? '', options?.unlimited ? 'all' : '', ...aliases].join('|');
+  const cached = getCachedCollection(cacheKey);
+  if (cached) return cached as RecordRow[];
   for (const name of [table, ...aliases]) {
     let offset = 0;
     const rows: RecordRow[] = [];
@@ -53,7 +58,7 @@ export async function fetchCollectionRecords(
     while (true) {
       const params = new URLSearchParams({ limit: String(pageSize), range: `${offset}-${offset + pageSize - 1}` });
       if (options?.columns) params.set('select', options.columns);
-      const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+      const response = await fetch(dataUrl(name, params), { cache: 'default', credentials: 'same-origin' });
       if (!response.ok) break;
       const body = (await response.json()) as { data?: RecordRow[] };
       const chunk = body.data || [];
@@ -61,17 +66,11 @@ export async function fetchCollectionRecords(
       if (chunk.length < pageSize || (options?.maxRows && rows.length >= options.maxRows)) break;
       offset += pageSize;
     }
-    if (rows.length > 0) return options?.maxRows ? rows.slice(0, options.maxRows) : rows;
-    /* try aliases */
-    /*
-    if (options?.columns) params.set('select', options.columns);
-    if (options?.maxRows) params.set('limit', String(options.maxRows));
-    const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
-    if (response.ok) {
-      const body = (await response.json()) as { data?: RecordRow[] };
-      return body.data || [];
+    if (rows.length > 0) {
+      const result = options?.maxRows ? rows.slice(0, options.maxRows) : rows;
+      setCachedCollection(cacheKey, result, CLIENT_CACHE_MS);
+      return result;
     }
-    */
   }
   return [];
 }
@@ -92,7 +91,7 @@ export async function fetchCollectionPage(
   if (filters.country) params.set('ilike.country', `%${filters.country}%`);
   if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
   if (filters.category) params.set('ilike.category', `%${filters.category}%`);
-  const response = await fetch(dataUrl(table, params), { cache: 'no-store' });
+  const response = await fetch(dataUrl(table, params), { cache: 'default' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
   return { rows: body.data || [], total: body.total ?? body.data?.length ?? 0 };
 }
@@ -102,7 +101,7 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
   for (const name of [table, ...aliases]) {
     for (const column of ['slug', 'seo_slug', 'id']) {
       const params = new URLSearchParams({ [`eq.${column}`]: slug, limit: '1' });
-      const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+      const response = await fetch(dataUrl(name, params), { cache: 'default' });
       const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
       if (body.data?.[0]) return body.data[0];
     }
@@ -116,7 +115,7 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
           [`ilike.${column}`]: `%${label}%`,
           limit: '1',
         });
-        const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+        const response = await fetch(dataUrl(name, params), { cache: 'default' });
         const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
         if (body.data?.[0]) return body.data[0];
       }
@@ -128,7 +127,7 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
 export async function fetchFeaturedTours(limit = 24) {
   if (!browser()) return fetchFeaturedToursServer(limit);
   const params = new URLSearchParams({ limit: String(limit), 'eq.is_featured': 'true' });
-  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
   return body.data || [];
 }
@@ -136,7 +135,7 @@ export async function fetchFeaturedTours(limit = 24) {
 export async function fetchToursForCountryLabel(countryLabel: string, limit = 48) {
   if (!browser()) return fetchToursForCountryLabelServer(countryLabel, limit);
   const params = new URLSearchParams({ limit: String(limit), 'ilike.country': `%${countryLabel}%` });
-  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
   return body.data || [];
 }
@@ -147,7 +146,7 @@ export async function fetchParksForCountry(countryLabel: string, limit = 200, co
   const seen = new Set<string>();
   if (countryId) {
     const params = new URLSearchParams({ limit: String(limit), 'eq.country_id': countryId });
-    const response = await fetch(dataUrl('national_park', params), { cache: 'no-store' });
+    const response = await fetch(dataUrl('national_park', params), { cache: 'default' });
     if (response.ok) {
       const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
       for (const row of body.data || []) {
@@ -161,7 +160,7 @@ export async function fetchParksForCountry(countryLabel: string, limit = 200, co
   }
   for (const column of ['country', 'country_name', 'destination', 'location']) {
     const params = new URLSearchParams({ limit: String(limit), [`ilike.${column}`]: `%${countryLabel}%` });
-    const response = await fetch(dataUrl('national_park', params), { cache: 'no-store' });
+    const response = await fetch(dataUrl('national_park', params), { cache: 'default' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
     for (const row of body.data || []) {
@@ -182,7 +181,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
   const seen = new Set<string>();
   if (parkId) {
     const idParams = new URLSearchParams({ limit: String(limit), 'eq.national_park_id': parkId });
-    const idResponse = await fetch(dataUrl('accommodations', idParams), { cache: 'no-store' });
+    const idResponse = await fetch(dataUrl('accommodations', idParams), { cache: 'default' });
     if (idResponse.ok) {
       const body = (await idResponse.json().catch(() => ({}))) as { data?: RecordRow[] };
       for (const row of body.data || []) {
@@ -197,7 +196,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
   const columns = ['national_park_name', 'national_park', 'park_name', 'park', 'location'];
   for (const column of columns) {
     const params = new URLSearchParams({ limit: String(limit), [`ilike.${column}`]: `%${parkName}%` });
-    const response = await fetch(dataUrl('accommodations', params), { cache: 'no-store' });
+    const response = await fetch(dataUrl('accommodations', params), { cache: 'default' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
     for (const row of body.data || []) {
@@ -218,7 +217,7 @@ export async function searchTours(options: { query: string; limit?: number }) {
     limit: String(options.limit || 24),
     'ilike.title': `%${options.query}%`,
   });
-  const response = await fetch(dataUrl('tours', params), { cache: 'no-store' });
+  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
   return body.data || [];
 }
@@ -227,7 +226,7 @@ export async function fetchCollectionRecordById(table: string, id: string | numb
   if (!browser()) return fetchCollectionRecordByIdServer(table, String(id), aliases);
   for (const name of [table, ...aliases]) {
     const params = new URLSearchParams({ 'eq.id': String(id), limit: '1' });
-    const response = await fetch(dataUrl(name, params), { cache: 'no-store' });
+    const response = await fetch(dataUrl(name, params), { cache: 'default' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
     if (body.data?.[0]) return body.data[0];

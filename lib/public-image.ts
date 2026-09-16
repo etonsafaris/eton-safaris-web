@@ -39,7 +39,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
   if (/\/object\/authenticated\//i.test(src) || /\/object\/sign\//i.test(src)) return false;
 
   if (src.startsWith('/') && !src.startsWith('//')) {
-    if (isKnownPublicAsset(src)) return true;
+    if (isKnownPublicAsset(src) || src.startsWith('/api/media/')) return true;
     if (isLocalUploadPath(src)) return allowLocalOnlyPaths();
     return allowLocalOnlyPaths();
   }
@@ -79,6 +79,7 @@ export function isLiveCmsImage(value: unknown): value is string {
   const pathname = imagePathname(src);
   if (pathname.startsWith('/heroes/')) return false;
   if (/images\.unsplash\.com/i.test(src)) return false;
+  if (pathname.startsWith('/api/media/')) return true;
   return true;
 }
 

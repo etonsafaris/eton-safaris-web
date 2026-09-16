@@ -33,9 +33,9 @@ export default function CoverImageField({
     setError('');
     try {
       const url = await uploadOptimizedImage(file, folder);
-      if (typeof window !== 'undefined' && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) && !isLiveCmsImage(url)) {
+      if (typeof window !== 'undefined' && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) && !isLiveCmsImage(url) && !url.startsWith('/api/media/') && !url.startsWith('/cms-media/')) {
         throw new Error(
-          'This image will not appear on the public website. Upload needs a public Supabase Storage URL. Add SUPABASE_SERVICE_ROLE_KEY in Vercel, then try again.'
+          'This image will not appear on the public website. Upload a JPG, PNG, or WebP and try again.'
         );
       }
       onChange(url);

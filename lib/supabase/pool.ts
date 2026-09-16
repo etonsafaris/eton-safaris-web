@@ -12,7 +12,7 @@ const cachedPool: Pool | null = normalizedConnectionString
       max: 2,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 4500,
-      statement_timeout: 4500,
+      statement_timeout: 12000,
       maxLifetimeSeconds: 60,
     }))
   : null;

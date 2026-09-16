@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { SITE, SITE_LOGO } from '@/lib/collections';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
+import { fetchCollectionRecords, fetchRecordByPublicSlug, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
 import { isDeployableImageUrl } from '@/lib/public-image';
 import {
@@ -34,26 +34,37 @@ function absoluteUrl(path: string) {
   return `${base}${suffix}`;
 }
 
-function safeCanonical(values: SeoValues, path: string) {
-  const raw = (values.canonical_url || '').trim();
-  if (!raw) return absoluteUrl(path);
+function pathnameOf(url: string) {
   try {
-    if (/^https?:\/\//i.test(raw)) return new URL(raw).toString();
-    if (raw.startsWith('/')) return absoluteUrl(raw);
+    return new URL(url).pathname.replace(/\/$/, '') || '/';
   } catch {
-    return absoluteUrl(path);
+    return url.replace(/\/$/, '') || '/';
   }
-  return absoluteUrl(path);
+}
+
+function isPrivateSeoPath(path: string) {
+  return /\/(admin|login|payment|verify|landing|quote|invite|dashboard|agents)(\/|$)/i.test(path);
+}
+
+function safeCanonical(values: SeoValues, path: string) {
+  const pageUrl = absoluteUrl(path);
+  const raw = (values.canonical_url || '').trim();
+  if (!raw) return pageUrl;
+  try {
+    const resolved = /^https?:\/\//i.test(raw)
+      ? new URL(raw).toString()
+      : raw.startsWith('/')
+        ? absoluteUrl(raw)
+        : pageUrl;
+    return pathnameOf(resolved) === pathnameOf(pageUrl) ? resolved : pageUrl;
+  } catch {
+    return pageUrl;
+  }
 }
 
 function safeImageUrl(image?: string) {
   if (!isDeployableImageUrl(image)) return undefined;
   return image.replace(/^http:\/\//i, 'https://');
-}
-
-function robotsContent(values: SeoValues) {
-  const parts = [values.robots_index ? 'index' : 'noindex', values.robots_follow ? 'follow' : 'nofollow'];
-  return [...parts, ...values.robots_advanced].join(', ');
 }
 
 export function metadataFromSeo(
@@ -71,6 +82,9 @@ export function metadataFromSeo(
   const canonical = safeCanonical(values, options.path);
   const ogTitle = values.og_title || title;
   const ogDescription = values.og_description || description;
+  const privatePath = isPrivateSeoPath(options.path);
+  const index = privatePath ? false : true;
+  const follow = privatePath ? false : values.robots_follow !== false;
 
   return {
     title: {
@@ -79,9 +93,8 @@ export function metadataFromSeo(
     description,
     keywords: values.focus_keywords?.length ? values.focus_keywords : undefined,
     robots: {
-      index: values.robots_index,
-      follow: values.robots_follow,
-      nocache: values.robots_advanced.includes('noarchive'),
+      index,
+      follow,
       nosnippet: values.robots_advanced.includes('nosnippet') || undefined,
       noimageindex: values.robots_advanced.includes('noimageindex') || undefined,
     },
@@ -106,13 +119,12 @@ export function metadataFromSeo(
       description: ogDescription,
       images: image ? [image] : undefined,
     },
-    other: {
-      robots: robotsContent(values),
-    },
   };
 }
 
 export async function findPublicRecord(table: string, slug: string, aliases: string[] = []) {
+  const direct = await fetchRecordByPublicSlug(table, slug, aliases).catch(() => null);
+  if (direct) return direct;
   const rows = await fetchCollectionRecords(table, aliases);
   const needle = normalizeSlug(slug);
   return (

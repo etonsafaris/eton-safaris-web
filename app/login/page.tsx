@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import AdminFavicon from '@/components/admin/AdminFavicon';
 import { SITE } from '@/lib/collections';
 import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
@@ -261,6 +262,7 @@ function LoginForm() {
           : 'relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden font-ui'
       }
     >
+      <AdminFavicon />
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <PlusGrid />
       </div>
