@@ -18,7 +18,7 @@ export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolved = resolvePublicSlug(params.slug);
-  if (!resolved) return { title: 'Page' };
+  if (!resolved) return { title: 'Eton Safaris', robots: { index: false, follow: false } };
 
   if (resolved.kind === 'country') {
     const slug = resolved.countrySlug || resolved.canonical;

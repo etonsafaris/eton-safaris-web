@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/cms-media/', '/api/media/', '/eton-safaris-gorilla.png'],
         disallow: [
           '/admin',
           '/landing',
@@ -18,8 +18,11 @@ export default function robots(): MetadataRoute.Robots {
           '/verify',
           '/payment',
           '/api/',
+          '/icon.png',
+          '/apple-icon.png',
+          '/favicon.ico',
+          '/icon-192.png',
         ],
-        allow: ['/cms-media/', '/api/media/'],
       },
     ],
     sitemap: 'https://etonsafaris.com/sitemap.xml',

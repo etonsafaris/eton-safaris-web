@@ -125,12 +125,29 @@ export function countryPlacePath(countrySlug: string, place: RecordRow): string 
   return `/explore/${placeSlug}`;
 }
 
-const RESERVED_PUBLIC_FILES = /^(favicon\.ico|icon\.png|apple-icon\.png|icon-192\.png|manifest\.webmanifest|robots\.txt|sitemap\.xml)$/i;
+const RESERVED_PUBLIC_FILES = /^(favicon\.ico|icon\.png|apple-icon\.png|icon-192\.png|eton-safaris-gorilla\.png|manifest\.webmanifest|robots\.txt|sitemap\.xml)$/i;
+const PUBLIC_FILE_SEGMENT = /\.(ico|png|jpe?g|webp|svg|xml|txt|webmanifest|map)$/i;
+
+function lastPathSegment(raw: string): string {
+  let value = String(raw || '').trim();
+  if (!value) return '';
+  try {
+    if (/^https?:\/\//i.test(value)) value = new URL(value).pathname;
+  } catch {
+    // keep the original value
+  }
+  return value.split(/[?#]/)[0].replace(/^\/+|\/+$/g, '').split('/').filter(Boolean).pop() || '';
+}
 
 export function resolvePublicSlug(raw: string): ResolvedCmsSlug | null {
+  const original = lastPathSegment(raw);
+  if (!original) return null;
+  if (RESERVED_PUBLIC_FILES.test(original) || PUBLIC_FILE_SEGMENT.test(original)) {
+    return null;
+  }
   const slug = publicSlugFromInput(raw);
   if (!slug) return null;
-  if (RESERVED_PUBLIC_FILES.test(slug) || /\.(ico|png|jpe?g|webp|svg|xml|txt|webmanifest)$/i.test(slug)) {
+  if (RESERVED_PUBLIC_FILES.test(slug) || PUBLIC_FILE_SEGMENT.test(slug)) {
     return null;
   }
 

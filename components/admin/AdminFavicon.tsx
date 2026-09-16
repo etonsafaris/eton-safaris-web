@@ -7,7 +7,7 @@ export default function AdminFavicon() {
   useEffect(() => {
     document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach((node) => {
       const href = (node as HTMLLinkElement).href || '';
-      if (href.includes('icon-192') || /\/favicon\.ico(\?|$)/.test(href)) node.remove();
+      if (!href.includes('eton-safaris-gorilla.png')) node.remove();
     });
     ['icon', 'shortcut icon', 'apple-touch-icon'].forEach((rel) => {
       let link = document.querySelector(`link[rel="${rel}"][data-eton-logo="1"]`) as HTMLLinkElement | null;

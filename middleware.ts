@@ -8,8 +8,17 @@ function hasAdminSession(request: NextRequest) {
   return request.cookies.get(ADMIN_SESSION_COOKIE)?.value === '1';
 }
 
+const REMOVED_ICON_PATHS = new Set(['/favicon.ico', '/icon.png', '/apple-icon.png', '/icon-192.png']);
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (REMOVED_ICON_PATHS.has(pathname)) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { 'Cache-Control': 'public, max-age=3600' },
+    });
+  }
 
   if (pathname === '/home-page' || pathname === '/homepage' || pathname === '/home') {
     const home = request.nextUrl.clone();
@@ -56,7 +65,11 @@ export const config = {
     '/api/settings/status', 
     '/api/pesapal/test',
     '/home-page',
-    '/homepage', 
-    '/home'
+    '/homepage',
+    '/home',
+    '/favicon.ico',
+    '/icon.png',
+    '/apple-icon.png',
+    '/icon-192.png',
   ],
 };

@@ -1,62 +1,37 @@
 /**
- * Build favicons from the official gorilla logo (public/eton-safaris-gorilla.png).
- *
- * - app/icon.png + app/apple-icon.png — Next.js tab icon (512 / 180)
- * - public/favicon.ico — browsers and Google that request /favicon.ico
+ * The only site mark is public/eton-safaris-gorilla.png.
+ * Extra Next/browser icon files (icon.png, apple-icon, favicon.ico, icon-192)
+ * are deleted here so they cannot be regenerated.
  *
  * Run: npm run icons:generate
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sharp from 'sharp';
-import toIco from 'to-ico';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const source = path.join(root, 'public', 'eton-safaris-gorilla.png');
-const publicDir = path.join(root, 'public');
-const appDir = path.join(root, 'app');
-const white = { r: 255, g: 255, b: 255, alpha: 1 };
+const gorilla = path.join(root, 'public', 'eton-safaris-gorilla.png');
 
-if (!fs.existsSync(source)) {
-  console.error('Missing logo:', source);
+const extraIcons = [
+  path.join(root, 'app', 'icon.png'),
+  path.join(root, 'app', 'apple-icon.png'),
+  path.join(root, 'app', 'favicon.ico'),
+  path.join(root, 'public', 'favicon.ico'),
+  path.join(root, 'public', 'icon.png'),
+  path.join(root, 'public', 'apple-icon.png'),
+  path.join(root, 'public', 'icon-192.png'),
+];
+
+if (!fs.existsSync(gorilla)) {
+  console.error('Missing official logo:', gorilla);
   process.exit(1);
 }
 
-async function writeLogo(outPath, size) {
-  await sharp(source)
-    .resize(size, size, { fit: 'contain', background: white })
-    .png({ compressionLevel: 9 })
-    .toFile(outPath);
-  const stat = fs.statSync(outPath);
-  console.log(`  ${path.relative(root, outPath)} (${stat.size} bytes, ${size}x${size})`);
+console.log('Keeping only', path.relative(root, gorilla));
+for (const file of extraIcons) {
+  if (!fs.existsSync(file)) continue;
+  fs.unlinkSync(file);
+  console.log('  removed', path.relative(root, file));
 }
-
-async function main() {
-  console.log('Generating site icons from', path.relative(root, source));
-
-  await writeLogo(path.join(appDir, 'icon.png'), 512);
-  await writeLogo(path.join(appDir, 'apple-icon.png'), 180);
-  await writeLogo(path.join(publicDir, 'icon-192.png'), 192);
-
-  const icoBuffers = await Promise.all(
-    [16, 32, 48].map((size) =>
-      sharp(source)
-        .resize(size, size, { fit: 'contain', background: white })
-        .png()
-        .toBuffer(),
-    ),
-  );
-  const ico = await toIco(icoBuffers);
-  const faviconPath = path.join(publicDir, 'favicon.ico');
-  fs.writeFileSync(faviconPath, ico);
-  console.log(`  ${path.relative(root, faviconPath)} (${ico.length} bytes)`);
-
-  console.log('Done.');
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+console.log('Done. Do not add favicon.ico / icon.png redirects — they crash refresh.');

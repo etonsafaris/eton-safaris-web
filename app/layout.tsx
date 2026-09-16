@@ -58,12 +58,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/eton-safaris-gorilla.png', type: 'image/png', sizes: '1024x1024' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
-      { url: '/favicon.ico', sizes: '48x48' },
+      { url: SITE_LOGO, type: 'image/png', sizes: '48x48' },
+      { url: SITE_LOGO, type: 'image/png', sizes: '192x192' },
+      { url: SITE_LOGO, type: 'image/png', sizes: '1024x1024' },
     ],
-    apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
-    shortcut: '/eton-safaris-gorilla.png',
+    apple: [{ url: SITE_LOGO, type: 'image/png', sizes: '180x180' }],
+    shortcut: SITE_LOGO,
   },
   robots: { index: true, follow: true },
   other: {

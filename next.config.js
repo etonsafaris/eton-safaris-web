@@ -68,24 +68,8 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
       },
       {
-        source: '/((?!_next/static|_next/image|admin|login|api|favicon.ico|icon-192.png|icon.png|apple-icon.png|eton-safaris-gorilla.png).*)',
+        source: '/((?!_next/static|_next/image|admin|login|api|eton-safaris-gorilla.png).*)',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' }],
-      },
-      {
-        source: '/favicon.ico',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
-      },
-      {
-        source: '/icon-192.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
-      },
-      {
-        source: '/icon.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
-      },
-      {
-        source: '/apple-icon.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }],
       },
       {
         source: '/eton-safaris-gorilla.png',

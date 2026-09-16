@@ -476,7 +476,10 @@ export async function fetchCollectionRecords(
       }
     }
 
-    if (lastError) throw lastError;
+    if (lastError) {
+      console.error('[Aiven] All table aliases failed; serving empty list instead of crashing the page.');
+      return [];
+    }
     return [];
   })();
 
