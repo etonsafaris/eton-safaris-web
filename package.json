@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "24.x"
+    "node": ">=18"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "npm run images:optimize && npm run icons:generate && next build",
+    "build": "next build",
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "images:optimize": "node scripts/optimize-static-images.mjs",
     "start": "next start",

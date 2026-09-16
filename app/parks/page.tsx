@@ -1,7 +1,7 @@
 import ParksPageClient from '@/components/public/ParksPageClient';
 import { Metadata } from 'next';
 
-export { revalidate } from '@/lib/public-page-config';
+export { dynamic, revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'National Parks | Eton Safaris',

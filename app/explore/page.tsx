@@ -1,7 +1,7 @@
 import ExplorePageClient from '@/components/public/ExplorePageClient';
 import { Metadata } from 'next';
 
-export { revalidate } from '@/lib/public-page-config';
+export { dynamic, revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Explore Places | Eton Safaris',
