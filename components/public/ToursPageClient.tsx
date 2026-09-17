@@ -52,7 +52,7 @@ export default function ToursPageClient({
   }, [initialTours, initialCategories, initialCountries]);
 
   useCmsPageReload(() => {
-    Promise.all([
+    return Promise.all([
       fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
         page.rows.filter(isPublishedRecord)
       ),
