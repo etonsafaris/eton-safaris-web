@@ -60,7 +60,7 @@ export default function ToursPageClient({
       fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
     ])
       .then(([tourRows, categoryRows, countryRows]) => {
-        setTours(tourRows);
+        if (tourRows.length) setTours(tourRows);
         setCategories(categoryRows);
         setCountries(countryRows.filter(isPublishedRecord));
       })

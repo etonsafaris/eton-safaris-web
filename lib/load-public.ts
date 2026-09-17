@@ -1,4 +1,3 @@
-import { unstable_noStore as noStore } from 'next/cache';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import {
@@ -16,7 +15,7 @@ import {
   fetchParksForCountry,
   fetchRecordByPublicSlug,
   fetchStaysForPark,
-  fetchToursForCountryLabel,
+  resolvePublicTours,
   findRecordBySlug,
   getRecordTitle,
   isLanguagePost,
@@ -38,7 +37,6 @@ export async function loadPublishedRecords(
   aliases: string[] = [],
   options?: { columns?: string }
 ): Promise<RecordRow[]> {
-  noStore();
   try {
     const columns = options?.columns || listColumns(table, aliases);
     const rows = await fetchCollectionRecords(table, aliases, columns ? { columns } : undefined);
@@ -55,7 +53,6 @@ export function findCountryRecord(rows: RecordRow[], slug: string) {
 export { findRecordBySlug };
 
 export async function loadCmsPage(slug: string) {
-  noStore();
   try {
     const columns = listColumns('pages');
     const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
@@ -108,7 +105,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function loadHomePageContent(): Promise<HomePageContent | null> {
-  noStore();
   try {
     const columns = listColumns('pages');
     const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
@@ -126,7 +122,6 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
 }
 
 export async function loadHomePageData() {
-  noStore();
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
   const [parkPage, countries, tours, updatesPage, categories] = await Promise.all([
     withTimeout(
@@ -175,7 +170,6 @@ export async function loadHomePageData() {
 }
 
 export async function loadAccommodationsPageData(options?: { limit?: number; offset?: number }) {
-  noStore();
   try {
     const page = await withTimeout(
       fetchCollectionPage('accommodations', [], {
@@ -194,7 +188,6 @@ export async function loadAccommodationsPageData(options?: { limit?: number; off
 }
 
 export async function loadToursPageData() {
-  noStore();
   try {
     const [tourPage, categories, countries] = await Promise.all([
       withTimeout(
@@ -230,7 +223,6 @@ export async function loadToursPageData() {
 }
 
 export async function loadCountryPageData(slug: string) {
-  noStore();
   const [countriesPage, categoriesPage, placesPage] = await Promise.all([
     fetchCollectionPage('countries', [], { columns: listColumns('countries'), limit: 100, offset: 0 }).catch(() => ({
       rows: [] as RecordRow[],
@@ -261,29 +253,31 @@ export async function loadCountryPageData(slug: string) {
     pickString(country || {}, ['name', 'title']) ||
     slug;
   const [tours, parks] = await Promise.all([
-    fetchToursForCountryLabel(countryName, 48).catch(() => [] as RecordRow[]),
+    resolvePublicTours({ country: countryName, limit: 48 }).catch(() => [] as RecordRow[]),
     fetchParksForCountry(countryName, 48, country?.id != null ? String(country.id) : undefined).catch(() => [] as RecordRow[]),
   ]);
+  const matchedTours = tours.filter((row) => matchesCountry(row, slug));
   return {
     country: country && isPublishedRecord(country) ? country : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
-    tours: tours.filter((row) => matchesCountry(row, slug)),
+    tours: matchedTours.length ? matchedTours : tours,
     parks: parks.filter(isPublishedRecord),
     places: placesPage.rows.filter(isPublishedRecord).filter((row) => matchesCountry(row, slug)),
   };
 }
 
 export async function loadTourDetail(slug: string) {
-  noStore();
   const tour = await withTimeout(fetchRecordByPublicSlug('tours', slug), 12000, null);
   if (tour && !isPublishedRecord(tour)) {
     return { tour: null, related: [] as RecordRow[] };
   }
   const country = tour ? pickString(tour, ['country']) : '';
   const category = tour ? pickString(tour, ['category']) : '';
-  const relatedPool = country
-    ? await withTimeout(fetchToursForCountryLabel(country, 40), 4000, [] as RecordRow[])
-    : [];
+  const relatedPool = await withTimeout(
+    resolvePublicTours({ country, limit: 40, excludeId: tour?.id != null ? String(tour.id) : undefined }),
+    8000,
+    [] as RecordRow[]
+  );
   const sameCountry = relatedPool.filter((row) => String(row.id) !== String(tour?.id || ''));
   const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
   return toClientProps({
@@ -293,7 +287,6 @@ export async function loadTourDetail(slug: string) {
 }
 
 export async function loadParksPageData(options?: { limit?: number; offset?: number }) {
-  noStore();
   try {
     const page = await withTimeout(
       fetchCollectionPage('national_park', ['national_parks', 'parks'], {
@@ -312,7 +305,6 @@ export async function loadParksPageData(options?: { limit?: number; offset?: num
 }
 
 export async function loadSafariUpdatesPageData(options?: { limit?: number; offset?: number }) {
-  noStore();
   try {
     const page = await withTimeout(
       fetchCollectionPage('safari_updates', [], {
@@ -331,7 +323,6 @@ export async function loadSafariUpdatesPageData(options?: { limit?: number; offs
 }
 
 export async function loadExplorePageData(options?: { limit?: number; offset?: number }) {
-  noStore();
   try {
     const page = await withTimeout(
       fetchCollectionPage('explore', [], {
@@ -350,7 +341,6 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
 }
 
 export async function loadParkDetail(slug: string) {
-  noStore();
   const [park, parkPage] = await Promise.all([
     withTimeout(fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']), 12000, null),
     withTimeout(
@@ -378,7 +368,6 @@ export async function loadParkDetail(slug: string) {
 }
 
 export async function loadSafariUpdateDetail(slug: string) {
-  noStore();
   const [post, updatePage] = await Promise.all([
     withTimeout(fetchRecordByPublicSlug('safari_updates', slug), 12000, null),
     withTimeout(
@@ -397,20 +386,23 @@ export async function loadSafariUpdateDetail(slug: string) {
   const country = published ? pickStoredString(published, ['country', 'category']) : '';
   const tours = published
     ? await withTimeout(
-        country ? fetchToursForCountryLabel(country, 12) : fetchFeaturedTours(12),
-        4000,
+        resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        }),
+        8000,
         [] as RecordRow[]
       )
     : [];
   return toClientProps({
     post: published,
     related,
-    tours: tours.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12),
+    tours: tours.slice(0, 12),
   });
 }
 
 export async function loadAccommodationDetail(slug: string) {
-  noStore();
   const [item, stayPage] = await Promise.all([
     withTimeout(fetchRecordByPublicSlug('accommodations', slug), 12000, null),
     withTimeout(
@@ -429,20 +421,23 @@ export async function loadAccommodationDetail(slug: string) {
   const country = published ? pickStoredString(published, ['country']) : '';
   const tours = published
     ? await withTimeout(
-        country ? fetchToursForCountryLabel(country, 12) : fetchFeaturedTours(12),
-        4000,
+        resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        }),
+        8000,
         [] as RecordRow[]
       )
     : [];
   return toClientProps({
     item: published,
     others,
-    tours: tours.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12),
+    tours: tours.slice(0, 12),
   });
 }
 
 export async function loadExploreDetail(slug: string) {
-  noStore();
   const [place, placePage] = await Promise.all([
     withTimeout(fetchRecordByPublicSlug('explore', slug), 12000, null),
     withTimeout(
@@ -465,14 +460,18 @@ export async function loadExploreDetail(slug: string) {
     : [];
   const tours = published
     ? await withTimeout(
-        countryKey ? fetchToursForCountryLabel(countryKey, 12) : fetchFeaturedTours(12),
-        4000,
+        resolvePublicTours({
+          country: countryKey,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        }),
+        8000,
         [] as RecordRow[]
       )
     : [];
   return toClientProps({
     place: published,
     others: (countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20),
-    tours: tours.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12),
+    tours: tours.slice(0, 12),
   });
 }

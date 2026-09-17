@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicListColumnsFor } from '@/lib/data-server';
 import { db } from '@/lib/supabase/pool';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,35 @@ const TABLES = new Set([
   'pesapal_payments',
 ]);
 
+const HEAVY_TABLES = new Set([
+  'tours',
+  'safari_updates',
+  'accommodations',
+  'national_park',
+  'national_parks',
+  'parks',
+  'explore',
+  'pages',
+]);
+
 const identifier = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function missingSelectColumn(message?: string) {
+  const text = String(message || '');
+  const match =
+    text.match(/Could not find the '([^']+)' column/i) ||
+    text.match(/column ["'`]([^"'`.]+)["'`]/i) ||
+    text.match(/column (?:[\w]+\.)?([A-Za-z_][\w]*) does not exist/i);
+  return match?.[1] || null;
+}
+
+function dropColumnFromSelect(columns: string, column: string) {
+  return columns
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== column && part !== '*')
+    .join(',');
+}
 
 export async function GET(
   request: Request,
@@ -35,11 +64,29 @@ export async function GET(
   }
 
   const url = new URL(request.url);
-  const select = url.searchParams.get('select') || '*';
-  const columns = select === '*'
-    ? '*'
-    : select.split(',').map((column) => column.trim()).filter((column) => identifier.test(column)).join(', ');
+  const requested = url.searchParams.get('select');
+  const listColumns = publicListColumnsFor(table) || publicListColumnsFor(table.replace(/s$/, '')) || '';
+  const range = url.searchParams.get('range')?.match(/^(\d+)-(\d+)$/);
+  const maxLimit = table === 'tours' ? 96 : HEAVY_TABLES.has(table) ? 200 : 1000;
+  const defaultLimit = table === 'tours' ? 48 : 48;
+  const limit = range
+    ? Math.min(Number(range[2]) - Number(range[1]) + 1, maxLimit)
+    : Math.min(Number(url.searchParams.get('limit') || defaultLimit), maxLimit);
+  const offset = range ? Number(range[1]) : 0;
+
+  let columns = requested
+    ? requested === '*'
+      ? '*'
+      : requested
+          .split(',')
+          .map((column) => column.trim())
+          .filter((column) => identifier.test(column))
+          .join(', ')
+    : listColumns || '*';
   if (!columns) return NextResponse.json({ error: 'Invalid select columns' }, { status: 400 });
+  if (columns === '*' && HEAVY_TABLES.has(table) && limit > 2 && listColumns) {
+    columns = listColumns;
+  }
 
   const params: unknown[] = [];
   const conditions: string[] = [];
@@ -56,32 +103,46 @@ export async function GET(
     const match = /^([a-zA-Z_][a-zA-Z0-9_]*)(?:\.(asc|desc))?$/.exec(order);
     if (match) orderSql = ` ORDER BY ${match[1]} ${(match[2] || 'asc').toUpperCase()}`;
   }
-  const range = url.searchParams.get('range')?.match(/^(\d+)-(\d+)$/);
-  const limit = range ? Math.min(Number(range[2]) - Number(range[1]) + 1, 1000) : Math.min(Number(url.searchParams.get('limit') || 1000), 1000);
-  const offset = range ? Number(range[1]) : 0;
   const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
 
   let client;
   try {
     client = await db.connect();
     let result;
-    try {
-      result = await client.query(
-        `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
-        params
-      );
-    } catch (error) {
-      if (columns === '*') throw error;
-      console.warn(`[Aiven] Falling back to all columns for ${table}:`, error);
-      result = await client.query(
-        `SELECT * FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
-        params
-      );
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        result = await client.query(
+          `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
+          params
+        );
+        break;
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        const missing = columns !== '*' ? missingSelectColumn(detail) : null;
+        if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
+          const next = dropColumnFromSelect(columns, missing);
+          if (next && next !== columns) {
+            console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
+            columns = next;
+            continue;
+          }
+        }
+        if (listColumns && columns !== listColumns && columns !== '*') {
+          columns = listColumns;
+          continue;
+        }
+        throw error;
+      }
+    }
+    if (!result) {
+      return NextResponse.json({ data: [], total: 0 }, { status: 200 });
     }
     let total = result.rows.length;
-    if (url.searchParams.get('count') === '1') {
+    if (url.searchParams.get('count') === '1' && table !== 'tours') {
       const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
       total = countResult.rows[0]?.total || 0;
+    } else if (url.searchParams.get('count') === '1') {
+      total = result.rows.length < limit ? offset + result.rows.length : offset + result.rows.length + limit;
     }
     return NextResponse.json(
       { data: result.rows, total },

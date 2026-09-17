@@ -9,9 +9,8 @@ import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionPage,
-  fetchFeaturedTours,
   fetchRecordByPublicSlug,
-  fetchToursForCountryLabel,
+  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -71,10 +70,12 @@ export default function AccommodationDetailClient({
             .slice(0, 20)
         );
         const country = published ? pickStoredString(published, ['country']) : '';
-        const tourRows = country
-          ? await fetchToursForCountryLabel(country, 12)
-          : await fetchFeaturedTours(12);
-        setTours(tourRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
+        const tourRows = await resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        });
+        if (tourRows.length) setTours(tourRows);
       } catch (error) {
         console.error('[Accommodation detail] Failed to load stay:', error);
         if (!initialItem) {
@@ -131,6 +132,7 @@ export default function AccommodationDetailClient({
                 ? `Explore These Amazing Safaris in ${pickStoredString(item, ['country'])}`
                 : 'Explore Our Amazing Safaris'
             }
+            emptyMessage="Tour packages for this destination will appear here."
           />
         }
       >

@@ -20,10 +20,10 @@ function getPool(): PgPool | null {
   global.aivenPool = new Pool({
     connectionString: normalizedConnectionString,
     ssl: { rejectUnauthorized: false },
-    max: 4,
+    max: 8,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 8000,
-    statement_timeout: 12000,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 8000,
     maxLifetimeSeconds: 60,
   });
   return global.aivenPool;

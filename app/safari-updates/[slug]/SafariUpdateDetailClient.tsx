@@ -9,9 +9,7 @@ import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionPage,
-  fetchFeaturedTours,
   fetchRecordByPublicSlug,
-  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isLanguagePost,
@@ -19,6 +17,7 @@ import {
   pickStoredString,
   pickString,
   recordPublishedAt,
+  resolvePublicTours,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -71,16 +70,17 @@ export default function SafariUpdateDetailClient({
             .slice(0, 20)
         );
         const country = published ? pickStoredString(published, ['country', 'category']) : '';
-        const tourRows = country
-          ? await fetchToursForCountryLabel(country, 12)
-          : await fetchFeaturedTours(12);
-        setTours(tourRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
+        const tourRows = await resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        });
+        if (tourRows.length) setTours(tourRows);
       } catch (error) {
         console.error('[Safari update detail] Failed to load post:', error);
         if (!initialPost) {
           setPost(null);
           setRelated([]);
-          setTours([]);
           router.replace('/404');
         }
       }
@@ -115,7 +115,15 @@ export default function SafariUpdateDetailClient({
           title: getRecordTitle(item),
           date: formatPublishedDate(recordPublishedAt(item)),
         }))}
-        below={<AmazingSafaris tours={tours} />}
+        below={
+          <section id="tour-packages" className="bg-[#f3f6f5]">
+            <AmazingSafaris
+              tours={tours}
+              title={country ? `Explore These Amazing Safaris in ${country}` : 'Explore Our Amazing Safaris'}
+              emptyMessage="Tour packages for this destination will appear here."
+            />
+          </section>
+        }
       >
         {!post ? (
           <p className="text-gray-500">No records found in this collection.</p>

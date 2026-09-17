@@ -8,9 +8,7 @@ import PublicShell from '@/components/public/PublicShell';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import TourItinerary from '@/components/public/TourItinerary';
 import {
-  fetchFeaturedTours,
   fetchRecordByPublicSlug,
-  fetchToursForCountryLabel,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -18,6 +16,7 @@ import {
   pickStoredString,
   pickString,
   publicRecordSlug,
+  resolvePublicTours,
   slugify,
   visibleRecordHtml,
 } from '@/lib/data';
@@ -91,10 +90,12 @@ export default function TourDetailClient({
         }
         setTour(published);
         const country = published ? pickString(published, ['country']) : '';
-        const relatedRows = country
-          ? await fetchToursForCountryLabel(country, 12)
-          : await fetchFeaturedTours(12);
-        setRelated(relatedRows.filter((row) => String(row.id) !== String(published?.id || '')).slice(0, 12));
+        const relatedRows = await resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        });
+        if (relatedRows.length) setRelated(relatedRows);
       } catch (error) {
         console.error('[Tour detail] Failed to load tour:', error);
         if (!initialTour) {
@@ -521,7 +522,10 @@ export default function TourDetailClient({
           </aside>
         </div>
       </section>
-      <AmazingSafaris tours={related} />
+      <AmazingSafaris
+        tours={related}
+        emptyMessage="More safari packages will appear here."
+      />
       {reviewSubmitted ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">

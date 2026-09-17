@@ -85,7 +85,7 @@ export default function PageHero({
     ? customItems
     : [...customItems, { label: 'Published', value: publishedLabel }];
   const showForestBar = true;
-  const fullBleedHero = isTour || isCountry;
+  const fullBleedHero = isTour || isCountry || isUpdate || isPark;
 
   const heroImage = (
     <section

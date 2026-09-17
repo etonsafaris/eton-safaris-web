@@ -1,6 +1,23 @@
 // Aiven PostgreSQL admin client for elevated operations
 import { db } from '@/lib/supabase/pool';
 
+function missingSelectColumn(message?: string) {
+  const text = String(message || '');
+  const match =
+    text.match(/Could not find the '([^']+)' column/i) ||
+    text.match(/column ["'`]([^"'`.]+)["'`]/i) ||
+    text.match(/column (?:[\w]+\.)?([A-Za-z_][\w]*) does not exist/i);
+  return match?.[1] || null;
+}
+
+function dropColumnFromSelect(columns: string, column: string) {
+  return columns
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== column && part !== '*')
+    .join(',');
+}
+
 export function createAdminClient() {
   // Aiven uses the same pool with elevated privileges via DATABASE_URL
   // No separate admin client needed - same connection with write permissions
@@ -132,7 +149,7 @@ class AivenAdminTableQuery {
     }));
   }
 
-  async execute() {
+  async execute(): Promise<{ data: any[] | null; error: { message: string } | null }> {
     let client;
     try {
       client = await db.connect();
@@ -177,6 +194,19 @@ class AivenAdminTableQuery {
       const result = await client.query(query, params);
       return { data: result.rows, error: null };
     } catch (error: any) {
+      const missing =
+        this._operation === 'select' && this._select !== '*'
+          ? missingSelectColumn(error.message)
+          : null;
+      if (missing && this._select.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(this._select, missing);
+        if (next && next !== this._select) {
+          this._select = next;
+          client?.release();
+          client = undefined;
+          return this.execute();
+        }
+      }
       console.error(`[Aiven Admin] Query error on ${this.table}:`, error.message);
       return { data: null, error: { message: error.message } };
     } finally {

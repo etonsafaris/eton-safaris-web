@@ -12,7 +12,9 @@ import {
   fetchRecordByPublicSlug as fetchRecordByPublicSlugServer,
   fetchStaysForPark as fetchStaysForParkServer,
   fetchToursForCountryLabel as fetchToursForCountryLabelServer,
+  resolvePublicTours as resolvePublicToursServer,
   searchTours as searchToursServer,
+  TOUR_LIST_COLUMNS as TOUR_LIST_SELECT,
 } from './data-server';
 
 // Re-export all server-side functions from data-server.ts
@@ -27,6 +29,7 @@ export {
   fetchRecordByPublicSlug as fetchRecordByPublicSlugServer,
   fetchStaysForPark as fetchStaysForParkServer,
   fetchToursForCountryLabel as fetchToursForCountryLabelServer,
+  resolvePublicTours as resolvePublicToursServer,
   searchTours as searchToursServer,
   countCollectionRecords,
   ADMIN_LIST_COLUMNS,
@@ -83,7 +86,8 @@ export async function fetchCollectionPage(
 ): Promise<{ rows: RecordRow[]; total: number }> {
   if (!browser()) return fetchCollectionPageServer(table, aliases, options);
   const params = new URLSearchParams();
-  if (options?.columns) params.set('select', options.columns);
+  const select = options?.columns || (table === 'tours' ? TOUR_LIST_SELECT : undefined);
+  if (select) params.set('select', select);
   if (options?.limit) params.set('limit', String(options.limit));
   if (options?.offset) params.set('range', `${options.offset}-${(options.offset + (options.limit || 48)) - 1}`);
   if (options?.orderBy) params.set('order', `${options.orderBy}.${options.ascending === false ? 'desc' : 'asc'}`);
@@ -125,20 +129,42 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
   return null;
 }
 
-export async function fetchFeaturedTours(limit = 24) {
-  if (!browser()) return fetchFeaturedToursServer(limit);
-  const params = new URLSearchParams({ limit: String(limit), 'eq.is_featured': 'true' });
+async function fetchTourRows(params: URLSearchParams) {
+  params.set('select', TOUR_LIST_SELECT);
   const response = await fetch(dataUrl('tours', params), { cache: 'default' });
+  if (!response.ok) return [] as RecordRow[];
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
   return body.data || [];
 }
 
+export async function fetchFeaturedTours(limit = 24) {
+  if (!browser()) return fetchFeaturedToursServer(limit);
+  const featured = await fetchTourRows(new URLSearchParams({ limit: String(limit), 'eq.is_featured': 'true' }));
+  if (featured.length) return featured;
+  return fetchTourRows(new URLSearchParams({ limit: String(limit), order: 'created_date.desc' }));
+}
+
 export async function fetchToursForCountryLabel(countryLabel: string, limit = 48) {
   if (!browser()) return fetchToursForCountryLabelServer(countryLabel, limit);
-  const params = new URLSearchParams({ limit: String(limit), 'ilike.country': `%${countryLabel}%` });
-  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-  return body.data || [];
+  const rows = await fetchTourRows(
+    new URLSearchParams({ limit: String(limit), 'ilike.country': `%${countryLabel}%` })
+  );
+  if (rows.length) return rows;
+  return fetchFeaturedTours(Math.min(limit, 24));
+}
+
+export async function resolvePublicTours(options?: { country?: string; limit?: number; excludeId?: string }) {
+  if (!browser()) return resolvePublicToursServer(options);
+  const capped = Math.max(1, Math.min(options?.limit ?? 12, 48));
+  const excludeId = options?.excludeId != null ? String(options.excludeId) : '';
+  const keep = (rows: RecordRow[]) =>
+    rows.filter((row) => !excludeId || String(row.id) !== excludeId).slice(0, capped);
+  const country = String(options?.country || '').trim();
+  if (country) {
+    const byCountry = keep(await fetchToursForCountryLabel(country, capped));
+    if (byCountry.length) return byCountry;
+  }
+  return keep(await fetchFeaturedTours(capped));
 }
 
 export async function fetchParksForCountry(countryLabel: string, limit = 200, countryId?: string) {
@@ -212,15 +238,21 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
   return rows.slice(0, limit);
 }
 
-export async function searchTours(options: { query: string; limit?: number }) {
+export async function searchTours(options: {
+  query?: string;
+  country?: string;
+  category?: string;
+  limit?: number;
+}) {
   if (!browser()) return searchToursServer(options);
-  const params = new URLSearchParams({
-    limit: String(options.limit || 24),
-    'ilike.title': `%${options.query}%`,
-  });
-  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-  return body.data || [];
+  const params = new URLSearchParams({ limit: String(options.limit || 24) });
+  if (options.query) params.set('ilike.title', `%${options.query}%`);
+  if (options.country && !/^all destinations$/i.test(options.country)) {
+    params.set('ilike.country', `%${options.country}%`);
+  }
+  if (options.category) params.set('ilike.category', `%${options.category}%`);
+  const rows = await fetchTourRows(params);
+  return rows;
 }
 
 export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
+import { adminListColumnsFor } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
@@ -103,16 +104,17 @@ export async function GET(request: Request) {
     const names = TABLE_ALIASES[table] || [table];
     let lastMessage = '';
     for (const name of names) {
+      const listSelect = adminListColumnsFor(name) || adminListColumnsFor(table) || '*';
       // Schema uses created_date (Base44 legacy), not created_at.
-      const orderedByDate = await client.from(name).select('*').order('created_date', { ascending: false });
+      const orderedByDate = await client.from(name).select(listSelect).order('created_date', { ascending: false });
       if (!orderedByDate.error) {
         return NextResponse.json({ rows: jsonSafeRows(orderedByDate.data || []) });
       }
-      const orderedByAt = await client.from(name).select('*').order('created_at', { ascending: false });
+      const orderedByAt = await client.from(name).select(listSelect).order('created_at', { ascending: false });
       if (!orderedByAt.error) {
         return NextResponse.json({ rows: jsonSafeRows(orderedByAt.data || []) });
       }
-      const fallback = await client.from(name).select('*');
+      const fallback = await client.from(name).select(listSelect);
       if (!fallback.error) {
         return NextResponse.json({ rows: jsonSafeRows(fallback.data || []) });
       }
