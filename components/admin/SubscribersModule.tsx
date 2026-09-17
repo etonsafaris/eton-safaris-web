@@ -161,11 +161,13 @@ export default function SubscribersModule() {
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
-                          title="Remove subscriber"
+                          title="Delete"
+                          aria-label="Delete subscriber"
                           onClick={() => setRemoving(row)}
-                          className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
                         >
                           <Trash2 className="h-4 w-4" />
+                          Delete
                         </button>
                       </td>
                     </tr>

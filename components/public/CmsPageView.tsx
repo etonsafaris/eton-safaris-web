@@ -33,6 +33,7 @@ export type CmsPageViewProps = {
   blocks?: CmsContentBlock[];
   ctaLabel?: string;
   ctaHref?: string;
+  published?: string;
 };
 
 function AboutStory({
@@ -102,6 +103,7 @@ export default function CmsPageView({
   blocks = [],
   ctaLabel = 'Talk to Us',
   ctaHref = '/contact-us',
+  published,
 }: CmsPageViewProps) {
   const html = toHtml(content);
   const layout = variant === 'default' ? 'standard' : variant;
@@ -110,7 +112,7 @@ export default function CmsPageView({
     const html = toHtml(content);
     return (
       <PublicShell>
-        <PageHero title={title} image={image} variant="policy" />
+        <PageHero title={title} image={image} variant="policy" published={published} />
         <section className="bg-[#edf2f2] pb-10">
           {html ? (
             <div className="dav-policies mx-4 bg-white p-[30px] lg:mx-[100px]" dangerouslySetInnerHTML={{ __html: html }} />
@@ -130,7 +132,7 @@ export default function CmsPageView({
   if (layout === 'community') {
     return (
       <PublicShell>
-        <PageHero title={title} subtitle={subtitle} image={image} />
+        <PageHero title={title} subtitle={subtitle} image={image} published={published} />
         <section className="mx-auto max-w-4xl px-4 py-16 text-center">
           <SectionHeading label="Giving back" title="Tourism That Transforms Lives" />
           {html ? (
@@ -209,7 +211,7 @@ export default function CmsPageView({
   if (layout === 'about' || layout === 'agency') {
     return (
       <PublicShell>
-        <PageHero title={title} image={image} variant="about" />
+        <PageHero title={title} image={image} variant="about" published={published} />
         <section className="bg-white px-4 py-14 text-[#222] md:px-8 md:py-16">
           <div className="mx-auto max-w-[1100px]">
             <AboutStory blocks={blocks} html={html} videoUrl={videoUrl} image={image} />
@@ -231,7 +233,7 @@ export default function CmsPageView({
 
   return (
     <PublicShell>
-      <PageHero title={title} subtitle={subtitle} image={image} />
+      <PageHero title={title} subtitle={subtitle} image={image} published={published} />
       <section className="bg-[#111] px-4 py-14 text-white md:py-16">
         <div className="mx-auto max-w-3xl">
           {html ? (

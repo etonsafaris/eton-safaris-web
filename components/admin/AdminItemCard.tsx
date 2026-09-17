@@ -29,46 +29,46 @@ export default function AdminItemCard({
   extraActions?: React.ReactNode;
 }) {
   const actions = (
-    <div
-      className="relative z-[2] flex items-center gap-2"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
-      onPointerDown={(event) => event.stopPropagation()}
-    >
+    <div className="flex flex-wrap items-center justify-end gap-2">
       {extraActions}
       <button
         type="button"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
+        onClick={() => {
+          if (!confirm(`Edit “${title}”?`)) return;
           onEdit();
         }}
-        aria-label="Edit"
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-[#2a3038] text-white hover:bg-[#3a414b] dark:bg-[#2a3038]"
+        title="Edit"
+        aria-label={`Edit ${title}`}
+        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#2a3038] px-2.5 text-xs font-semibold text-white hover:bg-[#3a414b]"
       >
         <Pencil className="h-3.5 w-3.5" />
+        Edit
       </button>
       <button
         type="button"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
+        onClick={() => {
+          if (!confirm(`Delete “${title}”? This cannot be undone.`)) return;
           onDelete();
         }}
-        aria-label="Delete"
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-[#3f1f24] text-red-400 hover:bg-[#5a2a31]"
+        title="Delete"
+        aria-label={`Delete ${title}`}
+        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#3f1f24] px-2.5 text-xs font-semibold text-red-300 hover:bg-[#5a2a31]"
       >
         <Trash2 className="h-3.5 w-3.5" />
+        Delete
       </button>
     </div>
   );
 
   const readMore = href ? (
-    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#00A651]">
+    <Link
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-[#00A651] hover:underline"
+    >
       Read More <ExternalLink className="h-3.5 w-3.5" />
-    </span>
+    </Link>
   ) : null;
 
   const imageBlock = (
@@ -81,7 +81,7 @@ export default function AdminItemCard({
       <span className="absolute left-3 top-3 rounded bg-[#00A651] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
         {badge}
       </span>
-      {indexBadge ? <div className="absolute right-3 top-3 z-[2]">{indexBadge}</div> : null}
+      {indexBadge ? <div className="absolute right-3 top-3">{indexBadge}</div> : null}
     </div>
   );
 
@@ -101,7 +101,7 @@ export default function AdminItemCard({
           Keywords: {keywords.join(', ')}
         </p>
       ) : null}
-      <div className="mt-auto flex items-end justify-between pt-4">
+      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
         {readMore || <span />}
         {actions}
       </div>
@@ -110,23 +110,13 @@ export default function AdminItemCard({
 
   const className =
     layout === 'grid'
-      ? 'group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#161b22] dark:ring-white/5'
-      : 'group relative flex w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] transition hover:shadow-md dark:bg-[#161b22] dark:ring-white/5';
+      ? 'flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] dark:bg-[#161b22] dark:ring-white/5'
+      : 'flex w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] dark:bg-[#161b22] dark:ring-white/5';
 
   return (
-    <article className={`${className} ${href ? 'cursor-pointer' : ''}`}>
+    <article className={className}>
       {imageBlock}
       {body}
-      {href ? (
-        <Link
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          title={href}
-          className="absolute inset-0 z-[1]"
-          aria-label={`View ${title} on website`}
-        />
-      ) : null}
     </article>
   );
 }

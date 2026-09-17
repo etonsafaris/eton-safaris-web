@@ -3,7 +3,7 @@ import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { mergeFaqs } from '@/lib/default-faqs';
-import { getRecordImage, getRecordTitle, pickStoredString, pickString } from '@/lib/data';
+import { getRecordImage, getRecordTitle, pickStoredString, pickString, recordPublishedAt } from '@/lib/data';
 import { publicBodyHtml, recordBodyHtml } from '@/lib/embedded-content';
 import { resolvePublicImage } from '@/lib/public-image';
 import { STATIC_PAGES } from '@/lib/static-pages';
@@ -122,5 +122,6 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     ctaLabel: extras.cta_label || 'Talk to Us',
     ctaHref: extras.cta_href || '/contact-us',
     layout: extras.layout,
+    published: extras.published_at || (page ? recordPublishedAt(page) : ''),
   };
 }

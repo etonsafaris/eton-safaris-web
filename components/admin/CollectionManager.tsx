@@ -134,6 +134,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   }, [config.id, config.publicPath]);
 
   function keywordsForRecord(record: RecordRow) {
+    if (config.id === 'tours') return [];
     const country = pickString(record, ['country']);
     const category = pickString(record, ['category']) || getRecordTitle(record);
     if (!country || !category) return [];
@@ -800,7 +801,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   }
 
   async function remove(record: RecordRow) {
-    if (!record.id || !confirm('Delete this record?')) return;
+    if (!record.id) return;
     try {
       await deleteAdminRecord(config.table, record.id);
     } catch (error) {
@@ -1172,7 +1173,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
-                  keywords={keywordsForRecord(record)}
+                  keywords={config.id === 'tours' ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1191,7 +1192,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={getRecordTitle(record)}
-                  keywords={keywordsForRecord(record)}
+                  keywords={config.id === 'tours' ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}

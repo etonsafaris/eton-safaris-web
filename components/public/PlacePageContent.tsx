@@ -34,6 +34,8 @@ type PlacePageContentProps = {
   slug?: string;
   country?: RecordRow | null;
   place?: RecordRow | null;
+  initialOthers?: RecordRow[];
+  initialTours?: RecordRow[];
 };
 
 function toProseHtml(value: string) {
@@ -51,21 +53,29 @@ export default function PlacePageContent({
   slug: countrySlugProp = '',
   country = null,
   place: initialPlace = null,
+  initialOthers = [],
+  initialTours = [],
 }: PlacePageContentProps) {
   const live = useCmsLive();
   const [place, setPlace] = useState<RecordRow | null>(initialPlace);
-  const [others, setOthers] = useState<RecordRow[]>([]);
-  const [tours, setTours] = useState<RecordRow[]>([]);
+  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
+  const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [ready, setReady] = useState(Boolean(initialPlace));
 
   useEffect(() => {
+    setPlace(initialPlace);
+    setOthers(initialOthers);
+    setTours(initialTours);
+    setReady(Boolean(initialPlace));
+  }, [initialPlace, initialOthers, initialTours]);
+
+  useEffect(() => {
     let mounted = true;
+    if (initialPlace && live === 0) return undefined;
     async function load() {
       try {
         const [full, placePage] = await Promise.all([
-          initialPlace && live === 0
-            ? Promise.resolve(initialPlace)
-            : fetchRecordByPublicSlug('explore', placeSlug),
+          fetchRecordByPublicSlug('explore', placeSlug),
           fetchCollectionPage('explore', [], { limit: 24, offset: 0 }),
         ]);
         if (!mounted) return;

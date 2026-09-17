@@ -1,7 +1,8 @@
 // Client-side compatibility layer - redirects to server-side Aiven functions when running on server
 import type { RecordRow } from '@/lib/types';
 import { getCachedCollection, setCachedCollection } from '@/lib/collection-cache';
-import { stripEmbeddedContent } from '@/lib/embedded-content';
+import { extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { formatPublishedStamp } from '@/lib/public-date';
 import {
   fetchCollectionRecords as fetchCollectionRecordsServer,
   fetchCollectionPage as fetchCollectionPageServer,
@@ -299,22 +300,66 @@ export function pickRecordId(record: RecordRow | null | undefined): string | num
 }
 
 export function pickDateValue(record: RecordRow, keys: string[], fallback = ''): string {
-  return pickString(record, keys, fallback);
+  for (const key of keys) {
+    const value = record[key];
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const date = new Date(value > 1e12 ? value : value * 1000);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed && !/^(null|undefined|—|-|n\/a|none)$/i.test(trimmed)) return trimmed;
+    }
+  }
+  return fallback;
+}
+
+const PUBLISHED_DATE_KEYS = [
+  'published_at',
+  'publishedAt',
+  'published_date',
+  'publish_date',
+  'publishDate',
+  'created_at',
+  'createdAt',
+  'created_date',
+  'updated_at',
+  'updatedAt',
+  'updated_date',
+  'date',
+];
+
+function dateFromMillisId(record: RecordRow): string {
+  const match = /^(\d{13})(?:-|$)/.exec(String(record.id ?? ''));
+  if (!match) return '';
+  const date = new Date(Number(match[1]));
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
 }
 
 export function recordPublishedAt(record: RecordRow | null | undefined): string {
-  return pickString(record || {}, ['published_at', 'publishedAt', 'published_date', 'created_at', 'created_date']);
+  if (!record) return '';
+  const top = pickDateValue(record, PUBLISHED_DATE_KEYS);
+  if (top) return top;
+  const html = ['content', 'description', 'body', 'excerpt', 'summary']
+    .map((key) => (typeof record[key] === 'string' ? record[key] : ''))
+    .filter(Boolean)
+    .join('\n');
+  const embedded = extractEmbeddedContent(html);
+  const fromEmbed = pickDateValue((embedded.fields || {}) as RecordRow, PUBLISHED_DATE_KEYS);
+  if (fromEmbed) return fromEmbed;
+  for (const key of ['seo_schema', 'seo', 'meta', '_etonSeo']) {
+    const nested = record[key];
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+      const value = pickDateValue(nested as RecordRow, PUBLISHED_DATE_KEYS);
+      if (value) return value;
+    }
+  }
+  return dateFromMillisId(record);
 }
 
 export function formatPublishedDate(record: RecordRow | null | undefined): string {
-  const value = recordPublishedAt(record);
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : `Published ${date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })}`;
+  return formatPublishedStamp(recordPublishedAt(record));
 }
 
 export function publishStampForSave(value: string, isEdit: boolean): string {

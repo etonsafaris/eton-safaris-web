@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Calendar, CalendarRange, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
@@ -31,17 +33,21 @@ function ForestMetaItem({
   icon: Icon,
   label,
   value,
+  accent = false,
 }: {
   icon: typeof Calendar;
   label: string;
   value: string;
+  accent?: boolean;
 }) {
+  if (!Icon || !value) return null;
+  if (!Icon) return null;
   return (
     <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 shrink-0 text-sage md:h-5 md:w-5" />
+      <Icon className={`h-4 w-4 shrink-0 md:h-5 md:w-5 ${accent ? 'text-[#7dce6a]' : 'text-sage'}`} />
       <div className="min-w-0">
         <p className="text-[9px] uppercase tracking-wide text-white/50 md:text-[10px]">{label}</p>
-        <p className="text-xs font-bold text-white md:text-sm">{value}</p>
+        <p className={`text-xs font-bold md:text-sm ${accent ? 'text-[#7dce6a]' : 'text-white'}`}>{value}</p>
       </div>
     </div>
   );
@@ -69,22 +75,30 @@ export default function PageHero({
   const isPolicy = variant === 'policy';
   const isAbout = variant === 'about';
   const isUpdate = variant === 'update';
-  const customItems = (metaItems || []).filter((item) => item.label);
+  const customItems = (metaItems || []).filter((item) => {
+    if (!item.label) return false;
+    if (isUpdate && /^country$/i.test(item.label)) return false;
+    return true;
+  });
+  const publishedLabel = formatPublishedDate(published);
+  const hasPublishedDate = Boolean(publishedLabel && publishedLabel !== '—');
   const showForestBar =
     isTour ||
     isUpdate ||
     isPark ||
     customItems.length > 0 ||
-    (isCountry && (Boolean(bestTime) || Boolean(country) || Boolean(published) || Boolean(location)));
+    hasPublishedDate ||
+    (isCountry && (Boolean(bestTime) || Boolean(country) || hasPublishedDate || Boolean(location)));
+  const fullBleedHero = isTour || isUpdate || isPark || isCountry;
 
   const heroImage = (
     <section
       className={`relative w-full overflow-hidden bg-[#141612] ${
-        showForestBar
+        fullBleedHero && showForestBar
           ? 'min-h-0 flex-1'
           : isPolicy
             ? 'h-[min(56svh,520px)]'
-            : 'h-[min(48svh,460px)] md:h-[min(52svh,520px)]'
+            : 'h-[min(42svh,380px)] md:h-[min(46svh,420px)]'
       }`}
     >
       {src ? (
@@ -158,6 +172,7 @@ export default function PageHero({
                 icon={item.label === 'Published' || /time|visit/i.test(item.label) ? Calendar : MapPin}
                 label={item.label}
                 value={item.label === 'Published' ? formatPublishedDate(item.value) : item.value?.trim() || '—'}
+                accent={item.label === 'Published'}
               />
             ))
           ) : isTour ? (
@@ -165,30 +180,27 @@ export default function PageHero({
               <ForestMetaItem icon={Clock} label="Duration" value={duration || '—'} />
               <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
               <ForestMetaItem icon={Users} label="Group Size" value={groupSize || 'Flexible'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+              <ForestMetaItem icon={Calendar} label="Published" value={publishedLabel} accent />
             </>
           ) : isUpdate ? (
-            <>
-              <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
-            </>
+            <ForestMetaItem icon={Calendar} label="Published" value={publishedLabel} accent />
           ) : isPark ? (
             <>
               <ForestMetaItem icon={MapPin} label="Location" value={location || '—'} />
               <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+              <ForestMetaItem icon={Calendar} label="Published" value={publishedLabel} accent />
             </>
           ) : bestTime ? (
             <>
               <ForestMetaItem icon={CalendarRange} label="Best time to visit" value={bestTime} />
               <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+              <ForestMetaItem icon={Calendar} label="Published" value={publishedLabel} accent />
             </>
           ) : (
             <>
-              <ForestMetaItem icon={MapPin} label="Location" value={location || '—'} />
-              <ForestMetaItem icon={MapPin} label="Country" value={country || '—'} />
-              <ForestMetaItem icon={Calendar} label="Published" value={formatPublishedDate(published)} />
+              {location ? <ForestMetaItem icon={MapPin} label="Location" value={location} /> : null}
+              {country ? <ForestMetaItem icon={MapPin} label="Country" value={country} /> : null}
+              <ForestMetaItem icon={Calendar} label="Published" value={publishedLabel} accent />
             </>
           )}
         </div>
@@ -200,7 +212,7 @@ export default function PageHero({
     <>
       <PageFavicon title={title} />
       {showForestBar ? (
-        <div className="flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] flex-col">
+        <div className={fullBleedHero ? 'flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] flex-col' : ''}>
           {heroImage}
           {forestMeta}
         </div>

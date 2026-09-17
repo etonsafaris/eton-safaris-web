@@ -103,19 +103,23 @@ export default function OpsRecordTable({
                       <button
                         type="button"
                         onClick={() => onEdit(record)}
+                        title="Edit"
                         aria-label="Edit"
-                        className="rounded-lg border border-[#e5e7eb] p-1.5 text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-2 py-1.5 text-xs font-semibold text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
                       >
                         <Pencil className="h-3.5 w-3.5" />
+                        Edit
                       </button>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => onDelete(record)}
+                      title="Delete"
                       aria-label="Delete"
-                      className="rounded-lg border border-red-200 p-1.5 text-red-500 hover:bg-red-50 dark:border-red-500/30 dark:hover:bg-red-500/10"
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:border-red-500/30 dark:hover:bg-red-500/10"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
+                      Delete
                     </button>
                   </div>
                 </td>

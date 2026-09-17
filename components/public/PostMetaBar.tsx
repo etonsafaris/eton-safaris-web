@@ -1,24 +1,10 @@
+'use client';
+
 import { Calendar, MapPin } from 'lucide-react';
+import { formatPublishedDateValue } from '@/lib/public-date';
 
 export function formatPublishedDate(value?: string): string {
-  if (!value) return '—';
-  const trimmed = value.trim();
-  if (!trimmed || /^(null|undefined|—|-|n\/a|none)$/i.test(trimmed)) return '—';
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
-  const date = dateOnly
-    ? new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])))
-    : new Date(trimmed);
-  if (Number.isNaN(date.getTime())) {
-    // Keep already-human stamps such as "August 15, 2026".
-    if (/\d{4}/.test(trimmed)) return trimmed;
-    return '—';
-  }
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
+  return formatPublishedDateValue(value) || '—';
 }
 
 export type MetaItem = {
@@ -65,7 +51,9 @@ export default function PostMetaBar({
               <MapPin className="h-4 w-4 text-moss" />
             )}
             <strong className="text-gray-700">{item.label}:</strong>
-            <span className="text-gray-600">{item.value?.trim() || '—'}</span>
+            <span className={item.label === 'Published' ? 'font-semibold text-[#00A651]' : 'text-gray-600'}>
+              {item.value?.trim() || '—'}
+            </span>
           </span>
         ))}
       </div>

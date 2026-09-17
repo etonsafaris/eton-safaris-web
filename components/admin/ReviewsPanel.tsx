@@ -212,19 +212,23 @@ export default function ReviewsPanel() {
                           <button
                             type="button"
                             onClick={() => openEdit(row)}
-                            aria-label="Edit"
-                            className="rounded-lg border p-1.5 text-gray-500 hover:text-[#00A651]"
+                            title="Edit"
+                            aria-label="Edit review"
+                            className="inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-semibold text-gray-500 hover:text-[#00A651]"
                           >
                             <Pencil className="h-3.5 w-3.5" />
+                            Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => void remove(row)}
                             disabled={deletingId === String(pickRecordId(row))}
-                            aria-label="Delete"
-                            className="rounded-lg border border-red-200 p-1.5 text-red-500 disabled:opacity-60"
+                            title="Delete"
+                            aria-label="Delete review"
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1.5 text-xs font-semibold text-red-500 disabled:opacity-60"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
+                            Delete
                           </button>
                         </div>
                       </td>

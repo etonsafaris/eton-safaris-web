@@ -14,7 +14,17 @@ const nextConfig = {
         net: false,
         dns: false,
         tls: false,
+        crypto: false,
+        stream: false,
         'util/types': false,
+        pg: false,
+        'pg-native': false,
+        'pg-cloudflare': false,
+      };
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        pg: false,
+        'pg-native': false,
       };
     }
     return config;

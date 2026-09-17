@@ -1,30 +1,44 @@
-import { Pool } from 'pg';
+import type { Pool as PgPool } from 'pg';
 
 const connectionString = process.env.DATABASE_URL;
 const normalizedConnectionString = connectionString
   ? connectionString.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '')
   : undefined;
 
-const cachedPool: Pool | null = normalizedConnectionString
-  ? (global.aivenPool ||= new Pool({
-      connectionString: normalizedConnectionString,
-      ssl: { rejectUnauthorized: false },
-      max: 2,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 4500,
-      statement_timeout: 12000,
-      maxLifetimeSeconds: 60,
-    }))
-  : null;
+const isServer = typeof window === 'undefined';
+
+/**
+ * Build the pool lazily. Creating it while the module loads breaks any client
+ * component that (indirectly) imports this file: `pg` cannot open sockets in the
+ * browser bundle, the module throws, and React then renders `undefined`.
+ */
+function getPool(): PgPool | null {
+  if (!isServer || !normalizedConnectionString) return null;
+  if (global.aivenPool) return global.aivenPool;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Pool } = require('pg') as typeof import('pg');
+  global.aivenPool = new Pool({
+    connectionString: normalizedConnectionString,
+    ssl: { rejectUnauthorized: false },
+    max: 4,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 8000,
+    statement_timeout: 12000,
+    maxLifetimeSeconds: 60,
+  });
+  return global.aivenPool;
+}
 
 export const db = {
   async connect() {
-    if (!cachedPool) throw new Error('Aiven DATABASE_URL is not configured.');
-    return cachedPool.connect();
+    const pool = getPool();
+    if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
+    return pool.connect();
   },
   async query<T = any>(text: string, values?: unknown[]) {
-    if (!cachedPool) throw new Error('Aiven DATABASE_URL is not configured.');
-    return cachedPool.query<T>(text, values);
+    const pool = getPool();
+    if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
+    return pool.query<T>(text, values);
   },
 };
 

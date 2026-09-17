@@ -11,6 +11,7 @@ import {
   isPublishedRecord,
   pickString,
   recordCardBlurb,
+  recordPublishedAt,
 } from '@/lib/data';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
@@ -39,6 +40,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
         title="Destinations"
         subtitle="Safari countries across Africa, from gorilla forests to savannah and coast."
         image={countryHeroImage(publicCountrySlug(items[0] || {}) || pickString(items[0] || {}, ['name']), items[0])}
+        published={items[0] ? recordPublishedAt(items[0]) || undefined : undefined}
       />
       <ListingSection>
         {items.length === 0 ? (

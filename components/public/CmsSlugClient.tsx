@@ -261,6 +261,7 @@ export default function CmsSlugClient({
       blocks={blocks}
       ctaLabel={view.ctaLabel || 'Talk to Us'}
       ctaHref={view.ctaHref || '/contact-us'}
+      published={view.published}
     />
   );
 }

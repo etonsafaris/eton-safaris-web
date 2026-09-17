@@ -85,6 +85,7 @@ export function getRecordTitle(record: RecordRow): string {
 
 function readableFieldValue(value: unknown): string {
   if (typeof value === 'string') return value.trim();
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   // Postgres/json arrays: use the first non-empty string entry — never index a string as [0].
   if (Array.isArray(value)) {
@@ -301,13 +302,29 @@ function isTransientFetchError(message?: string) {
   );
 }
 
+function jsonSafeValue(value: unknown): unknown {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  if (typeof value === 'bigint') return value.toString();
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) return value.toString('base64');
+  if (Array.isArray(value)) return value.map(jsonSafeValue);
+  return value;
+}
+
+function jsonSafeRow(row: RecordRow): RecordRow {
+  const next: RecordRow = { ...row };
+  for (const key of Object.keys(next)) {
+    next[key] = jsonSafeValue(next[key]) as RecordRow[typeof key];
+  }
+  return next;
+}
+
 function asRows(data: unknown): RecordRow[] {
-  return Array.isArray(data) ? (data as RecordRow[]) : [];
+  return Array.isArray(data) ? (data as RecordRow[]).map(jsonSafeRow) : [];
 }
 
 function asRow(data: unknown): RecordRow | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
-  return data as RecordRow;
+  return jsonSafeRow(data as RecordRow);
 }
 
 async function selectRange(
@@ -323,7 +340,7 @@ async function selectRange(
       const limit = end - start + 1;
       const queryText = `SELECT ${selectColumns} FROM ${tableName} OFFSET ${offset} LIMIT ${limit}`;
       const res = await db.query(queryText);
-      return { data: res.rows as RecordRow[], error: null };
+      return { data: (res.rows as RecordRow[]).map(jsonSafeRow), error: null };
     } catch (error: any) {
       lastMessage = error.message || 'fetch failed';
       if (!isTransientFetchError(lastMessage)) {
@@ -403,7 +420,7 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   explore:
     `id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   safari_updates:
-    `id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,title,slug,seo_slug,excerpt,category,country,image_url,social_image_url,post_type,publish_date,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   countries:
     `id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   categories:
@@ -577,7 +594,7 @@ export async function fetchCollectionPage(
         
         const res = await db.query(queryText, params);
         
-        const rows = res.rows as RecordRow[];
+        const rows = (res.rows as RecordRow[]).map(jsonSafeRow);
         if (rows[0]) rememberKnownColumns(name, Object.keys(rows[0]));
         // Avoid count: 'exact' — it scans huge tables and was timing out Vercel (504).
         const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
@@ -625,7 +642,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
     const queryText = `SELECT ${columns} FROM tours WHERE is_featured = true OR is_popular = true OR show_on_landing = true LIMIT ${capped}`;
     const res = await db.query(queryText);
     if (res.rows && res.rows.length > 0) {
-      return (res.rows as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
+      return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow).slice(0, capped);
     }
   } catch (error: any) {
     console.error('[Aiven] Featured tours query failed:', error.message);
@@ -634,7 +651,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   try {
     const queryText = `SELECT ${columns} FROM tours ORDER BY created_date DESC LIMIT ${capped}`;
     const res = await db.query(queryText);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord).slice(0, capped);
+    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow).slice(0, capped);
   } catch (error: any) {
     console.error('[Aiven] Recent tours query failed:', error.message);
     return [];
@@ -711,9 +728,9 @@ export async function fetchRecordByPublicSlug(
     rememberKnownColumns(name, Object.keys(row));
     if (selectColumns !== '*' && row.id != null) {
       const full = await fetchCollectionRecordById(name, String(row.id));
-      if (full) return full;
+      if (full) return jsonSafeRow(full);
     }
-    return row;
+    return jsonSafeRow(row);
   }
 
   for (const name of names) {
@@ -722,7 +739,7 @@ export async function fetchRecordByPublicSlug(
         try {
           const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} = $1 LIMIT 1`;
           const res = await db.query(queryText, [value]);
-          const row = (res.rows as RecordRow[])[0] || null;
+          const row = (res.rows as RecordRow[])[0] ? jsonSafeRow((res.rows as RecordRow[])[0]) : null;
           if (row) return hydrate(name, row);
         } catch (error: any) {
           continue;
@@ -737,7 +754,7 @@ export async function fetchRecordByPublicSlug(
           try {
             const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} ILIKE $1 LIMIT 1`;
             const res = await db.query(queryText, [pattern]);
-            const row = (res.rows as RecordRow[])[0] || null;
+            const row = (res.rows as RecordRow[])[0] ? jsonSafeRow((res.rows as RecordRow[])[0]) : null;
             if (row) return hydrate(name, row);
           } catch (error: any) {
             continue;
@@ -757,7 +774,7 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   try {
     const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours WHERE country ILIKE $1 LIMIT ${capped}`;
     const res = await db.query(queryText, [`%${label}%`]);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord);
+    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow);
   } catch (error: any) {
     console.error('[Aiven] fetchToursForCountryLabel failed:', error.message);
     return [];
@@ -802,7 +819,7 @@ export async function searchTours(options: {
     const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours ${whereClause} LIMIT ${capped}`;
     
     const res = await db.query(queryText, params);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord);
+    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow);
   } catch (error: any) {
     console.error('[Aiven] searchTours failed:', error.message);
     return [];
@@ -827,10 +844,11 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
 
   function pushRows(rows: RecordRow[]) {
     for (const row of rows) {
-      const id = String(row.id || '');
+      const safe = jsonSafeRow(row);
+      const id = String(safe.id || '');
       if (id && seen.has(id)) continue;
       if (id) seen.add(id);
-      merged.push(row);
+      merged.push(safe);
     }
   }
 
@@ -924,7 +942,7 @@ export async function fetchCollectionRecordById(
     try {
       const queryText = `SELECT * FROM ${name} WHERE id = $1 LIMIT 1`;
       const res = await db.query(queryText, [id]);
-      const row = (res.rows as RecordRow[])[0] || null;
+      const row = (res.rows as RecordRow[])[0] ? jsonSafeRow((res.rows as RecordRow[])[0]) : null;
       if (row) {
         rememberKnownColumns(name, Object.keys(row));
         return row;

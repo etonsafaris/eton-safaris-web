@@ -1,10 +1,28 @@
 import Link from 'next/link';
-import { MapPin, Star } from 'lucide-react';
-import DavCtaButton from '@/components/public/DavCtaButton';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { formatPublishedDateValue, formatPublishedStamp } from '@/lib/public-date';
 import { stripPublicMoney } from '@/lib/public-money';
-import { formatPublishedDate } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
+
+function cardStamp(date?: string, record?: RecordRow) {
+  const candidates = [
+    date,
+    record?.published_at,
+    record?.published_date,
+    record?.publish_date,
+    record?.created_at,
+    record?.created_date,
+    record?.updated_at,
+    record?.updated_date,
+  ];
+  for (const value of candidates) {
+    const stamp = formatPublishedStamp(value);
+    if (stamp) return stamp;
+  }
+  const match = /^(\d{13})(?:-|$)/.exec(String(record?.id ?? ''));
+  if (match) return formatPublishedStamp(new Date(Number(match[1])));
+  const pretty = formatPublishedDateValue(date);
+  return pretty ? `Published ${pretty}` : '';
+}
 
 export default function PlaceCard({
   href,
@@ -25,42 +43,36 @@ export default function PlaceCard({
   record?: RecordRow;
   cta?: string;
 }) {
-  const publishedDate = date || (record ? formatPublishedDate(record) : '');
+  const stamp = cardStamp(date, record);
+  const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
+  const to = typeof href === 'string' && href.trim() ? href : '/';
+
   return (
-    <Link href={href} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
-          <ResponsiveImage
+          <img
             src={image}
-            alt={title}
+            alt={title || ''}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        {publishedDate ? (
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{publishedDate}</p>
+        {stamp ? (
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">{stamp}</p>
         ) : null}
         <h2 className="text-[15px] font-bold leading-snug text-[#111]">{title}</h2>
         {location ? (
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#00A651]">
-            <MapPin className="h-3.5 w-3.5" /> {location}
-          </p>
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#00A651]">{location}</p>
         ) : null}
-        {description ? (
-          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#555]">
-            {stripPublicMoney(description)}
-          </p>
-        ) : null}
-        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
-          <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star key={index} className="h-3.5 w-3.5 fill-none text-[#222]" strokeWidth={1.6} />
-            ))}
-          </div>
-          <DavCtaButton>{cta}</DavCtaButton>
+        {copy ? <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#555]">{copy}</p> : null}
+        <div className="mt-auto pt-4">
+          <span className="dav-cta">{cta}</span>
         </div>
       </div>
     </Link>

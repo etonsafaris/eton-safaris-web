@@ -55,16 +55,7 @@ export default function SavedBlocksGrid({
           return (
             <article
               key={`${block.title}-${index}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => onEdit(index)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onEdit(index);
-                }
-              }}
-              className="flex min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:border-[#66bb9a] hover:shadow-md"
+              className="flex min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm"
             >
               {image ? (
                 <img src={image} alt="" className="h-36 w-full object-cover" loading="lazy" decoding="async" />
@@ -133,25 +124,28 @@ export default function SavedBlocksGrid({
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
+                      onClick={() => {
                         onEdit(index);
                       }}
-                      className="rounded-md p-1.5 text-[#00A651] hover:bg-[#ecfdf5]"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-[#00A651] hover:bg-[#ecfdf5]"
                       aria-label={`Edit ${itemLabel} ${index + 1}`}
+                      title="Edit"
                     >
                       <SquarePen className="h-4 w-4" />
+                      Edit
                     </button>
                     <button
                       type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
+                      onClick={() => {
+                        if (!confirm(`Delete this ${itemLabel}?`)) return;
                         onDelete(index);
                       }}
-                      className="rounded-md p-1.5 text-[#ef4444] hover:bg-red-50"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-[#ef4444] hover:bg-red-50"
                       aria-label={`Delete ${itemLabel} ${index + 1}`}
+                      title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
+                      Delete
                     </button>
                   </div>
                 </div>

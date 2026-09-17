@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
@@ -11,28 +10,37 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageFaqList from '@/components/public/PageFaqList';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
-import { fetchCollectionPage, getRecordImage, isPublishedRecord, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
+import { fetchCollectionPage, getRecordImage, isPublishedRecord, recordPublishedAt, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
-function ToursList({
+export default function ToursPageClient({
   initialTours,
   initialCategories,
   initialCountries,
   initialTotal = 0,
+  initialQuery = '',
+  initialCategory = '',
+  initialDestination = '',
+  initialDays = '',
+  initialDepart = '',
 }: {
   initialTours: RecordRow[];
   initialCategories: RecordRow[];
   initialCountries: RecordRow[];
   initialTotal?: number;
+  initialQuery?: string;
+  initialCategory?: string;
+  initialDestination?: string;
+  initialDays?: string;
+  initialDepart?: string;
 }) {
-  const searchParams = useSearchParams();
-  const q = searchParams?.get('q') || '';
-  const category = searchParams?.get('category') || '';
-  const destination = searchParams?.get('destination') || '';
-  const days = searchParams?.get('days') || '';
-  const depart = searchParams?.get('depart') || '';
+  const q = initialQuery;
+  const category = initialCategory;
+  const destination = initialDestination;
+  const days = initialDays;
+  const depart = initialDepart;
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
@@ -93,6 +101,7 @@ function ToursList({
             : `${(initialTotal || filtered.length).toLocaleString()} Total Packages from the live database.`
         }
         image={filtered[0] ? getRecordImage(filtered[0]) : undefined}
+        published={filtered[0] ? recordPublishedAt(filtered[0]) || undefined : undefined}
       />
       <div className="bg-[#f3f3f3] pb-4 pt-2">
         <TourSearchBar
@@ -125,18 +134,5 @@ function ToursList({
         <PageFaqList faqs={bestFaqsFor('tours')} tone="light" />
       </div>
     </PublicShell>
-  );
-}
-
-export default function ToursPageClient(props: {
-  initialTours: RecordRow[];
-  initialCategories: RecordRow[];
-  initialCountries: RecordRow[];
-  initialTotal?: number;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <ToursList {...props} />
-    </Suspense>
   );
 }
