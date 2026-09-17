@@ -149,8 +149,13 @@ export async function GET(
       { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' } }
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
-    return NextResponse.json({ data: [], error: 'Could not load data' }, { status: 503 });
+    const unavailable = /DATABASE_URL is not configured/i.test(message);
+    return NextResponse.json(
+      { data: [], total: 0, error: unavailable ? 'Database is not configured' : 'Could not load data' },
+      { status: 200 }
+    );
   } finally {
     client?.release();
   }

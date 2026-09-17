@@ -97,7 +97,8 @@ export async function fetchCollectionPage(
   if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
   if (filters.category) params.set('ilike.category', `%${filters.category}%`);
   const response = await fetch(dataUrl(table, params), { cache: 'default' });
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  if (!response.ok) return { rows: [] as RecordRow[], total: 0 };
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[]; total?: number };
   return { rows: body.data || [], total: body.total ?? body.data?.length ?? 0 };
 }
 
@@ -131,10 +132,14 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
 
 async function fetchTourRows(params: URLSearchParams) {
   params.set('select', TOUR_LIST_SELECT);
-  const response = await fetch(dataUrl('tours', params), { cache: 'default' });
-  if (!response.ok) return [] as RecordRow[];
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-  return body.data || [];
+  try {
+    const response = await fetch(dataUrl('tours', params), { cache: 'default' });
+    if (!response.ok) return [] as RecordRow[];
+    const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+    return Array.isArray(body.data) ? body.data : [];
+  } catch {
+    return [] as RecordRow[];
+  }
 }
 
 export async function fetchFeaturedTours(limit = 24) {
