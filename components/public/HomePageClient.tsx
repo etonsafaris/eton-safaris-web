@@ -163,7 +163,7 @@ export default function HomePageClient({
         return [] as RecordRow[];
       }),
     ]);
-    setTours(tourRows.slice(0, 12));
+    setTours((current) => (tourRows.length ? tourRows.slice(0, 12) : current));
     setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
     setParks(parkRows.filter(isPublishedRecord).slice(0, 12));
     setCategories(categoryRows.filter(isPublishedRecord));

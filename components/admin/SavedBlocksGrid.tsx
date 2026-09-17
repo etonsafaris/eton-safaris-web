@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, SquarePen, Trash2 } from 'lucide-react';
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
 export type ContentBlock = {
   title: string;
@@ -36,6 +38,11 @@ export default function SavedBlocksGrid({
   lineClamp?: number;
   itemLabel?: string;
 }) {
+  const [pending, setPending] = useState<{ action: 'edit' | 'delete'; index: number } | null>(null);
+  const pendingTitle = pending
+    ? blocks[pending.index]?.title || `Untitled ${itemLabel}`
+    : '';
+
   if (blocks.length === 0) return null;
 
   return (
@@ -125,7 +132,7 @@ export default function SavedBlocksGrid({
                     <button
                       type="button"
                       onClick={() => {
-                        onEdit(index);
+                        setPending({ action: 'edit', index });
                       }}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-[#00A651] hover:bg-[#ecfdf5]"
                       aria-label={`Edit ${itemLabel} ${index + 1}`}
@@ -137,8 +144,7 @@ export default function SavedBlocksGrid({
                     <button
                       type="button"
                       onClick={() => {
-                        if (!confirm(`Delete this ${itemLabel}?`)) return;
-                        onDelete(index);
+                        setPending({ action: 'delete', index });
                       }}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-[#ef4444] hover:bg-red-50"
                       aria-label={`Delete ${itemLabel} ${index + 1}`}
@@ -154,6 +160,31 @@ export default function SavedBlocksGrid({
           );
         })}
       </div>
+      <AdminConfirmDialog
+        open={pending?.action === 'edit'}
+        title="Edit"
+        message={`Edit “${pendingTitle}”?`}
+        confirmLabel="Edit"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const index = pending?.index;
+          setPending(null);
+          if (index != null) onEdit(index);
+        }}
+      />
+      <AdminConfirmDialog
+        open={pending?.action === 'delete'}
+        title="Delete"
+        message={`Delete “${pendingTitle}”? This cannot be undone.`}
+        confirmLabel="Delete"
+        tone="danger"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const index = pending?.index;
+          setPending(null);
+          if (index != null) onDelete(index);
+        }}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Pencil, Star, Trash2, X } from 'lucide-react';
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { statusBadgeClass } from '@/components/admin/OpsRecordTable';
 import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
@@ -31,6 +32,7 @@ export default function ReviewsPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState('');
+  const [pending, setPending] = useState<{ action: 'edit' | 'delete'; row: RecordRow } | null>(null);
 
   async function load() {
     try {
@@ -94,7 +96,7 @@ export default function ReviewsPanel() {
 
   async function remove(row: RecordRow) {
     const id = pickRecordId(row);
-    if (id == null || !confirm('Delete this review?')) return;
+    if (id == null) return;
     setDeletingId(String(id));
     setError('');
     try {
@@ -211,7 +213,7 @@ export default function ReviewsPanel() {
                           ) : null}
                           <button
                             type="button"
-                            onClick={() => openEdit(row)}
+                            onClick={() => setPending({ action: 'edit', row })}
                             title="Edit"
                             aria-label="Edit review"
                             className="inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-semibold text-gray-500 hover:text-[#00A651]"
@@ -221,7 +223,7 @@ export default function ReviewsPanel() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => void remove(row)}
+                            onClick={() => setPending({ action: 'delete', row })}
                             disabled={deletingId === String(pickRecordId(row))}
                             title="Delete"
                             aria-label="Delete review"
@@ -319,6 +321,31 @@ export default function ReviewsPanel() {
           </form>
         </div>
       )}
+      <AdminConfirmDialog
+        open={pending?.action === 'edit'}
+        title="Edit"
+        message={`Edit “${pending ? pickString(pending.row, ['author', 'title', 'name']) || 'this review' : ''}”?`}
+        confirmLabel="Edit"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const row = pending?.row;
+          setPending(null);
+          if (row) openEdit(row);
+        }}
+      />
+      <AdminConfirmDialog
+        open={pending?.action === 'delete'}
+        title="Delete"
+        message={`Delete “${pending ? pickString(pending.row, ['author', 'title', 'name']) || 'this review' : ''}”? This cannot be undone.`}
+        confirmLabel="Delete"
+        tone="danger"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const row = pending?.row;
+          setPending(null);
+          if (row) void remove(row);
+        }}
+      />
     </div>
   );
 }

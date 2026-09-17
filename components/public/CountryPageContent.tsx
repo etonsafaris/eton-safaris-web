@@ -23,8 +23,8 @@ import {
   fetchCollectionPage,
   fetchCollectionRecordById,
   fetchCollectionRecords,
-  fetchToursForCountryLabel,
   fetchParksForCountry,
+  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -93,7 +93,7 @@ export default function CountryPageContent({
       const [countryRows, allCategories, countryTours, countryParks, allPlaces] = await Promise.all([
         fetchCollectionRecords('countries', [], { maxRows: 48 }),
         fetchCollectionRecords('categories', [], { maxRows: 64 }),
-        fetchToursForCountryLabel(slug, 48),
+        resolvePublicTours({ country: publicCountryLabel(countryProp, slug) || slug, limit: 48 }),
         fetchParksForCountry(
           publicCountryLabel(countryProp, slug) || slug,
           48,
@@ -118,7 +118,10 @@ export default function CountryPageContent({
       setCategories(
         allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
       );
-      setTours(countryTours.filter((tour) => matchesCountry(tour, slug)));
+      if (countryTours.length) {
+        const matched = countryTours.filter((tour) => matchesCountry(tour, slug));
+        setTours(matched.length ? matched : countryTours);
+      }
       setParks(countryParks.filter(isPublishedRecord));
       setPlaces(allPlaces.filter(isPublishedRecord).filter((place) => matchesCountry(place, slug)));
     } catch (error) {

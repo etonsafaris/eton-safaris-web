@@ -15,5 +15,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function AccommodationDetailPage({ params }: PageProps) {
   const { item, others, tours } = await loadAccommodationDetail(params.slug);
   if (!item) notFound();
-  return <AccommodationDetailClient initialItem={item} initialOthers={others} initialTours={tours} />;
+  return (
+    <AccommodationDetailClient
+      key={params.slug}
+      initialItem={item}
+      initialOthers={others}
+      initialTours={tours}
+    />
+  );
 }

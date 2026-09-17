@@ -1,6 +1,10 @@
+'use client';
+
+import { useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
-import { pickDateValue, pickNumber, pickString } from '@/lib/data';
+import { getRecordTitle, pickDateValue, pickNumber, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export type OpsColumn = {
@@ -49,6 +53,9 @@ export default function OpsRecordTable({
   onView?: (record: RecordRow) => void;
   onDelete: (record: RecordRow) => void;
 }) {
+  const [pending, setPending] = useState<{ action: 'edit' | 'delete'; record: RecordRow } | null>(null);
+  const pendingTitle = pending ? getRecordTitle(pending.record) : '';
+
   return (
     <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm dark:border-white/10 dark:bg-[#161b22]">
       <div className="overflow-x-auto">
@@ -102,7 +109,7 @@ export default function OpsRecordTable({
                     {onEdit ? (
                       <button
                         type="button"
-                        onClick={() => onEdit(record)}
+                        onClick={() => setPending({ action: 'edit', record })}
                         title="Edit"
                         aria-label="Edit"
                         className="inline-flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-2 py-1.5 text-xs font-semibold text-[#6b7280] hover:border-[#00A651] hover:text-[#00A651] dark:border-white/10 dark:text-gray-300"
@@ -113,7 +120,7 @@ export default function OpsRecordTable({
                     ) : null}
                     <button
                       type="button"
-                      onClick={() => onDelete(record)}
+                      onClick={() => setPending({ action: 'delete', record })}
                       title="Delete"
                       aria-label="Delete"
                       className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:border-red-500/30 dark:hover:bg-red-500/10"
@@ -128,6 +135,31 @@ export default function OpsRecordTable({
           </tbody>
         </table>
       </div>
+      <AdminConfirmDialog
+        open={pending?.action === 'edit'}
+        title="Edit"
+        message={`Edit “${pendingTitle}”?`}
+        confirmLabel="Edit"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const record = pending?.record;
+          setPending(null);
+          if (record) onEdit?.(record);
+        }}
+      />
+      <AdminConfirmDialog
+        open={pending?.action === 'delete'}
+        title="Delete"
+        message={`Delete “${pendingTitle}”? This cannot be undone.`}
+        confirmLabel="Delete"
+        tone="danger"
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const record = pending?.record;
+          setPending(null);
+          if (record) onDelete(record);
+        }}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
-import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug, TOUR_LIST_COLUMNS } from '@/lib/data';
+import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug, recordPublishedAt, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -40,6 +40,7 @@ export default function TourComparePage() {
         title="Compare Safari Packages"
         subtitle="Compare duration and included activities across destinations."
         image={rows[0] ? getRecordImage(rows[0]) : undefined}
+        published={rows[0] ? recordPublishedAt(rows[0]) || undefined : undefined}
       />
       <section className="mx-auto max-w-7xl px-4 py-8">
           <label className="block max-w-xs text-sm font-medium text-gray-700">

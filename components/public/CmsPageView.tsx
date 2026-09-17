@@ -234,19 +234,19 @@ export default function CmsPageView({
   return (
     <PublicShell>
       <PageHero title={title} subtitle={subtitle} image={image} published={published} />
-      <section className="bg-[#111] px-4 py-14 text-white md:py-16">
+      <section className="bg-white px-4 py-14 text-[#222] md:py-16">
         <div className="mx-auto max-w-3xl">
           {html ? (
             <div
-              className="public-prose max-w-none text-white/80 [&_h4]:font-serif [&_h4]:text-2xl [&_h4]:italic [&_h4]:text-white [&_p]:text-white/75"
+              className="public-prose max-w-none [&_h4]:font-serif [&_h4]:text-2xl [&_h4]:italic"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (
-            <div className="public-article-body whitespace-pre-wrap text-sm leading-relaxed text-white/75 md:text-base">{content}</div>
+            <div className="public-article-body whitespace-pre-wrap text-sm leading-relaxed text-[#444] md:text-base">{content}</div>
           )}
-          <DestinationChips names={destinations} />
-          <PageFaqList faqs={faqs} tone="dark" />
-          <Link href={ctaHref} className="mt-10 inline-block text-sm font-semibold text-sage hover:text-white">
+          <DestinationChips names={destinations} tone="light" />
+          <PageFaqList faqs={faqs} tone="light" />
+          <Link href={ctaHref} className="mt-10 inline-block text-sm font-semibold text-[#00A651] hover:text-[#006400]">
             {ctaLabel} →
           </Link>
         </div>

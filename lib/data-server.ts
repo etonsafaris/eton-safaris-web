@@ -296,6 +296,37 @@ function dropColumnFromSelect(columns: string, column: string) {
     .join(',');
 }
 
+async function queryWithColumnFallback(
+  sqlFromColumns: (columns: string) => { text: string; values?: unknown[] },
+  initialColumns: string,
+  cacheKey?: string
+): Promise<RecordRow[]> {
+  let columns = (cacheKey && resolvedSelects.get(cacheKey)) || initialColumns;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      const { text, values } = sqlFromColumns(columns);
+      const res = await db.query(text, values);
+      const rows = (res.rows as RecordRow[]).map(jsonSafeRow);
+      if (cacheKey) resolvedSelects.set(cacheKey, columns);
+      if (rows[0] && cacheKey?.startsWith('tours')) rememberKnownColumns('tours', Object.keys(rows[0]));
+      return rows;
+    } catch (error: any) {
+      const missing = columns !== '*' ? missingSelectColumn(error.message) : null;
+      if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
+        const next = dropColumnFromSelect(columns, missing);
+        if (next && next !== columns) {
+          console.warn(`[Aiven] Dropping missing column "${missing}" from list select.`);
+          columns = next;
+          if (cacheKey) resolvedSelects.set(cacheKey, columns);
+          continue;
+        }
+      }
+      throw error;
+    }
+  }
+  return [];
+}
+
 function isTransientFetchError(message?: string) {
   return /timeout|terminated|fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|Connect Timeout|520|502|503|504|schema cache|connection/i.test(
     String(message || '')
@@ -404,30 +435,30 @@ export async function fetchAllRecords(
 const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
 
 export const TOUR_LIST_COLUMNS =
-  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
+  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
 
 /** Shared list columns for admin grids and public listings (no description HTML). */
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    `id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   national_park:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   national_parks:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   parks:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   explore:
-    `id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   safari_updates:
     `id,title,slug,seo_slug,excerpt,category,country,image_url,social_image_url,post_type,publish_date,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   countries:
-    `id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   categories:
-    `id,name,slug,seo_slug,country,image_url,social_image_url,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
-  pages: `id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,country,image_url,social_image_url,description_title,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+  pages: `id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   landing_pages:
-    `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   bookings:
     'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
 };
@@ -633,27 +664,76 @@ export async function fetchCollectionPage(
   return { rows: [], total: 0 };
 }
 
+const TOUR_SELECT_CACHE_KEY = 'tours::list';
+
+function publishedTourRows(rows: RecordRow[], limit: number) {
+  return rows.filter(isPublishedRecord).slice(0, limit);
+}
+
 /** Homepage / carousels: featured tours only — never page through all ~2900 rows. */
 export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
-  const columns = TOUR_LIST_COLUMNS;
   const capped = Math.max(1, Math.min(limit, 48));
+  const columns = resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS;
 
   try {
-    const queryText = `SELECT ${columns} FROM tours WHERE is_featured = true OR is_popular = true OR show_on_landing = true LIMIT ${capped}`;
-    const res = await db.query(queryText);
-    if (res.rows && res.rows.length > 0) {
-      return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow).slice(0, capped);
-    }
+    const featured = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours WHERE is_featured = true OR is_popular = true OR show_on_landing = true LIMIT ${capped}`,
+      }),
+      columns,
+      TOUR_SELECT_CACHE_KEY
+    );
+    const published = publishedTourRows(featured, capped);
+    if (published.length) return published;
   } catch (error: any) {
     console.error('[Aiven] Featured tours query failed:', error.message);
   }
 
   try {
-    const queryText = `SELECT ${columns} FROM tours ORDER BY created_date DESC LIMIT ${capped}`;
-    const res = await db.query(queryText);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow).slice(0, capped);
+    const recent = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours ORDER BY created_date DESC LIMIT ${capped}`,
+      }),
+      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      TOUR_SELECT_CACHE_KEY
+    );
+    return publishedTourRows(recent, capped);
   } catch (error: any) {
     console.error('[Aiven] Recent tours query failed:', error.message);
+    return [];
+  }
+}
+
+/** Country → featured → recent. Never hide tour packages because one filter returned empty. */
+export async function resolvePublicTours(options?: {
+  country?: string;
+  limit?: number;
+  excludeId?: string;
+}): Promise<RecordRow[]> {
+  const capped = Math.max(1, Math.min(options?.limit ?? 12, 48));
+  const excludeId = options?.excludeId != null ? String(options.excludeId) : '';
+  const keep = (rows: RecordRow[]) =>
+    publishedTourRows(
+      rows.filter((row) => !excludeId || String(row.id) !== excludeId),
+      capped
+    );
+
+  const country = String(options?.country || '').trim();
+  if (country) {
+    const byCountry = keep(await fetchToursForCountryLabel(country, capped));
+    if (byCountry.length) return byCountry;
+  }
+  const featured = keep(await fetchFeaturedTours(capped));
+  if (featured.length) return featured;
+  try {
+    const page = await fetchCollectionPage('tours', [], {
+      columns: resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      limit: capped,
+      offset: 0,
+    });
+    return keep(page.rows);
+  } catch (error: any) {
+    console.error('[Aiven] resolvePublicTours fallback failed:', error.message);
     return [];
   }
 }
@@ -772,9 +852,15 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 200));
   try {
-    const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours WHERE country ILIKE $1 LIMIT ${capped}`;
-    const res = await db.query(queryText, [`%${label}%`]);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow);
+    const rows = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours WHERE country ILIKE $1 LIMIT ${capped}`,
+        values: [`%${label}%`],
+      }),
+      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      TOUR_SELECT_CACHE_KEY
+    );
+    return publishedTourRows(rows, capped);
   } catch (error: any) {
     console.error('[Aiven] fetchToursForCountryLabel failed:', error.message);
     return [];
@@ -816,10 +902,15 @@ export async function searchTours(options: {
     }
 
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
-    const queryText = `SELECT ${TOUR_LIST_COLUMNS} FROM tours ${whereClause} LIMIT ${capped}`;
-    
-    const res = await db.query(queryText, params);
-    return (res.rows as RecordRow[]).filter(isPublishedRecord).map(jsonSafeRow);
+    const rows = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours ${whereClause} LIMIT ${capped}`,
+        values: params,
+      }),
+      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      TOUR_SELECT_CACHE_KEY
+    );
+    return publishedTourRows(rows, capped);
   } catch (error: any) {
     console.error('[Aiven] searchTours failed:', error.message);
     return [];
@@ -838,7 +929,8 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     .replace(/\s+np$/i, '')
     .trim();
   const like = `%${shortName || name}%`;
-  let selectColumns = '*';
+  const staySelectKey = 'accommodations::list';
+  let selectColumns = resolvedSelects.get(staySelectKey) || publicListColumnsFor('accommodations') || '*';
   const seen = new Set<string>();
   const merged: RecordRow[] = [];
 
@@ -852,22 +944,35 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     }
   }
 
-  async function queryOnce(queryText: string, params: any[] = []) {
-    try {
-      const res = await db.query(queryText, params);
-      pushRows(res.rows as RecordRow[]);
-    } catch (error: any) {
-      console.error('[Aiven] Park stays query failed:', error.message);
+  async function queryOnce(whereSql: string, params: any[] = []) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      try {
+        const res = await db.query(`SELECT ${selectColumns} FROM accommodations ${whereSql}`, params);
+        resolvedSelects.set(staySelectKey, selectColumns);
+        pushRows(res.rows as RecordRow[]);
+        return;
+      } catch (error: any) {
+        const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
+        if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
+          const next = dropColumnFromSelect(selectColumns, missing);
+          if (next && next !== selectColumns) {
+            selectColumns = next;
+            continue;
+          }
+        }
+        console.error('[Aiven] Park stays query failed:', error.message);
+        return;
+      }
     }
   }
 
   const id = String(parkId || '').trim();
   if (id) {
-    await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE national_park_id = $1 LIMIT ${capped}`, [id]);
+    await queryOnce(`WHERE national_park_id = $1 LIMIT ${capped}`, [id]);
   }
   if (merged.length < capped && (shortName || name)) {
     for (const column of ['national_park_name', 'national_park', 'park_name', 'park', 'location']) {
-      await queryOnce(`SELECT ${selectColumns} FROM accommodations WHERE ${column} ILIKE $1 LIMIT 48`, [like]);
+      await queryOnce(`WHERE ${column} ILIKE $1 LIMIT 48`, [like]);
       if (merged.length >= capped) break;
     }
   }

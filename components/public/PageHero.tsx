@@ -81,24 +81,20 @@ export default function PageHero({
     return true;
   });
   const publishedLabel = formatPublishedDate(published);
-  const hasPublishedDate = Boolean(publishedLabel && publishedLabel !== '—');
-  const showForestBar =
-    isTour ||
-    isUpdate ||
-    isPark ||
-    customItems.length > 0 ||
-    hasPublishedDate ||
-    (isCountry && (Boolean(bestTime) || Boolean(country) || hasPublishedDate || Boolean(location)));
-  const fullBleedHero = isTour || isUpdate || isPark || isCountry;
+  const customWithPublished = customItems.some((item) => /^published$/i.test(item.label))
+    ? customItems
+    : [...customItems, { label: 'Published', value: publishedLabel }];
+  const showForestBar = true;
+  const fullBleedHero = isTour || isCountry || isUpdate || isPark;
 
   const heroImage = (
     <section
-      className={`relative w-full overflow-hidden bg-[#141612] ${
+      className={`relative w-full overflow-hidden bg-[#1f3d2b] ${
         fullBleedHero && showForestBar
           ? 'min-h-0 flex-1'
           : isPolicy
             ? 'h-[min(56svh,520px)]'
-            : 'h-[min(42svh,380px)] md:h-[min(46svh,420px)]'
+            : 'h-[min(38svh,340px)] md:h-[min(42svh,380px)]'
       }`}
     >
       {src ? (
@@ -110,7 +106,7 @@ export default function PageHero({
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="h-full bg-[#141612]" />
+        <div className="h-full bg-[#1f3d2b]" />
       )}
       <div className="absolute inset-0 bg-black/18" />
       {isAbout ? (
@@ -166,7 +162,7 @@ export default function PageHero({
         <PageBreadcrumbs currentTitle={title} tone="forest" />
         <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2 md:gap-10">
           {customItems.length > 0 ? (
-            customItems.map((item) => (
+            customWithPublished.map((item) => (
               <ForestMetaItem
                 key={item.label}
                 icon={item.label === 'Published' || /time|visit/i.test(item.label) ? Calendar : MapPin}

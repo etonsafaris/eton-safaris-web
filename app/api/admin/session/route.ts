@@ -46,12 +46,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    if (isOwnerAdminEmail(email)) {
-      await ensureOwnerAdminRecord(email || '');
-    }
-
     const response = NextResponse.json({ ok: true });
     response.cookies.set(ADMIN_SESSION_COOKIE, '1', sessionCookieOptions());
+    if (isOwnerAdminEmail(email)) {
+      void ensureOwnerAdminRecord(email || '');
+    }
     return response;
   } catch (error) {
     console.error('[Admin session] Failed:', error);

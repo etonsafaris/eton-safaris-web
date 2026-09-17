@@ -17,5 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ParkDetailPage({ params }: PageProps) {
   const { park, others, stays } = await loadParkDetail(params.slug);
   if (!park) notFound();
-  return <ParkDetailClient initialPark={park} initialOthers={others} initialStays={stays} />;
+  return (
+    <ParkDetailClient key={params.slug} initialPark={park} initialOthers={others} initialStays={stays} />
+  );
 }

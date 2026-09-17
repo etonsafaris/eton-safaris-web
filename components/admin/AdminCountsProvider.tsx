@@ -27,7 +27,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
     setLoading(true);
     setError(null);
     let lastError: unknown;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const next = await fetchAdminCounts(buildAdminCountItems());
         setCounts((current) => ({ ...current, ...next }));
@@ -35,7 +35,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
         return;
       } catch (error) {
         lastError = error;
-        if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));
+        if (attempt < 1) await new Promise((resolve) => window.setTimeout(resolve, 400));
       }
     }
     console.error('[Admin] Could not load collection counts:', lastError);

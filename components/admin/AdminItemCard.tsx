@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
 export default function AdminItemCard({
   layout,
@@ -28,14 +30,17 @@ export default function AdminItemCard({
   onDelete: () => void;
   extraActions?: React.ReactNode;
 }) {
+  const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
+
   const actions = (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
       {extraActions}
       <button
         type="button"
-        onClick={() => {
-          if (!confirm(`Edit “${title}”?`)) return;
-          onEdit();
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setConfirmAction('edit');
         }}
         title="Edit"
         aria-label={`Edit ${title}`}
@@ -46,9 +51,10 @@ export default function AdminItemCard({
       </button>
       <button
         type="button"
-        onClick={() => {
-          if (!confirm(`Delete “${title}”? This cannot be undone.`)) return;
-          onDelete();
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setConfirmAction('delete');
         }}
         title="Delete"
         aria-label={`Delete ${title}`}
@@ -65,6 +71,7 @@ export default function AdminItemCard({
       href={href}
       target="_blank"
       rel="noreferrer"
+      onClick={(event) => event.stopPropagation()}
       className="inline-flex items-center gap-1.5 text-sm font-medium text-[#00A651] hover:underline"
     >
       Read More <ExternalLink className="h-3.5 w-3.5" />
@@ -72,11 +79,11 @@ export default function AdminItemCard({
   ) : null;
 
   const imageBlock = (
-    <div className={`relative overflow-hidden bg-[#1a1f26] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
+    <div className={`relative overflow-hidden bg-[#e8ece9] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
       {image ? (
         <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : (
-        <div className="flex h-full items-center justify-center text-xs text-white/30">No image</div>
+        <div className="flex h-full items-center justify-center text-xs text-gray-400">No image</div>
       )}
       <span className="absolute left-3 top-3 rounded bg-[#00A651] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
         {badge}
@@ -117,6 +124,29 @@ export default function AdminItemCard({
     <article className={className}>
       {imageBlock}
       {body}
+      <AdminConfirmDialog
+        open={confirmAction === 'edit'}
+        title="Edit"
+        message={`Edit “${title}”?`}
+        confirmLabel="Edit"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          onEdit();
+        }}
+      />
+      <AdminConfirmDialog
+        open={confirmAction === 'delete'}
+        title="Delete"
+        message={`Delete “${title}”? This cannot be undone.`}
+        confirmLabel="Delete"
+        tone="danger"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          onDelete();
+        }}
+      />
     </article>
   );
 }

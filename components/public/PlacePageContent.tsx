@@ -13,7 +13,7 @@ import { countryHeroImage } from '@/lib/country-heroes';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
-  fetchToursForCountryLabel,
+  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -91,7 +91,8 @@ export default function PlacePageContent({
           ? otherPlaces.filter((row) => matchesCountry(row, countryKey))
           : [];
         setOthers((countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20));
-        setTours(countryKey ? await fetchToursForCountryLabel(countryKey, 12) : []);
+        const tourRows = await resolvePublicTours({ country: countryKey, limit: 12 });
+        if (tourRows.length) setTours(tourRows);
       } catch (error) {
         console.error('[Supabase] Failed to load place page data:', error);
       } finally {

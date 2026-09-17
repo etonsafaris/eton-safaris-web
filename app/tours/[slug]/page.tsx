@@ -15,5 +15,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TourDetailPage({ params }: PageProps) {
   const { tour, related } = await loadTourDetail(params.slug);
   if (!tour) notFound();
-  return <TourDetailClient initialTour={tour} initialRelated={related} />;
+  return <TourDetailClient key={params.slug} initialTour={tour} initialRelated={related} />;
 }

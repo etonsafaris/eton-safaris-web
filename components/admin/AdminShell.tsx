@@ -134,12 +134,14 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       return;
     }
     const fallbackRole = String(user.user_metadata?.role || '');
+    const accessTimer = window.setTimeout(() => setAccessReady(true), 2500);
     supabase
       .from('registered_agents')
       .select('email,role,allowed_modules,status,is_active')
       .ilike('email', email)
       .limit(8)
       .then(({ data, error }) => {
+        window.clearTimeout(accessTimer);
         if (error) {
           console.error('[Admin] Could not load access profile:', error.message);
         }
@@ -155,6 +157,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
         if (row) router.replace('/agents/portal');
       })
       .catch((error) => {
+        window.clearTimeout(accessTimer);
         console.error('[Admin] Could not load access profile:', error);
         setAccessReady(true);
       });

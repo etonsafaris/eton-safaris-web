@@ -17,5 +17,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SafariUpdateDetailPage({ params }: PageProps) {
   const { post, related, tours } = await loadSafariUpdateDetail(params.slug);
   if (!post) notFound();
-  return <SafariUpdateDetailClient initialPost={post} initialRelated={related} initialTours={tours} />;
+  return (
+    <SafariUpdateDetailClient
+      key={params.slug}
+      initialPost={post}
+      initialRelated={related}
+      initialTours={tours}
+    />
+  );
 }

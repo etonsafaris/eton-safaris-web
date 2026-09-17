@@ -74,6 +74,10 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        source: '/api/data/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=30, stale-while-revalidate=120' }],
+      },
+      {
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
       },

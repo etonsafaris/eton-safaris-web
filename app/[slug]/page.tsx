@@ -73,6 +73,7 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
         }
       />
       <CmsSlugClient
+        key={params.slug}
         initialCountry={countryData?.country || null}
         initialPage={initialPage}
         initialCategories={countryData?.categories || []}

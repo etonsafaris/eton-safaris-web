@@ -14,7 +14,7 @@ import {
 } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
-  fetchToursForCountryLabel,
+  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
@@ -91,15 +91,18 @@ export default function CategoryPageContent({
       try {
         const [allCategories, countryTours] = await Promise.all([
           fetchCollectionRecords('categories'),
-          fetchToursForCountryLabel(slug, 48),
+          resolvePublicTours({ country: slug, limit: 48 }),
         ]);
         if (!mounted) return;
         const nextCategories = allCategories
           .filter(isPublishedRecord)
           .filter((category) => categoryMatchesCountry(category, slug));
-        const nextTours = countryTours.filter((tour) => matchesCountry(tour, slug));
+        const matched = countryTours.filter((tour) => matchesCountry(tour, slug));
+        const nextTours = matched.length ? matched : countryTours;
         setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
-        setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
+        if (nextTours.length) {
+          setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
+        }
       } catch (error) {
         console.error('[Supabase] Failed to load category page data:', error);
       }

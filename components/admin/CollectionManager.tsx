@@ -127,7 +127,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
 
   useEffect(() => {
-    if (!config.publicPath || config.id === 'keywords') return;
+    if (!config.publicPath || config.id === 'keywords' || config.id === 'tours') return;
     fetchCollectionRecords('keywords', ['keyword', 'seo_keywords'], { maxRows: 5000 })
       .then(setKeywordRows)
       .catch((error) => console.error('[Admin] Could not load keyword library:', error));
@@ -383,6 +383,11 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       notifications: 'NOTICE',
     };
     return badges[config.id] || config.label.toUpperCase();
+  }
+
+  function cardTitle(record: RecordRow) {
+    if (isTours) return pickString(record, ['title', 'name']) || getRecordTitle(record);
+    return getRecordTitle(record);
   }
 
   function cardDate(record: RecordRow) {
@@ -1172,8 +1177,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
-                  title={getRecordTitle(record)}
-                  keywords={config.id === 'tours' ? [] : keywordsForRecord(record)}
+                  title={cardTitle(record)}
+                  keywords={isTours ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1191,8 +1196,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
-                  title={getRecordTitle(record)}
-                  keywords={config.id === 'tours' ? [] : keywordsForRecord(record)}
+                  title={cardTitle(record)}
+                  keywords={isTours ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
