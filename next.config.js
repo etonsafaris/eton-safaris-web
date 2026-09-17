@@ -73,6 +73,7 @@ const nextConfig = {
         source: '/api/media/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
+      {
         source: '/api/data/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=30, stale-while-revalidate=120' }],
       },
