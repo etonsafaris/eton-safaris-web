@@ -29,7 +29,12 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
     let lastError: unknown;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const next = await fetchAdminCounts(buildAdminCountItems());
+        const next = await Promise.race([
+          fetchAdminCounts(buildAdminCountItems()),
+          new Promise<never>((_, reject) =>
+            window.setTimeout(() => reject(new Error('Collection counts timed out')), 6000)
+          ),
+        ]);
         setCounts((current) => ({ ...current, ...next }));
         setLoading(false);
         return;

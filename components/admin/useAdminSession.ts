@@ -5,7 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { clearAdminSessionCookieServer, syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { decodeJwtPayload, emailFromJwtPayload, readStoredAccessToken } from '@/lib/supabase/jwt-payload';
-type User = { email?: string; user_metadata?: Record<string, unknown> };
+
+type User = {
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+};
 
 type UseAdminSessionOptions = {
   redirectTo?: string;
@@ -31,6 +35,20 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   });
 }
 
+function userFromToken(token: string): User | null {
+  const payload = decodeJwtPayload(token);
+  const email = emailFromJwtPayload(payload);
+  if (!email) return null;
+  const metadata =
+    payload?.user_metadata && typeof payload.user_metadata === 'object'
+      ? (payload.user_metadata as Record<string, unknown>)
+      : {};
+  return {
+    email,
+    user_metadata: metadata,
+  };
+}
+
 export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminSessionOptions = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -39,17 +57,6 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
 
   useEffect(() => {
     let mounted = true;
-
-    function sessionUserFromToken(token: string, email: string): User {
-      return {
-        id: String(decodeJwtPayload(token)?.sub || ''),
-        email,
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: '',
-      } as User;
-    }
 
     function goToPasswordChange(nextUser: User) {
       if (pathname === '/admin/change-password') return;
@@ -63,29 +70,33 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
 
-        let session = data.session;
-        if (!session) {
-          const token = readStoredAccessToken();
-          const email = emailFromJwtPayload(decodeJwtPayload(token));
-          if (token && email) {
-            const restored = sessionUserFromToken(token, email);
-            setUser(restored);
-            setReady(true);
-            void withTimeout(syncAdminSessionCookie(token), 2500, false);
-            goToPasswordChange(restored);
-            return;
-          }
-          router.replace(redirectTo);
+        const session = data.session;
+        const token = session?.access_token || readStoredAccessToken();
+        const nextUser = session?.user
+          ? {
+              email: session.user.email,
+              user_metadata: session.user.user_metadata || {},
+            }
+          : token
+            ? userFromToken(token)
+            : null;
+
+        if (nextUser?.email) {
+          setUser(nextUser);
+          setReady(true);
+          goToPasswordChange(nextUser);
+          if (token) void withTimeout(syncAdminSessionCookie(token), 2500, false);
           return;
         }
 
-        setUser(session.user);
-        setReady(true);
-        goToPasswordChange(session.user);
-        void withTimeout(syncAdminSessionCookie(session.access_token), 2500, false);
+        if (pathname.startsWith('/admin')) {
+          setReady(true);
+          return;
+        }
+        router.replace(redirectTo);
       } catch (error) {
         console.error('[Auth] Failed to read admin session:', error);
-        if (mounted) router.replace(redirectTo);
+        if (mounted && !pathname.startsWith('/admin')) router.replace(redirectTo);
       } finally {
         if (mounted) setReady(true);
       }
@@ -98,18 +109,23 @@ export function useAdminSession({ redirectTo = '/login?next=/admin' }: UseAdminS
       void (async () => {
         if (!session) {
           const token = readStoredAccessToken();
-          const email = emailFromJwtPayload(decodeJwtPayload(token));
-          if (token && email) {
-            setUser(sessionUserFromToken(token, email));
+          const restored = token ? userFromToken(token) : null;
+          if (restored?.email) {
+            setUser(restored);
             void withTimeout(syncAdminSessionCookie(token), 2500, false);
             return;
           }
           setUser(null);
-          await withTimeout(clearAdminSessionCookieServer().then(() => true), 2000, true);
-          router.replace(redirectTo);
+          if (!pathname.startsWith('/admin')) {
+            await withTimeout(clearAdminSessionCookieServer().then(() => true), 2000, true);
+            router.replace(redirectTo);
+          }
           return;
         }
-        setUser(session.user);
+        setUser({
+          email: session.user.email,
+          user_metadata: session.user.user_metadata || {},
+        });
         goToPasswordChange(session.user);
         void withTimeout(syncAdminSessionCookie(session.access_token), 2500, false);
       })();

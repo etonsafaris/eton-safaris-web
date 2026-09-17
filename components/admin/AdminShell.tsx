@@ -126,7 +126,12 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const email = user?.email;
-    if (!user || !email) return;
+    if (!email) {
+      setRole('Admin');
+      setAllowedModules([]);
+      setAccessReady(true);
+      return;
+    }
     if (isOwnerAdminEmail(email)) {
       setRole('Admin');
       setAllowedModules([]);
@@ -229,11 +234,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const displayName = user.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
+  const displayName = user?.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
   const initial = displayName.charAt(0).toUpperCase();
   const currentCollection =
     MAIN_COLLECTIONS.find((item) => {

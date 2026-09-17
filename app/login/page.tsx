@@ -179,20 +179,11 @@ function LoginForm() {
       const clockIssue = /issued at future|iat claim in the future/i.test(authResult.error.message || '');
       const storedToken = readStoredAccessToken();
       if (!(clockIssue && storedToken)) {
-        const account = await findPublicAgentByEmail(email);
-        if (account && !agentIsActive(account)) {
-          setError(
-            isStaffRole(account.role)
-              ? 'Your account is waiting for administrator approval. You will be emailed when it is activated.'
-              : 'Your agent application is waiting for administrator approval. You will be emailed when it is activated.'
-          );
-        } else {
-          setError(
-            clockIssue
-              ? 'Sign-in hit a clock mismatch. Check that this computer’s date and time are correct, then try again.'
-              : authResult.error.message
-          );
-        }
+        setError(
+          clockIssue
+            ? 'Sign-in hit a clock mismatch. Check that this computer’s date and time are correct, then try again.'
+            : authResult.error.message
+        );
         setLoading(false);
         return;
       }
@@ -200,9 +191,15 @@ function LoginForm() {
 
     const session = authResult.data.session;
     const accessToken = session?.access_token || readStoredAccessToken();
-    const account = await findPublicAgentByEmail(email);
-    const roleValue = String(account?.role || authResult.data.user?.user_metadata?.role || '');
     const ownerAdmin = isOwnerAdminEmail(email);
+    let account = null as Awaited<ReturnType<typeof findPublicAgentByEmail>>;
+    if (!ownerAdmin) {
+      account = await Promise.race([
+        findPublicAgentByEmail(email),
+        new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 2500)),
+      ]);
+    }
+    const roleValue = String(account?.role || authResult.data.user?.user_metadata?.role || '');
     const isAgent = Boolean(account) && isTravelAgentRole(roleValue) && !ownerAdmin;
     const isStaff = ownerAdmin || isStaffRole(roleValue) || (!account && /admin|full access/i.test(roleValue));
 
@@ -226,11 +223,20 @@ function LoginForm() {
     else if (isStaff) destination = '/admin';
     else if (isAgent) destination = '/agents/portal';
 
-    const synced = await syncAdminSessionCookie(accessToken);
+    const synced = await Promise.race([
+      syncAdminSessionCookie(accessToken),
+      new Promise<boolean>((resolve) => window.setTimeout(() => resolve(false), 4000)),
+    ]);
     if (!synced) {
-      setError('Signed in, but the admin cookie could not be set. Check this computer’s date and time, then try again.');
-      setLoading(false);
-      return;
+      const retried = await Promise.race([
+        syncAdminSessionCookie(accessToken),
+        new Promise<boolean>((resolve) => window.setTimeout(() => resolve(false), 3000)),
+      ]);
+      if (!retried && !ownerAdmin) {
+        setError('Signed in, but the admin cookie could not be set. Check this computer’s date and time, then try again.');
+        setLoading(false);
+        return;
+      }
     }
     router.refresh();
     router.replace(destination);

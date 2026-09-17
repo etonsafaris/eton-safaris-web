@@ -1,19 +1,32 @@
+import {
+  ADMIN_AUTH_STORAGE_KEY,
+  decodeJwtPayload,
+  emailFromJwtPayload,
+} from '@/lib/supabase/jwt-payload';
+
 type QueryResult = { data: any[] | null; error: { message: string } | null };
 type AuthUser = { id: string; email: string; user_metadata?: Record<string, unknown> };
 type AuthSession = { access_token: string; user: AuthUser };
 
-const AUTH_STORAGE_KEY = 'eton-aiven-auth-token';
-
 function storedSession(): AuthSession | null {
   if (typeof window === 'undefined') return null;
-  try {
-    const token = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as AuthUser;
-    return { access_token: token, user: payload };
-  } catch {
-    return null;
-  }
+  const token = window.localStorage.getItem(ADMIN_AUTH_STORAGE_KEY)?.trim() || '';
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  const email = emailFromJwtPayload(payload);
+  const metadata =
+    payload.user_metadata && typeof payload.user_metadata === 'object'
+      ? (payload.user_metadata as Record<string, unknown>)
+      : {};
+  return {
+    access_token: token,
+    user: {
+      id: String(payload.sub || payload.id || email),
+      email: email || String(payload.email || ''),
+      user_metadata: metadata,
+    },
+  };
 }
 
 class BrowserQuery {
@@ -67,7 +80,7 @@ export const supabase = {
         return { data: { session: null, user: null }, error: { message: body.error || 'Invalid email or password' } };
       }
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(AUTH_STORAGE_KEY, body.session.access_token);
+        window.localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, body.session.access_token);
       }
       return { data: body.session, error: null };
     },
@@ -75,7 +88,7 @@ export const supabase = {
       if (typeof window !== 'undefined') {
         for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
           const key = window.localStorage.key(index);
-          if (key && (/auth-token/i.test(key) || key === AUTH_STORAGE_KEY)) {
+          if (key && (/auth-token/i.test(key) || key === ADMIN_AUTH_STORAGE_KEY)) {
             window.localStorage.removeItem(key);
           }
         }

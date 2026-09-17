@@ -7,14 +7,13 @@ import { collectionIcon } from '@/lib/admin-icons';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
-import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { fetchAdminTable } from '@/lib/admin-records-client';
 import { getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function AdminOverviewPage() {
   const { user } = useAdminSession();
-  const { counts, loading: countsLoading } = useAdminCounts();
+  const { counts } = useAdminCounts();
   const [bookings, setBookings] = useState<RecordRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
 
@@ -36,8 +35,6 @@ export default function AdminOverviewPage() {
     };
   }, []);
 
-  const loading = countsLoading && bookingsLoading;
-
   const destinations: Record<string, number> = {};
   bookings.forEach((booking) => {
     const dest = pickString(booking, ['destination', 'country', 'tour']) || 'Other';
@@ -51,14 +48,6 @@ export default function AdminOverviewPage() {
     ...MAIN_COLLECTIONS.filter((item) => item.id !== 'overview'),
     ...SYSTEM_COLLECTIONS,
   ];
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <AdminLogoLoader label="Loading dashboard" />
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -151,7 +140,7 @@ export default function AdminOverviewPage() {
       </div>
 
       <div className="mt-6">
-        <BookingPerformanceChart bookings={bookings} loading={loading} />
+        <BookingPerformanceChart bookings={bookings} loading={bookingsLoading} />
       </div>
     </div>
   );

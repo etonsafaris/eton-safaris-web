@@ -64,11 +64,7 @@ export default function AdminLightShell({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const displayName = user.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
+  const displayName = user?.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
   const initial = displayName.charAt(0).toUpperCase();
 
   return (

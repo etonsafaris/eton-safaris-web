@@ -1,4 +1,6 @@
 /** Decode a JWT payload in browser or Node without verifying the signature. */
+export const ADMIN_AUTH_STORAGE_KEY = 'eton-aiven-auth-token';
+
 export function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const part = token.split('.')[1];
@@ -34,22 +36,29 @@ export function emailFromJwtPayload(payload: Record<string, unknown> | null) {
   return '';
 }
 
-/** Read the persisted Supabase access token when getSession() rejects a future iat. */
+/** Read the persisted Aiven access token when getSession() cannot decode it. */
 export function readStoredAccessToken(fallback = '') {
   if (fallback) return fallback;
   if (typeof window === 'undefined') return '';
   try {
+    const direct = window.localStorage.getItem(ADMIN_AUTH_STORAGE_KEY)?.trim() || '';
+    if (direct.split('.').length >= 2) return direct;
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const key = window.localStorage.key(i);
       if (!key || !/auth-token/i.test(key)) continue;
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
-      const parsed = JSON.parse(raw) as {
-        access_token?: string;
-        currentSession?: { access_token?: string };
-      };
-      const token = parsed.access_token || parsed.currentSession?.access_token || '';
-      if (token) return token;
+      if (raw.split('.').length >= 2 && !raw.trim().startsWith('{')) return raw.trim();
+      try {
+        const parsed = JSON.parse(raw) as {
+          access_token?: string;
+          currentSession?: { access_token?: string };
+        };
+        const token = parsed.access_token || parsed.currentSession?.access_token || '';
+        if (token) return token;
+      } catch {
+        if (raw.split('.').length >= 2) return raw;
+      }
     }
   } catch {
     /* ignore */
