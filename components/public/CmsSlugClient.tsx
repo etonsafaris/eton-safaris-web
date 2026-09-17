@@ -21,7 +21,6 @@ import { inferPageLayout } from '@/lib/cms-page-model';
 import { hydratePublicCmsPage, resolvePolicyPageContent } from '@/lib/hydrate-cms-page';
 import {
   fetchCollectionRecords,
-  getRecordImage,
   isPublishedRecord,
 } from '@/lib/data';
 import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
@@ -69,19 +68,14 @@ export default function CmsSlugClient({
     const hasFirstPaint =
       Boolean(initialCountry || initialPage) && (!categorySlug || hasNested);
 
-    if (hasFirstPaint) {
-      setCountry(initialCountry);
-      setPage(initialPage);
-      setNestedPlace(initialNestedPlace);
-      setNestedIsCategory(initialNestedIsCategory);
-      setForceCountry(Boolean(initialCountry && resolved?.kind === 'country'));
+    setCountry(initialCountry);
+    setPage(initialPage);
+    setNestedPlace(initialNestedPlace);
+    setNestedIsCategory(initialNestedIsCategory);
+    setForceCountry(Boolean(initialCountry && resolved?.kind === 'country'));
+    if (hasFirstPaint || initialPage || initialCountry) {
       setReady(true);
       if (live === 0) return undefined;
-    } else {
-      // Drop the previous destination immediately so Rwanda never stays on a Madagascar route.
-      setCountry(null);
-      setNestedPlace(null);
-      setNestedIsCategory(false);
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {
@@ -117,7 +111,6 @@ export default function CmsSlugClient({
         setReady(true);
         return;
       }
-      if (categorySlug && !hasFirstPaint) setReady(false);
       try {
         if (resolved.kind === 'country') {
           await loadCountry(resolved.canonical, resolved.countrySlug || countrySlugFromLanding(resolved.canonical));
@@ -142,7 +135,7 @@ export default function CmsSlugClient({
     return () => {
       mounted = false;
     };
-  }, [rawSlug, categorySlug, resolved?.canonical, resolved?.kind, resolved?.countrySlug, live]);
+  }, [rawSlug, categorySlug, resolved?.canonical, resolved?.kind, resolved?.countrySlug, live, initialCountry, initialPage, initialNestedPlace, initialNestedIsCategory]);
 
   const showCountry = resolved?.kind === 'country' || forceCountry;
 
@@ -173,14 +166,6 @@ export default function CmsSlugClient({
       title: countryName,
       name: countryName,
     };
-
-    if (!ready && !country) {
-      return (
-        <PublicShell>
-          <PublicPageLoader label="Loading destination" />
-        </PublicShell>
-      );
-    }
 
     return (
       <PublicShell>
@@ -239,14 +224,6 @@ export default function CmsSlugClient({
   const blocks = view.blocks;
   const faqs = view.faqs;
   const destinations = view.destinations;
-
-  if (!ready && !page) {
-    return (
-      <PublicShell>
-        <PublicPageLoader label="Loading page" />
-      </PublicShell>
-    );
-  }
 
   return (
     <CmsPageView

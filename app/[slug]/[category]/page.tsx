@@ -82,6 +82,7 @@ export default async function CountryCategoryPage({ params }: PageProps) {
         schemaHint={schemaHint}
       />
       <CmsSlugClient
+        key={`${params.slug}/${params.category}`}
         initialCountry={countryData.country}
         initialCategories={countryData.categories}
         initialTours={countryData.tours}

@@ -42,6 +42,7 @@ export default async function SafariUpdatesPage({
   return (
     <PublicShell>
       <PageHero
+        variant="update"
         title="Safari Updates"
         subtitle={
           total ? `${total.toLocaleString()} safari stories and travel notes` : 'Safari news and travel notes'

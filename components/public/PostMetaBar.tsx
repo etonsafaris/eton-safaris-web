@@ -1,10 +1,10 @@
 'use client';
 
 import { Calendar, MapPin } from 'lucide-react';
-import { formatPublishedDateValue } from '@/lib/public-date';
+import { activePublishedDate } from '@/lib/public-date';
 
 export function formatPublishedDate(value?: string): string {
-  return formatPublishedDateValue(value) || '—';
+  return activePublishedDate(value);
 }
 
 export type MetaItem = {
@@ -30,13 +30,11 @@ export default function PostMetaBar({
   const resolved: MetaItem[] =
     items && items.length > 0
       ? items.map((item) =>
-          item.label === 'Published'
-            ? { ...item, value: formatPublishedDate(item.value) }
-            : item
+          item.label === 'Published' ? { ...item, value: formatPublishedDate(item.value) } : item
         )
       : [
-          { label: 'Country', value: country },
-          ...(showLocation ? [{ label: 'Location', value: location }] : []),
+          ...(country?.trim() ? [{ label: 'Country', value: country }] : []),
+          ...(showLocation && location?.trim() ? [{ label: 'Location', value: location }] : []),
           { label: 'Published', value: formatPublishedDate(published) },
         ];
 

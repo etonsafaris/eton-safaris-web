@@ -49,6 +49,7 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   return (
     <PublicShell>
       <CountryPageContent
+        key={slug}
         slug={slug}
         country={country}
         initialCategories={data.categories}

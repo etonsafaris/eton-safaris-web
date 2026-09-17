@@ -19,6 +19,7 @@ export default async function ExploreDetailPage({ params }: PageProps) {
   return (
     <PublicShell>
       <PlacePageContent
+        key={params.slug}
         placeSlug={params.slug}
         place={place}
         initialOthers={others}

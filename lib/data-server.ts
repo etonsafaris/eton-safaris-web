@@ -404,30 +404,30 @@ export async function fetchAllRecords(
 const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
 
 export const TOUR_LIST_COLUMNS =
-  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
+  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
 
 /** Shared list columns for admin grids and public listings (no description HTML). */
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   tours: TOUR_LIST_COLUMNS,
   accommodations:
-    `id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,location,country,type,image_url,social_image_url,description_title,national_park_id,national_park_name,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   national_park:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   national_parks:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   parks:
-    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   explore:
-    `id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,title,slug,location,country,image_url,social_image_url,description_title,seo_slug,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   safari_updates:
     `id,title,slug,seo_slug,excerpt,category,country,image_url,social_image_url,post_type,publish_date,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   countries:
-    `id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,tagline,summary,excerpt,image_url,social_image_url,is_popular,description_title,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   categories:
-    `id,name,slug,seo_slug,country,image_url,social_image_url,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
-  pages: `id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,name,slug,seo_slug,country,image_url,social_image_url,description_title,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+  pages: `id,title,post_title,slug,seo_slug,cover_image,social_image_url,subtitle,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   landing_pages:
-    `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+    `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   bookings:
     'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
 };

@@ -33,6 +33,11 @@ export function formatPublishedDateValue(value: unknown): string {
   return '';
 }
 
+/** Always returns a real calendar date so Published never shows as inactive "—". */
+export function activePublishedDate(value?: unknown): string {
+  return formatPublishedDateValue(value) || formatPublishedDateValue(new Date());
+}
+
 export function formatPublishedStamp(value: unknown): string {
   const pretty = formatPublishedDateValue(value);
   return pretty ? `Published ${pretty}` : '';
