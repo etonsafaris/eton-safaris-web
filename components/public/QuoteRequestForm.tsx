@@ -36,6 +36,17 @@ export default function QuoteRequestForm() {
     }));
   }, [presetCountry]);
 
+  useEffect(() => {
+    if (!presetTour) return;
+    setForm((current) => {
+      if (current.message.trim()) return current;
+      return {
+        ...current,
+        message: `I would like a quotation for: ${presetTour}.`,
+      };
+    });
+  }, [presetTour]);
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (isSpamHoneypot(honeypot)) return;

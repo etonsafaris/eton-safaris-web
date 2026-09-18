@@ -11,12 +11,18 @@ import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
-import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
+import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import PageFaqList from '@/components/public/PageFaqList';
 import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
-import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
+import {
+  canonicalCountrySlug,
+  countryCategoryPath,
+  publicCountrySlug,
+  publicCountryLabel,
+  recordCountryValues,
+} from '@/lib/country-utils';
 import {
   destinationListingRows,
   mergePublicDestinations,
@@ -88,6 +94,18 @@ export default function HomePageClient({
     const preferred = tours.filter((tour) => tour.is_featured || tour.is_popular || tour.show_on_landing);
     return (preferred.length ? preferred : tours).slice(0, 12);
   }, [tours]);
+
+  const homeCategoryCards = useMemo(() => categories.slice(0, 4), [categories]);
+
+  function homeCategoryHref(category: RecordRow) {
+    const countrySlugs = recordCountryValues(category);
+    const country =
+      countrySlugs[0] ||
+      canonicalCountrySlug(pickString(category, ['country'])) ||
+      publicCountrySlug(countries[0] as RecordRow) ||
+      'uganda';
+    return countryCategoryPath(country, category);
+  }
 
   const tourItems = featuredTours.map((tour, index) => (
     <TourCard key={String(tour.id ?? index)} tour={tour} />
@@ -204,12 +222,21 @@ export default function HomePageClient({
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
 
-      <WhatSetsUsApartSection
-        heading={homeContent.setsApartHeading}
-        intro={homeContent.setsApartIntro}
-        features={homeContent.features}
-        videos={homeContent.videos}
-      />
+      {homeCategoryCards.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 py-16">
+          <SectionHeading label="Find tours by" title="Safari Categories" />
+          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
+            {homeCategoryCards.map((category, index) => (
+              <SafariCategoryCard
+                key={String(category.id ?? index)}
+                category={category}
+                titleOnly
+                href={homeCategoryHref(category)}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
