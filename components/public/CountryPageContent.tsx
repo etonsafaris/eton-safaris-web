@@ -173,7 +173,7 @@ export default function CountryPageContent({
         published={published || undefined}
       />
 
-      <section className="bg-[#f3f3f3] px-4 py-12">
+      <section className="cv-auto bg-[#f3f3f3] px-4 py-12">
         <div className="mx-auto max-w-[1200px]">
           <div className="text-center">
             <h2 className="font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">

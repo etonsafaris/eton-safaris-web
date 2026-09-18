@@ -57,11 +57,7 @@ export const metadata: Metadata = {
     images: [`${SITE.url}${SITE_LOGO}`],
   },
   icons: {
-    icon: [
-      { url: SITE_LOGO, type: 'image/png', sizes: '48x48' },
-      { url: SITE_LOGO, type: 'image/png', sizes: '192x192' },
-      { url: SITE_LOGO, type: 'image/png', sizes: '1024x1024' },
-    ],
+    icon: [{ url: SITE_LOGO, type: 'image/png', sizes: '48x48' }],
     apple: [{ url: SITE_LOGO, type: 'image/png', sizes: '180x180' }],
     shortcut: SITE_LOGO,
   },

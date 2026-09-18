@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
-import { SITE, SITE_LOGO } from '@/lib/collections';
+import { SITE } from '@/lib/collections';
 import { quoteRequestPath } from '@/lib/quote-request';
+import { SiteLogoImage } from '@/components/BrandLogo';
 
 export default function SpeakToExpertCard({
   className = '',
@@ -27,15 +28,7 @@ export default function SpeakToExpertCard({
           <br /> who&apos;s there
         </h2>
         <div className="flex items-start">
-          <img
-            src={SITE_LOGO}
-            alt={SITE.name}
-            width={80}
-            height={80}
-            loading="lazy"
-            decoding="async"
-            className="mr-4 h-20 w-20 shrink-0 object-contain"
-          />
+          <SiteLogoImage size={80} className="mr-4 h-20 w-20 shrink-0 object-contain" />
           <p className="text-base leading-6 text-[#222]">
             Start planning your trip by contacting one of our {destination} specialists.
           </p>
@@ -81,7 +74,7 @@ export default function SpeakToExpertCard({
 
   return (
     <aside className={`border border-gray-100 bg-white p-5 shadow-card ${className || 'rounded-xl'}`}>
-      <img src={SITE_LOGO} alt={SITE.name} width={224} height={56} loading="lazy" decoding="async" className="mx-auto mb-3 h-14 w-auto object-contain" />
+      <SiteLogoImage size={224} className="mx-auto mb-3 h-14 w-auto object-contain" />
       <h3 className="mb-0.5 text-center font-serif text-sm font-bold text-[#333]">Speak to an Expert</h3>
       <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-widest text-sage">
         We&apos;re here to help

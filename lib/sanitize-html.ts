@@ -1,3 +1,5 @@
+import { contentImageSrc } from '@/lib/responsive-image';
+
 const MSO_BLOCK = /<!--\[if[\s\S]*?<!\[endif\]-->/gi;
 const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align)$/i;
 const ALLOWED_TAGS = new Set([
@@ -89,7 +91,8 @@ export function sanitizeWordHtml(input: string): string {
       const src = attr(rest, 'src').replace(/"/g, '');
       if (!src || /^(javascript|data):/i.test(src)) return '';
       const alt = attr(rest, 'alt').replace(/"/g, '');
-      return `<img src="${src}" alt="${alt}" style="max-width:100%" loading="lazy" decoding="async" />`;
+      const sized = contentImageSrc(src);
+      return `<img src="${sized}" alt="${alt}" style="max-width:100%" loading="lazy" decoding="async" />`;
     }
 
     if (tag === 'video') {

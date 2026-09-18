@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { formatPublishedDateValue, formatPublishedStamp } from '@/lib/public-date';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
+import ResponsiveImage from '@/components/public/ResponsiveImage';
 
 function cardStamp(date?: string, record?: RecordRow) {
   const candidates = [
@@ -51,12 +52,10 @@ export default function PlaceCard({
     <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
-          <img
+          <ResponsiveImage
             src={image}
             alt={title || ''}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>

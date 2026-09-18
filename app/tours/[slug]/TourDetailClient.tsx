@@ -23,6 +23,7 @@ import {
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import { contentImageSrc } from '@/lib/responsive-image';
 import { stripPublicMoney } from '@/lib/public-money';
 import { splitContentList } from '@/lib/content-list';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
@@ -357,7 +358,7 @@ export default function TourDetailClient({
                   />
                 ) : null}
                 {journeyMap ? (
-                  <img src={journeyMap} alt="Journey map" width={1200} height={675} loading="lazy" decoding="async" className="mt-4 w-full rounded-xl object-cover" />
+                  <img src={contentImageSrc(journeyMap)} alt="Journey map" width={1200} height={675} loading="lazy" decoding="async" className="mt-4 w-full rounded-xl object-cover" />
                 ) : null}
               </div>
             ) : null}

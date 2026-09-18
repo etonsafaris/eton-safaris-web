@@ -13,7 +13,22 @@ const heroesDir = path.join(root, 'public', 'heroes');
 const sourceExtensions = new Set(['.png', '.jpg', '.jpeg']);
 const widths = [480, 640, 768, 1080, 1440];
 
+const gorilla = path.join(root, 'public', 'eton-safaris-gorilla.png');
+const gorillaWidths = [96, 192, 384];
+
+async function optimizeLogo() {
+  if (!fs.existsSync(gorilla)) return;
+  for (const width of gorillaWidths) {
+    await sharp(gorilla)
+      .resize(width, width, { fit: 'inside' })
+      .webp({ quality: 82, effort: 6 })
+      .toFile(path.join(root, 'public', `eton-safaris-gorilla-${width}.webp`));
+  }
+  console.log('Optimized site logo display sizes');
+}
+
 async function main() {
+  await optimizeLogo();
   if (!fs.existsSync(heroesDir)) return;
   const sources = fs
     .readdirSync(heroesDir, { withFileTypes: true })

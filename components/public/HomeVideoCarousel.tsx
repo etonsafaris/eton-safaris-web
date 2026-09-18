@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import { cardImageSrc } from '@/lib/responsive-image';
 
 function uniqueVideos(videos: string[]) {
   const seen = new Set<string>();
@@ -102,7 +103,7 @@ export default function HomeVideoCarousel({
           onEnded={handleEnded}
         />
       ) : poster ? (
-        <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
+        <img src={cardImageSrc(poster)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : null}
       {hasPlaylist ? (
         <>

@@ -127,14 +127,14 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
 
   useEffect(() => {
-    if (!config.publicPath || config.id === 'keywords' || config.id === 'tours') return;
+    if (!config.publicPath || config.id === 'keywords' || config.id === 'tours' || config.id === 'categories') return;
     fetchCollectionRecords('keywords', ['keyword', 'seo_keywords'], { maxRows: 5000 })
       .then(setKeywordRows)
       .catch((error) => console.error('[Admin] Could not load keyword library:', error));
   }, [config.id, config.publicPath]);
 
   function keywordsForRecord(record: RecordRow) {
-    if (config.id === 'tours') return [];
+    if (config.id === 'tours' || config.id === 'categories') return [];
     const country = pickString(record, ['country']);
     const category = pickString(record, ['category']) || getRecordTitle(record);
     if (!country || !category) return [];
@@ -1178,7 +1178,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={cardTitle(record)}
-                  keywords={isTours ? [] : keywordsForRecord(record)}
+                  keywords={isTours || isCategories ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1197,7 +1197,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={cardTitle(record)}
-                  keywords={isTours ? [] : keywordsForRecord(record)}
+                  keywords={isTours || isCategories ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}

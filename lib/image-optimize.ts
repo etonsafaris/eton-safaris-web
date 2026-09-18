@@ -1,6 +1,6 @@
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const MAX_WIDTH = 1920;
-const QUALITY = 0.78;
+const MAX_WIDTH = 1440;
+const QUALITY = 0.72;
 
 export function isAllowedImageFile(file: File) {
   if (ALLOWED_TYPES.has(file.type)) return true;

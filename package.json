@@ -11,6 +11,7 @@
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "images:optimize": "node scripts/optimize-static-images.mjs",
     "start": "next start",
+    "test": "node --experimental-strip-types --test lib/responsive-image.test.ts",
     "lint": "next lint",
     "seed:admin": "node scripts/seed-admin.mjs",
     "seed:content": "node scripts/seed-sample-content.mjs",
@@ -98,7 +99,8 @@
     "pg": "^8.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "resend": "^6.20.0"
+    "resend": "^6.20.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
@@ -108,7 +110,6 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.28",
     "postcss": "^8.5.3",
-    "sharp": "^0.35.4",
     "tailwindcss": "^3.4.17",
     "to-ico": "^1.1.5",
     "typescript": "^6.0.3"

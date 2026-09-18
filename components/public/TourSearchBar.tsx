@@ -17,6 +17,8 @@ import { useCmsLive } from '@/lib/cms-live';
 
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 
+import { thumbImageSrc } from '@/lib/responsive-image';
+
 import type { RecordRow } from '@/lib/types';
 
 import { getRecordTitle } from '@/lib/data';
@@ -245,7 +247,7 @@ export default function TourSearchBar({
 
                           {card.image ? (
 
-                            <img src={card.image} alt="" width={64} height={56} loading="lazy" decoding="async" className="h-14 w-16 shrink-0 object-cover" />
+                            <img src={thumbImageSrc(card.image)} alt="" width={64} height={56} loading="lazy" decoding="async" className="h-14 w-16 shrink-0 object-cover" />
 
                           ) : (
 

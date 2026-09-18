@@ -1,6 +1,7 @@
 import { getRecordImage, getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 import Link from 'next/link';
+import ResponsiveImage from '@/components/public/ResponsiveImage';
 
 type SafariCategoryCardProps = {
   category: RecordRow;
@@ -28,13 +29,10 @@ export default function SafariCategoryCard({
     <>
       <div className="h-[130px] overflow-hidden rounded-[15px] bg-gray-100">
         {image ? (
-          <img
+          <ResponsiveImage
             src={image}
             alt={title}
-            width={320}
-            height={130}
-            loading="lazy"
-            decoding="async"
+            sizes="(max-width: 640px) 70vw, 240px"
             className="h-full w-full object-cover"
           />
         ) : (

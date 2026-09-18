@@ -23,15 +23,38 @@ export function publicMediaPath(id: string) {
   return `/api/media/${id}`;
 }
 
+async function optimizeUpload(buffer: Buffer, mime: string, filename: string) {
+  if (!mime.startsWith('image/') || /gif|svg|xml/i.test(mime)) {
+    return { buffer, mime, filename };
+  }
+  try {
+    const sharp = (await import('sharp')).default;
+    const next = await sharp(buffer, { failOn: 'none' })
+      .rotate()
+      .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 72, effort: 4 })
+      .toBuffer();
+    return {
+      buffer: next,
+      mime: 'image/webp',
+      filename: filename.replace(/\.[^.]+$/, '') + '.webp',
+    };
+  } catch {
+    return { buffer, mime, filename };
+  }
+}
+
 export async function saveMediaFile(file: File): Promise<string> {
   await ensureTable();
   const id = randomBytes(16).toString('hex');
-  const mime = file.type || 'application/octet-stream';
-  const filename = file.name || `${id}.bin`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const optimized = await optimizeUpload(
+    Buffer.from(await file.arrayBuffer()),
+    file.type || 'application/octet-stream',
+    file.name || `${id}.bin`
+  );
   await db.query(
     'INSERT INTO media_files (id, filename, mime, bytes) VALUES ($1, $2, $3, $4)',
-    [id, filename, mime, buffer]
+    [id, optimized.filename, optimized.mime, optimized.buffer]
   );
   return publicMediaPath(id);
 }

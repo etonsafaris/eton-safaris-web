@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import { cardImageSrc } from '@/lib/responsive-image';
 
 export default function AdminItemCard({
   layout,
@@ -81,7 +82,7 @@ export default function AdminItemCard({
   const imageBlock = (
     <div className={`relative overflow-hidden bg-[#e8ece9] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
       {image ? (
-        <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+        <img src={cardImageSrc(image)} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : (
         <div className="flex h-full items-center justify-center text-xs text-gray-400">No image</div>
       )}

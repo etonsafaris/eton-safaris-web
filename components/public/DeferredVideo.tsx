@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { cardImageSrc } from '@/lib/responsive-image';
 
 export default function DeferredVideo({
   src,
@@ -48,13 +49,13 @@ export default function DeferredVideo({
           loop
           playsInline
           preload="metadata"
-          poster={poster}
+          poster={poster ? cardImageSrc(poster) : undefined}
         >
           <source src={src} type="video/mp4" />
           {fallbackSrc ? <source src={fallbackSrc} type="video/mp4" /> : null}
         </video>
       ) : poster ? (
-        <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
+        <img src={cardImageSrc(poster)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
       ) : null}
     </div>
   );

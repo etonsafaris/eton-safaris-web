@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { stripPublicMoney } from '@/lib/public-money';
+import ResponsiveImage from '@/components/public/ResponsiveImage';
 
 export default function PublicListingCard({
   href,
@@ -25,7 +26,11 @@ export default function PublicListingCard({
     <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
-          <img src={image} alt={title || ''} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
+          <ResponsiveImage
+            src={image}
+            alt={title || ''}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
         )}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
+import { thumbImageSrc } from '@/lib/responsive-image';
 
 export type RelatedSidebarItem = {
   href: string;
@@ -32,7 +33,7 @@ export default function RelatedSidebar({
                 <Link href={item.href} className="group flex items-start gap-3">
                   {item.image ? (
                     <img
-                      src={item.image}
+                      src={thumbImageSrc(item.image)}
                       alt=""
                       width={72}
                       height={56}
