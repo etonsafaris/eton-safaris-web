@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
-import { loadTourDetail } from '@/lib/load-public';
+import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
 
 type PageProps = { params: { slug: string } };
+
+export async function generateStaticParams() {
+  return loadStaticTourParams();
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`);

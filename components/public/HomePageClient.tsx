@@ -14,11 +14,10 @@ import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import PageFaqList from '@/components/public/PageFaqList';
-import { useHomePageContent } from '@/components/public/useHomePageContent';
-import type { HomePageContent } from '@/lib/home-page-content';
+import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
+import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
 import {
   destinationListingRows,
   mergePublicDestinations,
@@ -47,13 +46,13 @@ const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: st
   uganda: {
     title: 'Crafted Safaris Across the African Wild',
     subtitle:
-      "Step into a world of untamed luxury â where every sunrise brings a new encounter with Africa's most extraordinary wildlife and landscapes",
+      "Step into a world of untamed luxury — where every sunrise brings a new encounter with Africa's most extraordinary wildlife and landscapes",
     image: '/heroes/uganda.jpg',
   },
   kenya: {
     title: 'Where the Wild Meets Refined Comfort',
     subtitle:
-      "From the Maasai Mara's endless plains to intimate bush dinners under the stars â experience Africa at its most captivating.",
+      "From the Maasai Mara's endless plains to intimate bush dinners under the stars — experience Africa at its most captivating.",
     image: '/heroes/kenya.jpg',
   },
   rwanda: {
@@ -78,33 +77,8 @@ type HomePageClientProps = {
   initialHomeContent?: HomePageContent | null;
 };
 
-function HomeBrandAndFeatures({ initialHomeContent }: { initialHomeContent?: HomePageContent | null }) {
-  const home = useHomePageContent(initialHomeContent);
-  return (
-    <>
-      <section className="px-[30px] py-16 text-center">
-        <h2 className="mb-2 font-serif text-[44px] font-normal uppercase leading-[1.2] text-[#588048] md:text-[70px] md:leading-[84px]">
-          {home.brandTitle}
-        </h2>
-        <p className="text-justify text-base leading-6 text-[#222]">{home.brandDescription}</p>
-      </section>
-      <WhatSetsUsApartSection
-        heading={home.setsApartHeading}
-        intro={home.setsApartIntro}
-        features={home.features}
-        videos={home.videos}
-      />
-    </>
-  );
-}
-
-function HomeFaqs({ initialHomeContent }: { initialHomeContent?: HomePageContent | null }) {
-  const home = useHomePageContent(initialHomeContent);
-  return (
-    <section className="mx-auto max-w-7xl px-4 pb-8">
-      <PageFaqList faqs={home.faqs || []} tone="light" />
-    </section>
-  );
+function resolveHomeContent(initialHomeContent?: HomePageContent | null): HomePageContent {
+  return initialHomeContent ?? DEFAULT_HOME_PAGE_CONTENT;
 }
 
 export default function HomePageClient({
@@ -119,6 +93,7 @@ export default function HomePageClient({
   const [updates, setUpdates] = useState<RecordRow[]>(initialUpdates);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
+  const homeContent = useMemo(() => resolveHomeContent(initialHomeContent), [initialHomeContent]);
   const hasServerContent = initialCountries.length > 0 || initialTours.length > 0;
 
   useEffect(() => {
@@ -159,30 +134,26 @@ export default function HomePageClient({
 
   const heroSlides = useMemo(() => {
     return NAV_COUNTRIES.map(({ slug, name }) => {
-      const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
       const defaults = HERO_DEFAULTS[slug] || {
         title: `Discover ${name}`,
         subtitle: `Discover unforgettable safari experiences in ${name}.`,
         image: '/heroes/kenya.jpg',
       };
-      const label = dbCountry ? publicCountryLabel(dbCountry, slug) : name;
       return {
-        title:
-          (dbCountry ? pickString(dbCountry, ['hero_title', 'headline', 'banner_title']) : '') || defaults.title,
-        subtitle:
-          (dbCountry ? pickString(dbCountry, ['hero_subtitle', 'tagline', 'excerpt']) : '') || defaults.subtitle,
-        cta: `Explore ${label}`,
+        title: defaults.title,
+        subtitle: defaults.subtitle,
+        cta: `Explore ${name}`,
         href: destinationPublicPath(slug),
-        image: countryHeroImage(slug, dbCountry) || '',
+        image: defaults.image,
       };
     });
-  }, [countries]);
+  }, []);
 
   useEffect(() => {
     if (heroSlides.length === 0) return undefined;
     const timer = setInterval(() => setSlide((value) => (value + 1) % heroSlides.length), 7000);
     return () => clearInterval(timer);
-  }, [heroSlides.length, slide]);
+  }, [heroSlides.length]);
 
   function goHero(next: number) {
     if (heroSlides.length === 0) return;
@@ -316,7 +287,12 @@ export default function HomePageClient({
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
 
-      <HomeBrandAndFeatures initialHomeContent={initialHomeContent} />
+      <WhatSetsUsApartSection
+        heading={homeContent.setsApartHeading}
+        intro={homeContent.setsApartIntro}
+        features={homeContent.features}
+        videos={homeContent.videos}
+      />
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
@@ -391,7 +367,9 @@ export default function HomePageClient({
         </div>
       </section>
 
-      <HomeFaqs initialHomeContent={initialHomeContent} />
+      <section className="mx-auto max-w-7xl px-4 pb-8">
+        <PageFaqList faqs={homeContent.faqs || []} tone="light" />
+      </section>
 
       <TestimonialsSection />
       <PaymentsSection />

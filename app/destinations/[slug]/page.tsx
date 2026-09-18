@@ -4,9 +4,13 @@ import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadCountryPageData } from '@/lib/load-public';
+import { loadCountryPageData, loadStaticDestinationParams } from '@/lib/load-public';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
+
+export function generateStaticParams() {
+  return loadStaticDestinationParams();
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = countrySlugFromLanding(params.slug);

@@ -23,11 +23,15 @@ import {
   pickStoredString,
   pickString,
   publicListColumnsFor,
+  publicRecordSlug,
   TOUR_LIST_COLUMNS,
 } from '@/lib/data-server';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
+
+const STATIC_DETAIL_BUILD_LIMIT = 48;
 
 function listColumns(table: string, aliases: string[] = []) {
   return publicListColumnsFor(table, aliases);
@@ -456,6 +460,52 @@ export async function loadExploreDetail(slug: string) {
     others: (countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20),
     tours: tours.slice(0, 12),
   });
+}
+
+/** Slugs to pre-render at build time (ISR + CDN). */
+export async function loadStaticTourParams(): Promise<{ slug: string }[]> {
+  try {
+    const featured = await fetchFeaturedTours(STATIC_DETAIL_BUILD_LIMIT);
+    const fromFeatured = featured
+      .map((row) => publicRecordSlug(row))
+      .filter((slug): slug is string => Boolean(slug));
+    if (fromFeatured.length) {
+      return fromFeatured.map((slug) => ({ slug }));
+    }
+    const rows = await loadPublishedRecords('tours', [], {
+      columns: 'id,slug,seo_slug,title,published',
+    });
+    return rows
+      .map((row) => publicRecordSlug(row))
+      .filter((slug): slug is string => Boolean(slug))
+      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
+}
+
+export function loadStaticDestinationParams(): { slug: string }[] {
+  const slugs = new Set<string>();
+  for (const item of [...NAV_COUNTRIES, ...OTHER_DESTINATIONS]) {
+    if (item.slug) slugs.add(item.slug);
+  }
+  return [...slugs].map((slug) => ({ slug }));
+}
+
+export async function loadStaticAccommodationParams(): Promise<{ slug: string }[]> {
+  try {
+    const rows = await loadPublishedRecords('accommodations', [], {
+      columns: 'id,slug,seo_slug,title,published',
+    });
+    return rows
+      .map((row) => publicRecordSlug(row))
+      .filter((slug): slug is string => Boolean(slug))
+      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
 }
 
 /** Header/footer destination chips — loaded once per cached PublicShell render. */

@@ -1,4 +1,4 @@
-import type { Pool as PgPool } from 'pg';
+import type { Pool as PgPool, PoolClient } from 'pg';
 
 const connectionString = process.env.DATABASE_URL;
 const normalizedConnectionString = connectionString
@@ -20,13 +20,26 @@ function getPool(): PgPool | null {
   global.aivenPool = new Pool({
     connectionString: normalizedConnectionString,
     ssl: { rejectUnauthorized: false },
-    max: 8,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    max: 3,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 4500,
     statement_timeout: 8000,
     maxLifetimeSeconds: 60,
+    allowExitOnIdle: true,
   });
   return global.aivenPool;
+}
+
+/** Run a query with a dedicated client; always calls `client.release()` in `finally`. */
+export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const pool = getPool();
+  if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
+  const client = await pool.connect();
+  try {
+    return await fn(client);
+  } finally {
+    client.release();
+  }
 }
 
 export const db = {
@@ -36,9 +49,7 @@ export const db = {
     return pool.connect();
   },
   async query<T = any>(text: string, values?: unknown[]) {
-    const pool = getPool();
-    if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-    return pool.query<T>(text, values);
+    return withPgClient((client) => client.query<T>(text, values));
   },
 };
 
