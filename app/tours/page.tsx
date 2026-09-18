@@ -1,3 +1,4 @@
+import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
 import { Metadata } from 'next';
@@ -23,6 +24,7 @@ export default async function ToursPage({
 }) {
   const { tours, total, categories, countries } = await loadToursPageData();
   return (
+    <PublicShellServer>
     <ToursPageClient
       initialTours={tours}
       initialCategories={categories}
@@ -34,5 +36,6 @@ export default async function ToursPage({
       initialDays={param(searchParams?.days)}
       initialDepart={param(searchParams?.depart)}
     />
+    </PublicShellServer>
   );
 }

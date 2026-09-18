@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
@@ -11,7 +11,7 @@ import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function RequestQuotePage() {
   return (
-    <PublicShell>
+    <PublicShellServer>
       <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
         <div className="absolute inset-0 bg-black/40" />
         <h1
@@ -81,6 +81,6 @@ export default function RequestQuotePage() {
           <PageFaqList faqs={bestFaqsFor('contact')} tone="light" />
         </div>
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

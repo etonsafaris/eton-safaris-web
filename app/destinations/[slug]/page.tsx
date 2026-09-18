@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CountryPageContent from '@/components/public/CountryPageContent';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { loadCountryPageData } from '@/lib/load-public';
@@ -47,7 +47,7 @@ export default async function DestinationCountryPage({ params }: { params: { slu
     } as const);
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <CountryPageContent
         key={slug}
         slug={slug}
@@ -57,6 +57,6 @@ export default async function DestinationCountryPage({ params }: { params: { slu
         initialParks={data.parks}
         initialPlaces={data.places}
       />
-    </PublicShell>
+    </PublicShellServer>
   );
 }

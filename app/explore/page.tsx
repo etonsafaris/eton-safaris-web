@@ -2,7 +2,7 @@ import ListingPager from '@/components/public/ListingPager';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { explorePlacePath } from '@/lib/cms-routes';
 import { matchesCountry } from '@/lib/country-utils';
 import { loadExplorePageData } from '@/lib/load-public';
@@ -44,7 +44,7 @@ export default async function ExplorePage({
     : places;
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title={countryFilter ? `Explore ${countryFilter.replace(/-/g, ' ')}` : 'Explore Africa'}
         subtitle="Places and experiences across the continent"
@@ -82,6 +82,6 @@ export default async function ExplorePage({
           </>
         )}
       </ListingSection>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

@@ -131,7 +131,7 @@ export async function loadHomePageData() {
         limit: 12,
         offset: 0,
       }),
-      12000,
+      6000,
       emptyPage
     ),
     withTimeout(
@@ -139,7 +139,7 @@ export async function loadHomePageData() {
         columns: listColumns('countries'),
         maxRows: 48,
       }).then((rows) => rows.filter(isPublishedRecord)),
-      12000,
+      6000,
       [] as RecordRow[]
     ),
     withTimeout(fetchFeaturedTours(12), 12000, [] as RecordRow[]),
@@ -149,7 +149,7 @@ export async function loadHomePageData() {
         limit: 8,
         offset: 0,
       }),
-      12000,
+      6000,
       emptyPage
     ),
     withTimeout(
@@ -157,7 +157,7 @@ export async function loadHomePageData() {
         columns: listColumns('categories'),
         maxRows: 64,
       }).then((rows) => rows.filter(isPublishedRecord)),
-      12000,
+      6000,
       [] as RecordRow[]
     ),
   ]);
@@ -178,7 +178,7 @@ export async function loadAccommodationsPageData(options?: { limit?: number; off
         limit: options?.limit ?? 48,
         offset: options?.offset ?? 0,
       }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const rows = page.rows.filter(isPublishedRecord);
@@ -193,17 +193,17 @@ export async function loadToursPageData() {
     const [tourPage, categories, countries] = await Promise.all([
       withTimeout(
         fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }),
-        12000,
+        6000,
         { rows: [] as RecordRow[], total: 0 }
       ),
       withTimeout(
         fetchCollectionRecords('categories', [], { columns: listColumns('categories'), maxRows: 80 }),
-        12000,
+        6000,
         [] as RecordRow[]
       ),
       withTimeout(
         fetchCollectionRecords('countries', [], { columns: listColumns('countries'), maxRows: 48 }),
-        12000,
+        6000,
         [] as RecordRow[]
       ),
     ]);
@@ -295,7 +295,7 @@ export async function loadParksPageData(options?: { limit?: number; offset?: num
         limit: options?.limit ?? 48,
         offset: options?.offset ?? 0,
       }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const parks = page.rows.filter(isPublishedRecord);
@@ -313,7 +313,7 @@ export async function loadSafariUpdatesPageData(options?: { limit?: number; offs
         limit: options?.limit ?? 48,
         offset: options?.offset ?? 0,
       }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const posts = page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
@@ -331,7 +331,7 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
         limit: options?.limit ?? 48,
         offset: options?.offset ?? 0,
       }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const places = page.rows.filter(isPublishedRecord);
@@ -346,7 +346,7 @@ export async function loadParkDetail(slug: string) {
     withTimeout(fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']), 12000, null),
     withTimeout(
       fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     ),
   ]);
@@ -373,7 +373,7 @@ export async function loadSafariUpdateDetail(slug: string) {
     withTimeout(fetchRecordByPublicSlug('safari_updates', slug), 12000, null),
     withTimeout(
       fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     ),
   ]);
@@ -408,7 +408,7 @@ export async function loadAccommodationDetail(slug: string) {
     withTimeout(fetchRecordByPublicSlug('accommodations', slug), 12000, null),
     withTimeout(
       fetchCollectionPage('accommodations', [], { limit: 20, offset: 0 }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     ),
   ]);
@@ -443,7 +443,7 @@ export async function loadExploreDetail(slug: string) {
     withTimeout(fetchRecordByPublicSlug('explore', slug), 12000, null),
     withTimeout(
       fetchCollectionPage('explore', [], { limit: 24, offset: 0 }),
-      12000,
+      6000,
       { rows: [] as RecordRow[], total: 0 }
     ),
   ]);
@@ -485,7 +485,7 @@ export async function loadPublicNavDestinations(): Promise<PublicDestination[]> 
         columns: listColumns('countries'),
         maxRows: 48,
       }).then((data) => data.filter(isPublishedRecord)),
-      8000,
+      5000,
       [] as RecordRow[]
     );
     return mergePublicDestinations(rows);

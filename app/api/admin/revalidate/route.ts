@@ -1,4 +1,5 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CMS_PUBLIC_CACHE_TAG } from '@/lib/cms-public-cache';
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  revalidateTag(CMS_PUBLIC_CACHE_TAG);
   revalidatePath('/', 'layout');
   revalidatePath('/destinations', 'layout');
   revalidatePath('/tours', 'layout');

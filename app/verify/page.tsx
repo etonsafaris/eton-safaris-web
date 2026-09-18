@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import PageHero from '@/components/public/PageHero';
 import { paymentSummary, verifyStatusClass, verifyStatusLabel } from '@/lib/booking-status';
 import { pickString } from '@/lib/data';
@@ -55,7 +55,7 @@ export default function VerifyBookingPage() {
         : 'Not yet paid';
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title="Verify Your Booking"
         subtitle="Enter the booking / payment code from your confirmation email."
@@ -129,6 +129,6 @@ export default function VerifyBookingPage() {
           </article>
         )}
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

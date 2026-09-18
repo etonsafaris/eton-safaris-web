@@ -3,7 +3,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageFaqList from '@/components/public/PageFaqList';
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { bestFaqsFor } from '@/lib/best-faqs';
 import { loadAccommodationsPageData } from '@/lib/load-public';
 import {
@@ -41,7 +41,7 @@ export default async function AccommodationsPage({
   });
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title="Accommodations"
         subtitle={`${total.toLocaleString()} lodges, camps, hotels, and bandas`}
@@ -80,6 +80,6 @@ export default async function AccommodationsPage({
       <div className="mx-auto max-w-[1200px] px-4 pb-12">
         <PageFaqList faqs={bestFaqsFor('accommodations')} tone="light" />
       </div>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

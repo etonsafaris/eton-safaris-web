@@ -6,7 +6,6 @@ import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
-import PublicShell from '@/components/public/PublicShell';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import PlaceCard from '@/components/public/PlaceCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
@@ -275,7 +274,7 @@ export default function HomePageClient({
   ));
 
   return (
-    <PublicShell>
+    <>
       {current && (
         <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
           {current.image ? (
@@ -439,6 +438,6 @@ export default function HomePageClient({
 
       <TestimonialsSection />
       <PaymentsSection />
-    </PublicShell>
+    </>
   );
 }

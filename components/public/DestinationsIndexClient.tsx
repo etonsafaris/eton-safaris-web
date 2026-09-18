@@ -5,7 +5,6 @@ import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
-import PublicShell from '@/components/public/PublicShell';
 import {
   fetchCollectionRecords,
   isPublishedRecord,
@@ -35,7 +34,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
   const items = useMemo(() => destinationListingRows(countries), [countries]);
 
   return (
-    <PublicShell>
+    <>
       <PageHero
         title="Destinations"
         subtitle="Safari countries across Africa, from gorilla forests to savannah and coast."
@@ -65,6 +64,6 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
           </ListingGrid>
         )}
       </ListingSection>
-    </PublicShell>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadPublishedRecords } from '@/lib/load-public';
 import { Metadata } from 'next';
 
@@ -14,5 +15,9 @@ export const metadata: Metadata = {
 
 export default async function DestinationsIndexPage() {
   const countries = await loadPublishedRecords('countries');
-  return <DestinationsIndexClient initialCountries={countries} />;
+  return (
+    <PublicShellServer>
+      <DestinationsIndexClient initialCountries={countries} />
+    </PublicShellServer>
+  );
 }

@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import PageHero from '@/components/public/PageHero';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 
-export default function NotFound() {
+export default async function NotFound() {
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title="Page not found"
         subtitle="This page is missing or has been moved. Return home to continue planning your safari."
@@ -19,6 +19,6 @@ export default function NotFound() {
           </Link>
         </div>
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

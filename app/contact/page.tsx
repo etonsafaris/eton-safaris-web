@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
@@ -90,7 +90,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
         <ResponsiveImage
           src={SITE_MEDIA.talkToUsHero}
@@ -300,7 +300,7 @@ export default function ContactPage() {
           <PageFaqList faqs={bestFaqsFor('contact')} tone="light" />
         </div>
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }
 

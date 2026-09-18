@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import PageHero from '@/components/public/PageHero';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { supabase } from '@/lib/supabase/client';
@@ -112,7 +112,7 @@ export default function AgentRegisterPage() {
   }
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title="Become a Registered Agent"
         subtitle="Submit your bio, address, and contact details. Access stays pending until an admin verifies your account."
@@ -270,6 +270,6 @@ export default function AgentRegisterPage() {
           </>
         )}
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

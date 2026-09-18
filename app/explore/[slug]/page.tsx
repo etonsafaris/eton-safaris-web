@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PlacePageContent from '@/components/public/PlacePageContent';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadExploreDetail } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
@@ -17,7 +17,7 @@ export default async function ExploreDetailPage({ params }: PageProps) {
   const { place, others, tours } = await loadExploreDetail(params.slug);
   if (!place) notFound();
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PlacePageContent
         key={params.slug}
         placeSlug={params.slug}
@@ -25,6 +25,6 @@ export default async function ExploreDetailPage({ params }: PageProps) {
         initialOthers={others}
         initialTours={tours}
       />
-    </PublicShell>
+    </PublicShellServer>
   );
 }

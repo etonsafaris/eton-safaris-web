@@ -1,3 +1,5 @@
+import { unstable_cache } from 'next/cache';
+import { CMS_PUBLIC_CACHE_TAG, CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
 import { db } from '@/lib/supabase/pool';
 import {
   extractEmbeddedContent,
@@ -485,20 +487,12 @@ function defaultCollectionMaxRows(table: string, aliases: string[] = []): number
   return undefined;
 }
 
-export async function fetchCollectionRecords(
+async function fetchCollectionRecordsLive(
   table: string,
-  aliases: string[] = [],
-  options?: { columns?: string; full?: boolean; unlimited?: boolean; maxRows?: number }
+  aliases: string[],
+  columns: string,
+  maxRows: number | undefined
 ): Promise<RecordRow[]> {
-  // Default to light list columns — never pull full description HTML for whole tables unless asked.
-  const columns =
-    options?.full || options?.columns === '*'
-      ? '*'
-      : options?.columns || publicListColumnsFor(table, aliases) || '*';
-  const maxRows =
-    options?.unlimited || options?.full
-      ? undefined
-      : options?.maxRows ?? defaultCollectionMaxRows(table, aliases);
   const cacheKey = [table, columns, maxRows ?? 'all', ...aliases].join('|');
   if (FETCH_CACHE_MS > 0) {
     const cached = getCachedCollection(cacheKey);
@@ -537,6 +531,32 @@ export async function fetchCollectionRecords(
   } finally {
     clearInflightCollection(cacheKey);
   }
+}
+
+export async function fetchCollectionRecords(
+  table: string,
+  aliases: string[] = [],
+  options?: { columns?: string; full?: boolean; unlimited?: boolean; maxRows?: number }
+): Promise<RecordRow[]> {
+  // Default to light list columns — never pull full description HTML for whole tables unless asked.
+  const columns =
+    options?.full || options?.columns === '*'
+      ? '*'
+      : options?.columns || publicListColumnsFor(table, aliases) || '*';
+  const maxRows =
+    options?.unlimited || options?.full
+      ? undefined
+      : options?.maxRows ?? defaultCollectionMaxRows(table, aliases);
+  const cacheKey = [table, columns, maxRows ?? 'all', ...aliases].join('|');
+
+  return unstable_cache(
+    () => fetchCollectionRecordsLive(table, aliases, columns, maxRows),
+    ['collection-records', cacheKey],
+    {
+      revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+      tags: [CMS_PUBLIC_CACHE_TAG, `collection:${table}`],
+    }
+  )();
 }
 
 /** Exact row count without downloading row payloads (admin dashboard cards). */
@@ -1037,7 +1057,7 @@ export async function fetchParksForCountry(countryLabel: string, limit = 200, co
 }
 
 /** Load one full row for an admin editor — never download the whole table to find a single id. */
-export async function fetchCollectionRecordById(
+async function fetchCollectionRecordByIdLive(
   table: string,
   id: string,
   aliases: string[] = []
@@ -1059,4 +1079,20 @@ export async function fetchCollectionRecordById(
     }
   }
   return null;
+}
+
+export async function fetchCollectionRecordById(
+  table: string,
+  id: string,
+  aliases: string[] = []
+): Promise<RecordRow | null> {
+  const cacheKey = [table, id, ...aliases].join('|');
+  return unstable_cache(
+    () => fetchCollectionRecordByIdLive(table, id, aliases),
+    ['collection-record-by-id', cacheKey],
+    {
+      revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+      tags: [CMS_PUBLIC_CACHE_TAG, `collection:${table}`],
+    }
+  )();
 }

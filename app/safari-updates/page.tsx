@@ -2,7 +2,7 @@ import ListingPager from '@/components/public/ListingPager';
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadSafariUpdatesPageData } from '@/lib/load-public';
 import {
   formatPublishedDate,
@@ -40,7 +40,7 @@ export default async function SafariUpdatesPage({
   const latest = posts[0];
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         variant="update"
         title="Safari Updates"
@@ -78,6 +78,6 @@ export default async function SafariUpdatesPage({
           </>
         )}
       </ListingSection>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

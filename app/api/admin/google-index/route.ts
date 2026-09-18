@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CMS_PUBLIC_CACHE_TAG } from '@/lib/cms-public-cache';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { applyAutoIndexSeo, collectionIdToTable } from '@/lib/auto-index-seo';
 import { getCollection } from '@/lib/collections';
@@ -172,6 +173,7 @@ export async function POST(request: Request) {
       ...withRobotsFlags(savedRaw, nextEnabled),
       robots_index: nextEnabled,
     } as RecordRow;
+    revalidateTag(CMS_PUBLIC_CACHE_TAG);
     revalidatePath('/', 'layout');
     revalidatePath('/sitemap.xml');
 

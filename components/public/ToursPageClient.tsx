@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import PublicShell from '@/components/public/PublicShell';
 import PageHero from '@/components/public/PageHero';
 import TourCard from '@/components/public/TourCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
@@ -92,7 +91,7 @@ export default function ToursPageClient({
   );
 
   return (
-    <PublicShell>
+    <>
       <PageHero
         title="Tours"
         subtitle={
@@ -133,6 +132,6 @@ export default function ToursPageClient({
       <div className="mx-auto max-w-[1200px] px-4 pb-12">
         <PageFaqList faqs={bestFaqsFor('tours')} tone="light" />
       </div>
-    </PublicShell>
+    </>
   );
 }

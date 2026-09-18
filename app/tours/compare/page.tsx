@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import PageHero from '@/components/public/PageHero';
 import { fetchCollectionPage, getRecordImage, getRecordTitle, isPublishedRecord, pickNumber, pickString, publicRecordSlug, recordPublishedAt, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
@@ -35,7 +35,7 @@ export default function TourComparePage() {
   );
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <PageHero
         title="Compare Safari Packages"
         subtitle="Compare duration and included activities across destinations."
@@ -96,6 +96,6 @@ export default function TourComparePage() {
           </table>
         )}
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

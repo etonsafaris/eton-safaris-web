@@ -10,7 +10,6 @@ import {
 } from '@/lib/public-indexing';
 import type { RecordRow } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 function sitemapColumns(table: string, aliases: string[] = []) {

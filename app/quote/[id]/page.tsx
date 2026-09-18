@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import PublicShell from '@/components/public/PublicShell';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { QuoteContactFooter, QuoteLetterhead } from '@/components/public/QuoteLetterhead';
 import { fetchCollectionRecords, pickString } from '@/lib/data';
 import { QUOTE_TERMS_SUMMARY } from '@/lib/quote-document';
@@ -59,7 +59,7 @@ export default function GuestQuotePage() {
   }
 
   return (
-    <PublicShell>
+    <PublicShellServer>
       <section className="bg-[#eef2f0] px-4 py-12">
         <div className="mx-auto max-w-[760px] overflow-hidden rounded-xl bg-white shadow-[0_8px_28px_rgba(27,67,50,0.12)]">
           {!quote ? (
@@ -146,6 +146,6 @@ export default function GuestQuotePage() {
           )}
         </div>
       </section>
-    </PublicShell>
+    </PublicShellServer>
   );
 }

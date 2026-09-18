@@ -230,7 +230,11 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="flex h-dvh items-center justify-center bg-[#f3f4f6] font-ui dark:bg-[#0a0c10]">
+        <AdminLogoLoader label="Redirecting to sign in" />
+      </div>
+    );
   }
 
   const displayName = user.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
