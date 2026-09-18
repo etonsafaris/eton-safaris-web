@@ -9,6 +9,7 @@ type SafariCategoryCardProps = {
   titleOnly?: boolean;
   href?: string;
   countryName?: string;
+  image?: string;
 };
 
 const CARD_SHADOW =
@@ -20,9 +21,10 @@ export default function SafariCategoryCard({
   onClick,
   titleOnly = true,
   href,
+  image: imageOverride,
 }: SafariCategoryCardProps) {
   const title = getRecordTitle(category);
-  const image = getRecordImage(category);
+  const image = imageOverride || getRecordImage(category);
 
   const inner = (
     <>

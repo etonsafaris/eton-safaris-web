@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { SITE } from '@/lib/collections';
+import { PUBLIC_SITE_LABELS, SITE } from '@/lib/collections';
 
 export const metadata: Metadata = {
-  title: 'Safari Updates',
+  title: PUBLIC_SITE_LABELS.blogPosts,
   description: 'Safari news, gorilla trekking notes, and East Africa travel updates from Eton Safaris.',
   alternates: {
     types: {

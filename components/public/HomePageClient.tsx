@@ -16,13 +16,8 @@ import PageFaqList from '@/components/public/PageFaqList';
 import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
-import {
-  canonicalCountrySlug,
-  countryCategoryPath,
-  publicCountrySlug,
-  publicCountryLabel,
-  recordCountryValues,
-} from '@/lib/country-utils';
+import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
+import { HOME_BEST_COUNTRY_SLUGS, PUBLIC_SITE_LABELS } from '@/lib/collections';
 import {
   destinationListingRows,
   mergePublicDestinations,
@@ -95,17 +90,26 @@ export default function HomePageClient({
     return (preferred.length ? preferred : tours).slice(0, 12);
   }, [tours]);
 
-  const homeCategoryCards = useMemo(() => categories.slice(0, 4), [categories]);
-
-  function homeCategoryHref(category: RecordRow) {
-    const countrySlugs = recordCountryValues(category);
-    const country =
-      countrySlugs[0] ||
-      canonicalCountrySlug(pickString(category, ['country'])) ||
-      publicCountrySlug(countries[0] as RecordRow) ||
-      'uganda';
-    return countryCategoryPath(country, category);
-  }
+  const homeBestCountryCards = useMemo(() => {
+    return HOME_BEST_COUNTRY_SLUGS.map((slug) => {
+      const match =
+        countries.find(
+          (row) =>
+            publicCountrySlug(row) === slug ||
+            canonicalCountrySlug(publicCountryLabel(row as RecordRow, slug)) === slug
+        ) || null;
+      const name = match ? publicCountryLabel(match as RecordRow, slug) : slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const record: RecordRow = match
+        ? (match as RecordRow)
+        : ({ name, title: name, slug } as RecordRow);
+      return {
+        slug,
+        record,
+        image: countryHeroImage(slug, record),
+        href: destinationPublicPath(slug),
+      };
+    });
+  }, [countries]);
 
   const tourItems = featuredTours.map((tour, index) => (
     <TourCard key={String(tour.id ?? index)} tour={tour} />
@@ -222,21 +226,20 @@ export default function HomePageClient({
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
 
-      {homeCategoryCards.length > 0 ? (
-        <section className="mx-auto max-w-7xl px-4 py-16">
-          <SectionHeading label="Find tours by" title="Safari Categories" />
-          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
-            {homeCategoryCards.map((category, index) => (
-              <SafariCategoryCard
-                key={String(category.id ?? index)}
-                category={category}
-                titleOnly
-                href={homeCategoryHref(category)}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <section className="mx-auto max-w-7xl px-4 py-16">
+        <SectionHeading label={PUBLIC_SITE_LABELS.findToursBy} title={PUBLIC_SITE_LABELS.bestCountries} />
+        <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
+          {homeBestCountryCards.map((item) => (
+            <SafariCategoryCard
+              key={item.slug}
+              category={item.record}
+              titleOnly
+              href={item.href}
+              image={item.image || undefined}
+            />
+          ))}
+        </div>
+      </section>
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
@@ -258,7 +261,7 @@ export default function HomePageClient({
               href="/destinations"
               className="inline-flex items-center gap-2 rounded-full bg-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a]"
             >
-              Other Destinations <ArrowRight className="h-4 w-4" />
+              {PUBLIC_SITE_LABELS.moreGetaways} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -266,7 +269,7 @@ export default function HomePageClient({
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
-          <SectionHeading label="Stay up to date with" title="Safari Updates" />
+          <SectionHeading label="Stay up to date with" title={PUBLIC_SITE_LABELS.blogPosts} />
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {updates.slice(0, 4).map((post, index) => (
               <Link

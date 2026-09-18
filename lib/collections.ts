@@ -429,3 +429,15 @@ export const OTHER_DESTINATIONS = [
 ];
 
 export const SITE_LOGO = '/eton-safaris-gorilla.png';
+
+/** Guest-facing nav and section labels (URLs unchanged). */
+export const PUBLIC_SITE_LABELS = {
+  findToursBy: 'Find tours by',
+  bestCountries: 'Best Countries',
+  blogPosts: 'Blog Posts',
+  moreGetaways: 'More Getaways',
+  getInTouch: 'Get in Touch',
+} as const;
+
+/** Home page country cards — fixed order, links to /destinations/{slug}. */
+export const HOME_BEST_COUNTRY_SLUGS = ['uganda', 'rwanda', 'kenya', 'tanzania'] as const;

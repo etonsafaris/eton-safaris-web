@@ -12,6 +12,7 @@ import {
   recordCardBlurb,
   recordPublishedAt,
 } from '@/lib/data';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
@@ -21,7 +22,7 @@ export const dynamicParams = true;
 const PAGE_SIZE = 48;
 
 export const metadata: Metadata = {
-  title: 'Safari Updates',
+  title: PUBLIC_SITE_LABELS.blogPosts,
   description: 'Stay updated with the latest safari news, travel tips, and wildlife conservation updates from Eton Safaris across East Africa.',
   alternates: {
     canonical: 'https://etonsafaris.com/safari-updates',
@@ -52,7 +53,7 @@ export default async function SafariUpdatesPage({
     <PublicShellServer>
       <PageHero
         variant="update"
-        title="Safari Updates"
+        title={PUBLIC_SITE_LABELS.blogPosts}
         subtitle={
           total ? `${total.toLocaleString()} safari stories and travel notes` : 'Safari news and travel notes'
         }

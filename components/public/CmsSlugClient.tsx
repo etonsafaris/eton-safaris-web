@@ -16,6 +16,7 @@ import {
   pageAliases,
   resolvePublicSlug,
 } from '@/lib/cms-routes';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { inferPageLayout } from '@/lib/cms-page-model';
@@ -237,7 +238,7 @@ export default function CmsSlugClient({
       destinations={destinations}
       faqs={faqs}
       blocks={blocks}
-      ctaLabel={view.ctaLabel || 'Talk to Us'}
+      ctaLabel={view.ctaLabel || PUBLIC_SITE_LABELS.getInTouch}
       ctaHref={view.ctaHref || '/contact-us'}
       published={view.published}
     />

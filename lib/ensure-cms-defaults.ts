@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { DEFAULT_CMS_PAGES, DEFAULT_LANDING_PAGES } from '@/lib/cms-defaults';
 import { cmsPageFieldPack, inferPageLayout } from '@/lib/cms-page-model';
@@ -31,7 +32,7 @@ function pagePayload(page: (typeof DEFAULT_CMS_PAGES)[number]) {
     destinations: page.destinations || [],
     faqs: page.faqs,
     status: 'published',
-    cta_label: 'Talk to Us',
+    cta_label: 'Get in Touch',
     cta_href: '/contact-us',
     published_at: new Date().toISOString(),
   });

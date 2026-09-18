@@ -6,7 +6,7 @@ import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { SITE, SOCIAL_LINKS } from '@/lib/collections';
+import { PUBLIC_SITE_LABELS, SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 
@@ -158,14 +158,14 @@ export default function SiteFooter() {
           <h4 className="site-footer-title">Quick Links</h4>
           <div className="mt-1 space-y-0 text-base">
             <Link href="/" className="site-footer-link block">Home</Link>
-            <Link href="/contact-us" className="site-footer-link block">Contact Us</Link>
+            <Link href="/contact-us" className="site-footer-link block">{PUBLIC_SITE_LABELS.getInTouch}</Link>
             <Link href="/about-us" className="site-footer-link block">About Us</Link>
             <Link href="/tours-and-travel-agency" className="site-footer-link block">Tours and Travel Agency</Link>
             <Link href="/tours" className="site-footer-link block">Safari Tours</Link>
             <Link href="/parks" className="site-footer-link block">National Parks</Link>
             <Link href="/accommodations" className="site-footer-link block">Accommodations</Link>
             <Link href="/explore" className="site-footer-link block">Explore</Link>
-            <Link href="/safari-updates" className="site-footer-link block">Safari Updates</Link>
+            <Link href="/safari-updates" className="site-footer-link block">{PUBLIC_SITE_LABELS.blogPosts}</Link>
             <Link href="/community-support" className="site-footer-link block">Community Support</Link>
             <Link href="/verify" className="site-footer-link block">Verify Booking</Link>
           </div>

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { PublicDestination } from '@/lib/public-destinations';
 
@@ -64,7 +65,7 @@ export default function SiteHeader() {
         })}
         {more.length > 0 ? (
           <div className="site-nav-item">
-            Other Destinations
+            {PUBLIC_SITE_LABELS.moreGetaways}
             <div className="site-nav-dropdown">
               {more.map((destination) => (
                 <Link
@@ -79,19 +80,19 @@ export default function SiteHeader() {
           </div>
         ) : null}
         <Link href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
-          Safari Updates
+          {PUBLIC_SITE_LABELS.blogPosts}
         </Link>
         <Link  href="/community-support" className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
         <Link  href="/contact-us" className={navClass(pathname.startsWith('/contact'))}>
-          Talk to Us
+          {PUBLIC_SITE_LABELS.getInTouch}
         </Link>
       </nav>
 
       <div className="flex items-center gap-2 lg:hidden">
         <Link href="/contact-us" className="px-2 py-2 text-base text-[#222]">
-          Talk to Us
+          {PUBLIC_SITE_LABELS.getInTouch}
         </Link>
         <button type="button" className="rounded-md p-2 text-[#222]" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu">
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -113,7 +114,7 @@ export default function SiteHeader() {
               <Flag iso={country.iso} name={country.name} /> {country.name}
             </Link>
           ))}
-          {more.length > 0 ? <p className="pt-2 text-base">Other Destinations</p> : null}
+          {more.length > 0 ? <p className="pt-2 text-base">{PUBLIC_SITE_LABELS.moreGetaways}</p> : null}
           {more.map((destination) => (
             <Link
               key={destination.slug}
@@ -125,13 +126,13 @@ export default function SiteHeader() {
             </Link>
           ))}
           <Link href="/safari-updates" className="block py-1" onClick={() => setOpen(false)}>
-            Safari Updates
+            {PUBLIC_SITE_LABELS.blogPosts}
           </Link>
           <Link href="/community-support" className="block py-1" onClick={() => setOpen(false)}>
             Community
           </Link>
           <Link href="/contact-us" className="block py-1" onClick={() => setOpen(false)}>
-            Talk to Us
+            {PUBLIC_SITE_LABELS.getInTouch}
           </Link>
         </div>
       )}

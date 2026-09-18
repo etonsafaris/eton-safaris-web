@@ -1,4 +1,5 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
@@ -119,7 +120,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     faqs,
     videoUrl: extras.video_url || seeded?.video_url || '',
     destinations: extras.destinations.length ? extras.destinations : seeded?.destinations || [],
-    ctaLabel: extras.cta_label || 'Talk to Us',
+    ctaLabel: extras.cta_label || PUBLIC_SITE_LABELS.getInTouch,
     ctaHref: extras.cta_href || '/contact-us',
     layout: extras.layout,
     published: extras.published_at || (page ? recordPublishedAt(page) : ''),

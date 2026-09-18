@@ -44,7 +44,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>${xmlEscape(SITE.name)} Safari Updates</title>
+    <title>${xmlEscape(SITE.name)} Blog Posts</title>
     <link>${SITE.url}/safari-updates</link>
     <description>Safari news, gorilla trekking notes, and East Africa travel updates from ${xmlEscape(SITE.name)}.</description>
     ${items}

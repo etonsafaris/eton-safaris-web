@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryLabelFromSlug, normalizeSlug } from '@/lib/country-utils';
 
@@ -11,7 +12,7 @@ const LABELS: Record<string, string> = {
   parks: 'National Parks',
   explore: 'Explore',
   accommodations: 'Accommodations',
-  'safari-updates': 'Safari Updates',
+  'safari-updates': PUBLIC_SITE_LABELS.blogPosts,
   community: 'Community',
   contact: 'Contact',
   'request-a-quote': 'Request a Quote',

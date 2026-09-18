@@ -8,6 +8,7 @@ import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import SectionHeading from '@/components/public/SectionHeading';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import type { CmsContentBlock, CmsPageLayout, PageFaq } from '@/lib/cms-page-model';
 
@@ -101,7 +102,7 @@ export default function CmsPageView({
   destinations = [],
   faqs = [],
   blocks = [],
-  ctaLabel = 'Talk to Us',
+  ctaLabel = PUBLIC_SITE_LABELS.getInTouch,
   ctaHref = '/contact-us',
   published,
 }: CmsPageViewProps) {
