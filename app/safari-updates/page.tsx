@@ -15,7 +15,8 @@ import {
 import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
+export const dynamicParams = true;
 
 const PAGE_SIZE = 48;
 

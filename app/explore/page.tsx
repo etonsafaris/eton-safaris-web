@@ -1,11 +1,72 @@
+import ListingPager from '@/components/public/ListingPager';
+import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
+import PageHero from '@/components/public/PageHero';
+import PublicListingCard from '@/components/public/PublicListingCard';
+import PublicShellServer from '@/components/public/PublicShellServer';
+import { loadExplorePageData } from '@/lib/load-public';
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
+import {
+  getRecordImage,
+  getRecordTitle,
+  pickString,
+  publicRecordSlug,
+  recordCardBlurb,
+} from '@/lib/data';
+import { SITE_MEDIA } from '@/lib/site-media';
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+
+export const revalidate = 900;
+
+const PAGE_SIZE = 48;
 
 export const metadata: Metadata = {
-  title: 'Safari Tours',
-  robots: { index: false, follow: true },
+  title: 'Explore Africa',
+  description: 'Discover places, experiences, and hidden gems across African safari destinations with Eton Safaris.',
+  alternates: { canonical: publicCanonicalUrl('/explore') },
+  robots: { index: true, follow: true },
 };
 
-export default function ExploreListingRedirect() {
-  redirect('/tours');
+export default async function ExploreListingPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const { places, total } = await loadExplorePageData({
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  });
+
+  return (
+    <PublicShellServer>
+      <PageHero
+        variant="default"
+        title="Explore"
+        subtitle={total ? `${total.toLocaleString()} places to discover` : 'Destinations and experiences'}
+        image={SITE_MEDIA.gorillasForest}
+      />
+      <ListingSection>
+        {places.length === 0 ? (
+          <p className="text-center text-gray-500">No records found in this collection.</p>
+        ) : (
+          <>
+            <ListingGrid>
+              {places.map((place, index) => (
+                <PublicListingCard
+                  key={String(place.id ?? index)}
+                  href={`/explore/${publicRecordSlug(place)}`}
+                  image={getRecordImage(place) || undefined}
+                  title={getRecordTitle(place)}
+                  location={pickString(place, ['country', 'location'])}
+                  description={recordCardBlurb(place)}
+                  cta="Explore"
+                />
+              ))}
+            </ListingGrid>
+            <ListingPager basePath="/explore" page={page} pageSize={PAGE_SIZE} total={total} label="places" />
+          </>
+        )}
+      </ListingSection>
+    </PublicShellServer>
+  );
 }

@@ -14,7 +14,8 @@ type PageProps = {
   params: { slug: string };
 };
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolved = resolvePublicSlug(params.slug);
@@ -80,6 +81,7 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
         initialTours={countryData?.tours || []}
         initialParks={countryData?.parks || []}
         initialPlaces={countryData?.places || []}
+        initialStays={countryData?.stays || []}
       />
     </>
   );

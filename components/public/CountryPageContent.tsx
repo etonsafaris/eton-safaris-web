@@ -5,7 +5,10 @@ import AmazingSafaris from '@/components/public/AmazingSafaris';
 import Carousel from '@/components/public/Carousel';
 import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
+import Link from 'next/link';
 import PageHero from '@/components/public/PageHero';
+import PlaceCard from '@/components/public/PlaceCard';
+import { countryPlacePath } from '@/lib/cms-routes';
 import {
   categoryMatchesCountry,
   countryCategoryPath,
@@ -21,8 +24,12 @@ import {
   fetchCollectionRecordById,
   fetchCollectionRecords,
   resolvePublicTours,
+  getRecordImage,
+  getRecordTitle,
   isPublishedRecord,
   pickString,
+  publicRecordSlug,
+  recordCardBlurb,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -40,6 +47,7 @@ type CountryPageContentProps = {
   initialTours?: RecordRow[];
   initialParks?: RecordRow[];
   initialPlaces?: RecordRow[];
+  initialStays?: RecordRow[];
 };
 
 function toProseHtml(value: string) {
@@ -58,10 +66,16 @@ export default function CountryPageContent({
   heroTitle,
   initialCategories = [],
   initialTours = [],
+  initialParks = [],
+  initialPlaces = [],
+  initialStays = [],
 }: CountryPageContentProps) {
   const [country, setCountry] = useState<RecordRow | null>(countryProp);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [parks, setParks] = useState<RecordRow[]>(initialParks);
+  const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
+  const [stays, setStays] = useState<RecordRow[]>(initialStays);
   const [ready, setReady] = useState(true);
   const hasServerContent = Boolean(
     pickString(countryProp || {}, ['description', 'country_description', 'overview', 'summary', 'excerpt'])?.trim() ||
@@ -72,7 +86,10 @@ export default function CountryPageContent({
     setCountry(countryProp);
     setCategories(initialCategories);
     setTours(initialTours);
-  }, [countryProp, initialCategories, initialTours]);
+    setParks(initialParks);
+    setPlaces(initialPlaces);
+    setStays(initialStays);
+  }, [countryProp, initialCategories, initialTours, initialParks, initialPlaces, initialStays]);
 
   useCmsPageReload(async () => {
     try {
@@ -188,6 +205,127 @@ export default function CountryPageContent({
           </div>
         </div>
       </section>
+
+      {parks.length > 0 ? (
+        <section className="bg-white px-4 py-12">
+          <div className="mx-auto max-w-[1200px]">
+            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
+              National Parks in {title}
+            </h2>
+            <div className="mt-8">
+              <Carousel
+                items={parks.map((park, index) => {
+                  const parkSlug = publicRecordSlug(park);
+                  return (
+                    <PlaceCard
+                      key={String(park.id ?? index)}
+                      href={parkSlug ? `/parks/${parkSlug}` : '/parks'}
+                      image={getRecordImage(park) || undefined}
+                      title={getRecordTitle(park)}
+                      location={pickString(park, ['location', 'country'])}
+                      description={recordCardBlurb(park)}
+                      record={park}
+                      cta="View Park"
+                    />
+                  );
+                })}
+                itemWidth={280}
+                gap={20}
+                autoPlayMs={5000}
+              />
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                href="/parks"
+                className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
+              >
+                Other Parks
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {stays.length > 0 ? (
+        <section className="bg-[#f3f3f3] px-4 py-12">
+          <div className="mx-auto max-w-[1200px]">
+            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
+              Accommodations in {title}
+            </h2>
+            <div className="mt-8">
+              <Carousel
+                items={stays.map((stay, index) => {
+                  const staySlug = publicRecordSlug(stay);
+                  return (
+                    <PlaceCard
+                      key={String(stay.id ?? index)}
+                      href={staySlug ? `/accommodations/${staySlug}` : '/accommodations'}
+                      image={getRecordImage(stay) || undefined}
+                      title={getRecordTitle(stay)}
+                      location={pickString(stay, ['location', 'national_park_name', 'country'])}
+                      description={recordCardBlurb(stay)}
+                      record={stay}
+                      cta="View Stay"
+                    />
+                  );
+                })}
+                itemWidth={280}
+                gap={20}
+                autoPlayMs={5200}
+              />
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                href="/accommodations"
+                className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
+              >
+                Other Accommodations
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {places.length > 0 ? (
+        <section className="bg-white px-4 py-12">
+          <div className="mx-auto max-w-[1200px]">
+            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
+              Explore {title}
+            </h2>
+            <div className="mt-8">
+              <Carousel
+                items={places.map((place, index) => {
+                  const placeSlug = publicRecordSlug(place);
+                  const href = placeSlug ? countryPlacePath(slug, place) : '/explore';
+                  return (
+                    <PlaceCard
+                      key={String(place.id ?? index)}
+                      href={href}
+                      image={getRecordImage(place) || undefined}
+                      title={getRecordTitle(place)}
+                      location={pickString(place, ['location', 'country'])}
+                      description={recordCardBlurb(place)}
+                      record={place}
+                      cta="Explore"
+                    />
+                  );
+                })}
+                itemWidth={280}
+                gap={20}
+                autoPlayMs={5400}
+              />
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                href="/explore"
+                className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
+              >
+                Other Places
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section id="tour-packages" className="bg-[#f3f6f5]">
         <AmazingSafaris

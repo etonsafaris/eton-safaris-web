@@ -56,6 +56,7 @@ export default async function DestinationCountryPage({ params }: { params: { slu
         initialTours={data.tours}
         initialParks={data.parks}
         initialPlaces={data.places}
+        initialStays={data.stays}
       />
     </PublicShellServer>
   );

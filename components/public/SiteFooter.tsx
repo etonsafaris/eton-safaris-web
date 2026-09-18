@@ -161,6 +161,10 @@ export default function SiteFooter() {
             <Link href="/contact-us" className="site-footer-link block">Contact Us</Link>
             <Link href="/about-us" className="site-footer-link block">About Us</Link>
             <Link href="/tours-and-travel-agency" className="site-footer-link block">Tours and Travel Agency</Link>
+            <Link href="/tours" className="site-footer-link block">Safari Tours</Link>
+            <Link href="/parks" className="site-footer-link block">National Parks</Link>
+            <Link href="/accommodations" className="site-footer-link block">Accommodations</Link>
+            <Link href="/explore" className="site-footer-link block">Explore</Link>
             <Link href="/safari-updates" className="site-footer-link block">Safari Updates</Link>
             <Link href="/community-support" className="site-footer-link block">Community Support</Link>
             <Link href="/verify" className="site-footer-link block">Verify Booking</Link>

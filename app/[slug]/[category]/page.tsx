@@ -14,7 +14,8 @@ type PageProps = {
   params: { slug: string; category: string };
 };
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const path = `/${params.slug}/${params.category}`;
@@ -92,6 +93,7 @@ export default async function CountryCategoryPage({ params }: PageProps) {
         initialTours={countryData.tours}
         initialParks={countryData.parks}
         initialPlaces={countryData.places}
+        initialStays={countryData.stays}
         initialNestedPlace={place}
         initialNestedIsCategory={Boolean(category)}
       />

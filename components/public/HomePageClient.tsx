@@ -87,23 +87,29 @@ export default function HomePageClient({
     }
 
     const [tourRows, updateRows, categoryRows] = await Promise.all([
-      fetchFeaturedTours(12).catch((error) => {
-        console.error('[Supabase] Failed to load tours:', error);
-        return [] as RecordRow[];
-      }),
-      fetchCollectionPage('safari_updates', [], { limit: 8, offset: 0 })
-        .then((page) => page.rows)
-        .catch((error) => {
-          console.error('[Supabase] Failed to load safari updates:', error);
-          return [] as RecordRow[];
-        }),
+      initialTours.length
+        ? Promise.resolve([] as RecordRow[])
+        : fetchFeaturedTours(12).catch((error) => {
+            console.error('[Supabase] Failed to load tours:', error);
+            return [] as RecordRow[];
+          }),
+      initialUpdates.length
+        ? Promise.resolve([] as RecordRow[])
+        : fetchCollectionRecords('safari_updates', [], { maxRows: 12 }).catch((error) => {
+            console.error('[Supabase] Failed to load safari updates:', error);
+            return [] as RecordRow[];
+          }),
       fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
         console.error('[Supabase] Failed to load categories:', error);
         return [] as RecordRow[];
       }),
     ]);
     setTours((current) => (tourRows.length ? tourRows.slice(0, 12) : current));
-    setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
+    setUpdates((current) => {
+      if (initialUpdates.length && current.length) return current;
+      const next = updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8);
+      return next.length ? next : current;
+    });
     setCategories(categoryRows.filter(isPublishedRecord));
   }, hasServerContent);
 

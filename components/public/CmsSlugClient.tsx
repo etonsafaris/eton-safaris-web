@@ -38,6 +38,7 @@ export default function CmsSlugClient({
   initialTours = [],
   initialParks = [],
   initialPlaces = [],
+  initialStays = [],
   initialNestedPlace = null,
   initialNestedIsCategory = false,
 }: {
@@ -47,6 +48,7 @@ export default function CmsSlugClient({
   initialTours?: RecordRow[];
   initialParks?: RecordRow[];
   initialPlaces?: RecordRow[];
+  initialStays?: RecordRow[];
   initialNestedPlace?: RecordRow | null;
   initialNestedIsCategory?: boolean;
 }) {
@@ -194,6 +196,7 @@ export default function CmsSlugClient({
             initialTours={initialTours}
             initialParks={initialParks}
             initialPlaces={initialPlaces}
+            initialStays={initialStays}
           />
         )}
       </PublicShell>
