@@ -7,6 +7,7 @@ import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
+import { triggerNotFound } from '@/lib/client-not-found';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -59,7 +60,7 @@ export default function AccommodationDetailClient({
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialItem) router.replace('/404');
+          if (!initialItem) triggerNotFound();
           return;
         }
         setItem(published);
@@ -82,7 +83,7 @@ export default function AccommodationDetailClient({
           setItem(null);
           setOthers([]);
           setTours([]);
-          router.replace('/404');
+          if (!initialItem) triggerNotFound();
         }
       }
     }

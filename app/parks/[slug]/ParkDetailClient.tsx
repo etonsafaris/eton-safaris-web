@@ -8,6 +8,7 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
+import { triggerNotFound } from '@/lib/client-not-found';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -76,7 +77,7 @@ export default function ParkDetailClient({
           setStays(await fetchStaysForPark(parkName, 24, parkId).catch(() => []));
           return;
         }
-        if (!initialPark) router.replace('/404');
+        if (!initialPark) triggerNotFound();
         if (!initialPark) {
           setPark(null);
           setOthers([]);
@@ -88,7 +89,7 @@ export default function ParkDetailClient({
           setPark(null);
           setOthers([]);
           setStays([]);
-          router.replace('/404');
+          if (!initialPark) triggerNotFound();
         }
       } finally {
         setReady(true);

@@ -7,6 +7,7 @@ import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
+import { triggerNotFound } from '@/lib/client-not-found';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -59,7 +60,7 @@ export default function SafariUpdateDetailClient({
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialPost) router.replace('/404');
+          if (!initialPost) triggerNotFound();
           return;
         }
         setPost(published);
@@ -81,7 +82,7 @@ export default function SafariUpdateDetailClient({
         if (!initialPost) {
           setPost(null);
           setRelated([]);
-          router.replace('/404');
+          if (!initialPost) triggerNotFound();
         }
       }
     }

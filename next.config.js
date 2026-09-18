@@ -109,6 +109,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      { source: '/404', destination: '/', permanent: false },
       { source: '/eton-safaris-logo.png', destination: '/eton-safaris-gorilla.png', permanent: false },
       { source: '/pages/terms', destination: '/terms-of-services', permanent: true },
       { source: '/pages/privacy', destination: '/privacy-policies', permanent: true },

@@ -22,6 +22,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import { triggerNotFound } from '@/lib/client-not-found';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import { stripPublicMoney } from '@/lib/public-money';
 import { splitContentList } from '@/lib/content-list';
@@ -85,7 +86,7 @@ export default function TourDetailClient({
         const full = await fetchRecordByPublicSlug('tours', slug);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialTour) router.replace('/404');
+          if (!initialTour) triggerNotFound();
           return;
         }
         setTour(published);
@@ -98,11 +99,7 @@ export default function TourDetailClient({
         if (relatedRows.length) setRelated(relatedRows);
       } catch (error) {
         console.error('[Tour detail] Failed to load tour:', error);
-        if (!initialTour) {
-          setTour(null);
-          setRelated([]);
-          router.replace('/404');
-        }
+        if (!initialTour) triggerNotFound();
       } finally {
         setReady(true);
       }

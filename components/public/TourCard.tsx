@@ -14,6 +14,13 @@ export default function TourCard({
   durationBadge?: boolean;
 }) {
   const slug = publicRecordSlug(tour);
+  if (!slug) {
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-white p-4 shadow-sm opacity-60">
+        <p className="text-sm text-gray-500">Tour unavailable</p>
+      </div>
+    );
+  }
   const days = pickNumber(tour, ['duration_days', 'days', 'duration']);
   const nights = days > 0 ? Math.max(days - 1, 0) : 0;
   const image = getRecordImage(tour);

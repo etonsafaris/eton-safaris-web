@@ -150,6 +150,9 @@ export function resolvePublicSlug(raw: string): ResolvedCmsSlug | null {
   if (RESERVED_PUBLIC_FILES.test(slug) || PUBLIC_FILE_SEGMENT.test(slug)) {
     return null;
   }
+  if (/^(404|not-found|missing|undefined|null)$/i.test(slug)) {
+    return null;
+  }
 
   if (PAGE_ALIASES[slug]) {
     return { kind: 'page', canonical: PAGE_ALIASES[slug] };
