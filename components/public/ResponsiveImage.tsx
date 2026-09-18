@@ -35,7 +35,7 @@ export default function ResponsiveImage({
   const defaultSizes =
     variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw';
   return (
-    <picture className="contents">
+    <picture className={variant === 'hero' || className?.includes('absolute') ? 'absolute inset-0 block h-full w-full' : 'block h-full w-full'}>
       {avifSrcSet ? <source type="image/avif" srcSet={avifSrcSet} sizes={sizes || defaultSizes} /> : null}
       <img
         src={displaySrc}
@@ -49,9 +49,15 @@ export default function ResponsiveImage({
         referrerPolicy="no-referrer"
         onError={(event) => {
           const image = event.currentTarget;
+          if (image.dataset.fallback === '1') {
+            image.style.visibility = 'hidden';
+            return;
+          }
+          image.dataset.fallback = '1';
           image.srcset = '';
           image.removeAttribute('srcset');
-          image.style.visibility = 'hidden';
+          if (image.src !== resolved) image.src = resolved;
+          else image.style.visibility = 'hidden';
         }}
       />
     </picture>

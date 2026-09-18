@@ -30,28 +30,25 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   const slug = countrySlugFromLanding(params.slug);
   if (!slug) notFound();
 
-  let data;
+  let data: Awaited<ReturnType<typeof loadCountryPageData>> = {
+    country: null,
+    categories: [],
+    tours: [],
+    parks: [],
+    places: [],
+  };
   try {
     data = await loadCountryPageData(slug);
   } catch (error) {
     console.error('[Destination detail] Failed to load country:', error);
-    notFound();
   }
-  if (!data.country) notFound();
-  const country =
-    data.country ||
-    ({
-      name: countryLabelFromSlug(slug),
-      title: countryLabelFromSlug(slug),
-      slug,
-    } as const);
 
   return (
     <PublicShell>
       <CountryPageContent
         key={slug}
         slug={slug}
-        country={country}
+        country={data.country}
         initialCategories={data.categories}
         initialTours={data.tours}
         initialParks={data.parks}
