@@ -40,7 +40,6 @@ export default async function LandingAdminPreviewPage({ params }: { params: { sl
         initialTours={data.tours}
         initialParks={data.parks}
         initialPlaces={data.places}
-        initialStays={data.stays}
       />
     </PublicShellServer>
   );

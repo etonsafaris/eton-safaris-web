@@ -30,19 +30,25 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   const slug = countrySlugFromLanding(params.slug);
   if (!slug) notFound();
 
-  let data;
+  const fallbackName = countryLabelFromSlug(slug);
+  let data: Awaited<ReturnType<typeof loadCountryPageData>>;
   try {
     data = await loadCountryPageData(slug);
   } catch (error) {
     console.error('[Destination detail] Failed to load country:', error);
-    notFound();
+    data = {
+      country: null,
+      categories: [],
+      tours: [],
+      parks: [],
+      places: [],
+    };
   }
-  if (!data.country) notFound();
   const country =
     data.country ||
     ({
-      name: countryLabelFromSlug(slug),
-      title: countryLabelFromSlug(slug),
+      name: fallbackName,
+      title: fallbackName,
       slug,
     } as const);
 
@@ -56,7 +62,6 @@ export default async function DestinationCountryPage({ params }: { params: { slu
         initialTours={data.tours}
         initialParks={data.parks}
         initialPlaces={data.places}
-        initialStays={data.stays}
       />
     </PublicShellServer>
   );

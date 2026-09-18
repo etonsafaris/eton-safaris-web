@@ -88,7 +88,7 @@ export default function TourDetailClient({
         const full = await fetchRecordByPublicSlug('tours', slug);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!serverGate.current) triggerNotFound();
+          if (!serverGate.current) triggerNotFound('tour missing');
           return;
         }
         setTour(published);
@@ -101,7 +101,7 @@ export default function TourDetailClient({
         if (relatedRows.length) setRelated(relatedRows);
       } catch (error) {
         console.error('[Tour detail] Failed to load tour:', error);
-        if (!serverGate.current) triggerNotFound();
+        if (!serverGate.current) triggerNotFound('tour fetch error');
       } finally {
         setReady(true);
       }

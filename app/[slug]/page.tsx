@@ -81,7 +81,6 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
         initialTours={countryData?.tours || []}
         initialParks={countryData?.parks || []}
         initialPlaces={countryData?.places || []}
-        initialStays={countryData?.stays || []}
       />
     </>
   );

@@ -93,7 +93,6 @@ export default async function CountryCategoryPage({ params }: PageProps) {
         initialTours={countryData.tours}
         initialParks={countryData.parks}
         initialPlaces={countryData.places}
-        initialStays={countryData.stays}
         initialNestedPlace={place}
         initialNestedIsCategory={Boolean(category)}
       />

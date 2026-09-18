@@ -255,7 +255,7 @@ export async function loadCountryPageData(slug: string) {
     pickString(country || {}, ['name', 'title']) ||
     slug;
   const countryId = country?.id != null ? String(country.id) : undefined;
-  const [tours, parks, explorePage, accommodationsPage] = await Promise.all([
+  const [tours, parks, explorePage] = await Promise.all([
     resolvePublicTours({ country: countryName, limit: 48 }).catch(() => [] as RecordRow[]),
     withTimeout(fetchParksForCountry(countryName, 24, countryId), 8000, [] as RecordRow[]),
     withTimeout(
@@ -267,30 +267,27 @@ export async function loadCountryPageData(slug: string) {
       8000,
       { rows: [] as RecordRow[], total: 0 }
     ),
-    withTimeout(
-      fetchCollectionPage('accommodations', [], {
-        columns: listColumns('accommodations'),
-        limit: 80,
-        offset: 0,
-      }),
-      8000,
-      { rows: [] as RecordRow[], total: 0 }
-    ),
   ]);
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
   const places = explorePage.rows
     .filter(isPublishedRecord)
     .filter((row) => matchesCountry(row, slug) || recordMatchesCountrySlug(row, slug));
-  const stays = accommodationsPage.rows
-    .filter(isPublishedRecord)
-    .filter((row) => matchesCountry(row, slug) || recordMatchesCountrySlug(row, slug));
+  const fallbackCountry: RecordRow = {
+    name: countryName,
+    title: countryName,
+    slug,
+  };
   return {
-    country: country && isPublishedRecord(country) ? country : null,
+    country:
+      country && isPublishedRecord(country)
+        ? country
+        : countryName
+          ? fallbackCountry
+          : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
     tours: matchedTours.length ? matchedTours : tours,
     parks: parks.filter(isPublishedRecord),
     places,
-    stays,
   };
 }
 
