@@ -1,10 +1,16 @@
-import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
+import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import {
   categoryMatchesCountry,
+  categoryPublicSlug,
+  canonicalCountrySlug,
+  countryLabelFromSlug,
+  filterToursByCategory,
+  findCategoryBySlug,
   matchesCategoryValue,
   matchesCountry,
   publicCountryLabel,
+  recordCountryValues,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import {
@@ -553,6 +559,92 @@ export async function loadExploreDetail(slug: string) {
   } catch (error) {
     console.warn('[Public] loadExploreDetail failed:', slug, error);
     return { place: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
+  }
+}
+
+/** Fast category page payload — avoids loading full country parks/explore on every category click. */
+export async function loadCategoryPageData(countrySlug: string, categorySlug: string) {
+  const bare =
+    canonicalCountrySlug(countrySlug) ||
+    countrySlugFromLanding(countrySlug) ||
+    normalizeSlug(countrySlug).replace(/-safaris$/, '');
+  const fallbackName = countryLabelFromSlug(bare);
+  try {
+    const [categoriesPage, countryRow, tourRows] = await Promise.all([
+      withTimeout(
+        fetchCollectionPage('categories', [], {
+          columns: listColumns('categories'),
+          limit: 120,
+          offset: 0,
+        }),
+        8000,
+        { rows: [] as RecordRow[], total: 0 }
+      ),
+      fetchPublicRecordResilient('countries', bare),
+      withTimeout(resolvePublicTours({ country: fallbackName || bare, limit: 48 }), 10000, [] as RecordRow[]),
+    ]);
+    const categories = (categoriesPage?.rows ?? [])
+      .filter(isPublishedRecord)
+      .filter((row) => categoryMatchesCountry(row, bare));
+    const category = findCategoryBySlug(categories, categorySlug, bare);
+    const countryTours = (tourRows ?? []).filter((row) => matchesCountry(row, bare));
+    const pool = countryTours.length ? countryTours : tourRows ?? [];
+    const filteredTours = filterToursByCategory(pool, category, categorySlug);
+    const countryName = publicCountryLabel(countryRow, bare) || fallbackName;
+    const country: RecordRow =
+      countryRow && isPublishedRecord(countryRow)
+        ? countryRow
+        : ({
+            name: countryName,
+            title: countryName,
+            slug: bare,
+          } as RecordRow);
+    return toClientProps({
+      country,
+      category,
+      categories,
+      tours: filteredTours.length ? filteredTours : pool,
+    });
+  } catch (error) {
+    console.warn('[Public] loadCategoryPageData failed:', bare, categorySlug, error);
+    return {
+      country: {
+        name: fallbackName,
+        title: fallbackName,
+        slug: bare,
+      } as RecordRow,
+      category: null as RecordRow | null,
+      categories: [] as RecordRow[],
+      tours: [] as RecordRow[],
+    };
+  }
+}
+
+export async function loadStaticCategoryParams(): Promise<{ slug: string; category: string }[]> {
+  try {
+    const page = await fetchCollectionPage('categories', [], {
+      limit: STATIC_DETAIL_BUILD_LIMIT * 2,
+      offset: 0,
+    });
+    const params: { slug: string; category: string }[] = [];
+    for (const row of (page?.rows ?? []).filter(isPublishedRecord)) {
+      const catSlug = categoryPublicSlug(row);
+      if (!catSlug) continue;
+      const countries = recordCountryValues(row);
+      if (!countries.length) continue;
+      for (const country of countries) {
+        params.push({ slug: landingSlugForCountry(country), category: catSlug });
+      }
+    }
+    const seen = new Set<string>();
+    return params.filter((item) => {
+      const key = `${item.slug}/${item.category}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, STATIC_DETAIL_BUILD_LIMIT * 2);
+  } catch {
+    return [];
   }
 }
 

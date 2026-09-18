@@ -3,6 +3,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { matchesCountry } from '@/lib/country-utils';
 import { loadExplorePageData } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import {
@@ -29,9 +30,10 @@ export const metadata: Metadata = {
 export default async function ExploreListingPage({
   searchParams,
 }: {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string; country?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const countryFilter = searchParams?.country?.trim() || '';
   let places: Awaited<ReturnType<typeof loadExplorePageData>>['places'] = [];
   let total = 0;
   try {
@@ -44,12 +46,16 @@ export default async function ExploreListingPage({
   } catch (error) {
     console.warn('[Public] Explore listing failed:', error);
   }
+  if (countryFilter) {
+    places = places.filter((row) => matchesCountry(row, countryFilter));
+    total = places.length;
+  }
 
   return (
     <PublicShellServer>
       <PageHero
         variant="default"
-        title="Explore"
+        title={countryFilter ? `Explore ${countryFilter.replace(/-/g, ' ')}` : 'Explore'}
         subtitle={total ? `${total.toLocaleString()} places to discover` : 'Destinations and experiences'}
         image={SITE_MEDIA.gorillasForest}
       />

@@ -3,6 +3,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { matchesCountry } from '@/lib/country-utils';
 import { loadAccommodationsPageData } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import {
@@ -30,9 +31,10 @@ export const metadata: Metadata = {
 export default async function AccommodationsPage({
   searchParams,
 }: {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string; country?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const countryFilter = searchParams?.country?.trim() || '';
   let rows: Awaited<ReturnType<typeof loadAccommodationsPageData>>['rows'] = [];
   let total = 0;
   try {
@@ -45,12 +47,16 @@ export default async function AccommodationsPage({
   } catch (error) {
     console.warn('[Public] Accommodations listing failed:', error);
   }
+  if (countryFilter) {
+    rows = rows.filter((row) => matchesCountry(row, countryFilter));
+    total = rows.length;
+  }
 
   return (
     <PublicShellServer>
       <PageHero
         variant="default"
-        title="Accommodations"
+        title={countryFilter ? `Accommodations in ${countryFilter.replace(/-/g, ' ')}` : 'Accommodations'}
         subtitle={total ? `${total.toLocaleString()} lodges and safari stays` : 'Places to stay on safari'}
         image={SITE_MEDIA.safariVehicle}
       />

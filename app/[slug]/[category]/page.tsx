@@ -1,15 +1,19 @@
 import type { Metadata } from 'next';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
-import CmsSlugClient from '@/components/public/CmsSlugClient';
 import JsonLd from '@/components/public/JsonLd';
+import PlacePageContent from '@/components/public/PlacePageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { countrySlugFromLanding, resolvePublicSlug } from '@/lib/cms-routes';
-import { countryLabelFromSlug, filterToursByCategory, findCategoryBySlug, findPlaceBySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString, publicRecordSlug } from '@/lib/data';
+import { countrySlugFromLanding, landingSlugForCountry, resolvePublicSlug } from '@/lib/cms-routes';
+import {
+  countryLabelFromSlug,
+  findCategoryBySlug,
+  findPlaceBySlug,
+  matchesCountry,
+} from '@/lib/country-utils';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString, publicRecordSlug } from '@/lib/data';
+import { loadCategoryPageData, loadCountryPageData, loadStaticCategoryParams } from '@/lib/load-public';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
-
-import { loadCountryPageData } from '@/lib/load-public';
 import type { RecordRow } from '@/lib/types';
 
 type PageProps = {
@@ -18,6 +22,10 @@ type PageProps = {
 
 export const revalidate = 900;
 export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return loadStaticCategoryParams();
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const path = `/${params.slug}/${params.category}`;
@@ -53,81 +61,100 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CountryCategoryPage({ params }: PageProps) {
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
+  const landingSlug = params.slug.includes('-safaris') ? params.slug : landingSlugForCountry(countrySlug);
 
-  let countryData: Awaited<ReturnType<typeof loadCountryPageData>>;
-  try {
-    countryData = await loadCountryPageData(countrySlug);
-  } catch (error) {
-    console.error('[Category page] Failed to load country data:', error);
-    countryData = {
-      country: null,
-      categories: [],
-      tours: [],
-      parks: [],
-      places: [],
-    };
+  const { country, category, categories, tours } = await loadCategoryPageData(countrySlug, params.category);
+
+  if (category) {
+    return (
+      <>
+        <JsonLd
+          table="categories"
+          slug={params.category}
+          path={`/${landingSlug}/${params.category}`}
+          schemaHint="TouristTrip"
+        />
+        <PublicShellServer>
+          <CategoryPageContent
+            slug={countrySlug}
+            country={country}
+            categorySlug={params.category}
+            initialCategories={categories}
+            initialTours={tours}
+            initialCategory={category}
+            serverPreloaded
+          />
+        </PublicShellServer>
+      </>
+    );
   }
 
-  const category = findCategoryBySlug(countryData.categories, params.category, countrySlug);
-  const place = !category ? findPlaceBySlug(countryData.places, params.category, countrySlug) : null;
+  let place: RecordRow | null = null;
+  let placeOthers: RecordRow[] = [];
+  let placeTours: RecordRow[] = [];
+  try {
+    const countryPeek = await loadCountryPageData(countrySlug);
+    place = findPlaceBySlug(countryPeek.places, params.category, countrySlug);
+    if (place) {
+      placeOthers = (countryPeek.places ?? [])
+        .filter(isPublishedRecord)
+        .filter((row) => String(row?.id) !== String(place?.id || ''))
+        .filter((row) => matchesCountry(row, countrySlug))
+        .slice(0, 20);
+      placeTours = (countryPeek.tours ?? []).filter((row) => matchesCountry(row, countrySlug)).slice(0, 12);
+    }
+  } catch (error) {
+    console.warn('[Category page] Place load failed:', error);
+  }
 
-  let table: 'categories' | 'explore' = 'categories';
-  let schemaHint: 'TouristTrip' | 'TouristAttraction' = 'TouristTrip';
   if (place) {
-    table = 'explore';
-    schemaHint = 'TouristAttraction';
+    return (
+      <>
+        <JsonLd
+          table="explore"
+          slug={params.category}
+          path={`/${landingSlug}/${params.category}`}
+          schemaHint="TouristAttraction"
+        />
+        <PublicShellServer>
+          <PlacePageContent
+            slug={countrySlug}
+            placeSlug={params.category}
+            country={country}
+            place={place}
+            initialOthers={placeOthers}
+            initialTours={placeTours}
+          />
+        </PublicShellServer>
+      </>
+    );
   }
 
   const fallbackName = countryLabelFromSlug(countrySlug);
-  const country: RecordRow =
-    countryData.country ||
+  const mergedCountry: RecordRow =
+    country ||
     ({
       name: fallbackName,
       title: fallbackName,
       slug: countrySlug,
     } as RecordRow);
 
-  if (place) {
-    return (
-      <>
-        <JsonLd
-          table={table}
-          slug={params.category}
-          path={`/${params.slug}/${params.category}`}
-          schemaHint={schemaHint}
-        />
-        <CmsSlugClient
-          key={`${params.slug}/${params.category}`}
-          initialCountry={country}
-          initialCategories={countryData.categories}
-          initialTours={countryData.tours}
-          initialParks={countryData.parks}
-          initialPlaces={countryData.places}
-          initialNestedPlace={place}
-          initialNestedIsCategory={false}
-        />
-      </>
-    );
-  }
-
-  const filteredTours = filterToursByCategory(countryData.tours, category, params.category);
-
   return (
     <>
       <JsonLd
-        table={table}
+        table="categories"
         slug={params.category}
-        path={`/${params.slug}/${params.category}`}
-        schemaHint={schemaHint}
+        path={`/${landingSlug}/${params.category}`}
+        schemaHint="TouristTrip"
       />
       <PublicShellServer>
         <CategoryPageContent
           slug={countrySlug}
-          country={country}
+          country={mergedCountry}
           categorySlug={params.category}
-          initialCategories={countryData.categories}
-          initialTours={filteredTours.length ? filteredTours : countryData.tours}
-          initialCategory={category}
+          initialCategories={categories}
+          initialTours={tours}
+          initialCategory={null}
           serverPreloaded
         />
       </PublicShellServer>

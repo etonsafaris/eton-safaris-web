@@ -10,6 +10,7 @@ import PageHero from '@/components/public/PageHero';
 import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
+import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
 import {
   categoryMatchesCountry,
   countryCategoryPath,
@@ -231,7 +232,7 @@ export default function CountryPageContent({
             </div>
             <div className="mt-8 text-center">
               <Link
-                href="/parks"
+                href={countryParksListingPath(slug)}
                 className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
               >
                 Other Parks
@@ -270,7 +271,7 @@ export default function CountryPageContent({
             </div>
             <div className="mt-8 text-center">
               <Link
-                href="/explore"
+                href={countryExploreListingPath(slug)}
                 className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
               >
                 Other Places

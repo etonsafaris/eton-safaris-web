@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { countryAccommodationsListingPath } from '@/lib/listing-paths';
 import Carousel from '@/components/public/Carousel';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
@@ -172,6 +174,14 @@ export default function ParkDetailClient({
                     pauseOnHover
                     emptyMessage="No records found in this collection."
                   />
+                </div>
+                <div className="mt-8 text-center">
+                  <Link
+                    href={countryAccommodationsListingPath(pickString(park, ['country']) || '')}
+                    className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
+                  >
+                    Other Accommodations
+                  </Link>
                 </div>
               </div>
             </section>

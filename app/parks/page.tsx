@@ -3,6 +3,7 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageHero from '@/components/public/PageHero';
 import PublicListingCard from '@/components/public/PublicListingCard';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { matchesCountry } from '@/lib/country-utils';
 import { loadParksPageData } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import {
@@ -30,9 +31,10 @@ export const metadata: Metadata = {
 export default async function NationalParksPage({
   searchParams,
 }: {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string; country?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const countryFilter = searchParams?.country?.trim() || '';
   let parks: Awaited<ReturnType<typeof loadParksPageData>>['parks'] = [];
   let total = 0;
   try {
@@ -45,12 +47,16 @@ export default async function NationalParksPage({
   } catch (error) {
     console.warn('[Public] Parks listing failed:', error);
   }
+  if (countryFilter) {
+    parks = parks.filter((row) => matchesCountry(row, countryFilter));
+    total = parks.length;
+  }
 
   return (
     <PublicShellServer>
       <PageHero
         variant="park"
-        title="National Parks"
+        title={countryFilter ? `National Parks in ${countryFilter.replace(/-/g, ' ')}` : 'National Parks'}
         subtitle={total ? `${total.toLocaleString()} parks and reserves` : 'Wildlife destinations'}
         image={SITE_MEDIA.wildlifeNationalPark}
       />

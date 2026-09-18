@@ -53,7 +53,7 @@ export default function SafariCategoryCard({
 
   if (href) {
     return (
-      <Link href={href} className={className} style={{ boxShadow: CARD_SHADOW }}>
+      <Link href={href} prefetch className={className} style={{ boxShadow: CARD_SHADOW }}>
         {inner}
       </Link>
     );
