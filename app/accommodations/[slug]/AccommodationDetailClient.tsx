@@ -8,6 +8,7 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import { triggerNotFound } from '@/lib/client-not-found';
+import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -43,6 +44,7 @@ export default function AccommodationDetailClient({
   const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const live = useCmsLive();
+  const serverGate = useServerRecordGate(initialItem);
 
   useEffect(() => {
     setItem(initialItem);
@@ -51,7 +53,7 @@ export default function AccommodationDetailClient({
   }, [initialItem, initialOthers, initialTours]);
 
   useEffect(() => {
-    if (initialItem && live === 0) return;
+    if (serverGate.current && live === 0) return;
     async function load() {
       try {
         const [full, stayPage] = await Promise.all([
@@ -60,7 +62,7 @@ export default function AccommodationDetailClient({
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialItem) triggerNotFound();
+          if (!serverGate.current) triggerNotFound();
           return;
         }
         setItem(published);
@@ -79,16 +81,16 @@ export default function AccommodationDetailClient({
         if (tourRows.length) setTours(tourRows);
       } catch (error) {
         console.error('[Accommodation detail] Failed to load stay:', error);
-        if (!initialItem) {
+        if (!serverGate.current) {
           setItem(null);
           setOthers([]);
           setTours([]);
-          if (!initialItem) triggerNotFound();
+          triggerNotFound();
         }
       }
     }
     void load();
-  }, [slug, live, router, initialItem]);
+  }, [slug, live, router, serverGate]);
 
   const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {
     setItem((row) => (row ? { ...row, published_at: stamp } : row));

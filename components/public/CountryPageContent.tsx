@@ -6,9 +6,9 @@ import Carousel from '@/components/public/Carousel';
 import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import PageHero from '@/components/public/PageHero';
-import { countryCategoryPath } from '@/lib/cms-routes';
 import {
   categoryMatchesCountry,
+  countryCategoryPath,
   matchesCountry,
   publicCountryLabel,
   recordMatchesCountrySlug,

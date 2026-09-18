@@ -9,6 +9,7 @@ import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
 import PublicShell from '@/components/public/PublicShell';
 import { triggerNotFound } from '@/lib/client-not-found';
+import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -46,6 +47,7 @@ export default function ParkDetailClient({
   const [stays, setStays] = useState<RecordRow[]>(initialStays);
   const [ready, setReady] = useState(Boolean(initialPark));
   const live = useCmsLive();
+  const serverGate = useServerRecordGate(initialPark);
 
   useEffect(() => {
     setPark(initialPark);
@@ -55,7 +57,7 @@ export default function ParkDetailClient({
   }, [initialPark, initialOthers, initialStays]);
 
   useEffect(() => {
-    if (initialPark && live === 0) return;
+    if (serverGate.current && live === 0) return;
     async function load() {
       try {
         const [full, parkPage] = await Promise.all([
@@ -77,26 +79,26 @@ export default function ParkDetailClient({
           setStays(await fetchStaysForPark(parkName, 24, parkId).catch(() => []));
           return;
         }
-        if (!initialPark) triggerNotFound();
-        if (!initialPark) {
+        if (!serverGate.current) triggerNotFound();
+        if (!serverGate.current) {
           setPark(null);
           setOthers([]);
           setStays([]);
         }
       } catch (error) {
         console.error('[Park detail] Failed to load park:', error);
-        if (!initialPark) {
+        if (!serverGate.current) {
           setPark(null);
           setOthers([]);
           setStays([]);
-          if (!initialPark) triggerNotFound();
+          triggerNotFound();
         }
       } finally {
         setReady(true);
       }
     }
     load();
-  }, [slug, live, router, initialPark]);
+  }, [slug, live, router, serverGate]);
 
   const stayItems = useMemo(
     () =>

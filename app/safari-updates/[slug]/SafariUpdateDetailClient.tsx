@@ -8,6 +8,7 @@ import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PublicShell from '@/components/public/PublicShell';
 import { triggerNotFound } from '@/lib/client-not-found';
+import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
   fetchCollectionPage,
   fetchRecordByPublicSlug,
@@ -43,6 +44,7 @@ export default function SafariUpdateDetailClient({
   const [related, setRelated] = useState<RecordRow[]>(initialRelated);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const live = useCmsLive();
+  const serverGate = useServerRecordGate(initialPost);
 
   useEffect(() => {
     setPost(initialPost);
@@ -51,7 +53,7 @@ export default function SafariUpdateDetailClient({
   }, [initialPost, initialRelated, initialTours]);
 
   useEffect(() => {
-    if (initialPost && live === 0) return;
+    if (serverGate.current && live === 0) return;
     async function load() {
       try {
         const [full, updatePage] = await Promise.all([
@@ -60,7 +62,7 @@ export default function SafariUpdateDetailClient({
         ]);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialPost) triggerNotFound();
+          if (!serverGate.current) triggerNotFound();
           return;
         }
         setPost(published);
@@ -79,15 +81,15 @@ export default function SafariUpdateDetailClient({
         if (tourRows.length) setTours(tourRows);
       } catch (error) {
         console.error('[Safari update detail] Failed to load post:', error);
-        if (!initialPost) {
+        if (!serverGate.current) {
           setPost(null);
           setRelated([]);
-          if (!initialPost) triggerNotFound();
+          triggerNotFound();
         }
       }
     }
     void load();
-  }, [slug, live, router, initialPost]);
+  }, [slug, live, router, serverGate]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = post ? getRecordImage(post) || undefined : undefined;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import { useParams, useRouter } from 'next/navigation';
 import { Check, Star, X } from 'lucide-react';
 import PageHero from '@/components/public/PageHero';
@@ -72,6 +73,7 @@ export default function TourDetailClient({
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [ready, setReady] = useState(Boolean(initialTour));
   const live = useCmsLive();
+  const serverGate = useServerRecordGate(initialTour);
 
   useEffect(() => {
     setTour(initialTour);
@@ -80,13 +82,13 @@ export default function TourDetailClient({
   }, [initialTour, initialRelated]);
 
   useEffect(() => {
-    if (initialTour && live === 0) return;
+    if (serverGate.current && live === 0) return;
     async function load() {
       try {
         const full = await fetchRecordByPublicSlug('tours', slug);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
-          if (!initialTour) triggerNotFound();
+          if (!serverGate.current) triggerNotFound();
           return;
         }
         setTour(published);
@@ -99,13 +101,13 @@ export default function TourDetailClient({
         if (relatedRows.length) setRelated(relatedRows);
       } catch (error) {
         console.error('[Tour detail] Failed to load tour:', error);
-        if (!initialTour) triggerNotFound();
+        if (!serverGate.current) triggerNotFound();
       } finally {
         setReady(true);
       }
     }
     void load();
-  }, [slug, live, router, initialTour]);
+  }, [slug, live, router, serverGate]);
 
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);
   const highlights = useMemo(
