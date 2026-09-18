@@ -6,7 +6,7 @@ import { getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo } from '@/lib/seo-public';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata(): Promise<Metadata> {
   const row = await loadCmsPage('community-support');

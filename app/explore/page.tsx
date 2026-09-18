@@ -16,7 +16,7 @@ import {
 } from '@/lib/data';
 import { Metadata } from 'next';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 const PAGE_SIZE = 48;
 

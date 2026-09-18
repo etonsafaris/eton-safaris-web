@@ -14,7 +14,7 @@ type PageProps = {
   params: { slug: string; category: string };
 };
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const path = `/${params.slug}/${params.category}`;

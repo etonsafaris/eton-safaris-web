@@ -83,7 +83,7 @@ const nextConfig = {
       },
       {
         source: '/((?!_next/static|_next/image|admin|login|api|eton-safaris-gorilla.png).*)',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=120, stale-while-revalidate=600' }],
       },
       {
         source: '/eton-safaris-gorilla.png',

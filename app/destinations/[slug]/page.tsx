@@ -6,7 +6,7 @@ import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { loadCountryPageData } from '@/lib/load-public';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = countrySlugFromLanding(params.slug);

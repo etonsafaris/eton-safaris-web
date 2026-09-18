@@ -2,7 +2,7 @@ import DestinationsIndexClient from '@/components/public/DestinationsIndexClient
 import { loadPublishedRecords } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Safari Destinations | Eton Safaris',

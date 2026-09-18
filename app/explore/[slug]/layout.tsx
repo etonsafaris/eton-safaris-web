@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export const dynamic = 'force-dynamic';
+export { revalidate } from '@/lib/public-page-config';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   return publicRecordMetadata('explore', params.slug, `/explore/${params.slug}`, { contentType: 'place' });

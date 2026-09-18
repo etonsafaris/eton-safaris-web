@@ -2,7 +2,7 @@ import HomePageClient from '@/components/public/HomePageClient';
 import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Eton Safaris | Africa & Beyond',

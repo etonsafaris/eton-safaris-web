@@ -2,7 +2,7 @@ import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Safari Tours',

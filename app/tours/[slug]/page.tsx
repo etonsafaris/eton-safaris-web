@@ -4,7 +4,7 @@ import TourDetailClient from './TourDetailClient';
 import { loadTourDetail } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export { dynamic, fetchCache, revalidate } from '@/lib/public-page-config';
+export { revalidate } from '@/lib/public-page-config';
 
 type PageProps = { params: { slug: string } };
 

@@ -26,6 +26,7 @@ import {
   TOUR_LIST_COLUMNS,
 } from '@/lib/data-server';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
+import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
 function listColumns(table: string, aliases: string[] = []) {
@@ -474,4 +475,21 @@ export async function loadExploreDetail(slug: string) {
     others: (countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20),
     tours: tours.slice(0, 12),
   });
+}
+
+/** Header/footer destination chips — loaded once per cached PublicShell render. */
+export async function loadPublicNavDestinations(): Promise<PublicDestination[]> {
+  try {
+    const rows = await withTimeout(
+      fetchCollectionRecords('countries', [], {
+        columns: listColumns('countries'),
+        maxRows: 48,
+      }).then((data) => data.filter(isPublishedRecord)),
+      8000,
+      [] as RecordRow[]
+    );
+    return mergePublicDestinations(rows);
+  } catch {
+    return mergePublicDestinations([]);
+  }
 }

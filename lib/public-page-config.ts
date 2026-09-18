@@ -1,9 +1,9 @@
 /**
- * Public pages always render on request so Vercel builds without DATABASE_URL
- * do not prerender empty CMS HTML. List queries are light and CDN-cached in
- * next.config.js (s-maxage=60). Do not force-no-store — that made every click
- * wait on Postgres.
+ * Public CMS pages: time-based revalidation and CDN caching (see next.config.js).
+ * force-dynamic avoids build-time prerender when DATABASE_URL is missing on CI.
+ * Do not use force-no-store — that forces every click to wait on Postgres.
+ * Admin saves call /api/admin/revalidate for immediate updates.
  */
 export const dynamic = 'force-dynamic';
-export const revalidate = 60;
+export const revalidate = 120;
 export const fetchCache = 'auto';
