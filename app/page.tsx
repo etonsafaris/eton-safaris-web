@@ -1,16 +1,22 @@
 import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
-  title: 'Eton Safaris | Africa & Beyond',
-  description: 'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.',
-  alternates: {
-    canonical: 'https://etonsafaris.com',
+  title: {
+    absolute: 'Eton Safaris | Africa & Beyond',
   },
+  description:
+    'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.',
+  alternates: {
+    canonical: publicCanonicalUrl('/'),
+  },
+  robots: { index: true, follow: true },
 };
 
 export default async function HomePage() {
@@ -28,9 +34,12 @@ export default async function HomePage() {
   } catch (error) {
     console.error('[Public] Home page data failed:', error);
   }
+  const initialHeroSlides = buildHomeHeroSlides(data.countries);
+
   return (
     <PublicShellServer>
       <HomePageClient
+        initialHeroSlides={initialHeroSlides}
         initialCountries={data.countries}
         initialTours={data.tours}
         initialUpdates={data.updates}

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { fetchCollectionRecords, fetchRecordByPublicSlug, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { normalizeSlug } from '@/lib/country-utils';
@@ -22,23 +23,14 @@ import { mergeFaqs } from '@/lib/default-faqs';
 import type { RecordRow } from '@/lib/types';
 
 function absoluteUrl(path: string) {
-  if (/^https?:\/\//i.test(path)) {
-    try {
-      return new URL(path).toString();
-    } catch {
-      return SITE.url;
-    }
-  }
-  const base = SITE.url.replace(/\/$/, '');
-  const suffix = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${suffix}`;
+  return publicCanonicalUrl(path);
 }
 
 function pathnameOf(url: string) {
   try {
     return new URL(url).pathname.replace(/\/$/, '') || '/';
   } catch {
-    return url.replace(/\/$/, '') || '/';
+    return publicCanonicalUrl(url).replace(SITE.url.replace(/\/$/, ''), '') || '/';
   }
 }
 
@@ -83,7 +75,7 @@ export function metadataFromSeo(
   const ogTitle = values.og_title || title;
   const ogDescription = values.og_description || description;
   const privatePath = isPrivateSeoPath(options.path);
-  const index = privatePath ? false : true;
+  const index = privatePath ? false : values.robots_index !== false;
   const follow = privatePath ? false : values.robots_follow !== false;
 
   return {
@@ -215,6 +207,8 @@ function resolveIndexableKind(table: string, contentType?: SeoContentType): Inde
   return indexableContentKindForTable(table);
 }
 
+export { publicCanonicalUrl, normalizePublicPath } from '@/lib/seo-canonical';
+
 export async function publicRecordMetadata(
   table: string,
   slug: string,
@@ -223,7 +217,13 @@ export async function publicRecordMetadata(
 ): Promise<Metadata> {
   try {
     const record = await findPublicRecord(table, slug, options.aliases || []);
-    if (!record) return { title: SITE.name };
+    if (!record) {
+      return metadataFromSeo(seoValuesFromRecord({}), {
+        title: `${slug.replace(/-/g, ' ')} | ${SITE.name}`,
+        description: SITE.about.slice(0, 160),
+        path,
+      });
+    }
     const values = seoValuesFromRecord(record as Record<string, unknown>);
     const kind = resolveIndexableKind(table, options.contentType);
     if (kind) {

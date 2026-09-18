@@ -4,9 +4,9 @@ import CmsSlugClient from '@/components/public/CmsSlugClient';
 import JsonLd from '@/components/public/JsonLd';
 import { resolvePublicSlug } from '@/lib/cms-routes';
 import { findCategoryBySlug, findPlaceBySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString, publicRecordSlug } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
-import { metadataFromSeo } from '@/lib/seo-public';
+import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
 
 import { loadCountryPageData } from '@/lib/load-public';
 
@@ -25,9 +25,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       fetchCollectionRecords('explore'),
     ]);
     const countryKey = resolved?.countrySlug || params.slug;
-    const row =
-      findCategoryBySlug(categories, params.category, countryKey) ||
-      findPlaceBySlug(places, params.category, resolved?.countrySlug || params.slug);
+    const category = findCategoryBySlug(categories, params.category, countryKey);
+    const place = findPlaceBySlug(places, params.category, resolved?.countrySlug || params.slug);
+    if (place && !category) {
+      const placeSlug = publicRecordSlug(place) || params.category;
+      return publicRecordMetadata('explore', placeSlug, `/explore/${placeSlug}`, { contentType: 'place' });
+    }
+    const row = category || place;
     const values = seoValuesFromRecord((row || {}) as Record<string, unknown>);
     const title = values.seo_title || (row && getRecordTitle(row)) || params.category;
     const description =

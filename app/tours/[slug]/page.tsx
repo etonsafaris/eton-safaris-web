@@ -5,6 +5,7 @@ import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
+export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };
 
@@ -13,7 +14,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`);
+  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
 }
 
 export default async function TourDetailPage({ params }: PageProps) {

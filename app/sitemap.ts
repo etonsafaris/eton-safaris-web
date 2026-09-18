@@ -1,7 +1,14 @@
 import type { MetadataRoute } from 'next';
-import { CORE_PAGE_SLUGS, countryPlacePath, destinationPublicPath } from '@/lib/cms-routes';
+import { CORE_PAGE_SLUGS, destinationPublicPath } from '@/lib/cms-routes';
 import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
-import { fetchCollectionRecords, pickString, publicListColumnsFor, publicRecordSlug, recordPublishedAt } from '@/lib/data';
+import {
+  fetchCollectionRecords,
+  pickString,
+  publicListColumnsFor,
+  publicRecordSlug,
+  recordPublishedAt,
+} from '@/lib/data';
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { mergePublicDestinations } from '@/lib/public-destinations';
 import {
   indexableContentKindForTable,
@@ -33,7 +40,7 @@ function entry(
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'weekly'
 ): MetadataRoute.Sitemap[number] {
   return {
-    url: `https://etonsafaris.com${path || '/'}`,
+    url: publicCanonicalUrl(path || '/'),
     lastModified,
     changeFrequency,
     priority,
@@ -47,7 +54,10 @@ function recordPath(base: string, row: RecordRow) {
 }
 
 function recordDate(row: RecordRow) {
-  const raw = recordPublishedAt(row);
+  const raw =
+    pickString(row, ['updated_date', 'updated_at', 'modified_at']) ||
+    recordPublishedAt(row) ||
+    pickString(row, ['created_date', 'created_at']);
   const date = raw ? new Date(raw) : new Date();
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
@@ -114,8 +124,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return path ? indexableRow('safari_updates', row, path, 0.6, 'weekly') : null;
     }),
     ...places.map((row) => {
-      const country = canonicalCountrySlug(pickString(row, ['country']));
-      const path = country ? countryPlacePath(country, row) : recordPath('/explore', row);
+      const path = recordPath('/explore', row);
       return path ? indexableRow('explore', row, path, 0.6) : null;
     }),
     ...pages.map((row) => {

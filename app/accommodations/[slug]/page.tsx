@@ -5,6 +5,7 @@ import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/lo
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
+export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };
 
@@ -13,7 +14,9 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return publicRecordMetadata('accommodations', params.slug, `/accommodations/${params.slug}`);
+  return publicRecordMetadata('accommodations', params.slug, `/accommodations/${params.slug}`, {
+    contentType: 'stay',
+  });
 }
 
 export default async function AccommodationDetailPage({ params }: PageProps) {

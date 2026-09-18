@@ -1,16 +1,22 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
-import { loadParkDetail } from '@/lib/load-public';
+import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
+export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };
+
+export async function generateStaticParams() {
+  return loadStaticParkParams();
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return publicRecordMetadata('national_park', params.slug, `/parks/${params.slug}`, {
     aliases: ['national_parks', 'parks'],
+    contentType: 'park',
   });
 }
 

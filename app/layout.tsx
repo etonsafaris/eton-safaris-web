@@ -66,6 +66,9 @@ export const metadata: Metadata = {
     shortcut: SITE_LOGO,
   },
   robots: { index: true, follow: true },
+  alternates: {
+    canonical: '/',
+  },
   other: {
     'mobile-web-app-capable': 'yes',
   },

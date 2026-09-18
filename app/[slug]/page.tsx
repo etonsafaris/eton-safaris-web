@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (resolved.kind === 'country') {
     const slug = resolved.countrySlug || resolved.canonical;
-    return publicRecordMetadata('countries', slug, destinationPublicPath(slug));
+    return publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
   }
 
   const path = `/${resolved.canonical}`;

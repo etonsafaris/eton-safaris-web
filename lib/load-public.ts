@@ -508,6 +508,38 @@ export async function loadStaticAccommodationParams(): Promise<{ slug: string }[
   }
 }
 
+export async function loadStaticParkParams(): Promise<{ slug: string }[]> {
+  try {
+    const rows = await loadPublishedRecords('national_park', ['national_parks', 'parks'], {
+      columns: 'id,slug,seo_slug,title,published',
+    });
+    return rows
+      .map((row) => publicRecordSlug(row))
+      .filter((slug): slug is string => Boolean(slug))
+      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadStaticSafariUpdateParams(): Promise<{ slug: string }[]> {
+  try {
+    const page = await fetchCollectionPage('safari_updates', [], {
+      limit: STATIC_DETAIL_BUILD_LIMIT,
+      offset: 0,
+    });
+    return page.rows
+      .filter(isPublishedRecord)
+      .filter((row) => !isLanguagePost(row))
+      .map((row) => publicRecordSlug(row))
+      .filter((slug): slug is string => Boolean(slug))
+      .map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
+}
+
 /** Header/footer destination chips — loaded once per cached PublicShell render. */
 export async function loadPublicNavDestinations(): Promise<PublicDestination[]> {
   try {

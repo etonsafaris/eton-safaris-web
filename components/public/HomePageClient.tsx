@@ -15,8 +15,8 @@ import TourCard from '@/components/public/TourCard';
 import WhatSetsUsApartSection from '@/components/public/WhatSetsUsApartSection';
 import PageFaqList from '@/components/public/PageFaqList';
 import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
-import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
 import {
   destinationListingRows,
@@ -42,34 +42,8 @@ import { countryHeroImage } from '@/lib/country-heroes';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
-const HERO_DEFAULTS: Record<string, { title: string; subtitle: string; image: string }> = {
-  uganda: {
-    title: 'Crafted Safaris Across the African Wild',
-    subtitle:
-      "Step into a world of untamed luxury — where every sunrise brings a new encounter with Africa's most extraordinary wildlife and landscapes",
-    image: '/heroes/uganda.jpg',
-  },
-  kenya: {
-    title: 'Where the Wild Meets Refined Comfort',
-    subtitle:
-      "From the Maasai Mara's endless plains to intimate bush dinners under the stars — experience Africa at its most captivating.",
-    image: '/heroes/kenya.jpg',
-  },
-  rwanda: {
-    title: 'The Land of a Thousand Hidden Wonders',
-    subtitle:
-      'Meet the gentle giants of Volcanoes National Park and discover friendly people, mountain gorillas, and stunning views of the great rift valley.',
-    image: '/heroes/rwanda.jpg',
-  },
-  tanzania: {
-    title: 'Witness the Great Migration',
-    subtitle:
-      'Witness the great wildebeest migration, climb Kilimanjaro, and discover Serengeti wildlife on unforgettable journeys.',
-    image: '/heroes/tanzania.jpg',
-  },
-};
-
 type HomePageClientProps = {
+  initialHeroSlides: HomeHeroSlide[];
   initialCountries: RecordRow[];
   initialTours: RecordRow[];
   initialUpdates: RecordRow[];
@@ -82,6 +56,7 @@ function resolveHomeContent(initialHomeContent?: HomePageContent | null): HomePa
 }
 
 export default function HomePageClient({
+  initialHeroSlides,
   initialCountries,
   initialTours,
   initialUpdates,
@@ -132,22 +107,7 @@ export default function HomePageClient({
     setCategories(categoryRows.filter(isPublishedRecord));
   }, hasServerContent);
 
-  const heroSlides = useMemo(() => {
-    return NAV_COUNTRIES.map(({ slug, name }) => {
-      const defaults = HERO_DEFAULTS[slug] || {
-        title: `Discover ${name}`,
-        subtitle: `Discover unforgettable safari experiences in ${name}.`,
-        image: '/heroes/kenya.jpg',
-      };
-      return {
-        title: defaults.title,
-        subtitle: defaults.subtitle,
-        cta: `Explore ${name}`,
-        href: destinationPublicPath(slug),
-        image: defaults.image,
-      };
-    });
-  }, []);
+  const heroSlides = initialHeroSlides;
 
   useEffect(() => {
     if (heroSlides.length === 0) return undefined;
