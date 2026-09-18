@@ -209,6 +209,14 @@ function resolveIndexableKind(table: string, contentType?: SeoContentType): Inde
 
 export { publicCanonicalUrl, normalizePublicPath } from '@/lib/seo-canonical';
 
+function stayParkLabel(record: RecordRow): string {
+  return (
+    pickString(record, ['national_park_name', 'national_park', 'park_name', 'park']) ||
+    pickString(record, ['location']) ||
+    ''
+  ).trim();
+}
+
 export async function publicRecordMetadata(
   table: string,
   slug: string,
@@ -231,16 +239,30 @@ export async function publicRecordMetadata(
       values.robots_index = indexable;
       if (indexable) values.robots_follow = true;
     }
-    const title = values.seo_title || getRecordTitle(record);
-    const description = values.meta_description || pickString(record, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
+    const baseTitle = values.seo_title || getRecordTitle(record);
+    const parkName = table === 'accommodations' ? stayParkLabel(record as RecordRow) : '';
+    const title =
+      parkName && !baseTitle.toLowerCase().includes(parkName.toLowerCase())
+        ? `${baseTitle} | ${parkName}`
+        : baseTitle;
+    const plain =
+      values.meta_description ||
+      pickString(record, ['excerpt', 'description', 'content']).replace(/<[^>]+>/g, ' ').trim();
+    const country = pickString(record, ['country']);
+    const descriptionParts = [plain, parkName ? `Near ${parkName}` : '', country ? `in ${country}` : ''].filter(Boolean);
+    const description = descriptionParts.join(' · ').slice(0, 160);
     return metadataFromSeo(values, {
       title,
-      description: description.slice(0, 160),
+      description,
       path,
       image:
         (table === 'countries' ? countryHeroImage(slug, record) : getRecordImage(record)) || undefined,
     });
   } catch {
-    return { title: SITE.name };
+    return metadataFromSeo(seoValuesFromRecord({}), {
+      title: SITE.name,
+      description: SITE.about.slice(0, 160),
+      path,
+    });
   }
 }

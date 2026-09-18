@@ -26,17 +26,24 @@ export function PublicDestinationsProvider({
   children: ReactNode;
 }) {
   const live = useCmsLive();
-  const [destinations, setDestinations] = useState<PublicDestination[]>(initialDestinations);
+  const [destinations, setDestinations] = useState<PublicDestination[]>(() =>
+    initialDestinations.length ? initialDestinations : mergePublicDestinations([])
+  );
 
   useEffect(() => {
-    setDestinations(initialDestinations);
+    if (initialDestinations.length) setDestinations(initialDestinations);
   }, [initialDestinations]);
 
   useEffect(() => {
     if (live === 0) return;
     fetchCollectionRecords('countries', [], { maxRows: 48 })
-      .then((rows) => setDestinations(mergePublicDestinations(rows.filter(isPublishedRecord))))
-      .catch(() => setDestinations(seededDestinations()));
+      .then((rows) => {
+        const merged = mergePublicDestinations(rows.filter(isPublishedRecord));
+        setDestinations((current) => (merged.length ? merged : current.length ? current : seededDestinations()));
+      })
+      .catch(() => {
+        setDestinations((current) => (current.length ? current : seededDestinations()));
+      });
   }, [live]);
 
   const split = useMemo(() => splitNavDestinations(destinations), [destinations]);

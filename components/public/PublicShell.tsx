@@ -5,7 +5,7 @@ import { PublicDestinationsProvider } from '@/components/public/PublicDestinatio
 import SiteFooter from '@/components/public/SiteFooter';
 import SiteHeader from '@/components/public/SiteHeader';
 import WhatsAppFloat from '@/components/public/WhatsAppFloat';
-import type { PublicDestination } from '@/lib/public-destinations';
+import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 
 export default function PublicShell({
   children,
@@ -14,12 +14,15 @@ export default function PublicShell({
   children: React.ReactNode;
   initialDestinations?: PublicDestination[];
 }) {
+  const navDestinations =
+    initialDestinations.length > 0 ? initialDestinations : mergePublicDestinations([]);
+
   return (
-    <PublicDestinationsProvider initialDestinations={initialDestinations}>
+    <PublicDestinationsProvider initialDestinations={navDestinations}>
       <div className="min-h-screen bg-white">
         <PageFavicon />
         <SiteHeader />
-        <main>{children}</main>
+        <main className="public-shell-main">{children}</main>
         <SiteFooter />
         <WhatsAppFloat />
       </div>

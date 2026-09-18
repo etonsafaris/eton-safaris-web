@@ -688,8 +688,10 @@ article > .content-subheading:first-child {
 }
 
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
   display: flex;
   width: 100%;
@@ -698,6 +700,11 @@ article > .content-subheading:first-child {
   background: #fff;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   padding: 0 36px;
+  min-height: 72px;
+}
+
+.public-shell-main {
+  padding-top: 72px;
 }
 
 .site-header-logo {

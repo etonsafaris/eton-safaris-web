@@ -7,6 +7,7 @@ import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import Link from 'next/link';
 import PageHero from '@/components/public/PageHero';
+import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import {
@@ -207,11 +208,9 @@ export default function CountryPageContent({
       </section>
 
       {parks.length > 0 ? (
-        <section className="bg-white px-4 py-12">
+        <section className="bg-[#f3f3f3] px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
-            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
-              National Parks in {title}
-            </h2>
+            <CountrySectionHeading>National Parks in {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
                 items={parks.map((park, index) => {
@@ -229,8 +228,8 @@ export default function CountryPageContent({
                     />
                   );
                 })}
-                itemWidth={280}
-                gap={20}
+                itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+                instant
                 autoPlayMs={5000}
               />
             </div>
@@ -249,9 +248,7 @@ export default function CountryPageContent({
       {stays.length > 0 ? (
         <section className="bg-[#f3f3f3] px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
-            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
-              Accommodations in {title}
-            </h2>
+            <CountrySectionHeading>Accommodations in {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
                 items={stays.map((stay, index) => {
@@ -269,8 +266,8 @@ export default function CountryPageContent({
                     />
                   );
                 })}
-                itemWidth={280}
-                gap={20}
+                itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+                instant
                 autoPlayMs={5200}
               />
             </div>
@@ -289,9 +286,7 @@ export default function CountryPageContent({
       {places.length > 0 ? (
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
-            <h2 className="text-center font-serif text-[28px] font-medium italic text-[#343434] md:text-[32px]">
-              Explore {title}
-            </h2>
+            <CountrySectionHeading>Explore {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
                 items={places.map((place, index) => {
@@ -310,8 +305,8 @@ export default function CountryPageContent({
                     />
                   );
                 })}
-                itemWidth={280}
-                gap={20}
+                itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+                instant
                 autoPlayMs={5400}
               />
             </div>

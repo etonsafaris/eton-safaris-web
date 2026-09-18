@@ -45,7 +45,7 @@ export default function SiteHeader() {
   const homeActive = pathname === '/';
 
   return (
-    <header className="site-header">
+    <header className="site-header relative">
       <Link href="/" className="site-header-logo shrink-0">
         <BrandLogo size={72} />
       </Link>

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
@@ -24,13 +23,8 @@ import {
   publicDestinationNames,
 } from '@/lib/public-destinations';
 import {
-  fetchCollectionPage,
-  fetchCollectionRecords,
-  fetchFeaturedTours,
   getRecordImage,
   getRecordTitle,
-  isLanguagePost,
-  isPublishedRecord,
   pickString,
   pickPlainText,
   publicRecordSlug,
@@ -64,54 +58,11 @@ export default function HomePageClient({
   initialHomeContent,
 }: HomePageClientProps) {
   const [slide, setSlide] = useState(0);
-  const [tours, setTours] = useState<RecordRow[]>(initialTours);
-  const [updates, setUpdates] = useState<RecordRow[]>(initialUpdates);
-  const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
-  const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const homeContent = useMemo(() => resolveHomeContent(initialHomeContent), [initialHomeContent]);
-  const hasServerContent = initialCountries.length > 0 || initialTours.length > 0;
-
-  useEffect(() => {
-    setCountries(initialCountries);
-    setTours(initialTours);
-    setUpdates(initialUpdates);
-    setCategories(initialCategories);
-  }, [initialCountries, initialTours, initialUpdates, initialCategories]);
-
-  useCmsPageReload(async () => {
-    try {
-      const rows = await fetchCollectionRecords('countries', [], { maxRows: 48 });
-      setCountries(rows.filter(isPublishedRecord));
-    } catch (error) {
-      console.error('[Supabase] Failed to load countries:', error);
-    }
-
-    const [tourRows, updateRows, categoryRows] = await Promise.all([
-      initialTours.length
-        ? Promise.resolve([] as RecordRow[])
-        : fetchFeaturedTours(12).catch((error) => {
-            console.error('[Supabase] Failed to load tours:', error);
-            return [] as RecordRow[];
-          }),
-      initialUpdates.length
-        ? Promise.resolve([] as RecordRow[])
-        : fetchCollectionRecords('safari_updates', [], { maxRows: 12 }).catch((error) => {
-            console.error('[Supabase] Failed to load safari updates:', error);
-            return [] as RecordRow[];
-          }),
-      fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
-        console.error('[Supabase] Failed to load categories:', error);
-        return [] as RecordRow[];
-      }),
-    ]);
-    setTours((current) => (tourRows.length ? tourRows.slice(0, 12) : current));
-    setUpdates((current) => {
-      if (initialUpdates.length && current.length) return current;
-      const next = updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8);
-      return next.length ? next : current;
-    });
-    setCategories(categoryRows.filter(isPublishedRecord));
-  }, hasServerContent);
+  const countries = initialCountries;
+  const tours = initialTours;
+  const updates = initialUpdates;
+  const categories = initialCategories;
 
   const heroSlides = initialHeroSlides;
 

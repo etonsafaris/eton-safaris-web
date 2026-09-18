@@ -15,14 +15,17 @@ import {
 export function usePublicDestinations() {
   const fromShell = usePublicDestinationsFromContext();
   const live = useCmsLive();
-  const [destinations, setDestinations] = useState<PublicDestination[]>(() => mergePublicDestinations([]));
+  const [destinations, setDestinations] = useState<PublicDestination[]>(() => seededDestinations());
 
   useEffect(() => {
     if (fromShell) return;
     let cancelled = false;
     fetchCollectionRecords('countries', [], { maxRows: 48 })
       .then((rows) => {
-        if (!cancelled) setDestinations(mergePublicDestinations(rows.filter(isPublishedRecord)));
+        if (!cancelled) {
+          const merged = mergePublicDestinations(rows.filter(isPublishedRecord));
+          setDestinations(merged.length ? merged : seededDestinations());
+        }
       })
       .catch((error) => {
         console.error('[Supabase] Failed to load public destinations:', error);
