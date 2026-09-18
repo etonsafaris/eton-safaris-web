@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
+import { isDiscoveryListingPath } from '@/lib/public-discovery-policy';
 
 const PROTECTED_APIS = ['/api/settings/status', '/api/pesapal/test'];
 
@@ -18,6 +19,13 @@ export function middleware(request: NextRequest) {
       status: 404,
       headers: { 'Cache-Control': 'public, max-age=3600' },
     });
+  }
+
+  if (isDiscoveryListingPath(pathname)) {
+    const tours = request.nextUrl.clone();
+    tours.pathname = '/tours';
+    tours.search = '';
+    return NextResponse.redirect(tours);
   }
 
   if (pathname === '/home-page' || pathname === '/homepage' || pathname === '/home') {
@@ -71,5 +79,8 @@ export const config = {
     '/icon.png',
     '/apple-icon.png',
     '/icon-192.png',
+    '/parks',
+    '/accommodations',
+    '/explore',
   ],
 };

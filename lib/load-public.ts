@@ -124,16 +124,7 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
 
 export async function loadHomePageData() {
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
-  const [parkPage, countries, tours, updatesPage, categories] = await Promise.all([
-    withTimeout(
-      fetchCollectionPage('national_park', ['national_parks', 'parks'], {
-        columns: listColumns('national_park', ['national_parks', 'parks']),
-        limit: 12,
-        offset: 0,
-      }),
-      6000,
-      emptyPage
-    ),
+  const [countries, tours, updatesPage, categories] = await Promise.all([
     withTimeout(
       fetchCollectionRecords('countries', [], {
         columns: listColumns('countries'),
@@ -165,7 +156,6 @@ export async function loadHomePageData() {
     countries,
     tours: tours.slice(0, 12),
     updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
-    parks: parkPage.rows.filter(isPublishedRecord).slice(0, 12),
     categories,
   });
 }
@@ -224,7 +214,7 @@ export async function loadToursPageData() {
 }
 
 export async function loadCountryPageData(slug: string) {
-  const [countriesPage, categoriesPage, placesPage] = await Promise.all([
+  const [countriesPage, categoriesPage] = await Promise.all([
     fetchCollectionPage('countries', [], { columns: listColumns('countries'), limit: 100, offset: 0 }).catch(() => ({
       rows: [] as RecordRow[],
       total: 0,
@@ -233,12 +223,6 @@ export async function loadCountryPageData(slug: string) {
       rows: [] as RecordRow[],
       total: 0,
     })),
-    fetchCollectionPage('explore', [], {
-      columns: listColumns('explore'),
-      limit: 48,
-      offset: 0,
-      filters: { country: slug },
-    }).catch(() => ({ rows: [] as RecordRow[], total: 0 })),
   ]);
   const countries = countriesPage.rows.filter(isPublishedRecord);
   const categories = categoriesPage.rows.filter(isPublishedRecord);
@@ -253,17 +237,14 @@ export async function loadCountryPageData(slug: string) {
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
     slug;
-  const [tours, parks] = await Promise.all([
-    resolvePublicTours({ country: countryName, limit: 48 }).catch(() => [] as RecordRow[]),
-    fetchParksForCountry(countryName, 48, country?.id != null ? String(country.id) : undefined).catch(() => [] as RecordRow[]),
-  ]);
+  const tours = await resolvePublicTours({ country: countryName, limit: 48 }).catch(() => [] as RecordRow[]);
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
   return {
     country: country && isPublishedRecord(country) ? country : null,
     categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
     tours: matchedTours.length ? matchedTours : tours,
-    parks: parks.filter(isPublishedRecord),
-    places: placesPage.rows.filter(isPublishedRecord).filter((row) => matchesCountry(row, slug)),
+    parks: [] as RecordRow[],
+    places: [] as RecordRow[],
   };
 }
 

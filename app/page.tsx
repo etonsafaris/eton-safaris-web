@@ -18,7 +18,6 @@ export default async function HomePage() {
     countries: [] as Awaited<ReturnType<typeof loadHomePageData>>['countries'],
     tours: [] as Awaited<ReturnType<typeof loadHomePageData>>['tours'],
     updates: [] as Awaited<ReturnType<typeof loadHomePageData>>['updates'],
-    parks: [] as Awaited<ReturnType<typeof loadHomePageData>>['parks'],
     categories: [] as Awaited<ReturnType<typeof loadHomePageData>>['categories'],
   };
   let homeContent: Awaited<ReturnType<typeof loadHomePageContent>> = null;
@@ -35,7 +34,6 @@ export default async function HomePage() {
         initialCountries={data.countries}
         initialTours={data.tours}
         initialUpdates={data.updates}
-        initialParks={data.parks}
         initialCategories={data.categories}
         initialHomeContent={homeContent}
       />

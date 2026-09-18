@@ -74,7 +74,6 @@ type HomePageClientProps = {
   initialCountries: RecordRow[];
   initialTours: RecordRow[];
   initialUpdates: RecordRow[];
-  initialParks: RecordRow[];
   initialCategories: RecordRow[];
   initialHomeContent?: HomePageContent | null;
 };
@@ -112,7 +111,6 @@ export default function HomePageClient({
   initialCountries,
   initialTours,
   initialUpdates,
-  initialParks,
   initialCategories,
   initialHomeContent,
 }: HomePageClientProps) {
@@ -120,7 +118,6 @@ export default function HomePageClient({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [updates, setUpdates] = useState<RecordRow[]>(initialUpdates);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
-  const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const hasServerContent = initialCountries.length > 0 || initialTours.length > 0;
 
@@ -128,9 +125,8 @@ export default function HomePageClient({
     setCountries(initialCountries);
     setTours(initialTours);
     setUpdates(initialUpdates);
-    setParks(initialParks);
     setCategories(initialCategories);
-  }, [initialCountries, initialTours, initialUpdates, initialParks, initialCategories]);
+  }, [initialCountries, initialTours, initialUpdates, initialCategories]);
 
   useCmsPageReload(async () => {
     try {
@@ -140,7 +136,7 @@ export default function HomePageClient({
       console.error('[Supabase] Failed to load countries:', error);
     }
 
-    const [tourRows, updateRows, parkRows, categoryRows] = await Promise.all([
+    const [tourRows, updateRows, categoryRows] = await Promise.all([
       fetchFeaturedTours(12).catch((error) => {
         console.error('[Supabase] Failed to load tours:', error);
         return [] as RecordRow[];
@@ -151,12 +147,6 @@ export default function HomePageClient({
           console.error('[Supabase] Failed to load safari updates:', error);
           return [] as RecordRow[];
         }),
-      fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 12, offset: 0 })
-        .then((page) => page.rows)
-        .catch((error) => {
-          console.error('[Supabase] Failed to load national parks:', error);
-          return [] as RecordRow[];
-        }),
       fetchCollectionRecords('categories', [], { maxRows: 64 }).catch((error) => {
         console.error('[Supabase] Failed to load categories:', error);
         return [] as RecordRow[];
@@ -164,7 +154,6 @@ export default function HomePageClient({
     ]);
     setTours((current) => (tourRows.length ? tourRows.slice(0, 12) : current));
     setUpdates(updateRows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8));
-    setParks(parkRows.filter(isPublishedRecord).slice(0, 12));
     setCategories(categoryRows.filter(isPublishedRecord));
   }, hasServerContent);
 
@@ -258,21 +247,6 @@ export default function HomePageClient({
     );
   });
 
-  const featuredParks = useMemo(() => parks.slice(0, 12), [parks]);
-
-  const parkItems = featuredParks.map((park, index) => (
-    <PlaceCard
-      key={String(park.id ?? index)}
-      href={`/parks/${publicRecordSlug(park)}`}
-      image={getRecordImage(park) || undefined}
-      title={getRecordTitle(park)}
-      record={park}
-      location={pickString(park, ['location', 'country'])}
-      description={recordCardBlurb(park)}
-      cta="View Park"
-    />
-  ));
-
   return (
     <>
       {current && (
@@ -365,23 +339,6 @@ export default function HomePageClient({
               className="inline-flex items-center gap-2 rounded-full bg-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a]"
             >
               Other Destinations <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="cv-auto py-16">
-        <div className="mx-auto max-w-7xl px-4">
-          <SectionHeading label="Wildlife" title="National Parks" />
-          <div className="mt-10">
-            <Carousel instant items={parkItems} itemsPerView={{ sm: 1, md: 2, lg: 4 }} emptyMessage="No records found in this collection." />
-          </div>
-          <div className="mt-10 text-center">
-            <Link
-              href="/parks"
-              className="inline-flex items-center gap-2 rounded-full bg-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a]"
-            >
-              Other Parks
             </Link>
           </div>
         </div>

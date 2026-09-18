@@ -11,6 +11,7 @@ import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-de
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { fetchCollectionPage, getRecordImage, isPublishedRecord, recordPublishedAt, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
+import DiscoverySearchSection from '@/components/public/DiscoverySearchSection';
 import { bestFaqsFor } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
 
@@ -113,6 +114,7 @@ export default function ToursPageClient({
           className="-mt-10 px-4"
         />
       </div>
+      {q.trim().length >= 2 ? <DiscoverySearchSection query={q} /> : null}
       <ListingSection className="pt-6">
         <Link href="/tours/compare" className="inline-flex text-sm font-semibold text-[#00A651] hover:underline">
           Compare packages →
