@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
 import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
 import { EMPTY_PARK_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
@@ -33,7 +32,6 @@ export default async function ParkDetailPage({ params }: PageProps) {
     EMPTY_PARK_DETAIL,
     params.slug
   );
-  if (!park) notFound();
   return (
     <ParkDetailClient
       key={params.slug}

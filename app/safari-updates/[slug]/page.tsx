@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
 import { loadSafariUpdateDetail, loadStaticSafariUpdateParams } from '@/lib/load-public';
 import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
@@ -32,7 +31,6 @@ export default async function SafariUpdateDetailPage({ params }: PageProps) {
     EMPTY_SAFARI_UPDATE_DETAIL,
     params.slug
   );
-  if (!post) notFound();
   return (
     <SafariUpdateDetailClient
       key={params.slug}

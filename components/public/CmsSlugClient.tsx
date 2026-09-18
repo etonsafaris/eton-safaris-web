@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useCmsLive } from '@/lib/cms-live';
 import PublicPageLoader from '@/components/public/PublicPageLoader';
+import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
 import PublicShell from '@/components/public/PublicShell';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
@@ -149,7 +150,7 @@ export default function CmsSlugClient({
     }
     return (
       <PublicShell>
-        <div className="py-24 text-center text-gray-500">This page is not available.</div>
+        <PublicRecordUnavailable />
       </PublicShell>
     );
   }
@@ -205,7 +206,7 @@ export default function CmsSlugClient({
   if (!page && !fallback && !seeded && ready) {
     return (
       <PublicShell>
-        <div className="py-24 text-center text-gray-500">This page is not available.</div>
+        <PublicRecordUnavailable />
       </PublicShell>
     );
   }

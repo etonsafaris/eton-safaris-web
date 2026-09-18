@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { EMPTY_TOUR_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
@@ -30,6 +29,5 @@ export default async function TourDetailPage({ params }: PageProps) {
     EMPTY_TOUR_DETAIL,
     params.slug
   );
-  if (!tour) notFound();
   return <TourDetailClient key={params.slug} initialTour={tour} initialRelated={related ?? []} />;
 }

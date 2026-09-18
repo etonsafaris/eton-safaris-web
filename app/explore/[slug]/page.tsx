@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import PlacePageContent from '@/components/public/PlacePageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadExploreDetail, loadStaticExploreParams } from '@/lib/load-public';
@@ -31,7 +30,6 @@ export default async function ExploreDetailPage({ params }: PageProps) {
     EMPTY_EXPLORE_DETAIL,
     params.slug
   );
-  if (!place) notFound();
   return (
     <PublicShellServer>
       <PlacePageContent

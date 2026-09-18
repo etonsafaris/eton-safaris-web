@@ -109,6 +109,17 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   });
 }
 
+/** Two attempts — avoids false "missing" when Aiven is cold or the first query times out. */
+async function fetchPublicRecordResilient(
+  table: string,
+  slug: string,
+  aliases: string[] = []
+): Promise<RecordRow | null> {
+  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 18000, null);
+  if (first) return first;
+  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 24000, null);
+}
+
 export async function loadHomePageContent(): Promise<HomePageContent | null> {
   try {
     const columns = listColumns('pages');
@@ -311,7 +322,7 @@ async function loadCountryPageDataInner(slug: string) {
 
 export async function loadTourDetail(slug: string) {
   try {
-    const tour = await withTimeout(fetchRecordByPublicSlug('tours', slug), 12000, null);
+    const tour = await fetchPublicRecordResilient('tours', slug);
     if (tour && !isPublishedRecord(tour)) {
       return { tour: null, related: [] as RecordRow[] };
     }
@@ -391,7 +402,7 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
 export async function loadParkDetail(slug: string) {
   try {
     const [park, parkPage] = await Promise.all([
-      withTimeout(fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']), 12000, null),
+      fetchPublicRecordResilient('national_park', slug, ['national_parks', 'parks']),
       withTimeout(
         fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
         6000,
@@ -424,7 +435,7 @@ export async function loadParkDetail(slug: string) {
 export async function loadSafariUpdateDetail(slug: string) {
   try {
     const [post, updatePage] = await Promise.all([
-      withTimeout(fetchRecordByPublicSlug('safari_updates', slug), 12000, null),
+      fetchPublicRecordResilient('safari_updates', slug),
       withTimeout(
         fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
         6000,
@@ -464,7 +475,7 @@ export async function loadSafariUpdateDetail(slug: string) {
 export async function loadAccommodationDetail(slug: string) {
   try {
     const [item, stayPage] = await Promise.all([
-      withTimeout(fetchRecordByPublicSlug('accommodations', slug), 12000, null),
+      fetchPublicRecordResilient('accommodations', slug),
       withTimeout(
         fetchCollectionPage('accommodations', [], { limit: 20, offset: 0 }),
         6000,
@@ -504,7 +515,7 @@ export async function loadAccommodationDetail(slug: string) {
 export async function loadExploreDetail(slug: string) {
   try {
     const [place, placePage] = await Promise.all([
-      withTimeout(fetchRecordByPublicSlug('explore', slug), 12000, null),
+      fetchPublicRecordResilient('explore', slug),
       withTimeout(
         fetchCollectionPage('explore', [], { limit: 24, offset: 0 }),
         6000,

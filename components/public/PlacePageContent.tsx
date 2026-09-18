@@ -84,9 +84,9 @@ export default function PlacePageContent({
         const countryKey =
           countrySlugProp ||
           pickStoredString(match, ['country', 'country_slug', 'destination', 'nation']);
-        const otherPlaces = placePage.rows
+        const otherPlaces = (placePage?.rows ?? [])
           .filter(isPublishedRecord)
-          .filter((row) => String(row.id) !== String(match?.id || ''));
+          .filter((row) => String(row?.id) !== String(match?.id || ''));
         const countryPlaces = countryKey
           ? otherPlaces.filter((row) => matchesCountry(row, countryKey))
           : [];

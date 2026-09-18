@@ -166,6 +166,30 @@ export function resolvePublicSlug(raw: string): ResolvedCmsSlug | null {
     };
   }
 
+  const bareCountry = countrySlugFromLanding(slug);
+  if (LANDING_COUNTRY_SLUGS.has(bareCountry)) {
+    return {
+      kind: 'country',
+      canonical: landingSlugForCountry(bareCountry),
+      countrySlug: bareCountry,
+    };
+  }
+
+  return { kind: 'page', canonical: slug };
+}
+
+/**
+ * Never hard-404 public CMS paths for unknown segments — treat as a soft page slug
+ * unless the segment is a reserved static asset name.
+ */
+export function resolvePublicSlugLenient(raw: string): ResolvedCmsSlug | null {
+  const strict = resolvePublicSlug(raw);
+  if (strict) return strict;
+  const slug = publicSlugFromInput(raw);
+  if (!slug) return null;
+  if (RESERVED_PUBLIC_FILES.test(slug) || PUBLIC_FILE_SEGMENT.test(slug)) {
+    return null;
+  }
   return { kind: 'page', canonical: slug };
 }
 

@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import CmsSlugClient from '@/components/public/CmsSlugClient';
 import JsonLd from '@/components/public/JsonLd';
-import { destinationPublicPath, matchCmsRecord, pageAliases, resolvePublicSlug } from '@/lib/cms-routes';
+import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
+import PublicShellServer from '@/components/public/PublicShellServer';
+import {
+  destinationPublicPath,
+  matchCmsRecord,
+  pageAliases,
+  resolvePublicSlugLenient,
+} from '@/lib/cms-routes';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
@@ -18,12 +24,16 @@ export const revalidate = 900;
 export const dynamicParams = true;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolved = resolvePublicSlug(params.slug);
+  const resolved = resolvePublicSlugLenient(params.slug);
   if (!resolved) return { title: 'Eton Safaris', robots: { index: false, follow: false } };
 
   if (resolved.kind === 'country') {
     const slug = resolved.countrySlug || resolved.canonical;
-    return publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
+    try {
+      return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
+    } catch {
+      return { title: 'Destination | Eton Safaris' };
+    }
   }
 
   const path = `/${resolved.canonical}`;
@@ -51,8 +61,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PublicCmsSlugPage({ params }: PageProps) {
-  const resolved = resolvePublicSlug(params.slug);
-  if (!resolved) notFound();
+  const resolved = resolvePublicSlugLenient(params.slug);
+  if (!resolved) {
+    return (
+      <PublicShellServer>
+        <PublicRecordUnavailable />
+      </PublicShellServer>
+    );
+  }
   const isCountryAlias = resolved.kind === 'country';
   const countrySlug = resolved.countrySlug || resolved.canonical;
   let countryData: Awaited<ReturnType<typeof loadCountryPageData>> | null = null;

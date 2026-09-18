@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
 import { EMPTY_STAY_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
@@ -32,7 +31,6 @@ export default async function AccommodationDetailPage({ params }: PageProps) {
     EMPTY_STAY_DETAIL,
     params.slug
   );
-  if (!item) notFound();
   return (
     <AccommodationDetailClient
       key={params.slug}

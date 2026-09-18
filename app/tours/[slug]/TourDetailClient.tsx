@@ -233,7 +233,9 @@ export default function TourDetailClient({
     return (
       <PublicShell>
         <p className="px-4 py-20 text-center text-gray-500">
-          {ready ? 'No records found in this collection.' : 'Loading tour…'}
+          {ready
+            ? 'This tour could not be loaded right now. Refresh the page or browse all tours.'
+            : 'Loading tour…'}
         </p>
       </PublicShell>
     );
