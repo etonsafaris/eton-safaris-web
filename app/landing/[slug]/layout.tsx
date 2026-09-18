@@ -5,7 +5,6 @@ import {
   landingPreviewPath,
   matchCmsRecord,
 } from '@/lib/cms-routes';
-import { landingConversionCopy, landingVisibleH1 } from '@/lib/landing-page-copy';
 import { DEFAULT_LANDING_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage } from '@/lib/data';
@@ -33,10 +32,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const values = seoValuesFromRecord((landing || country || {}) as Record<string, unknown>);
     const countryName =
       publicCountryLabel(country, countrySlug) || seeded?.country || countrySlug;
-    const copy = landingConversionCopy(countrySlug, countryName);
-    const h1 = landingVisibleH1(countrySlug, countryName, extras.hero_title);
+    const h1 = extras.hero_title || `${countryName} Safaris`;
     if (!values.focus_keywords?.length) {
-      values.focus_keywords = [copy.h1, `${countryName} safari`, 'Eton Safaris'];
+      values.focus_keywords = [`${countryName} safari`, 'Eton Safaris'];
     }
     values.schema_type = 'TouristDestination';
     values.robots_index = false;
@@ -45,7 +43,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       ...metadataFromSeo(values, {
         title: values.seo_title || `${h1} - Eton Safaris, Tour, Travel, Hotel Booking, Uganda`,
         description: stripHtmlText(
-          values.meta_description || extras.excerpt || copy.seoIntro || seeded?.meta_description || '',
+          values.meta_description || extras.excerpt || seeded?.meta_description || '',
           160
         ),
         path: `/landing/${canonical}`,

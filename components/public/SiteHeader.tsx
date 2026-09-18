@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
-import SiteTranslateButton from '@/components/public/SiteTranslateButton';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { PublicDestination } from '@/lib/public-destinations';
@@ -85,7 +84,6 @@ export default function SiteHeader() {
         <Link  href="/community-support" className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
-        <SiteTranslateButton />
         <Link  href="/contact-us" className={navClass(pathname.startsWith('/contact'))}>
           Talk to Us
         </Link>
@@ -132,7 +130,6 @@ export default function SiteHeader() {
           <Link href="/community-support" className="block py-1" onClick={() => setOpen(false)}>
             Community
           </Link>
-          <SiteTranslateButton variant="menu" onNavigate={() => setOpen(false)} />
           <Link href="/contact-us" className="block py-1" onClick={() => setOpen(false)}>
             Talk to Us
           </Link>

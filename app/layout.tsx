@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
-import SiteTranslateRoot from '@/components/public/SiteTranslateRoot';
+import PublicAppRoot from '@/components/public/PublicAppRoot';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
 
 /**
@@ -136,10 +136,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={FONT_VARS}>
       <body className="bg-white font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
-        <SiteTranslateRoot>
+        <PublicAppRoot>
           <CmsLiveHost />
           {children}
-        </SiteTranslateRoot>
+        </PublicAppRoot>
       </body>
     </html>
   );
