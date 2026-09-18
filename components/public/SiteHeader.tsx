@@ -44,6 +44,7 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { primary, more } = usePublicDestinations();
   const homeActive = pathname === '/';
+  const eastAfricaActive = primary.some((destination) => destinationActive(pathname, destination));
 
   return (
     <header className="site-header relative">
@@ -55,14 +56,22 @@ export default function SiteHeader() {
         <Link href="/" className={navClass(homeActive)}>
           Home
         </Link>
-        {primary.map((country) => {
-          const href = destinationPublicPath(country.slug);
-          return (
-            <Link  key={country.slug} href={href} className={navClass(destinationActive(pathname, country))}>
-              <Flag iso={country.iso} name={country.name} /> {country.name}
-            </Link>
-          );
-        })}
+        {primary.length > 0 ? (
+          <div className={`site-nav-item${eastAfricaActive ? ' is-active' : ''}`}>
+            {PUBLIC_SITE_LABELS.eastAfrica}
+            <div className="site-nav-dropdown">
+              {primary.map((destination) => (
+                <Link
+                  key={destination.slug}
+                  href={destinationPublicPath(destination.slug)}
+                  className="site-nav-dropdown-item"
+                >
+                  <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {more.length > 0 ? (
           <div className="site-nav-item">
             {PUBLIC_SITE_LABELS.moreGetaways}
@@ -104,14 +113,15 @@ export default function SiteHeader() {
           <Link href="/" className="block py-2" onClick={() => setOpen(false)}>
             Home
           </Link>
-          {primary.map((country) => (
+          {primary.length > 0 ? <p className="pt-2 text-base">{PUBLIC_SITE_LABELS.eastAfrica}</p> : null}
+          {primary.map((destination) => (
             <Link
-              key={country.slug}
-              href={destinationPublicPath(country.slug)}
-              className="flex items-center gap-2 py-1"
+              key={destination.slug}
+              href={destinationPublicPath(destination.slug)}
+              className="flex items-center gap-2 py-1 pl-2"
               onClick={() => setOpen(false)}
             >
-              <Flag iso={country.iso} name={country.name} /> {country.name}
+              <Flag iso={destination.iso} name={destination.name} /> {destination.name}
             </Link>
           ))}
           {more.length > 0 ? <p className="pt-2 text-base">{PUBLIC_SITE_LABELS.moreGetaways}</p> : null}

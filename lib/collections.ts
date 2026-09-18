@@ -434,6 +434,7 @@ export const SITE_LOGO = '/eton-safaris-gorilla.png';
 export const PUBLIC_SITE_LABELS = {
   findToursBy: 'Find tours by',
   bestCountries: 'Best Countries',
+  eastAfrica: 'East Africa',
   blogPosts: 'Blog Posts',
   moreGetaways: 'More Getaways',
   getInTouch: 'Get in Touch',
