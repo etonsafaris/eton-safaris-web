@@ -33,10 +33,18 @@ export default async function NationalParksPage({
   searchParams?: { page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
-  const { parks, total } = await loadParksPageData({
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  let parks: Awaited<ReturnType<typeof loadParksPageData>>['parks'] = [];
+  let total = 0;
+  try {
+    const loaded = await loadParksPageData({
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    });
+    parks = loaded.parks ?? [];
+    total = loaded.total ?? 0;
+  } catch (error) {
+    console.warn('[Public] Parks listing failed:', error);
+  }
 
   return (
     <PublicShellServer>

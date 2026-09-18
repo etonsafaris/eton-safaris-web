@@ -46,6 +46,9 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error('[Search] Discovery lookup failed:', error);
-    return NextResponse.json({ parks: [], stays: [], places: [] }, { status: 200, headers: CACHE_HEADERS });
+    return NextResponse.json(
+      { data: [], parks: [], stays: [], places: [], error: true },
+      { status: 200, headers: CACHE_HEADERS }
+    );
   }
 }

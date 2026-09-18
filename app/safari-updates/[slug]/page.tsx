@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
 import { loadSafariUpdateDetail, loadStaticSafariUpdateParams } from '@/lib/load-public';
+import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
@@ -14,20 +15,30 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return publicRecordMetadata('safari_updates', params.slug, `/safari-updates/${params.slug}`, {
-    contentType: 'article',
-  });
+  try {
+    return await publicRecordMetadata('safari_updates', params.slug, `/safari-updates/${params.slug}`, {
+      contentType: 'article',
+    });
+  } catch (error) {
+    console.warn('[Public] Safari update metadata failed:', params.slug, error);
+    return { title: 'Safari Update | Eton Safaris', robots: { index: false, follow: false } };
+  }
 }
 
 export default async function SafariUpdateDetailPage({ params }: PageProps) {
-  const { post, related, tours } = await loadSafariUpdateDetail(params.slug);
+  const { post, related, tours } = await safePublicLoad(
+    'safari update detail page',
+    () => loadSafariUpdateDetail(params.slug),
+    EMPTY_SAFARI_UPDATE_DETAIL,
+    params.slug
+  );
   if (!post) notFound();
   return (
     <SafariUpdateDetailClient
       key={params.slug}
       initialPost={post}
-      initialRelated={related}
-      initialTours={tours}
+      initialRelated={related ?? []}
+      initialTours={tours ?? []}
     />
   );
 }

@@ -10,9 +10,16 @@ export default function TourCard({
   tour,
   durationBadge = false,
 }: {
-  tour: RecordRow;
+  tour: RecordRow | null | undefined;
   durationBadge?: boolean;
 }) {
+  if (!tour) {
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-white p-4 shadow-sm opacity-60">
+        <p className="text-sm text-gray-500">Tour unavailable</p>
+      </div>
+    );
+  }
   const slug = publicRecordSlug(tour);
   if (!slug) {
     return (

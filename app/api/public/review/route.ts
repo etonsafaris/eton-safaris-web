@@ -62,8 +62,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error('[Public API] review failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not save review' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not save review' },
       { status: 500 }
     );
   }

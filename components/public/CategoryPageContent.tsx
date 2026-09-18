@@ -38,6 +38,8 @@ type CategoryPageContentProps = {
   categorySlug: string;
   initialCategories?: RecordRow[];
   initialTours?: RecordRow[];
+  initialCategory?: RecordRow | null;
+  serverPreloaded?: boolean;
 };
 
 function toProseHtml(value: string) {
@@ -73,11 +75,15 @@ export default function CategoryPageContent({
   categorySlug,
   initialCategories = [],
   initialTours = [],
+  initialCategory = null,
+  serverPreloaded = false,
 }: CategoryPageContentProps) {
   const live = useCmsLive();
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
-  const [ready, setReady] = useState(true);
+  const [ready, setReady] = useState(
+    serverPreloaded || Boolean(initialCategory || initialCategories.length || initialTours.length)
+  );
 
   useEffect(() => {
     setCategories(initialCategories);
@@ -85,6 +91,7 @@ export default function CategoryPageContent({
   }, [initialCategories, initialTours]);
 
   useEffect(() => {
+    if (serverPreloaded && live === 0) return undefined;
     if (live === 0) return undefined;
     let mounted = true;
     async function load() {
@@ -111,11 +118,13 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug, live]);
+  }, [slug, live, serverPreloaded]);
 
   const selectedCategory = useMemo(
-    () => findCategoryBySlug(categories, categorySlug, slug),
-    [categories, categorySlug, slug]
+    () =>
+      findCategoryBySlug(categories, categorySlug, slug) ||
+      (initialCategory && categoryMatchesCountry(initialCategory, slug) ? initialCategory : null),
+    [categories, categorySlug, slug, initialCategory]
   );
 
   const categoryTitle = selectedCategory
@@ -153,10 +162,10 @@ export default function CategoryPageContent({
     }
   );
 
-  const filteredTours = useMemo(
-    () => (ready ? filterToursByCategory(tours, selectedCategory, categorySlug) : []),
-    [ready, tours, selectedCategory, categorySlug]
-  );
+  const filteredTours = useMemo(() => {
+    if (serverPreloaded && initialTours.length) return initialTours;
+    return ready ? filterToursByCategory(tours, selectedCategory, categorySlug) : [];
+  }, [ready, tours, selectedCategory, categorySlug, serverPreloaded, initialTours]);
 
   return (
     <>

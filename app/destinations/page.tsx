@@ -14,7 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default async function DestinationsIndexPage() {
-  const countries = await loadPublishedRecords('countries');
+  let countries: Awaited<ReturnType<typeof loadPublishedRecords>> = [];
+  try {
+    countries = await loadPublishedRecords('countries');
+  } catch (error) {
+    console.warn('[Public] Destinations index failed:', error);
+  }
   return (
     <PublicShellServer>
       <DestinationsIndexClient initialCountries={countries} />

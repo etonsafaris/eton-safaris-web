@@ -38,8 +38,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, booking });
   } catch (error) {
+    console.error('[Public API] verify-booking failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not verify this booking' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not verify this booking' },
       { status: 500 }
     );
   }

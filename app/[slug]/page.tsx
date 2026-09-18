@@ -55,12 +55,25 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
   if (!resolved) notFound();
   const isCountryAlias = resolved.kind === 'country';
   const countrySlug = resolved.countrySlug || resolved.canonical;
-  const countryData = isCountryAlias ? await loadCountryPageData(countrySlug) : null;
+  let countryData: Awaited<ReturnType<typeof loadCountryPageData>> | null = null;
+  if (isCountryAlias) {
+    try {
+      countryData = await loadCountryPageData(countrySlug);
+    } catch (error) {
+      console.warn('[Public] CMS country slug load failed:', countrySlug, error);
+      countryData = null;
+    }
+  }
   let initialPage = null;
   if (!isCountryAlias) {
-    const rows = await fetchCollectionRecords('pages').catch(() => []);
-    const match = matchCmsRecord(rows, resolved.canonical, pageAliases(resolved.canonical));
-    initialPage = match && isPublishedRecord(match) ? match : null;
+    try {
+      const rows = await fetchCollectionRecords('pages');
+      const match = matchCmsRecord(rows, resolved.canonical, pageAliases(resolved.canonical));
+      initialPage = match && isPublishedRecord(match) ? match : null;
+    } catch (error) {
+      console.warn('[Public] CMS page load failed:', resolved.canonical, error);
+      initialPage = null;
+    }
   }
 
   return (

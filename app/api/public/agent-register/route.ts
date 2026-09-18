@@ -39,7 +39,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('[Agent register API]', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not save the agent application.' },
+      {
+        data: [],
+        error: true,
+        message: error instanceof Error ? error.message : 'Could not save the agent application.',
+      },
       { status: 500 }
     );
   }

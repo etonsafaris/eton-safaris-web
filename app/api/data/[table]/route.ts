@@ -150,7 +150,10 @@ export async function GET(
     );
   } catch (error) {
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
-    return NextResponse.json({ data: [], error: 'Could not load data' }, { status: 503 });
+    return NextResponse.json(
+      { data: [], error: true, message: 'Could not load data' },
+      { status: 503 }
+    );
   } finally {
     client?.release();
   }

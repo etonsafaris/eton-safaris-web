@@ -23,7 +23,19 @@ export default async function ToursPage({
 }: {
   searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string };
 }) {
-  const { tours, total, categories, countries } = await loadToursPageData();
+  let tours: Awaited<ReturnType<typeof loadToursPageData>>['tours'] = [];
+  let total = 0;
+  let categories: Awaited<ReturnType<typeof loadToursPageData>>['categories'] = [];
+  let countries: Awaited<ReturnType<typeof loadToursPageData>>['countries'] = [];
+  try {
+    const loaded = await loadToursPageData();
+    tours = loaded.tours ?? [];
+    total = loaded.total ?? 0;
+    categories = loaded.categories ?? [];
+    countries = loaded.countries ?? [];
+  } catch (error) {
+    console.warn('[Public] Tours listing failed:', error);
+  }
   return (
     <PublicShellServer>
     <ToursPageClient

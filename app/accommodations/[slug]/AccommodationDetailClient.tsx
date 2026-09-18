@@ -67,9 +67,9 @@ export default function AccommodationDetailClient({
         }
         setItem(published);
         setOthers(
-          stayPage.rows
+          (stayPage?.rows ?? [])
             .filter(isPublishedRecord)
-            .filter((row) => String(row.id) !== String(published?.id || ''))
+            .filter((row) => String(row?.id) !== String(published?.id || ''))
             .slice(0, 20)
         );
         const country = published ? pickStoredString(published, ['country']) : '';

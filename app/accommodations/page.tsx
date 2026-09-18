@@ -33,10 +33,18 @@ export default async function AccommodationsPage({
   searchParams?: { page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
-  const { rows, total } = await loadAccommodationsPageData({
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  let rows: Awaited<ReturnType<typeof loadAccommodationsPageData>>['rows'] = [];
+  let total = 0;
+  try {
+    const loaded = await loadAccommodationsPageData({
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    });
+    rows = loaded.rows ?? [];
+    total = loaded.total ?? 0;
+  } catch (error) {
+    console.warn('[Public] Accommodations listing failed:', error);
+  }
 
   return (
     <PublicShellServer>

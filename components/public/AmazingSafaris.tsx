@@ -16,7 +16,8 @@ export default function AmazingSafaris({
   emptyMessage?: string;
   columns?: 3 | 4;
 }) {
-  if (!tours.length && !emptyMessage) return null;
+  const safeTours = (tours ?? []).filter((row): row is RecordRow => Boolean(row));
+  if (!safeTours.length && !emptyMessage) return null;
 
   return (
     <section className="w-full bg-transparent px-5 py-10">
@@ -24,19 +25,19 @@ export default function AmazingSafaris({
         <div className="dav-amazing-title">
           {kicker ? <div className="dav-amazing-kicker">{kicker}</div> : null}
           <h3>{title}</h3>
-          {tours.length > 0 ? (
+          {safeTours.length > 0 ? (
             <p className="mt-2 text-sm font-medium text-[#4b5563]">
-              {tours.length.toLocaleString()} package{tours.length === 1 ? '' : 's'}
+              {safeTours.length.toLocaleString()} package{safeTours.length === 1 ? '' : 's'}
             </p>
           ) : null}
           <span className="dav-amazing-underline" />
         </div>
-        {tours.length === 0 ? (
+        {safeTours.length === 0 ? (
           <p className="py-8 text-center text-gray-500">{emptyMessage}</p>
         ) : (
           <div className={`grid gap-6 sm:grid-cols-2 ${columns === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
-            {tours.map((tour, index) => (
-              <TourCard key={String(tour.id ?? index)} tour={tour} />
+            {safeTours.map((tour, index) => (
+              <TourCard key={String(tour?.id ?? index)} tour={tour} />
             ))}
           </div>
         )}

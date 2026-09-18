@@ -5,7 +5,7 @@ export const SITE_MEDIA = {
   communityConservation: '/heroes/community-conservation.webp',
   communityEmployment: '/heroes/community-employment.webp',
   talkToUsHero: '/heroes/talk-to-us.webp',
-  safariUpdatesHero: '/heroes/safari-updates.png',
+  safariUpdatesHero: '/heroes/zambia.webp',
   gorillasForest: '/heroes/rwanda.webp',
   wildlifeNationalPark: '/heroes/botswana.jpg',
   safariVehicle: '/heroes/kenya.jpg',

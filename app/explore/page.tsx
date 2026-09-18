@@ -32,10 +32,18 @@ export default async function ExploreListingPage({
   searchParams?: { page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
-  const { places, total } = await loadExplorePageData({
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  let places: Awaited<ReturnType<typeof loadExplorePageData>>['places'] = [];
+  let total = 0;
+  try {
+    const loaded = await loadExplorePageData({
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    });
+    places = loaded.places ?? [];
+    total = loaded.total ?? 0;
+  } catch (error) {
+    console.warn('[Public] Explore listing failed:', error);
+  }
 
   return (
     <PublicShellServer>

@@ -89,8 +89,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, published_at: stamp, updated: true, via: 'embed' });
   } catch (error) {
+    console.error('[Public API] ensure-published-at failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not backfill published date' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not backfill published date' },
       { status: 500 }
     );
   }

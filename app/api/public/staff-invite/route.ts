@@ -29,8 +29,9 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({ ok: true, invite: publicInvite(found.row) });
   } catch (error) {
+    console.error('[Public API] staff-invite GET failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not load this invite.' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not load this invite.' },
       { status: 500 }
     );
   }
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('[Staff invite complete] Failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not complete this invite.' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not complete this invite.' },
       { status: 500 }
     );
   }

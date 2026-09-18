@@ -34,8 +34,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error('[Public API] subscribe failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not subscribe' },
+      { data: [], error: true, message: error instanceof Error ? error.message : 'Could not subscribe' },
       { status: 500 }
     );
   }

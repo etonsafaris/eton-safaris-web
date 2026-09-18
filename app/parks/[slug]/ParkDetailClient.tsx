@@ -68,9 +68,9 @@ export default function ParkDetailClient({
         if (published) {
           setPark(published);
           setOthers(
-            parkPage.rows
+            (parkPage?.rows ?? [])
               .filter(isPublishedRecord)
-              .filter((row) => String(row.id) !== String(published.id || ''))
+              .filter((row) => String(row?.id) !== String(published?.id || ''))
               .slice(0, 20)
           );
           setReady(true);
@@ -148,12 +148,14 @@ export default function ParkDetailClient({
         hideMeta
         country={pickString(park, ['country'])}
         sidebarTitle="Other Parks"
-        sidebarItems={others.map((item) => ({
-          href: `/parks/${publicRecordSlug(item)}`,
-          image: getRecordImage(item),
-          title: getRecordTitle(item),
-          date: formatPublishedDate(recordPublishedAt(item)),
-        }))}
+        sidebarItems={(others ?? [])
+          .filter(Boolean)
+          .map((item) => ({
+            href: `/parks/${publicRecordSlug(item) || ''}`,
+            image: getRecordImage(item) || undefined,
+            title: getRecordTitle(item) || 'Park',
+            date: formatPublishedDate(recordPublishedAt(item)),
+          }))}
         below={
           stays.length > 0 ? (
             <section className="bg-white pb-12">

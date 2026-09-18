@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
+import { usePublicSafariUpdates } from '@/components/public/usePublicSafariUpdates';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { PublicDestination } from '@/lib/public-destinations';
 
@@ -42,7 +43,9 @@ export default function SiteHeader() {
   const pathname = usePathname() || '';
   const [open, setOpen] = useState(false);
   const { primary, more } = usePublicDestinations();
+  const { items: safariUpdates } = usePublicSafariUpdates();
   const homeActive = pathname === '/';
+  const safariUpdatesActive = pathname.startsWith('/safari-updates');
 
   return (
     <header className="site-header relative">
@@ -78,9 +81,25 @@ export default function SiteHeader() {
             </div>
           </div>
         ) : null}
-        <Link  href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
-          Safari Updates
-        </Link>
+        {safariUpdates.length > 0 ? (
+          <div className={`site-nav-item${safariUpdatesActive ? ' is-active' : ''}`}>
+            Safari Updates
+            <div className="site-nav-dropdown">
+              <Link href="/safari-updates" className="site-nav-dropdown-item">
+                All Safari Updates
+              </Link>
+              {safariUpdates.map((item) => (
+                <Link key={item.href} href={item.href} className="site-nav-dropdown-item">
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Link href="/safari-updates" className={navClass(safariUpdatesActive)}>
+            Safari Updates
+          </Link>
+        )}
         <Link  href="/community-support" className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
@@ -127,6 +146,16 @@ export default function SiteHeader() {
           <Link href="/safari-updates" className="block py-1" onClick={() => setOpen(false)}>
             Safari Updates
           </Link>
+          {safariUpdates.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="block py-1 pl-3 text-[15px] text-[#444]"
+              onClick={() => setOpen(false)}
+            >
+              {item.title}
+            </Link>
+          ))}
           <Link href="/community-support" className="block py-1" onClick={() => setOpen(false)}>
             Community
           </Link>

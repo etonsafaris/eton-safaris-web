@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
+import { EMPTY_TOUR_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
@@ -14,11 +15,21 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
+  try {
+    return await publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
+  } catch (error) {
+    console.warn('[Public] Tour metadata failed:', params.slug, error);
+    return { title: 'Tour | Eton Safaris', robots: { index: false, follow: false } };
+  }
 }
 
 export default async function TourDetailPage({ params }: PageProps) {
-  const { tour, related } = await loadTourDetail(params.slug);
+  const { tour, related } = await safePublicLoad(
+    'tour detail page',
+    () => loadTourDetail(params.slug),
+    EMPTY_TOUR_DETAIL,
+    params.slug
+  );
   if (!tour) notFound();
-  return <TourDetailClient key={params.slug} initialTour={tour} initialRelated={related} />;
+  return <TourDetailClient key={params.slug} initialTour={tour} initialRelated={related ?? []} />;
 }

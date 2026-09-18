@@ -23,7 +23,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
   }
 
-  return publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
+  try {
+    return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
+  } catch (error) {
+    console.warn('[Public] Destination metadata failed:', slug, error);
+    return { title: `${slug} | Eton Safaris`, robots: { index: false, follow: false } };
+  }
 }
 
 export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
