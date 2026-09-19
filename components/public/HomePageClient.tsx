@@ -33,6 +33,7 @@ import {
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { isBundledHeroAsset } from '@/lib/public-image';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -64,7 +65,10 @@ export default function HomePageClient({
   const updates = initialUpdates;
   const categories = initialCategories;
 
-  const heroSlides = initialHeroSlides;
+  const heroSlides = useMemo(
+    () => initialHeroSlides.filter((slide) => isBundledHeroAsset(slide.image)),
+    [initialHeroSlides]
+  );
 
   useEffect(() => {
     if (heroSlides.length === 0) return undefined;
@@ -145,7 +149,8 @@ export default function HomePageClient({
               src={current.image}
               alt=""
               variant="hero"
-              priority
+              priority={true}
+              quality={100}
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : null}

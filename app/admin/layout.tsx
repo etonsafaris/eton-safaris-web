@@ -1,12 +1,7 @@
-'use client';
+import AdminLayoutClient from './AdminLayoutClient';
 
-import { usePathname } from 'next/navigation';
-import AdminShell from '@/components/admin/AdminShell';
+export const dynamic = 'force-dynamic';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname() || '';
-  if (pathname === '/admin/change-password') {
-    return children;
-  }
-  return <AdminShell>{children}</AdminShell>;
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

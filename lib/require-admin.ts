@@ -22,18 +22,20 @@ export async function requireAdminUser(request: Request): Promise<
   }
 
   // Simple token validation for Aiven - check against stored admin tokens
+  let client;
   try {
-    const client = await db.connect();
+    client = await db.connect();
     const queryText = `SELECT * FROM profiles WHERE email = $1 LIMIT 1`;
     const result = await client.query(queryText, [token]);
-    client.release();
-    
+
     if (result.rows.length > 0) {
       const user = result.rows[0];
       return { ok: true, user };
     }
   } catch (error: any) {
     console.error('[Aiven] Admin auth error:', error.message);
+  } finally {
+    client?.release();
   }
 
   return {

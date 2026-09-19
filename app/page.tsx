@@ -34,7 +34,7 @@ export default async function HomePage() {
   } catch (error) {
     console.error('[Public] Home page data failed:', error);
   }
-  const initialHeroSlides = buildHomeHeroSlides(data.countries);
+  const initialHeroSlides = buildHomeHeroSlides();
 
   return (
     <PublicShellServer>

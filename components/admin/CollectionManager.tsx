@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminUrlPage } from '@/lib/use-admin-url-page';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
@@ -74,6 +75,14 @@ import { faqsForEditor } from '@/lib/default-faqs';
 import { chipsFromKeywordRows, keywordRowMatchesScope } from '@/lib/keywords';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
+  return (
+    <Suspense fallback={<AdminLogoLoader />}>
+      <CollectionManagerInner config={config} />
+    </Suspense>
+  );
+}
+
+function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const router = useRouter();
   const { counts: adminCounts } = useAdminCounts();
   const isTours = config.id === 'tours';
@@ -120,11 +129,11 @@ export default function CollectionManager({ config }: { config: CollectionConfig
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [viewingNotice, setViewingNotice] = useState<RecordRow | null>(null);
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
-  const [page, setPage] = useState(1);
   const PAGE_SIZE = 48;
   const [remoteTotal, setRemoteTotal] = useState(0);
   const [keywordRows, setKeywordRows] = useState<RecordRow[]>([]);
   const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
+  const { page, setPage, resetPage } = useAdminUrlPage();
 
   useEffect(() => {
     if (!config.publicPath || config.id === 'keywords' || config.id === 'tours') return;
@@ -272,9 +281,21 @@ export default function CollectionManager({ config }: { config: CollectionConfig
     });
   }, [records, query, countryFilter, parkFilter, categoryFilter, postKind, isSafariUpdates, isTours, isAccommodations, usesRemotePaging]);
 
+  const listFilterKey = useMemo(
+    () => [config.table, query, countryFilter, parkFilter, categoryFilter, postKind].join('\0'),
+    [config.table, query, countryFilter, parkFilter, categoryFilter, postKind]
+  );
+  const previousListFilterKey = useRef<string | null>(null);
   useEffect(() => {
-    setPage(1);
-  }, [query, countryFilter, parkFilter, categoryFilter, postKind, config.table]);
+    if (previousListFilterKey.current === null) {
+      previousListFilterKey.current = listFilterKey;
+      return;
+    }
+    if (previousListFilterKey.current !== listFilterKey) {
+      previousListFilterKey.current = listFilterKey;
+      resetPage();
+    }
+  }, [listFilterKey, resetPage]);
 
   const hasListFilters = Boolean(
     query || countryFilter || parkFilter || categoryFilter || (isSafariUpdates && postKind)
@@ -287,6 +308,13 @@ export default function CollectionManager({ config }: { config: CollectionConfig
       ? moduleTotal || remoteTotal
       : moduleTotal || filtered.length;
   const totalPages = Math.max(1, Math.ceil(listTotal / PAGE_SIZE));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages, setPage]);
+
   const paged = useMemo(() => {
     if (usesRemotePaging && !query) {
       return filtered;

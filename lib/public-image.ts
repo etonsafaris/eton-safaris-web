@@ -72,6 +72,13 @@ function imagePathname(src: string) {
   }
 }
 
+/** Static safari art shipped under `public/heroes` — safe for the home carousel. */
+export function isBundledHeroAsset(value: unknown): value is string {
+  if (!isDeployableImageUrl(value)) return false;
+  const pathname = imagePathname(value.trim());
+  return pathname.startsWith('/heroes/');
+}
+
 /** Admin-uploaded / CMS images that can appear on Vercel. Bundled heroes and Unsplash placeholders are not live CMS. */
 export function isLiveCmsImage(value: unknown): value is string {
   if (!isDeployableImageUrl(value)) return false;

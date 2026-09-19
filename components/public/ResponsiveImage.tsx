@@ -9,6 +9,7 @@ type ResponsiveImageProps = {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  quality?: number;
   variant?: 'hero' | 'card';
 };
 
@@ -18,11 +19,14 @@ export default function ResponsiveImage({
   className,
   sizes,
   priority = false,
+  quality,
   variant = 'card',
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
   if (!resolved) return null;
-  const displaySrc = variant === 'hero' ? heroImageSrc(resolved) : cardImageSrc(resolved);
+  const heroQuality = quality ?? 100;
+  const displaySrc =
+    variant === 'hero' ? heroImageSrc(resolved, heroQuality) : cardImageSrc(resolved);
   const srcSet = imageSrcSet(resolved);
   const avifSrcSet = /^\/heroes\//.test(resolved) ? srcSet.replace(/\.webp(?=\s|,|$)/g, '.avif') : '';
   const motionClass = variant === 'hero' ? 'hero-motion' : '';

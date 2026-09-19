@@ -36,8 +36,8 @@ export function imageSrcSet(src: string, widths: number[] = DEFAULT_WIDTHS): str
   return widths.map((width) => `${sizedImageUrl(src, width)} ${width}w`).join(', ');
 }
 
-export function heroImageSrc(src: string) {
-  return sizedImageUrl(src, 1080, 72);
+export function heroImageSrc(src: string, quality = 100) {
+  return sizedImageUrl(src, 1440, quality);
 }
 
 export function cardImageSrc(src: string) {

@@ -1,8 +1,7 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { bundledCountryHero, countryHeroImage } from '@/lib/country-heroes';
-import { recordMatchesCountrySlug } from '@/lib/country-utils';
-import type { RecordRow } from '@/lib/types';
+import { bundledCountryHero } from '@/lib/country-heroes';
+import { isBundledHeroAsset } from '@/lib/public-image';
 
 export type HomeHeroSlide = {
   title: string;
@@ -35,15 +34,14 @@ const HERO_COPY: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-/** Server-built hero slides: per-country artwork from `country-heroes` (+ CMS country image when set). */
-export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[] {
+/** Home carousel uses only bundled `/heroes/*` safari art (no CMS URLs or legacy placeholders). */
+export function buildHomeHeroSlides(): HomeHeroSlide[] {
   return NAV_COUNTRIES.map(({ slug, name }) => {
-    const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
     const copy = HERO_COPY[slug] || {
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = countryHeroImage(slug, dbCountry) || bundledCountryHero(slug);
+    const image = bundledCountryHero(slug);
     return {
       title: copy.title,
       subtitle: copy.subtitle,
@@ -51,5 +49,5 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       href: destinationPublicPath(slug),
       image,
     };
-  });
+  }).filter((slide) => isBundledHeroAsset(slide.image));
 }
