@@ -6,7 +6,6 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
 import HomePageImage from '@/components/public/HomePageImage';
-import PlaceCard from '@/components/public/PlaceCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
