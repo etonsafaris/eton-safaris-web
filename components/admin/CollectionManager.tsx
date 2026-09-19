@@ -73,7 +73,6 @@ import {
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { chipsFromKeywordRows, keywordRowMatchesScope } from '@/lib/keywords';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   return (
@@ -134,36 +133,24 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
   const PAGE_SIZE = 48;
   const [remoteTotal, setRemoteTotal] = useState(0);
-  const [keywordRows, setKeywordRows] = useState<RecordRow[]>([]);
   const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
   const { page, setPage, resetPage } = useAdminUrlPage();
+  const loadRequestRef = useRef(0);
 
-  useEffect(() => {
-    if (!config.publicPath || config.id === 'keywords' || config.id === 'tours') return;
-    fetchCollectionRecords('keywords', ['keyword', 'seo_keywords'], { maxRows: 5000 })
-      .then(setKeywordRows)
-      .catch((error) => console.error('[Admin] Could not load keyword library:', error));
-  }, [config.id, config.publicPath]);
-
-  function keywordsForRecord(record: RecordRow) {
-    if (config.id === 'tours') return [];
-    const country = pickString(record, ['country']);
-    const category = pickString(record, ['category']) || getRecordTitle(record);
-    if (!country || !category) return [];
-    return chipsFromKeywordRows(keywordRows.filter((row) => keywordRowMatchesScope(row, country, category)));
-  }
-
-  async function load() {
+  async function load(options?: { bustCache?: boolean }) {
     if (!config.table) {
       setLoading(false);
       return;
     }
+    const requestId = ++loadRequestRef.current;
     setLoading(true);
     setError('');
     setActionError('');
     try {
-      clearCollectionCache(config.table);
-      (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
+      if (options?.bustCache) {
+        clearCollectionCache(config.table);
+        (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
+      }
       const listColumns = adminListColumnsFor(config.table, config.aliases || []);
       const listOptions = listColumns ? { columns: listColumns } : undefined;
       let data: RecordRow[] = [];
@@ -209,6 +196,8 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           total = data.length;
         }
       }
+      if (requestId !== loadRequestRef.current) return;
+
       setRemoteTotal(total);
       setRecords(
         data.slice().sort((a, b) => {
@@ -220,24 +209,27 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           return id != null && (row.id === undefined || row.id === null || row.id === '') ? { ...row, id } : row;
         })
       );
-      if (data.length === 0) {
-        console.error(`[Supabase] "${config.table}" returned 0 rows. Check RLS policies or empty table.`);
+      if (data.length === 0 && !usesRemotePaging) {
+        console.warn(`[Admin] "${config.table}" returned 0 rows.`);
       }
     } catch (err) {
+      if (requestId !== loadRequestRef.current) return;
       const message = err instanceof Error ? err.message : 'Failed to load records';
       console.error(err);
       setError(message);
-      setRecords([]);
-      setRemoteTotal(0);
+      setRecords((prev) => (prev.length > 0 ? prev : []));
+      setRemoteTotal((prev) => (prev > 0 ? prev : 0));
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestRef.current) {
+        setLoading(false);
+      }
     }
   }
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.table, usesRemotePaging ? page : 0, countryFilter, parkFilter, categoryFilter]);
+  }, [config.table, usesRemotePaging ? page : -1, countryFilter, parkFilter, categoryFilter]);
 
   useEffect(() => {
     if (!isAccommodations) return;
@@ -308,7 +300,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const listTotal = useMemo(() => {
     if (hasListFilters) return filtered.length;
     const base = usesRemotePaging
-      ? Math.max(moduleTotal, remoteTotal)
+      ? Math.max(remoteTotal, moduleTotal, filtered.length)
       : Math.max(moduleTotal, filtered.length);
     if (loading && usesRemotePaging && page > 1) {
       return Math.max(base, page * PAGE_SIZE);
@@ -579,7 +571,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           throw new Error(body.error || 'Auto-configure failed');
         }
       }
-      await load();
+      await load({ bustCache: true });
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Auto-configure failed');
     } finally {
@@ -847,7 +839,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
     setModalOpen(false);
     setSaving(false);
-    await load();
+    await load({ bustCache: true });
   }
 
   async function remove(record: RecordRow) {
@@ -861,7 +853,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     }
     await publishPublicSite();
     if (isNotifications) notifyAdminNotificationsChanged();
-    await load();
+    await load({ bustCache: true });
   }
 
   async function setAgentStatus(record: RecordRow, status: 'Active' | 'Inactive' | 'Pending') {
@@ -888,7 +880,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       setActionError(body.error || 'Could not update the agent status.');
       return;
     }
-    await load();
+    await load({ bustCache: true });
   }
 
   async function viewGuestLogs(record: RecordRow) {
@@ -1006,7 +998,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         guestMessage: notice.guestMessage,
       });
     }
-    await load();
+    await load({ bustCache: true });
   }
 
   async function viewPayments(record: RecordRow) {
@@ -1077,7 +1069,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           </span>
           <button
             type="button"
-            onClick={() => load()}
+            onClick={() => load({ bustCache: true })}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
           >
             <RefreshCw className="h-4 w-4" /> Refresh
@@ -1187,14 +1179,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{actionError}</div>
       ) : null}
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <AdminLogoLoader label={`Loading ${config.label}`} />
-        </div>
-      ) : error ? (
+      {error && records.length === 0 ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           <p className="font-semibold">Unable to load {config.label}</p>
           <p className="mt-1">{error}</p>
+        </div>
+      ) : loading && records.length === 0 ? (
+        <div className="flex justify-center py-20">
+          <AdminLogoLoader label={`Loading ${config.label}`} />
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-400">
@@ -1211,6 +1203,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         />
       ) : (
         <>
+          {error ? (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              Could not refresh — showing last loaded data. {error}
+            </div>
+          ) : null}
+          {loading && records.length > 0 ? (
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">Updating list…</p>
+          ) : null}
           {view === 'grid' ? (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {paged.map((record, index) => (
@@ -1223,7 +1223,6 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={cardTitle(record)}
-                  keywords={isTours ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}
@@ -1242,7 +1241,6 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
                   title={cardTitle(record)}
-                  keywords={isTours ? [] : keywordsForRecord(record)}
                   onEdit={() => openEdit(record)}
                   onDelete={() => remove(record)}
                   extraActions={cardActions(record)}

@@ -23,8 +23,8 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
     setError(null);
     let lastError: unknown;
     for (let attempt = 0; attempt < 2; attempt += 1) {
