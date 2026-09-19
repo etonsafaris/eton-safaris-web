@@ -7,8 +7,8 @@ export const SITE_MEDIA = {
   talkToUsHero: '/heroes/talk-to-us.webp',
   safariUpdatesHero: '/heroes/zambia.webp',
   gorillasForest: '/heroes/rwanda.webp',
-  wildlifeNationalPark: '/heroes/botswana.jpg',
-  safariVehicle: '/heroes/kenya.jpg',
+  wildlifeNationalPark: '/heroes/zambia.webp',
+  safariVehicle: '/heroes/south-africa.webp',
   elephantSunset: '/heroes/zambia.webp',
   gorillaVideo:
     'https://videos.pexels.com/video-files/31223125/13336255_720_1280_60fps.mp4',

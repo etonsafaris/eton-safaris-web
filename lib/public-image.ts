@@ -1,4 +1,4 @@
-export const DEFAULT_PUBLIC_IMAGE = '/heroes/kenya.jpg';
+export const DEFAULT_PUBLIC_IMAGE = '/heroes/zambia.webp';
 
 function isLocalDevHost(hostname: string) {
   return /^(localhost|127\.0\.0\.1)$/i.test(hostname);

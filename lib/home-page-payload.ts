@@ -1,6 +1,7 @@
 import type { HomePageContent } from '@/lib/home-page-content';
 import { DEFAULT_HOME_PAGE_CONTENT } from '@/lib/home-page-content';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
+import { resolvePublicImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 export type HomePagePayload = {
@@ -42,11 +43,9 @@ export function resolveHomePageContent(content: HomePageContent | null | undefin
 
 export function safeHeroSlides(slides: unknown): HomeHeroSlide[] {
   if (!Array.isArray(slides)) return [];
-  return slides.filter(
-    (slide) =>
-      slide &&
-      typeof slide === 'object' &&
-      typeof (slide as HomeHeroSlide).image === 'string' &&
-      typeof (slide as HomeHeroSlide).href === 'string'
-  ) as HomeHeroSlide[];
+  return slides.filter((slide) => {
+    if (!slide || typeof slide !== 'object') return false;
+    const item = slide as HomeHeroSlide;
+    return Boolean(item.href && resolvePublicImage(item.image));
+  }) as HomeHeroSlide[];
 }

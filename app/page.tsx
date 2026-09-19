@@ -47,7 +47,7 @@ export default async function HomePage() {
   }
 
   try {
-    initialHeroSlides = safeHeroSlides(buildHomeHeroSlides());
+    initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(data.countries));
   } catch (error) {
     console.error('[Public] Home hero slides failed:', error);
     initialHeroSlides = safeHeroSlides([]);

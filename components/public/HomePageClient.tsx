@@ -5,8 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
-import HomeStaticImage from '@/components/public/HomeStaticImage';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
+import HomePageImage from '@/components/public/HomePageImage';
 import PlaceCard from '@/components/public/PlaceCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
@@ -35,7 +34,7 @@ import {
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { isBundledHeroAsset } from '@/lib/public-image';
+import { resolvePublicImage } from '@/lib/public-image';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { RecordRow } from '@/lib/types';
 
@@ -67,7 +66,7 @@ export default function HomePageClient({
   const categories = initialCategories ?? [];
 
   const heroSlides = useMemo(
-    () => (initialHeroSlides ?? []).filter((slide) => slide?.image && isBundledHeroAsset(slide.image)),
+    () => (initialHeroSlides ?? []).filter((item) => Boolean(resolvePublicImage(item?.image))),
     [initialHeroSlides]
   );
 
@@ -108,15 +107,16 @@ export default function HomePageClient({
       publicCountrySlug(country) ||
       canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||
       '';
+    const countryImage = countryHeroImage(slug, country as RecordRow);
     return (
       <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">
-          {countryHeroImage(slug, country as RecordRow) ? (
-            <HomeStaticImage
-              src={countryHeroImage(slug, country as RecordRow) || ''}
+          {countryImage ? (
+            <HomePageImage
+              src={countryImage}
               alt=""
               sizes="(max-width: 768px) 100vw, 33vw"
-              className="object-cover transition duration-700 group-hover:scale-110"
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">No image</div>
@@ -148,14 +148,15 @@ export default function HomePageClient({
     <>
       {current?.image ? (
         <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
-          <HomeStaticImage
+          <HomePageImage
             key={current.image}
             src={current.image}
             alt=""
+            variant="hero"
             priority={true}
             quality={90}
             sizes="100vw"
-            className="object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="pointer-events-none absolute inset-0 bg-black/20" />
           <button
@@ -252,22 +253,12 @@ export default function HomePageClient({
                 className="group block overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-xl"
               >
                 {image ? (
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
-                    {image.startsWith('/') ? (
-                      <HomeStaticImage
-                        src={image}
-                        alt=""
-                        sizes="(max-width: 640px) 100vw, 25vw"
-                        className="object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <ResponsiveImage
-                        src={image}
-                        alt=""
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    )}
-                  </div>
+                  <HomePageImage
+                    src={image}
+                    alt=""
+                    sizes="(max-width: 640px) 100vw, 25vw"
+                    className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
                   <div className="flex aspect-[4/3] items-center justify-center bg-gray-100 text-sm text-gray-400">
                     No image
