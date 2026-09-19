@@ -1,11 +1,17 @@
 import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
+import {
+  EMPTY_HOME_PAGE_PAYLOAD,
+  normalizeHomePagePayload,
+  resolveHomePageContent,
+  safeHeroSlides,
+} from '@/lib/home-page-payload';
 import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: {
@@ -20,30 +26,41 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  let data = {
-    countries: [] as Awaited<ReturnType<typeof loadHomePageData>>['countries'],
-    tours: [] as Awaited<ReturnType<typeof loadHomePageData>>['tours'],
-    updates: [] as Awaited<ReturnType<typeof loadHomePageData>>['updates'],
-    categories: [] as Awaited<ReturnType<typeof loadHomePageData>>['categories'],
-  };
-  let homeContent: Awaited<ReturnType<typeof loadHomePageContent>> = null;
+  let data = EMPTY_HOME_PAGE_PAYLOAD;
+  let homeContent = resolveHomePageContent(null);
+  let initialHeroSlides = safeHeroSlides([]);
+
   try {
-    const [loaded, content] = await Promise.all([loadHomePageData(), loadHomePageContent()]);
-    data = loaded;
-    homeContent = content;
+    const loaded = await loadHomePageData();
+    data = normalizeHomePagePayload(loaded);
   } catch (error) {
     console.error('[Public] Home page data failed:', error);
+    data = EMPTY_HOME_PAGE_PAYLOAD;
   }
-  const initialHeroSlides = buildHomeHeroSlides();
+
+  try {
+    const content = await loadHomePageContent();
+    homeContent = resolveHomePageContent(content);
+  } catch (error) {
+    console.error('[Public] Home page content failed:', error);
+    homeContent = resolveHomePageContent(null);
+  }
+
+  try {
+    initialHeroSlides = safeHeroSlides(buildHomeHeroSlides());
+  } catch (error) {
+    console.error('[Public] Home hero slides failed:', error);
+    initialHeroSlides = safeHeroSlides([]);
+  }
 
   return (
     <PublicShellServer>
       <HomePageClient
         initialHeroSlides={initialHeroSlides}
-        initialCountries={data.countries}
-        initialTours={data.tours}
-        initialUpdates={data.updates}
-        initialCategories={data.categories}
+        initialCountries={data?.countries ?? []}
+        initialTours={data?.tours ?? []}
+        initialUpdates={data?.updates ?? []}
+        initialCategories={data?.categories ?? []}
         initialHomeContent={homeContent}
       />
     </PublicShellServer>

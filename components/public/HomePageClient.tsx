@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import PaymentsSection from '@/components/public/PaymentsSection';
+import HomeStaticImage from '@/components/public/HomeStaticImage';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import PlaceCard from '@/components/public/PlaceCard';
 import TourSearchBar from '@/components/public/TourSearchBar';
@@ -12,7 +13,8 @@ import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
-import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
+import { resolveHomePageContent } from '@/lib/home-page-payload';
+import type { HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
@@ -46,10 +48,6 @@ type HomePageClientProps = {
   initialHomeContent?: HomePageContent | null;
 };
 
-function resolveHomeContent(initialHomeContent?: HomePageContent | null): HomePageContent {
-  return initialHomeContent ?? DEFAULT_HOME_PAGE_CONTENT;
-}
-
 export default function HomePageClient({
   initialHeroSlides,
   initialCountries,
@@ -59,14 +57,17 @@ export default function HomePageClient({
   initialHomeContent,
 }: HomePageClientProps) {
   const [slide, setSlide] = useState(0);
-  const homeContent = useMemo(() => resolveHomeContent(initialHomeContent), [initialHomeContent]);
-  const countries = initialCountries;
-  const tours = initialTours;
-  const updates = initialUpdates;
-  const categories = initialCategories;
+  const homeContent = useMemo(
+    () => resolveHomePageContent(initialHomeContent),
+    [initialHomeContent]
+  );
+  const countries = initialCountries ?? [];
+  const tours = initialTours ?? [];
+  const updates = initialUpdates ?? [];
+  const categories = initialCategories ?? [];
 
   const heroSlides = useMemo(
-    () => initialHeroSlides.filter((slide) => isBundledHeroAsset(slide.image)),
+    () => (initialHeroSlides ?? []).filter((slide) => slide?.image && isBundledHeroAsset(slide.image)),
     [initialHeroSlides]
   );
 
@@ -86,20 +87,23 @@ export default function HomePageClient({
     [countries]
   );
 
-  const current = heroSlides[slide] || heroSlides[0];
+  const current = heroSlides?.[slide] ?? heroSlides?.[0];
 
   const featuredTours = useMemo(() => {
-    const preferred = tours.filter((tour) => tour.is_featured || tour.is_popular || tour.show_on_landing);
-    return (preferred.length ? preferred : tours).slice(0, 12);
+    const pool = tours ?? [];
+    const preferred = pool.filter(
+      (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
+    );
+    return (preferred.length ? preferred : pool).slice(0, 12);
   }, [tours]);
 
-  const tourItems = featuredTours.map((tour, index) => (
-    <TourCard key={String(tour.id ?? index)} tour={tour} />
+  const tourItems = (featuredTours ?? []).map((tour, index) => (
+    <TourCard key={String(tour?.id ?? index)} tour={tour} />
   ));
 
-  const destinationRows = useMemo(() => destinationListingRows(countries), [countries]);
+  const destinationRows = useMemo(() => destinationListingRows(countries ?? []), [countries]);
 
-  const destinationItems = destinationRows.map((country, index) => {
+  const destinationItems = (destinationRows ?? []).map((country, index) => {
     const slug =
       publicCountrySlug(country) ||
       canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||
@@ -108,10 +112,11 @@ export default function HomePageClient({
       <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">
           {countryHeroImage(slug, country as RecordRow) ? (
-            <ResponsiveImage
-              src={countryHeroImage(slug, country as RecordRow)}
+            <HomeStaticImage
+              src={countryHeroImage(slug, country as RecordRow) || ''}
               alt=""
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover transition duration-700 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">No image</div>
@@ -141,19 +146,17 @@ export default function HomePageClient({
 
   return (
     <>
-      {current && (
+      {current?.image ? (
         <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
-          {current.image ? (
-            <ResponsiveImage
-              key={current.image}
-              src={current.image}
-              alt=""
-              variant="hero"
-              priority={true}
-              quality={100}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : null}
+          <HomeStaticImage
+            key={current.image}
+            src={current.image}
+            alt=""
+            priority={true}
+            quality={90}
+            sizes="100vw"
+            className="object-cover"
+          />
           <div className="pointer-events-none absolute inset-0 bg-black/20" />
           <button
             type="button"
@@ -177,24 +180,24 @@ export default function HomePageClient({
                 className="mb-2 font-serif text-2xl font-bold leading-tight text-white md:text-4xl"
                 style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
               >
-                {current.title}
+                {current?.title ?? ''}
               </h1>
               <p
                 className="mb-4 text-sm leading-snug text-white/90 md:text-base"
                 style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
               >
-                {current.subtitle}
+                {current?.subtitle ?? ''}
               </p>
               <Link
-                href={current.href}
+                href={current?.href ?? '/destinations'}
                 className="pointer-events-auto inline-block rounded-full bg-moss/90 px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white backdrop-blur-sm hover:bg-moss"
               >
-                {current.cta}
+                {current?.cta ?? 'Explore'}
               </Link>
             </div>
           </div>
           <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-            {heroSlides.map((_, index) => (
+            {(heroSlides ?? []).map((_, index) => (
               <button
                 key={index}
                 type="button"
@@ -205,9 +208,9 @@ export default function HomePageClient({
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
-      <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
+      <TourSearchBar tours={tours ?? []} categories={categories ?? []} destinations={destinationOptions ?? []} />
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
@@ -239,36 +242,53 @@ export default function HomePageClient({
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Stay up to date with" title={PUBLIC_SITE_LABELS.blogPosts} />
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {updates.slice(0, 4).map((post, index) => (
+            {(updates ?? []).slice(0, 4).map((post, index) => {
+              const image = post ? getRecordImage(post) : '';
+              const slug = post ? publicRecordSlug(post) || String(post?.id ?? '') : '';
+              return (
               <Link
-                key={String(post.id ?? index)}
-                href={`/safari-updates/${publicRecordSlug(post) || String(post.id ?? '')}`}
+                key={String(post?.id ?? index)}
+                href={`/safari-updates/${slug}`}
                 className="group block overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-xl"
               >
-                {getRecordImage(post) ? (
-                  <ResponsiveImage
-                    src={getRecordImage(post) || ''}
-                    alt=""
-                    className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
+                {image ? (
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                    {image.startsWith('/') ? (
+                      <HomeStaticImage
+                        src={image}
+                        alt=""
+                        sizes="(max-width: 640px) 100vw, 25vw"
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <ResponsiveImage
+                        src={image}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    )}
+                  </div>
                 ) : (
                   <div className="flex aspect-[4/3] items-center justify-center bg-gray-100 text-sm text-gray-400">
                     No image
                   </div>
                 )}
                 <div className="p-4">
-                  {recordPublishedAt(post) ? (
+                  {post && recordPublishedAt(post) ? (
                     <p className="text-xs text-gray-400">{formatPublishedDate(recordPublishedAt(post))}</p>
                   ) : null}
-                  <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{getRecordTitle(post)}</h4>
+                  <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{post ? getRecordTitle(post) : ''}</h4>
                   <p className="mt-2 line-clamp-2 text-sm text-[#666]">
-                    {stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content']))}
+                    {post
+                      ? stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content']))
+                      : ''}
                   </p>
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
-          {updates.length === 0 && (
+          {(updates ?? []).length === 0 && (
             <p className="mt-6 text-center text-gray-500">No records found in this collection.</p>
           )}
           <div className="mt-8 text-center">
@@ -283,7 +303,7 @@ export default function HomePageClient({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-8">
-        <PageFaqList faqs={homeContent.faqs || []} tone="light" />
+        <PageFaqList faqs={homeContent?.faqs ?? []} tone="light" />
       </section>
 
       <TestimonialsSection />
