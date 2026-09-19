@@ -9,7 +9,7 @@ import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
 import PlaceCard from '@/components/public/PlaceCard';
-import PublicShell from '@/components/public/PublicShell';
+import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
@@ -33,10 +33,12 @@ import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
 
 export default function ParkDetailClient({
+  embedded = false,
   initialPark = null,
   initialOthers = [],
   initialStays = [],
 }: {
+  embedded?: boolean;
   initialPark?: RecordRow | null;
   initialOthers?: RecordRow[];
   initialStays?: RecordRow[];
@@ -126,18 +128,18 @@ export default function ParkDetailClient({
 
   if (!park) {
     return (
-      <PublicShell>
+      <DetailPageShell embedded={embedded}>
         <p className="px-4 py-20 text-center text-gray-500">
           {ready ? 'No records found in this collection.' : 'Loading park…'}
         </p>
-      </PublicShell>
+      </DetailPageShell>
     );
   }
 
   const parkName = getRecordTitle(park);
 
   return (
-    <PublicShell>
+    <DetailPageShell embedded={embedded}>
       <PageHero
         variant="park"
         title={parkName}
@@ -199,6 +201,6 @@ export default function ParkDetailClient({
         />
         <ContentBlocks record={park} />
       </ContentDetailLayout>
-    </PublicShell>
+    </DetailPageShell>
   );
 }

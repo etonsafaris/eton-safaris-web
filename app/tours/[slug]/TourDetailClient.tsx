@@ -5,7 +5,7 @@ import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import { useParams, useRouter } from 'next/navigation';
 import { Check, Star, X } from 'lucide-react';
 import PageHero from '@/components/public/PageHero';
-import PublicShell from '@/components/public/PublicShell';
+import DetailPageShell from '@/components/public/DetailPageShell';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import TourItinerary from '@/components/public/TourItinerary';
 import {
@@ -44,9 +44,11 @@ import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 
 export default function TourDetailClient({
+  embedded = false,
   initialTour = null,
   initialRelated = [],
 }: {
+  embedded?: boolean;
   initialTour?: RecordRow | null;
   initialRelated?: RecordRow[];
 }) {
@@ -231,18 +233,18 @@ export default function TourDetailClient({
 
   if (!tour) {
     return (
-      <PublicShell>
+      <DetailPageShell embedded={embedded}>
         <p className="px-4 py-20 text-center text-gray-500">
           {ready
             ? 'This tour could not be loaded right now. Refresh the page or browse all tours.'
             : 'Loading tour…'}
         </p>
-      </PublicShell>
+      </DetailPageShell>
     );
   }
 
   return (
-    <PublicShell>
+    <DetailPageShell embedded={embedded}>
       <PageHero
         variant="tour"
         title={getRecordTitle(tour)}
@@ -542,6 +544,6 @@ export default function TourDetailClient({
           </div>
         </div>
       ) : null}
-    </PublicShell>
+      </DetailPageShell>
   );
 }

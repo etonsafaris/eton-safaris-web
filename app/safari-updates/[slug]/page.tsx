@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadSafariUpdateDetail, loadStaticSafariUpdateParams } from '@/lib/load-public';
 import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
@@ -32,11 +33,14 @@ export default async function SafariUpdateDetailPage({ params }: PageProps) {
     params.slug
   );
   return (
-    <SafariUpdateDetailClient
-      key={params.slug}
-      initialPost={post}
-      initialRelated={related ?? []}
-      initialTours={tours ?? []}
-    />
+    <PublicShellServer>
+      <SafariUpdateDetailClient
+        key={params.slug}
+        embedded
+        initialPost={post}
+        initialRelated={related ?? []}
+        initialTours={tours ?? []}
+      />
+    </PublicShellServer>
   );
 }

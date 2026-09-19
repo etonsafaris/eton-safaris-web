@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ParkDetailClient from './ParkDetailClient';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
 import { EMPTY_PARK_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
@@ -33,11 +34,14 @@ export default async function ParkDetailPage({ params }: PageProps) {
     params.slug
   );
   return (
-    <ParkDetailClient
-      key={params.slug}
-      initialPark={park}
-      initialOthers={others ?? []}
-      initialStays={stays ?? []}
-    />
+    <PublicShellServer>
+      <ParkDetailClient
+        key={params.slug}
+        embedded
+        initialPark={park}
+        initialOthers={others ?? []}
+        initialStays={stays ?? []}
+      />
+    </PublicShellServer>
   );
 }

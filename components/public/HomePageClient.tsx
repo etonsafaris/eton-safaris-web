@@ -11,13 +11,12 @@ import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
-import SafariCategoryCard from '@/components/public/SafariCategoryCard';
 import PageFaqList from '@/components/public/PageFaqList';
 import { DEFAULT_HOME_PAGE_CONTENT, type HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
-import { HOME_BEST_COUNTRY_SLUGS, PUBLIC_SITE_LABELS } from '@/lib/collections';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import {
   destinationListingRows,
   mergePublicDestinations,
@@ -89,27 +88,6 @@ export default function HomePageClient({
     const preferred = tours.filter((tour) => tour.is_featured || tour.is_popular || tour.show_on_landing);
     return (preferred.length ? preferred : tours).slice(0, 12);
   }, [tours]);
-
-  const homeBestCountryCards = useMemo(() => {
-    return HOME_BEST_COUNTRY_SLUGS.map((slug) => {
-      const match =
-        countries.find(
-          (row) =>
-            publicCountrySlug(row) === slug ||
-            canonicalCountrySlug(publicCountryLabel(row as RecordRow, slug)) === slug
-        ) || null;
-      const name = match ? publicCountryLabel(match as RecordRow, slug) : slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      const record: RecordRow = match
-        ? (match as RecordRow)
-        : ({ name, title: name, slug } as RecordRow);
-      return {
-        slug,
-        record,
-        image: countryHeroImage(slug, record),
-        href: destinationPublicPath(slug),
-      };
-    });
-  }, [countries]);
 
   const tourItems = featuredTours.map((tour, index) => (
     <TourCard key={String(tour.id ?? index)} tour={tour} />
@@ -189,7 +167,7 @@ export default function HomePageClient({
             <ChevronRight />
           </button>
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4">
-            <div className="w-full max-w-2xl rounded-[3rem] border border-white/15 bg-black/30 px-8 py-6 text-center shadow-2xl backdrop-blur-md md:px-12 md:py-8">
+            <div className="w-full max-w-2xl rounded-[3rem] border border-white/20 bg-black/15 px-8 py-6 text-center shadow-2xl backdrop-blur-sm md:px-12 md:py-8">
               <h1
                 className="mb-2 font-serif text-2xl font-bold leading-tight text-white md:text-4xl"
                 style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
@@ -225,21 +203,6 @@ export default function HomePageClient({
       )}
 
       <TourSearchBar tours={tours} categories={categories} destinations={destinationOptions} />
-
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <SectionHeading label={PUBLIC_SITE_LABELS.findToursBy} title={PUBLIC_SITE_LABELS.bestCountries} />
-        <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
-          {homeBestCountryCards.map((item) => (
-            <SafariCategoryCard
-              key={item.slug}
-              category={item.record}
-              titleOnly
-              href={item.href}
-              image={item.image || undefined}
-            />
-          ))}
-        </div>
-      </section>
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">

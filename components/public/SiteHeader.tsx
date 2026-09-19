@@ -49,7 +49,7 @@ export default function SiteHeader() {
   return (
     <header className="site-header relative">
       <Link href="/" className="site-header-logo shrink-0">
-        <BrandLogo size={72} />
+        <BrandLogo size={52} />
       </Link>
 
       <nav className="hidden items-center lg:flex">

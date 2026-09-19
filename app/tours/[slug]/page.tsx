@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import TourDetailClient from './TourDetailClient';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { EMPTY_TOUR_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
@@ -29,5 +30,14 @@ export default async function TourDetailPage({ params }: PageProps) {
     EMPTY_TOUR_DETAIL,
     params.slug
   );
-  return <TourDetailClient key={params.slug} initialTour={tour} initialRelated={related ?? []} />;
+  return (
+    <PublicShellServer>
+      <TourDetailClient
+        key={params.slug}
+        embedded
+        initialTour={tour}
+        initialRelated={related ?? []}
+      />
+    </PublicShellServer>
+  );
 }

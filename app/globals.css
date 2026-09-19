@@ -497,7 +497,7 @@ article > .content-subheading:first-child {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 1.2rem 0.7rem;
+  padding: 0.65rem 0.6rem;
   color: #222222;
   font-family: Roboto, system-ui, -apple-system, "Helvetica Neue", sans-serif;
   font-size: 16px;
@@ -699,18 +699,18 @@ article > .content-subheading:first-child {
   justify-content: space-between;
   background: #fff;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 0 36px;
-  min-height: 72px;
+  padding: 0 28px;
+  min-height: 56px;
 }
 
 .public-shell-main {
-  padding-top: 72px;
+  padding-top: 56px;
 }
 
 .site-header-logo {
   display: flex;
   align-items: center;
-  padding: 4px 0;
+  padding: 2px 0;
   text-decoration: none;
 }
 

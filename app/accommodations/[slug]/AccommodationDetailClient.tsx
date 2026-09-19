@@ -6,7 +6,7 @@ import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import ContentDetailLayout from '@/components/public/ContentDetailLayout';
 import PageHero from '@/components/public/PageHero';
-import PublicShell from '@/components/public/PublicShell';
+import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
@@ -29,10 +29,12 @@ import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailClient({
+  embedded = false,
   initialItem = null,
   initialOthers = [],
   initialTours = [],
 }: {
+  embedded?: boolean;
   initialItem?: RecordRow | null;
   initialOthers?: RecordRow[];
   initialTours?: RecordRow[];
@@ -98,14 +100,14 @@ export default function AccommodationDetailClient({
 
   if (!item) {
     return (
-      <PublicShell>
+      <DetailPageShell embedded={embedded}>
         <p className="px-4 py-20 text-center text-gray-500">No records found in this collection.</p>
-      </PublicShell>
+      </DetailPageShell>
     );
   }
 
   return (
-    <PublicShell>
+    <DetailPageShell embedded={embedded}>
       <PageHero
         variant="park"
         title={getRecordTitle(item)}
@@ -150,6 +152,6 @@ export default function AccommodationDetailClient({
         />
         <ContentBlocks record={item} />
       </ContentDetailLayout>
-    </PublicShell>
+    </DetailPageShell>
   );
 }

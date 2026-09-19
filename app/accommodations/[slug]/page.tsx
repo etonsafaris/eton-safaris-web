@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AccommodationDetailClient from './AccommodationDetailClient';
+import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
 import { EMPTY_STAY_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
@@ -32,11 +33,14 @@ export default async function AccommodationDetailPage({ params }: PageProps) {
     params.slug
   );
   return (
-    <AccommodationDetailClient
-      key={params.slug}
-      initialItem={item}
-      initialOthers={others ?? []}
-      initialTours={tours ?? []}
-    />
+    <PublicShellServer>
+      <AccommodationDetailClient
+        key={params.slug}
+        embedded
+        initialItem={item}
+        initialOthers={others ?? []}
+        initialTours={tours ?? []}
+      />
+    </PublicShellServer>
   );
 }
