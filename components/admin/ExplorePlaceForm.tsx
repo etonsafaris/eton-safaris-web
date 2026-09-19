@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
@@ -72,7 +73,16 @@ async function uploadPlaceImage(file: File): Promise<string> {
   return uploadOptimizedImage(file, 'explore');
 }
 
-export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
+export default function ExplorePlaceForm(props: ExplorePlaceFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <ExplorePlaceFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
+  const listHref = useAdminCollectionListHref('explore');
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(placeId);
@@ -220,14 +230,13 @@ export default function ExplorePlaceForm({ placeId }: ExplorePlaceFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? placeId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/explore');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="explore-place-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/explore"
+        href={listHref}
         className="mb-6 inline-block text-sm font-medium text-[#6b7280] hover:text-[#374151]"
       >
         &lt; Back to Places

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import CoverImageField from '@/components/admin/CoverImageField';
 import FaqEditor from '@/components/admin/FaqEditor';
 import HomePageFields from '@/components/admin/HomePageFields';
@@ -71,7 +72,16 @@ function PillInput({
   );
 }
 
-export default function PageForm({ pageId }: PageFormProps) {
+export default function PageForm(props: PageFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <PageFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function PageFormInner({ pageId }: PageFormProps) {
+  const listHref = useAdminCollectionListHref('pages');
   const router = useRouter();
   const isEdit = Boolean(pageId);
 
@@ -251,13 +261,12 @@ export default function PageForm({ pageId }: PageFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? pageId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/pages');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="cms-page-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
-      <Link href="/admin/pages" className="mb-6 inline-block text-sm font-medium text-[#6b7280] hover:text-[#374151]">
+      <Link href={listHref} className="mb-6 inline-block text-sm font-medium text-[#6b7280] hover:text-[#374151]">
         &lt; Back to Pages
       </Link>
 

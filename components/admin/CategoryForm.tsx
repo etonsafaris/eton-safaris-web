@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import CoverImageField from '@/components/admin/CoverImageField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SearchableSelect from '@/components/admin/SearchableSelect';
@@ -56,7 +57,16 @@ async function uploadCategoryImage(file: File): Promise<string> {
   return uploadOptimizedImage(file, 'categories');
 }
 
-export default function CategoryForm({ categoryId }: CategoryFormProps) {
+export default function CategoryForm(props: CategoryFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <CategoryFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function CategoryFormInner({ categoryId }: CategoryFormProps) {
+  const listHref = useAdminCollectionListHref('categories');
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(categoryId);
@@ -171,14 +181,13 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? categoryId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/categories');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="category-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/categories"
+        href={listHref}
         className="mb-6 inline-block text-sm font-medium text-[#64748b] hover:text-[#475569]"
       >
         &lt; Back to Categories

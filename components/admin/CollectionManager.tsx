@@ -1,7 +1,8 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { adminListQueryString } from '@/lib/admin-list-navigation';
 import { useAdminUrlPage } from '@/lib/use-admin-url-page';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
@@ -84,6 +85,8 @@ export default function CollectionManager({ config }: { config: CollectionConfig
 
 function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const listQuery = adminListQueryString(searchParams);
   const { counts: adminCounts } = useAdminCounts();
   const isTours = config.id === 'tours';
   const isSafariUpdates = config.id === 'safari_updates';
@@ -302,18 +305,33 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   );
   const moduleTotal = adminCounts[config.id] ?? 0;
 
-  const listTotal = hasListFilters
-    ? filtered.length
-    : usesRemotePaging
-      ? moduleTotal || remoteTotal
-      : moduleTotal || filtered.length;
-  const totalPages = Math.max(1, Math.ceil(listTotal / PAGE_SIZE));
+  const listTotal = useMemo(() => {
+    if (hasListFilters) return filtered.length;
+    const base = usesRemotePaging
+      ? Math.max(moduleTotal, remoteTotal)
+      : Math.max(moduleTotal, filtered.length);
+    if (loading && usesRemotePaging && page > 1) {
+      return Math.max(base, page * PAGE_SIZE);
+    }
+    return base || filtered.length;
+  }, [
+    filtered.length,
+    hasListFilters,
+    loading,
+    moduleTotal,
+    page,
+    remoteTotal,
+    usesRemotePaging,
+  ]);
+  const totalPages = Math.max(1, Math.ceil(Math.max(listTotal, 1) / PAGE_SIZE));
 
   useEffect(() => {
+    if (loading) return;
+    if (listTotal <= 0) return;
     if (page > totalPages) {
       setPage(totalPages);
     }
-  }, [page, totalPages, setPage]);
+  }, [loading, listTotal, page, totalPages, setPage]);
 
   const paged = useMemo(() => {
     if (usesRemotePaging && !query) {
@@ -602,39 +620,39 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
   function openCreate() {
     if (isTours) {
-      router.push('/admin/tours/new');
+      router.push(`/admin/tours/new${listQuery}`);
       return;
     }
     if (isSafariUpdates) {
-      router.push('/admin/safari_updates/new');
+      router.push(`/admin/safari_updates/new${listQuery}`);
       return;
     }
     if (isCountries) {
-      router.push('/admin/countries/new');
+      router.push(`/admin/countries/new${listQuery}`);
       return;
     }
     if (isCategories) {
-      router.push('/admin/categories/new');
+      router.push(`/admin/categories/new${listQuery}`);
       return;
     }
     if (isNationalPark) {
-      router.push('/admin/national_park/new');
+      router.push(`/admin/national_park/new${listQuery}`);
       return;
     }
     if (isAccommodations) {
-      router.push('/admin/accommodations/new');
+      router.push(`/admin/accommodations/new${listQuery}`);
       return;
     }
     if (isExplore) {
-      router.push('/admin/explore/new');
+      router.push(`/admin/explore/new${listQuery}`);
       return;
     }
     if (isPages) {
-      router.push('/admin/pages/new');
+      router.push(`/admin/pages/new${listQuery}`);
       return;
     }
     if (isLandingPages) {
-      router.push('/admin/landing_pages/new');
+      router.push(`/admin/landing_pages/new${listQuery}`);
       return;
     }
     if (config.id === 'registered_agents') return;
@@ -669,39 +687,39 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     const recordId = pickRecordId(record);
     if (recordId != null) {
       if (isTours) {
-        router.push(`/admin/tours/${recordId}/edit`);
+        router.push(`/admin/tours/${recordId}/edit${listQuery}`);
         return;
       }
       if (isSafariUpdates) {
-        router.push(`/admin/safari_updates/${recordId}/edit`);
+        router.push(`/admin/safari_updates/${recordId}/edit${listQuery}`);
         return;
       }
       if (isCountries) {
-        router.push(`/admin/countries/${recordId}/edit`);
+        router.push(`/admin/countries/${recordId}/edit${listQuery}`);
         return;
       }
       if (isCategories) {
-        router.push(`/admin/categories/${recordId}/edit`);
+        router.push(`/admin/categories/${recordId}/edit${listQuery}`);
         return;
       }
       if (isNationalPark) {
-        router.push(`/admin/national_park/${recordId}/edit`);
+        router.push(`/admin/national_park/${recordId}/edit${listQuery}`);
         return;
       }
       if (isAccommodations) {
-        router.push(`/admin/accommodations/${recordId}/edit`);
+        router.push(`/admin/accommodations/${recordId}/edit${listQuery}`);
         return;
       }
       if (isExplore) {
-        router.push(`/admin/explore/${recordId}/edit`);
+        router.push(`/admin/explore/${recordId}/edit${listQuery}`);
         return;
       }
       if (isPages) {
-        router.push(`/admin/pages/${recordId}/edit`);
+        router.push(`/admin/pages/${recordId}/edit${listQuery}`);
         return;
       }
       if (isLandingPages) {
-        router.push(`/admin/landing_pages/${recordId}/edit`);
+        router.push(`/admin/landing_pages/${recordId}/edit${listQuery}`);
         return;
       }
     }
@@ -830,7 +848,6 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     setModalOpen(false);
     setSaving(false);
     await load();
-    router.refresh();
   }
 
   async function remove(record: RecordRow) {

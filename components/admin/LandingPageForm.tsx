@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import CoverImageField from '@/components/admin/CoverImageField';
 import FaqEditor from '@/components/admin/FaqEditor';
 import RichTextEditor from '@/components/admin/RichTextEditor';
@@ -51,7 +52,16 @@ function PillInput({
   );
 }
 
-export default function LandingPageForm({ landingId }: LandingPageFormProps) {
+export default function LandingPageForm(props: LandingPageFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <LandingPageFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function LandingPageFormInner({ landingId }: LandingPageFormProps) {
+  const listHref = useAdminCollectionListHref('landing_pages');
   const router = useRouter();
   const isEdit = Boolean(landingId);
 
@@ -179,14 +189,13 @@ export default function LandingPageForm({ landingId }: LandingPageFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? landingId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/landing_pages');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="landing-page-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/landing_pages"
+        href={listHref}
         className="mb-6 inline-block text-sm font-medium text-[#6b7280] hover:text-[#374151]"
       >
         &lt; Back to Landing Pages

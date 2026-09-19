@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import { ChevronDown } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
@@ -37,7 +38,16 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-gray-300">{children}</label>;
 }
 
-export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
+export default function SafariUpdateForm(props: SafariUpdateFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <SafariUpdateFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
+  const listHref = useAdminCollectionListHref('safari_updates');
   const router = useRouter();
   const isEdit = Boolean(postId);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -163,15 +173,14 @@ export default function SafariUpdateForm({ postId }: SafariUpdateFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? postId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/safari_updates');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="safari-update-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
         <Link
-          href="/admin/safari_updates"
+          href={listHref}
           className="text-sm font-medium text-[#00A651] hover:text-[#00945a]"
         >
           &lt; Back

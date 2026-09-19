@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
@@ -95,7 +96,16 @@ async function uploadAccommodationImage(file: File): Promise<string> {
   return uploadOptimizedImage(file, 'accommodations');
 }
 
-export default function AccommodationForm({ accommodationId }: AccommodationFormProps) {
+export default function AccommodationForm(props: AccommodationFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <AccommodationFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
+  const listHref = useAdminCollectionListHref('accommodations');
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(accommodationId);
@@ -292,14 +302,13 @@ export default function AccommodationForm({ accommodationId }: AccommodationForm
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? accommodationId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/accommodations');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="accommodation-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/accommodations"
+        href={listHref}
         className="mb-6 inline-block text-sm font-medium text-[#64748b] hover:text-[#475569]"
       >
         &lt; Back to Accommodations

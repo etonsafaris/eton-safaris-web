@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import CoverImageField from '@/components/admin/CoverImageField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SeoPanel from '@/components/admin/SeoPanel';
@@ -28,7 +29,16 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-2 block text-sm font-medium text-[#374151]">{children}</label>;
 }
 
-export default function CountryForm({ countryId }: CountryFormProps) {
+export default function CountryForm(props: CountryFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <CountryFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function CountryFormInner({ countryId }: CountryFormProps) {
+  const listHref = useAdminCollectionListHref('countries');
   const router = useRouter();
   const isEdit = Boolean(countryId);
 
@@ -131,8 +141,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
         item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? countryId : result.data?.[0]?.id },
       });
 
-      router.push('/admin/countries');
-      router.refresh();
+      router.push(listHref);
     } catch (error) {
       console.error('[Supabase] Country save threw:', error);
       setError(
@@ -149,7 +158,7 @@ export default function CountryForm({ countryId }: CountryFormProps) {
   return (
     <form id="country-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/countries"
+        href={listHref}
         className="mb-6 inline-block text-sm font-medium text-[#6b7280] hover:text-[#374151]"
       >
         &lt; Back to Destinations

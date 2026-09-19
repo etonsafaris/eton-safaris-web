@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import {
   ArrowLeft,
   BookOpen,
@@ -160,7 +161,16 @@ type TourPackageFormProps = {
   tourId?: string;
 };
 
-export default function TourPackageForm({ tourId }: TourPackageFormProps) {
+export default function TourPackageForm(props: TourPackageFormProps) {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+      <TourPackageFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function TourPackageFormInner({ tourId }: TourPackageFormProps) {
+  const listHref = useAdminCollectionListHref('tours');
   const router = useRouter();
   const isEdit = Boolean(tourId);
   const [form, setForm] = useState<TourFormState>(DEFAULT_FORM);
@@ -375,14 +385,13 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? tourId : result.data?.[0]?.id },
     });
 
-    router.push('/admin/tours');
-    router.refresh();
+    router.push(listHref);
   }
 
   return (
     <form id="tour-package-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        href="/admin/tours"
+        href={listHref}
         className="inline-flex items-center gap-2 text-sm text-[#6b7280] transition hover:text-[#111827]"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -711,7 +720,7 @@ export default function TourPackageForm({ tourId }: TourPackageFormProps) {
 
           <div className="mt-8 flex justify-end gap-3">
             <Link
-              href="/admin/tours"
+              href={listHref}
               className="rounded-full border border-[#c17f59] px-6 py-2.5 text-sm font-semibold text-[#c17f59] transition hover:bg-[#fff7ed]"
             >
               Cancel
