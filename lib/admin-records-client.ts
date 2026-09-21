@@ -111,6 +111,46 @@ export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
   return page.rows;
 }
 
+/** Full CMS row for edit screens (description, itinerary, SEO, etc.). */
+export async function fetchAdminRecordById(
+  table: string,
+  id: string | number
+): Promise<RecordRow | null> {
+  await syncAdminSessionCookie().catch(() => false);
+  const params = new URLSearchParams({
+    table,
+    id: String(id),
+  });
+
+  async function getOnce() {
+    return fetch(`/api/admin/records?${params.toString()}`, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await authHeaders(),
+    });
+  }
+
+  try {
+    let response = await getOnce();
+    if (response.status === 401) {
+      await syncAdminSessionCookie();
+      response = await getOnce();
+    }
+    const body = (await response.json().catch(() => ({}))) as {
+      row?: RecordRow | null;
+      error?: string;
+    };
+    if (!response.ok) {
+      console.warn(`[Admin] Could not load ${table}#${id}:`, body.error || response.status);
+      return null;
+    }
+    return body.row ?? null;
+  } catch (error) {
+    console.warn(`[Admin] Could not load ${table}#${id}:`, error);
+    return null;
+  }
+}
+
 export async function deleteAdminRecord(table: string, id: string | number): Promise<void> {
   const response = await fetch(
     `/api/admin/records?table=${encodeURIComponent(table)}&id=${encodeURIComponent(String(id))}`,

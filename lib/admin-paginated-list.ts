@@ -178,3 +178,33 @@ export async function queryAdminTablePage(
 export function isHeavyAdminTable(table: string) {
   return HEAVY_ADMIN_TABLES.has(table);
 }
+
+/** Full row for admin edit forms (`SELECT *`), one client, always released. */
+export async function queryAdminRecordById(
+  table: string,
+  id: string | number
+): Promise<RecordRow | null> {
+  const idText = String(id ?? '').trim();
+  if (!idText) return null;
+
+  try {
+    return await withPgClient(async (client) => {
+      const quoted = quoteTable(table);
+      const res = await client.query(
+        `SELECT * FROM ${quoted} WHERE CAST(id AS text) = $1 LIMIT 1`,
+        [idText]
+      );
+      if (res.rows[0]) return res.rows[0] as RecordRow;
+
+      const asNumber = Number(idText);
+      if (Number.isFinite(asNumber) && String(asNumber) === idText) {
+        const numeric = await client.query(`SELECT * FROM ${quoted} WHERE id = $1 LIMIT 1`, [asNumber]);
+        if (numeric.rows[0]) return numeric.rows[0] as RecordRow;
+      }
+      return null;
+    });
+  } catch (error) {
+    console.error(`[Admin] Could not load ${table} id=${idText}:`, error);
+    return null;
+  }
+}

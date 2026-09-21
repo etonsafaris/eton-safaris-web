@@ -8,6 +8,7 @@ import { allowAdminRequest } from '@/lib/admin-request-auth';
 import {
   ADMIN_PAGE_SIZE_DEFAULT,
   ADMIN_PAGE_SIZE_MAX,
+  queryAdminRecordById,
   queryAdminTablePage,
 } from '@/lib/admin-paginated-list';
 import { adminListColumnsFor } from '@/lib/data-server';
@@ -84,12 +85,29 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const table = new URL(request.url).searchParams.get('table')?.trim() || '';
+  const url = new URL(request.url);
+  const table = url.searchParams.get('table')?.trim() || '';
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
   }
 
-  const url = new URL(request.url);
+  const recordId = url.searchParams.get('id')?.trim() || '';
+  if (recordId) {
+    try {
+      const names = TABLE_ALIASES[table] || [table];
+      for (const name of names) {
+        const row = await queryAdminRecordById(name, recordId);
+        if (row) {
+          return NextResponse.json({ row: jsonSafeRows([row])[0] });
+        }
+      }
+      return NextResponse.json({ row: null, error: 'Record not found' }, { status: 404 });
+    } catch (error) {
+      console.error(`[Admin] records GET by id failed for ${table}:`, error);
+      return NextResponse.json({ row: null, error: 'Could not load record' }, { status: 500 });
+    }
+  }
+
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const limit = Math.min(
     ADMIN_PAGE_SIZE_MAX,

@@ -27,9 +27,9 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/admin-records-client';
+import { fetchAdminRecordById, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adminListColumnsFor, fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -184,6 +184,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
+  const [loadingTour, setLoadingTour] = useState(Boolean(tourId));
   const [publishedAt, setPublishedAt] = useState('');
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
@@ -203,26 +204,34 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
 
   useEffect(() => {
     if (!tourId) return;
-    fetchCollectionRecordById('tours', tourId).then((tour) => {
-      if (!tour) return;
+    let active = true;
+    setLoadingTour(true);
+    setError('');
+    void fetchAdminRecordById('tours', tourId).then((tour) => {
+      if (!active) return;
+      setLoadingTour(false);
+      if (!tour) {
+        setError('Could not load this tour. Go back to the list and try Edit again.');
+        return;
+      }
       setSchemaColumns(Object.keys(tour));
-      const embedded = extractEmbeddedContent(String(tour.description || ''));
+      const embedded = extractEmbeddedContent(String(tour.description || tour.content || ''));
       setPublishedAt(recordPublishedAt(tour));
       setForm({
-        title: String(tour.title || ''),
-        description: stripEmbeddedContent(String(tour.description || '')),
+        title: String(tour.title || tour.name || ''),
+        description: stripEmbeddedContent(String(tour.description || tour.content || '')),
         highlights: String(tour.highlights || embedded.fields?.highlights || ''),
-        image_url: String(tour.image_url || ''),
+        image_url: String(tour.image_url || tour.cover_image || ''),
         country: String(tour.country || ''),
-        category: String(tour.category || ''),
-        duration_days: String(tour.duration_days ?? ''),
-        price: String(tour.price || ''),
+        category: String(tour.category || tour.category_name || ''),
+        duration_days: String(tour.duration_days ?? tour.duration ?? ''),
+        price: String(tour.price ?? ''),
         price_includes: String(tour.price_includes || embedded.fields?.price_includes || ''),
         price_excludes: String(tour.price_excludes || embedded.fields?.price_excludes || ''),
         journey_details: String(tour.journey_details || embedded.fields?.journey_details || ''),
         journey_map_url: String(tour.journey_map_url || embedded.fields?.journey_map_url || ''),
-        featured: tour.featured !== false,
-        slug: String(tour.slug || ''),
+        featured: tour.featured !== false && tour.is_featured !== false,
+        slug: String(tour.slug || tour.seo_slug || ''),
       });
       setSeo(seoValuesFromRecord(tour as Record<string, unknown>));
       setFaqs(faqsForEditor(tour, 'tours'));
@@ -241,6 +250,9 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         setItineraries([]);
       }
     });
+    return () => {
+      active = false;
+    };
   }, [tourId]);
 
   useEffect(() => {
@@ -403,9 +415,18 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
           {isEdit ? 'Edit Tour Package' : 'Create New Tour Package'}
         </h1>
         <p className="mt-1 text-sm text-[#6b7280]">
-          Fill in the details below to add a new safari experience.
+          {isEdit
+            ? 'Update the saved tour details below, then click Save.'
+            : 'Fill in the details below to add a new safari experience.'}
         </p>
       </div>
+
+      {loadingTour ? (
+        <p className="mt-8 text-sm text-gray-500">Loading saved tour…</p>
+      ) : null}
+      {error ? (
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
+      ) : null}
 
       <div className="mt-8 space-y-8 rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
         <section>
