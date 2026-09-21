@@ -18,6 +18,11 @@ function dropColumnFromSelect(columns: string, column: string) {
     .join(',');
 }
 
+function quoteIdent(name: string) {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) throw new Error(`Invalid SQL identifier: ${name}`);
+  return `"${name}"`;
+}
+
 export function createAdminClient() {
   // Aiven uses the same pool with elevated privileges via DATABASE_URL
   // No separate admin client needed - same connection with write permissions
@@ -35,7 +40,10 @@ export function createServiceClient() {
 }
 
 class AivenAdminTableQuery {
+  private readonly quotedTable: string;
+
   constructor(private table: string) {
+    this.quotedTable = quoteIdent(table);
     this._select = '*';
     this._filters = [];
     this._orFilters = [];
@@ -159,7 +167,7 @@ class AivenAdminTableQuery {
       const buildWhere = () => this.buildFullWhere(params, () => paramIndex++);
 
       if (this._operation === 'delete') {
-        query = `DELETE FROM ${this.table}`;
+        query = `DELETE FROM ${this.quotedTable}`;
         const where = buildWhere();
         if (where) query += ` WHERE ${where}`;
         query += ' RETURNING *';
@@ -168,23 +176,24 @@ class AivenAdminTableQuery {
         const values = Object.values(this._data);
 
         if (this._filters.length > 0 || this._orFilters.length > 0) {
-          const setClause = columns.map((col) => `${col} = $${paramIndex++}`).join(', ');
+          const setClause = columns.map((col) => `${quoteIdent(col)} = $${paramIndex++}`).join(', ');
           const where = buildWhere();
-          query = `UPDATE ${this.table} SET ${setClause} WHERE ${where} RETURNING *`;
+          query = `UPDATE ${this.quotedTable} SET ${setClause} WHERE ${where} RETURNING *`;
           params.unshift(...values);
         } else {
           const placeholders = columns.map(() => `$${paramIndex++}`).join(', ');
-          query = `INSERT INTO ${this.table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`;
+          const columnList = columns.map((col) => quoteIdent(col)).join(', ');
+          query = `INSERT INTO ${this.quotedTable} (${columnList}) VALUES (${placeholders}) RETURNING *`;
           params.push(...values);
         }
       } else {
-        query = `SELECT ${this._select} FROM ${this.table}`;
+        query = `SELECT ${this._select} FROM ${this.quotedTable}`;
         const where = buildWhere();
         if (where) query += ` WHERE ${where}`;
       }
 
       if (this._orderBy && this._operation === 'select') {
-        query += ` ORDER BY ${this._orderBy.column} ${this._orderBy.ascending ? 'ASC' : 'DESC'}`;
+        query += ` ORDER BY ${quoteIdent(this._orderBy.column)} ${this._orderBy.ascending ? 'ASC' : 'DESC'}`;
       }
 
       if (this._limit && this._operation === 'select') {
@@ -226,10 +235,10 @@ class AivenAdminTableQuery {
         params.push(value);
         return `$${nextParam()}`;
       });
-      return `${filter.column} IN (${placeholders.join(', ')})`;
+      return `${quoteIdent(filter.column)} IN (${placeholders.join(', ')})`;
     }
     params.push(filter.value);
-    return `${filter.column} ${filter.operator} $${nextParam()}`;
+    return `${quoteIdent(filter.column)} ${filter.operator} $${nextParam()}`;
   }
 
   private buildFullWhere(params: any[], nextParam: () => number): string {

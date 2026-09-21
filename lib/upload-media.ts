@@ -1,5 +1,7 @@
+import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { optimizeImageFile } from '@/lib/image-optimize';
 import { supabase } from '@/lib/supabase/client';
+import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 
 const BUCKETS = ['media', 'images', 'uploads', 'public'];
 
@@ -34,10 +36,29 @@ async function uploadFile(file: File, folder: string) {
 }
 
 async function uploadViaApi(file: File, folder: string) {
-  const body = new FormData();
-  body.append('file', file);
-  body.append('folder', folder);
-  const response = await fetch('/api/upload', { method: 'POST', body, credentials: 'include' });
+  await syncAdminSessionCookie().catch(() => false);
+
+  const token =
+    (await supabase.auth.getSession()).data.session?.access_token || readStoredAccessToken();
+
+  async function postOnce() {
+    const body = new FormData();
+    body.append('file', file);
+    body.append('folder', folder);
+    return fetch('/api/upload', {
+      method: 'POST',
+      body,
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  }
+
+  let response = await postOnce();
+  if (response.status === 401) {
+    await syncAdminSessionCookie(token);
+    response = await postOnce();
+  }
+
   const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
   if (!response.ok || !payload.url) {
     throw new Error(payload.error || 'Image upload failed. Check storage permissions.');

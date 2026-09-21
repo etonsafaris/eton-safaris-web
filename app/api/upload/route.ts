@@ -1,16 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
+import { allowAdminRequest } from '@/lib/admin-request-auth';
 import { saveMediaFile } from '@/lib/media-store';
 
-function hasAdminSession(request: Request) {
-  const cookie = request.headers.get('cookie') || '';
-  return cookie.split(';').some((part) => part.trim() === `${ADMIN_SESSION_COOKIE}=1`);
-}
-
 export async function POST(request: Request) {
-  if (!hasAdminSession(request)) {
+  if (!(await allowAdminRequest(request))) {
     return NextResponse.json({ error: 'Sign in to upload images.' }, { status: 401 });
   }
 

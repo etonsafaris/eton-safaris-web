@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
-import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
-import { requireAdminUser } from '@/lib/require-admin';
+import { allowAdminRequest } from '@/lib/admin-request-auth';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -43,12 +42,7 @@ const TABLE_ALIASES: Record<string, string[]> = {
 };
 
 async function allowAdmin(request: Request) {
-  const cookie = request.headers.get('cookie') || '';
-  if (cookie.split(';').some((part) => part.trim() === `${ADMIN_SESSION_COOKIE}=1`)) {
-    return true;
-  }
-  const auth = await requireAdminUser(request);
-  return auth.ok;
+  return allowAdminRequest(request);
 }
 
 async function loadAgentRows(client: SupabaseClient) {

@@ -1,13 +1,18 @@
+import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
+import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 import type { RecordRow } from '@/lib/types';
 
-async function authHeaders(): Promise<HeadersInit> {
+async function accessTokenForAdmin(): Promise<string> {
   const { data } = await supabase.auth.getSession();
+  return data.session?.access_token || readStoredAccessToken();
+}
+
+async function authHeaders(): Promise<HeadersInit> {
+  const token = await accessTokenForAdmin();
   return {
     'Content-Type': 'application/json',
-    ...(data.session?.access_token
-      ? { Authorization: `Bearer ${data.session.access_token}` }
-      : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -68,13 +73,25 @@ export async function saveAdminRecord(
   payload: Record<string, unknown>,
   id?: string | number | null
 ): Promise<Record<string, unknown>[]> {
-  const response = await fetch('/api/admin/records', {
-    method: 'POST',
-    credentials: 'include',
-    cache: 'no-store',
-    headers: await authHeaders(),
-    body: JSON.stringify({ table, payload, id }),
-  });
+  await syncAdminSessionCookie().catch(() => false);
+
+  const bodyJson = JSON.stringify({ table, payload, id });
+  async function postOnce() {
+    return fetch('/api/admin/records', {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await authHeaders(),
+      body: bodyJson,
+    });
+  }
+
+  let response = await postOnce();
+  if (response.status === 401) {
+    await syncAdminSessionCookie();
+    response = await postOnce();
+  }
+
   const body = (await response.json().catch(() => ({}))) as {
     data?: Record<string, unknown>[];
     error?: string;
@@ -88,14 +105,19 @@ export async function saveWithColumnFallback(
   payload: Record<string, unknown>,
   idOrOptions?: string | number | { id?: string | number | null; keepId?: boolean } | null
 ) {
-  const options = typeof idOrOptions === 'object' && idOrOptions !== null
-    ? idOrOptions
-    : { id: idOrOptions };
-  const data = options.keepId && payload.id == null
-    ? { id: crypto.randomUUID(), ...payload }
-    : payload;
-  const rows = await saveAdminRecord(table, data, options.id);
-  return { data: rows, error: null };
+  const options =
+    typeof idOrOptions === 'object' && idOrOptions !== null ? idOrOptions : { id: idOrOptions };
+  const data =
+    options.keepId && payload.id == null ? { id: crypto.randomUUID(), ...payload } : payload;
+
+  try {
+    const rows = await saveAdminRecord(table, data, options.id);
+    return { data: rows, error: null as { message: string } | null };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not save record';
+    console.error(`[Admin] Save failed (${table}):`, error);
+    return { data: null, error: { message } };
+  }
 }
 
 export const adminAuthHeaders = authHeaders;

@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { db } from '@/lib/supabase/pool';
+import { db, withPgClient } from '@/lib/supabase/pool';
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS media_files (
@@ -29,10 +29,13 @@ export async function saveMediaFile(file: File): Promise<string> {
   const mime = file.type || 'application/octet-stream';
   const filename = file.name || `${id}.bin`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await db.query(
-    'INSERT INTO media_files (id, filename, mime, bytes) VALUES ($1, $2, $3, $4)',
-    [id, filename, mime, buffer]
-  );
+  await withPgClient(async (client) => {
+    await client.query('SET LOCAL statement_timeout = 60000');
+    await client.query(
+      'INSERT INTO media_files (id, filename, mime, bytes) VALUES ($1, $2, $3, $4)',
+      [id, filename, mime, buffer]
+    );
+  });
   return publicMediaPath(id);
 }
 
