@@ -1,5 +1,6 @@
 // Aiven PostgreSQL admin client for elevated operations
-import { db } from '@/lib/supabase/pool';
+import type { PoolClient } from 'pg';
+import { withPgClient } from '@/lib/supabase/pool';
 
 function missingSelectColumn(message?: string) {
   const text = String(message || '');
@@ -158,9 +159,13 @@ class AivenAdminTableQuery {
   }
 
   async execute(): Promise<{ data: any[] | null; error: { message: string } | null }> {
-    let client;
+    return withPgClient((client) => this.executeWithClient(client));
+  }
+
+  private async executeWithClient(
+    client: PoolClient
+  ): Promise<{ data: any[] | null; error: { message: string } | null }> {
     try {
-      client = await db.connect();
       let query = '';
       const params: any[] = [];
       let paramIndex = 1;
@@ -211,15 +216,11 @@ class AivenAdminTableQuery {
         const next = dropColumnFromSelect(this._select, missing);
         if (next && next !== this._select) {
           this._select = next;
-          client?.release();
-          client = undefined;
-          return this.execute();
+          return this.executeWithClient(client);
         }
       }
       console.error(`[Aiven Admin] Query error on ${this.table}:`, error.message);
       return { data: null, error: { message: error.message } };
-    } finally {
-      client?.release();
     }
   }
 

@@ -11,7 +11,7 @@ import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
-import { db } from '@/lib/supabase/pool';
+import { withPgClient } from '@/lib/supabase/pool';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,11 +23,13 @@ function quoteIdentifier(value: string) {
 async function findRecord(table: string, aliases: string[], id: string | number) {
   for (const name of [table, ...aliases]) {
     try {
-      const result = await db.query<RecordRow>(
-        `SELECT * FROM ${quoteIdentifier(name)} WHERE CAST(id AS text) = $1 LIMIT 1`,
-        [String(id)]
+      const rows = await withPgClient((client) =>
+        client.query<RecordRow>(
+          `SELECT * FROM ${quoteIdentifier(name)} WHERE CAST(id AS text) = $1 LIMIT 1`,
+          [String(id)]
+        )
       );
-      if (result.rows[0]) return result.rows[0];
+      if (rows.rows[0]) return rows.rows[0];
     } catch (error) {
       if (!/relation .* does not exist|column .* does not exist/i.test(error instanceof Error ? error.message : '')) {
         console.error(`[Google Index] Could not load ${name}:`, error);

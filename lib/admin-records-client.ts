@@ -40,11 +40,37 @@ export async function fetchAdminCounts(
   }
 }
 
-export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
+export type AdminTablePageResult = {
+  rows: RecordRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export async function fetchAdminTablePage(
+  table: string,
+  options?: {
+    page?: number;
+    limit?: number;
+    country?: string;
+    park?: string;
+    category?: string;
+  }
+): Promise<AdminTablePageResult> {
   await syncAdminSessionCookie().catch(() => false);
+  const page = Math.max(1, options?.page ?? 1);
+  const limit = Math.min(50, Math.max(1, options?.limit ?? 50));
+  const params = new URLSearchParams({
+    table,
+    page: String(page),
+    limit: String(limit),
+  });
+  if (options?.country) params.set('country', options.country);
+  if (options?.park) params.set('park', options.park);
+  if (options?.category) params.set('category', options.category);
 
   async function getOnce() {
-    return fetch(`/api/admin/records?table=${encodeURIComponent(table)}`, {
+    return fetch(`/api/admin/records?${params.toString()}`, {
       credentials: 'include',
       cache: 'no-store',
       headers: await authHeaders(),
@@ -57,19 +83,32 @@ export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
       await syncAdminSessionCookie();
       response = await getOnce();
     }
-    const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
+    const body = (await response.json().catch(() => ({}))) as {
+      rows?: RecordRow[];
+      total?: number;
+      page?: number;
+      pageSize?: number;
+      error?: string;
+    };
     if (!response.ok) {
       console.warn(`[Admin] Could not load ${table}:`, body.error || response.status);
-      return [];
+      return { rows: [], total: 0, page, pageSize: limit };
     }
-    if (body.error && (!body.rows || body.rows.length === 0)) {
-      console.warn(`[Admin] Could not load ${table}:`, body.error);
-    }
-    return body.rows || [];
+    return {
+      rows: body.rows || [],
+      total: body.total ?? body.rows?.length ?? 0,
+      page: body.page ?? page,
+      pageSize: body.pageSize ?? limit,
+    };
   } catch (error) {
     console.warn(`[Admin] Could not load ${table}:`, error);
-    return [];
+    return { rows: [], total: 0, page, pageSize: limit };
   }
+}
+
+export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
+  const page = await fetchAdminTablePage(table, { page: 1, limit: 50 });
+  return page.rows;
 }
 
 export async function deleteAdminRecord(table: string, id: string | number): Promise<void> {

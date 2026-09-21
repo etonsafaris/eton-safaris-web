@@ -29,9 +29,9 @@ export function getAivenPool(): PgPool | null {
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Pool } = require('pg') as typeof import('pg');
-  const pool =
-    global._aivenPool ||
-    new Pool({
+  let pool = global._aivenPool;
+  if (!pool) {
+    pool = new Pool({
       connectionString: normalizedConnectionString,
       ssl: { rejectUnauthorized: false },
       max: 20,
@@ -40,8 +40,6 @@ export function getAivenPool(): PgPool | null {
       statement_timeout: 12000,
       allowExitOnIdle: true,
     });
-
-  if (!global._aivenPool) {
     global._aivenPool = pool;
     global.aivenPool = pool;
   }

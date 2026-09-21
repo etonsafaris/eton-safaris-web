@@ -13,7 +13,6 @@ import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTabl
 import type { CollectionConfig, FormField, RecordRow } from '@/lib/types';
 import {
   adminListColumnsFor,
-  fetchCollectionPage,
   fetchCollectionRecords,
   fetchParksForCountry,
   formatColumnLabel,
@@ -36,7 +35,7 @@ import NotificationDetailModal from '@/components/admin/NotificationDetailModal'
 import {
   adminAuthHeaders,
   deleteAdminRecord,
-  fetchAdminTable,
+  fetchAdminTablePage,
   saveAdminRecord,
   saveWithColumnFallback,
 } from '@/lib/admin-records-client';
@@ -131,9 +130,15 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
   const [viewingNotice, setViewingNotice] = useState<RecordRow | null>(null);
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
-  const PAGE_SIZE = 48;
+  const PAGE_SIZE = 50;
   const [remoteTotal, setRemoteTotal] = useState(0);
-  const usesRemotePaging = isTours || isNationalPark || isAccommodations || isSafariUpdates || isExplore;
+  const usesRemotePaging =
+    isTours ||
+    isNationalPark ||
+    isAccommodations ||
+    isSafariUpdates ||
+    isExplore ||
+    isOps;
   const { page, setPage, resetPage } = useAdminUrlPage();
   const loadRequestRef = useRef(0);
 
@@ -151,48 +156,37 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         clearCollectionCache(config.table);
         (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
       }
-      const listColumns = adminListColumnsFor(config.table, config.aliases || []);
-      const listOptions = listColumns ? { columns: listColumns } : undefined;
+      const listOptions = adminListColumnsFor(config.table, config.aliases || []);
       let data: RecordRow[] = [];
       let total = 0;
-      if (isOps) {
-        try {
-          data = await fetchAdminTable(config.table);
-          total = data.length;
-        } catch {
-          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
-          total = data.length;
-        }
-      } else if (usesRemotePaging) {
-        const offset = (Math.max(1, page) - 1) * PAGE_SIZE;
-        const paged = await fetchCollectionPage(config.table, config.aliases || [], {
-          columns: listColumns,
+      if (usesRemotePaging && config.table) {
+        const result = await fetchAdminTablePage(config.table, {
+          page,
           limit: PAGE_SIZE,
-          offset,
-          orderBy: 'created_date',
-          filters: {
-            country: isSafariUpdates ? undefined : countryFilter || undefined,
-            park: isAccommodations ? parkFilter || undefined : undefined,
-            category: isTours ? categoryFilter || undefined : undefined,
-          },
+          country: isSafariUpdates ? undefined : countryFilter || undefined,
+          park: isAccommodations ? parkFilter || undefined : undefined,
+          category: isTours ? categoryFilter || undefined : undefined,
         });
-        data = paged.rows;
-        total = paged.total;
+        data = result.rows ?? [];
+        total = result.total ?? 0;
       } else {
-        data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+        const listColumns = listOptions ? { columns: listOptions } : undefined;
+        data = await fetchCollectionRecords(config.table, config.aliases, listColumns);
         total = data.length;
       }
       if (config.id === 'pages') {
         const created = await ensureDefaultCmsPages();
         if (created > 0) {
-          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+          const cols = listOptions ? { columns: listOptions } : undefined;
+          data = await fetchCollectionRecords(config.table, config.aliases, cols);
           total = data.length;
         }
       }
       if (config.id === 'landing_pages') {
         const created = await ensureDefaultLandingPages();
         if (created > 0) {
-          data = await fetchCollectionRecords(config.table, config.aliases, listOptions);
+          const cols = listOptions ? { columns: listOptions } : undefined;
+          data = await fetchCollectionRecords(config.table, config.aliases, cols);
           total = data.length;
         }
       }
@@ -200,14 +194,21 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
       setRemoteTotal(total);
       setRecords(
-        data.slice().sort((a, b) => {
-          const aDate = String(a.created_date || a.created_at || '');
-          const bDate = String(b.created_date || b.created_at || '');
-          return bDate.localeCompare(aDate);
-        }).map((row) => {
-          const id = pickRecordId(row);
-          return id != null && (row.id === undefined || row.id === null || row.id === '') ? { ...row, id } : row;
-        })
+        (data ?? [])
+          .slice()
+          .sort((a, b) => {
+            const aDate = String(a?.created_date || a?.created_at || '');
+            const bDate = String(b?.created_date || b?.created_at || '');
+            return bDate.localeCompare(aDate);
+          })
+          .map((row) => {
+            if (!row || typeof row !== 'object') return row;
+            const id = pickRecordId(row);
+            return id != null && (row.id === undefined || row.id === null || row.id === '')
+              ? { ...row, id }
+              : row;
+          })
+          .filter(Boolean) as RecordRow[]
       );
       if (data.length === 0 && !usesRemotePaging) {
         console.warn(`[Admin] "${config.table}" returned 0 rows.`);
@@ -272,7 +273,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         if (category !== categoryFilter.toLowerCase()) return false;
       }
       if (!needle) return true;
-      return Object.keys(record).some((key) => String(record[key] ?? '').toLowerCase().includes(needle));
+      return Object.keys(record ?? {}).some((key) =>
+        String(record?.[key] ?? '').toLowerCase().includes(needle)
+      );
     });
   }, [records, query, countryFilter, parkFilter, categoryFilter, postKind, isSafariUpdates, isTours, isAccommodations, usesRemotePaging]);
 
@@ -424,8 +427,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   }
 
   function cardTitle(record: RecordRow) {
-    if (isTours) return pickString(record, ['title', 'name']) || getRecordTitle(record);
-    return getRecordTitle(record);
+    if (!record) return 'Untitled';
+    if (isTours) return pickString(record, ['title', 'name']) || getRecordTitle(record) || 'Untitled';
+    return getRecordTitle(record) || pickString(record, ['title', 'name', 'email']) || 'Untitled';
   }
 
   function cardDate(record: RecordRow) {
@@ -1193,14 +1197,45 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           No records found in this collection.
         </div>
       ) : isOps ? (
-        <OpsRecordTable
-          columns={opsColumns()}
-          records={filtered}
-          extraActions={opsActions}
-          onEdit={isNotifications ? undefined : openEdit}
-          onView={isNotifications ? (record) => void viewNotification(record) : undefined}
-          onDelete={remove}
-        />
+        <>
+          <OpsRecordTable
+            columns={opsColumns()}
+            records={filtered}
+            extraActions={opsActions}
+            onEdit={isNotifications ? undefined : openEdit}
+            onView={isNotifications ? (record) => void viewNotification(record) : undefined}
+            onDelete={remove}
+          />
+          {totalPages > 1 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-[#161b22]">
+              <p className="text-gray-600 dark:text-gray-400">
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, listTotal)} of {listTotal.toLocaleString()}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 disabled:opacity-40 dark:border-white/10"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Page {page} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 disabled:opacity-40 dark:border-white/10"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </>
       ) : (
         <>
           {error ? (

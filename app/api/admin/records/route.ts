@@ -1,8 +1,15 @@
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { allowAdminRequest } from '@/lib/admin-request-auth';
+import {
+  ADMIN_PAGE_SIZE_DEFAULT,
+  ADMIN_PAGE_SIZE_MAX,
+  queryAdminTablePage,
+} from '@/lib/admin-paginated-list';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -82,46 +89,66 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
   }
 
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+  const limit = Math.min(
+    ADMIN_PAGE_SIZE_MAX,
+    Math.max(1, Number(url.searchParams.get('limit')) || ADMIN_PAGE_SIZE_DEFAULT)
+  );
+  const offset = (page - 1) * limit;
+  const filters = {
+    country: url.searchParams.get('country')?.trim() || undefined,
+    park: url.searchParams.get('park')?.trim() || undefined,
+    category: url.searchParams.get('category')?.trim() || undefined,
+  };
+
   try {
-    // Prefer service role for admin reads so RLS does not empty ops tables.
-    const client = hasServiceRoleKey()
-      ? createAdminClient()
-      : createWriteClient(bearerTokenFromRequest(request));
     if (table === 'registered_agents') {
+      const client = hasServiceRoleKey()
+        ? createAdminClient()
+        : createWriteClient(bearerTokenFromRequest(request));
       const rows = await loadAgentRows(client);
       if (rows.error) {
-        return NextResponse.json({ error: rows.error }, { status: 400 });
+        return NextResponse.json({ error: rows.error, rows: [], total: 0 }, { status: 400 });
       }
-      return NextResponse.json({ rows: jsonSafeRows(rows.data) });
+      const all = rows.data || [];
+      const slice = all.slice(offset, offset + limit);
+      return NextResponse.json({
+        rows: jsonSafeRows(slice),
+        total: all.length,
+        page,
+        pageSize: limit,
+      });
     }
 
     const names = TABLE_ALIASES[table] || [table];
+    const listSelect = adminListColumnsFor(table) || adminListColumnsFor(names[0]) || undefined;
     let lastMessage = '';
+
     for (const name of names) {
-      const listSelect = adminListColumnsFor(name) || adminListColumnsFor(table) || '*';
-      // Schema uses created_date (Base44 legacy), not created_at.
-      const orderedByDate = await client.from(name).select(listSelect).order('created_date', { ascending: false });
-      if (!orderedByDate.error) {
-        return NextResponse.json({ rows: jsonSafeRows(orderedByDate.data || []) });
+      const result = await queryAdminTablePage(name, {
+        limit,
+        offset,
+        columns: listSelect || adminListColumnsFor(name),
+        filters,
+      });
+      if (result.rows.length > 0 || result.total > 0 || name === names[names.length - 1]) {
+        return NextResponse.json({
+          rows: jsonSafeRows(result.rows),
+          total: result.total,
+          page,
+          pageSize: limit,
+        });
       }
-      const orderedByAt = await client.from(name).select(listSelect).order('created_at', { ascending: false });
-      if (!orderedByAt.error) {
-        return NextResponse.json({ rows: jsonSafeRows(orderedByAt.data || []) });
-      }
-      const fallback = await client.from(name).select(listSelect);
-      if (!fallback.error) {
-        return NextResponse.json({ rows: jsonSafeRows(fallback.data || []) });
-      }
-      lastMessage = isRlsError(fallback.error.message)
-        ? rlsHelpMessage(`Loading ${name}`)
-        : fallback.error.message;
+      lastMessage = `No rows in ${name}`;
     }
-    console.warn(`[Admin] records GET failed for ${table}:`, lastMessage);
-    return NextResponse.json({ rows: [], error: lastMessage || `Could not load ${table}` });
+
+    console.warn(`[Admin] records GET empty for ${table}:`, lastMessage);
+    return NextResponse.json({ rows: [], total: 0, page, pageSize: limit, error: lastMessage });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not load records';
     console.error(`[Admin] records GET error for ${table}:`, error);
-    return NextResponse.json({ rows: [], error: message });
+    return NextResponse.json({ rows: [], total: 0, error: message }, { status: 500 });
   }
 }
 
