@@ -17,6 +17,7 @@ import {
   fetchCollectionRecordById,
   fetchCollectionRecords,
   fetchCollectionPage,
+  fetchPublicSafariUpdatesPage,
   fetchFeaturedTours,
   fetchParksForCountry,
   fetchRecordByPublicSlug,
@@ -156,25 +157,11 @@ export async function loadHomePageData() {
     ),
     withTimeout(fetchFeaturedTours(12), 12000, [] as RecordRow[]),
     withTimeout(
-      fetchCollectionRecords('safari_updates', [], {
-        columns: listColumns('safari_updates'),
-        maxRows: 16,
-      })
-        .then((rows) => ({
-          rows: rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)),
-          total: rows.length,
-        }))
-        .catch(() =>
-          fetchCollectionPage('safari_updates', [], {
-            columns: listColumns('safari_updates'),
-            limit: 16,
-            offset: 0,
-          }).then((page) => ({
-            rows: page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)),
-            total: page.total,
-          }))
-        ),
-      12000,
+      fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((page) => ({
+        rows: page.rows,
+        total: page.total,
+      })),
+      15000,
       emptyPage
     ),
     withTimeout(
@@ -372,17 +359,16 @@ export async function loadParksPageData(options?: { limit?: number; offset?: num
 export async function loadSafariUpdatesPageData(options?: { limit?: number; offset?: number }) {
   try {
     const page = await withTimeout(
-      fetchCollectionPage('safari_updates', [], {
-        columns: listColumns('safari_updates'),
+      fetchPublicSafariUpdatesPage({
         limit: options?.limit ?? 48,
         offset: options?.offset ?? 0,
       }),
-      6000,
+      15000,
       { rows: [] as RecordRow[], total: 0 }
     );
-    const posts = page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
-    return toClientProps({ posts, total: Math.max(page.total, posts.length) });
-  } catch {
+    return toClientProps({ posts: page.rows, total: page.total });
+  } catch (error) {
+    console.warn('[Public] Safari updates listing failed:', error);
     return { posts: [] as RecordRow[], total: 0 };
   }
 }
@@ -443,16 +429,16 @@ export async function loadSafariUpdateDetail(slug: string) {
     const [post, updatePage] = await Promise.all([
       fetchPublicRecordResilient('safari_updates', slug),
       withTimeout(
-        fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
-        6000,
+        fetchPublicSafariUpdatesPage({ limit: 20, offset: 0 }),
+        12000,
         { rows: [] as RecordRow[], total: 0 }
       ),
     ]);
-    const published = post && isPublishedRecord(post) ? post : null;
+    const published =
+      post && isPublishedRecord(post) && !isLanguagePost(post) ? post : null;
     const related = published
       ? (updatePage?.rows ?? [])
-          .filter(isPublishedRecord)
-          .filter((row) => String(row?.id) !== String(published.id || '') && !isLanguagePost(row))
+          .filter((row) => String(row?.id) !== String(published.id || ''))
           .slice(0, 20)
       : [];
     const country = published ? pickStoredString(published, ['country', 'category']) : '';
@@ -726,13 +712,11 @@ export async function loadStaticExploreParams(): Promise<{ slug: string }[]> {
 
 export async function loadStaticSafariUpdateParams(): Promise<{ slug: string }[]> {
   try {
-    const page = await fetchCollectionPage('safari_updates', [], {
+    const page = await fetchPublicSafariUpdatesPage({
       limit: STATIC_DETAIL_BUILD_LIMIT,
       offset: 0,
     });
     return page.rows
-      .filter(isPublishedRecord)
-      .filter((row) => !isLanguagePost(row))
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
       .map((slug) => ({ slug }));

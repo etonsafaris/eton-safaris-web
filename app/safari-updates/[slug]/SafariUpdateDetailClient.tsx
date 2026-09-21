@@ -55,16 +55,18 @@ export default function SafariUpdateDetailClient({
   }, [initialPost, initialRelated, initialTours]);
 
   useEffect(() => {
-    if (serverGate.current && live === 0) return;
+    if ((serverGate.current || initialPost) && live === 0) return;
     async function load() {
       try {
         const [full, updatePage] = await Promise.all([
           fetchRecordByPublicSlug('safari_updates', slug),
           fetchCollectionPage('safari_updates', [], { limit: 20, offset: 0 }),
         ]);
-        const published = full && isPublishedRecord(full) ? full : null;
+        const published =
+          full && isPublishedRecord(full) && !isLanguagePost(full) ? full : null;
         if (!published) {
-          if (!serverGate.current) triggerNotFound();
+          if (initialPost && isPublishedRecord(initialPost) && !isLanguagePost(initialPost)) return;
+          if (!serverGate.current && !initialPost) triggerNotFound();
           return;
         }
         setPost(published);
@@ -91,7 +93,7 @@ export default function SafariUpdateDetailClient({
       }
     }
     void load();
-  }, [slug, live, router, serverGate]);
+  }, [slug, live, router, serverGate, initialPost]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = post ? getRecordImage(post) || undefined : undefined;

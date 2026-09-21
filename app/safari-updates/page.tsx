@@ -13,6 +13,7 @@ import {
   recordPublishedAt,
 } from '@/lib/data';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
+import { resolvePublicImage } from '@/lib/public-image';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
@@ -70,7 +71,7 @@ export default async function SafariUpdatesPage({
                 <PublicListingCard
                   key={String(post.id ?? index)}
                   href={`/safari-updates/${publicRecordSlug(post)}`}
-                  image={getRecordImage(post) || undefined}
+                  image={resolvePublicImage(getRecordImage(post) || '', SITE_MEDIA.safariUpdatesHero) || undefined}
                   title={getRecordTitle(post)}
                   date={formatPublishedDate(post)}
                   description={recordCardBlurb(post)}

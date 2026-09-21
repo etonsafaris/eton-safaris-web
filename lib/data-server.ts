@@ -508,7 +508,7 @@ async function fetchCollectionRecordsLive(
     for (const name of names) {
       try {
         const rows = await fetchAllRecords(name, columns, maxRows);
-        if (FETCH_CACHE_MS > 0) {
+        if (FETCH_CACHE_MS > 0 && rows.length > 0) {
           setCachedCollection(cacheKey, rows, FETCH_CACHE_MS);
         }
         return rows;
@@ -665,9 +665,18 @@ export async function fetchCollectionPage(
           }
         }
         if (/created_date/i.test(detail) && orderBy === 'created_date') {
+          return fetchCollectionPage(table, aliases, { ...options, orderBy: 'published_at' });
+        }
+        if (/published_at/i.test(detail) && orderBy === 'published_at') {
+          return fetchCollectionPage(table, aliases, { ...options, orderBy: 'publish_date' });
+        }
+        if (/publish_date/i.test(detail) && orderBy === 'publish_date') {
           return fetchCollectionPage(table, aliases, { ...options, orderBy: 'created_at' });
         }
         if (/created_at/i.test(detail) && orderBy === 'created_at') {
+          return fetchCollectionPage(table, aliases, { ...options, orderBy: 'id' });
+        }
+        if (/column .* does not exist/i.test(detail) && orderBy === 'id') {
           return fetchCollectionPage(table, aliases, { ...options, orderBy: '' });
         }
         if (!isTransientFetchError(detail)) {
@@ -682,6 +691,62 @@ export async function fetchCollectionPage(
 
   if (lastError) throw lastError;
   return { rows: [], total: 0 };
+}
+
+const SAFARI_UPDATE_PUBLIC_LIST_FALLBACK =
+  'id,title,slug,seo_slug,excerpt,category,country,image_url,social_image_url,post_type,publish_date,published_at,created_date,created_at,status,published,is_published';
+
+export function filterPublicSafariUpdates(rows: RecordRow[]): RecordRow[] {
+  return rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
+}
+
+/** Blog listing — direct Aiven query (no 15m empty Data Cache) with sort column fallbacks. */
+export async function fetchPublicSafariUpdatesPage(options?: {
+  limit?: number;
+  offset?: number;
+}): Promise<{ rows: RecordRow[]; total: number }> {
+  const limit = Math.max(1, Math.min(options?.limit ?? 48, 200));
+  const offset = Math.max(0, options?.offset ?? 0);
+  const initialColumns = publicListColumnsFor('safari_updates') || SAFARI_UPDATE_PUBLIC_LIST_FALLBACK;
+  const orderColumns = ['published_at', 'publish_date', 'created_date', 'created_at', 'id'];
+
+  for (const orderColumn of orderColumns) {
+    try {
+      const raw = await queryWithColumnFallback(
+        (cols) => ({
+          text: `SELECT ${cols} FROM safari_updates ORDER BY ${orderColumn} DESC NULLS LAST OFFSET ${offset} LIMIT ${limit}`,
+          values: [],
+        }),
+        initialColumns,
+        'safari_updates::public-list'
+      );
+      const rows = filterPublicSafariUpdates(raw);
+      const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
+      return { rows, total };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      if (!/column .* does not exist|does not exist/i.test(detail)) {
+        console.warn('[Aiven] Safari updates list query failed:', detail);
+      }
+    }
+  }
+
+  try {
+    const raw = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM safari_updates OFFSET ${offset} LIMIT ${limit}`,
+        values: [],
+      }),
+      initialColumns,
+      'safari_updates::public-list'
+    );
+    const rows = filterPublicSafariUpdates(raw);
+    const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
+    return { rows, total };
+  } catch (error) {
+    console.error('[Aiven] Safari updates fallback list failed:', error);
+    return { rows: [], total: 0 };
+  }
 }
 
 const TOUR_SELECT_CACHE_KEY = 'tours::list';

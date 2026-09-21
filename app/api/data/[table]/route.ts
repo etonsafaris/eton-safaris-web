@@ -106,9 +106,10 @@ export async function GET(
     }
   }
   for (const clause of [
+    ' ORDER BY published_at DESC',
+    ' ORDER BY publish_date DESC',
     ' ORDER BY created_date DESC',
     ' ORDER BY created_at DESC',
-    ' ORDER BY published_at DESC',
     ' ORDER BY id DESC',
     '',
   ]) {
