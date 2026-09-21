@@ -15,16 +15,24 @@ export async function fetchAdminCounts(
   items: { id: string; table: string; aliases?: string[] }[]
 ): Promise<Record<string, number>> {
   if (items.length === 0) return {};
-  const response = await fetch('/api/admin/counts', {
-    method: 'POST',
-    credentials: 'include',
-    cache: 'no-store',
-    headers: await authHeaders(),
-    body: JSON.stringify({ items }),
-  });
-  const body = (await response.json().catch(() => ({}))) as { counts?: Record<string, number>; error?: string };
-  if (!response.ok) throw new Error(body.error || 'Could not load collection counts');
-  return body.counts || {};
+  try {
+    const response = await fetch('/api/admin/counts', {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await authHeaders(),
+      body: JSON.stringify({ items }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { counts?: Record<string, number>; error?: string };
+    if (!response.ok) {
+      console.warn('[Admin] Counts request failed:', body.error || response.status);
+      return body.counts || {};
+    }
+    return body.counts || {};
+  } catch (error) {
+    console.warn('[Admin] Counts request failed:', error);
+    return {};
+  }
 }
 
 export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
@@ -33,9 +41,17 @@ export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
     cache: 'no-store',
     headers: await authHeaders(),
   });
-  const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
-  if (!response.ok) throw new Error(body.error || `Could not load ${table}`);
-  return body.rows || [];
+  try {
+    const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
+    if (!response.ok) {
+      console.warn(`[Admin] Could not load ${table}:`, body.error || response.status);
+      return [];
+    }
+    return body.rows || [];
+  } catch (error) {
+    console.warn(`[Admin] Could not load ${table}:`, error);
+    return [];
+  }
 }
 
 export async function deleteAdminRecord(table: string, id: string | number): Promise<void> {

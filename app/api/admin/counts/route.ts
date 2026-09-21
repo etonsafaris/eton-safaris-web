@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic';
 
+import type { PoolClient } from 'pg';
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
-import { db } from '@/lib/supabase/pool';
+import { withPgClient } from '@/lib/supabase/pool';
 
 const TABLE_ALIASES: Record<string, string[]> = {
   quotations_inquiries: ['quotations_inquiries', 'quotations'],
@@ -29,9 +30,11 @@ function quoteTable(name: string) {
   return `"${name}"`;
 }
 
-async function countWithMode(name: string) {
+async function countWithClient(client: PoolClient, name: string) {
   try {
-    const result = await db.query<{ count: number }>(`SELECT COUNT(*)::int AS count FROM ${quoteTable(name)}`);
+    const result = await client.query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM ${quoteTable(name)}`
+    );
     return Number(result.rows[0]?.count || 0);
   } catch (error) {
     if (error instanceof Error && isMissingTable(error.message)) return null;
@@ -39,11 +42,15 @@ async function countWithMode(name: string) {
   }
 }
 
-async function countTable(table: string, aliases: string[] = []) {
+async function countTableWithClient(
+  client: PoolClient,
+  table: string,
+  aliases: string[] = []
+) {
   if (table === 'registered_agents') {
     let total = 0;
     for (const name of AGENT_TABLES) {
-      const count = await countWithMode(name);
+      const count = await countWithClient(client, name);
       if (count != null) total += count;
     }
     return total;
@@ -51,19 +58,10 @@ async function countTable(table: string, aliases: string[] = []) {
 
   const names = Array.from(new Set([table, ...(TABLE_ALIASES[table] || []), ...aliases].filter(Boolean)));
   for (const name of names) {
-    const count = await countWithMode(name);
+    const count = await countWithClient(client, name);
     if (count != null) return count;
   }
   return 0;
-}
-
-async function mapInChunks<T, R>(items: T[], fn: (item: T) => Promise<R>, size = 8) {
-  const results: R[] = [];
-  for (let index = 0; index < items.length; index += size) {
-    const chunk = items.slice(index, index + size);
-    results.push(...(await Promise.all(chunk.map(fn))));
-  }
-  return results;
 }
 
 export async function POST(request: Request) {
@@ -84,22 +82,26 @@ export async function POST(request: Request) {
   }
 
   try {
-    const counts: Record<string, number> = {};
-    await mapInChunks(items, async (item) => {
-      if (!item?.id || !item?.table) return;
-      try {
-        counts[item.id] = await countTable(item.table, item.aliases || []);
-      } catch (error) {
-        console.error(`[Admin] Could not count ${item.table}:`, error);
-        counts[item.id] = 0;
+    const counts = await withPgClient(async (client) => {
+      const result: Record<string, number> = {};
+      for (const item of items) {
+        if (!item?.id || !item?.table) continue;
+        try {
+          result[item.id] = await countTableWithClient(client, item.table, item.aliases || []);
+        } catch (error) {
+          console.error(`[Admin] Could not count ${item.table}:`, error);
+          result[item.id] = 0;
+        }
       }
-    }, 4);
-
+      return result;
+    });
     return NextResponse.json({ counts });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not load counts' },
-      { status: 500 }
-    );
+    console.error('[Admin] Counts batch failed:', error);
+    const fallback: Record<string, number> = {};
+    for (const item of items) {
+      if (item?.id) fallback[item.id] = 0;
+    }
+    return NextResponse.json({ counts: fallback });
   }
 }

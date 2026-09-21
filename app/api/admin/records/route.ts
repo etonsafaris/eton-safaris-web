@@ -122,12 +122,12 @@ export async function GET(request: Request) {
         ? rlsHelpMessage(`Loading ${name}`)
         : fallback.error.message;
     }
-    return NextResponse.json({ error: lastMessage || `Could not load ${table}` }, { status: 400 });
+    console.warn(`[Admin] records GET failed for ${table}:`, lastMessage);
+    return NextResponse.json({ rows: [], error: lastMessage || `Could not load ${table}` });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not load records' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Could not load records';
+    console.error(`[Admin] records GET error for ${table}:`, error);
+    return NextResponse.json({ rows: [], error: message });
   }
 }
 

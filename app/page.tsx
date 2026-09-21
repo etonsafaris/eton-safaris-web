@@ -11,6 +11,7 @@ import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
+/** Static on Vercel CDN; refresh from Aiven every 15 minutes. */
 export const revalidate = 900;
 
 export const metadata: Metadata = {
@@ -53,14 +54,19 @@ export default async function HomePage() {
     initialHeroSlides = safeHeroSlides([]);
   }
 
+  const countries = data?.countries ?? [];
+  const tours = data?.tours ?? [];
+  const updates = data?.updates ?? [];
+  const categories = data?.categories ?? [];
+
   return (
     <PublicShellServer>
       <HomePageClient
-        initialHeroSlides={initialHeroSlides}
-        initialCountries={data?.countries ?? []}
-        initialTours={data?.tours ?? []}
-        initialUpdates={data?.updates ?? []}
-        initialCategories={data?.categories ?? []}
+        initialHeroSlides={initialHeroSlides ?? []}
+        initialCountries={countries}
+        initialTours={tours}
+        initialUpdates={updates}
+        initialCategories={categories}
         initialHomeContent={homeContent}
       />
     </PublicShellServer>

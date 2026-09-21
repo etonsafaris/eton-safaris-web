@@ -1,5 +1,4 @@
 /**
- * Legacy path: `lib/supabase/server.ts/server.ts`.
- * Canonical pool + release helpers live in `@/lib/supabase/pool`.
+ * Canonical server DB entry — pool + safe query helpers (`withPgClient` always releases).
  */
-export { aivenFetch, db, getAivenPool, withPgClient } from '@/lib/supabase/pool';
+export { aivenFetch, db, getAivenPool, queryRows, withPgClient } from '@/lib/supabase/pool';

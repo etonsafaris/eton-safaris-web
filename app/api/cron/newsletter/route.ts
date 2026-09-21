@@ -6,7 +6,7 @@ import { SITE } from '@/lib/collections';
 import { deliverIncomingAlert } from '@/lib/deliver-alert';
 import { sendEmail } from '@/lib/email';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
-import { db } from '@/lib/supabase/pool';
+import { withPgClient } from '@/lib/supabase/pool';
 
 
 
@@ -56,23 +56,18 @@ export async function GET(request: Request) {
 
   try {
 
-    const client = await db.connect();
-
-    const [subscribersResult, toursResult, updatesResult] = await Promise.all([
-
-      client.query('SELECT id,email,last_digest_at FROM subscribers'),
-
-      client.query('SELECT id,title,slug,country FROM tours LIMIT 6'),
-
-      client.query('SELECT title,slug FROM safari_updates LIMIT 5'),
-
-    ]);
-
-    client.release();
-
-    const subscribers = subscribersResult.rows;
-    const tours = toursResult.rows;
-    const updates = updatesResult.rows;
+    const { subscribers, tours, updates } = await withPgClient(async (client) => {
+      const [subscribersResult, toursResult, updatesResult] = await Promise.all([
+        client.query('SELECT id,email,last_digest_at FROM subscribers'),
+        client.query('SELECT id,title,slug,country FROM tours LIMIT 6'),
+        client.query('SELECT title,slug FROM safari_updates LIMIT 5'),
+      ]);
+      return {
+        subscribers: subscribersResult.rows,
+        tours: toursResult.rows,
+        updates: updatesResult.rows,
+      };
+    });
 
 
 
