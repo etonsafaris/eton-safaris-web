@@ -549,14 +549,19 @@ export async function fetchCollectionRecords(
       : options?.maxRows ?? defaultCollectionMaxRows(table, aliases);
   const cacheKey = [table, columns, maxRows ?? 'all', ...aliases].join('|');
 
-  return unstable_cache(
-    () => fetchCollectionRecordsLive(table, aliases, columns, maxRows),
-    ['collection-records', cacheKey],
-    {
-      revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
-      tags: [CMS_PUBLIC_CACHE_TAG, `collection:${table}`],
-    }
-  )();
+  try {
+    return await unstable_cache(
+      () => fetchCollectionRecordsLive(table, aliases, columns, maxRows),
+      ['collection-records', cacheKey],
+      {
+        revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+        tags: [CMS_PUBLIC_CACHE_TAG, `collection:${table}`],
+      }
+    )();
+  } catch (error) {
+    console.warn(`[Public] Cached fetch for "${table}" failed; using live fallback.`, error);
+    return fetchCollectionRecordsLive(table, aliases, columns, maxRows);
+  }
 }
 
 /** Exact row count without downloading row payloads (admin dashboard cards). */

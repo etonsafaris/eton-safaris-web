@@ -7,7 +7,8 @@ import {
   resolveHomePageContent,
   safeHeroSlides,
 } from '@/lib/home-page-payload';
-import { loadHomePageContent, loadHomePageData } from '@/lib/load-public';
+import { loadHomePageBundle } from '@/lib/load-public';
+import type { PublicDestination } from '@/lib/public-destinations';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
@@ -31,19 +32,15 @@ export default async function HomePage() {
   let homeContent = resolveHomePageContent(null);
   let initialHeroSlides = safeHeroSlides([]);
 
+  let navDestinations: PublicDestination[] | undefined;
   try {
-    const loaded = await loadHomePageData();
-    data = normalizeHomePagePayload(loaded);
+    const bundle = await loadHomePageBundle();
+    data = normalizeHomePagePayload(bundle.data);
+    homeContent = resolveHomePageContent(bundle.content);
+    navDestinations = bundle.destinations;
   } catch (error) {
-    console.error('[Public] Home page data failed:', error);
+    console.error('[Public] Home page bundle failed:', error);
     data = EMPTY_HOME_PAGE_PAYLOAD;
-  }
-
-  try {
-    const content = await loadHomePageContent();
-    homeContent = resolveHomePageContent(content);
-  } catch (error) {
-    console.error('[Public] Home page content failed:', error);
     homeContent = resolveHomePageContent(null);
   }
 
@@ -60,7 +57,7 @@ export default async function HomePage() {
   const categories = data?.categories ?? [];
 
   return (
-    <PublicShellServer>
+    <PublicShellServer initialDestinations={navDestinations}>
       <HomePageClient
         initialHeroSlides={initialHeroSlides ?? []}
         initialCountries={countries}

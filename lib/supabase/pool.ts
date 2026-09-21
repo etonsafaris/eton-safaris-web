@@ -47,15 +47,42 @@ export function getAivenPool(): PgPool | null {
   return global._aivenPool;
 }
 
+/** Caps parallel connects so ISR + admin + homepage do not exhaust Aiven (20 conn). */
+const PG_SLOT_MAX = 8;
+let pgSlotsInUse = 0;
+const pgSlotWaiters: Array<() => void> = [];
+
+function acquirePgSlot(): Promise<void> {
+  if (pgSlotsInUse < PG_SLOT_MAX) {
+    pgSlotsInUse += 1;
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    pgSlotWaiters.push(() => {
+      pgSlotsInUse += 1;
+      resolve();
+    });
+  });
+}
+
+function releasePgSlot() {
+  pgSlotsInUse = Math.max(0, pgSlotsInUse - 1);
+  const next = pgSlotWaiters.shift();
+  if (next) next();
+}
+
 /** Preferred API: one client per operation, always released in `finally`. */
 export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getAivenPool();
   if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-  const client = await pool.connect();
+  await acquirePgSlot();
+  let client: PoolClient | null = null;
   try {
+    client = await pool.connect();
     return await fn(client);
   } finally {
-    client.release();
+    client?.release();
+    releasePgSlot();
   }
 }
 

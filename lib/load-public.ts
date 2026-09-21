@@ -1,5 +1,7 @@
+import { CMS_PUBLIC_CACHE_TAG, CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
 import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
+import { unstable_cache } from 'next/cache';
 import {
   categoryMatchesCountry,
   categoryPublicSlug,
@@ -129,15 +131,39 @@ async function fetchPublicRecordResilient(
 
 export async function loadHomePageContent(): Promise<HomePageContent | null> {
   try {
-    const columns = listColumns('pages');
-    const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
+    const slugCandidates = [
+      HOME_PAGE_SLUG,
+      ...pageAliases(HOME_PAGE_SLUG),
+      'home',
+      'homepage',
+    ];
+    const seen = new Set<string>();
+    for (const slug of slugCandidates) {
+      const key = normalizeSlug(slug);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const row = await withTimeout(fetchRecordByPublicSlug('pages', slug), 8000, null);
+      if (row && isPublishedRecord(row)) {
+        return parseHomePageContent(row);
+      }
+    }
+
+    const page = await withTimeout(
+      fetchCollectionPage('pages', [], {
+        columns: listColumns('pages'),
+        limit: 8,
+        offset: 0,
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
     const match =
-      matchCmsRecord(rows, HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG).concat(['home', 'homepage'])) ||
-      rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
+      page.rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
+      page.rows.find((row) => isPublishedRecord(row)) ||
       null;
     if (!match || !isPublishedRecord(match)) return null;
     const id = String(match.id || '');
-    const full = id ? await fetchCollectionRecordById('pages', id) : match;
+    const full = id ? await withTimeout(fetchCollectionRecordById('pages', id), 8000, match) : match;
     return parseHomePageContent(full || match);
   } catch {
     return null;
@@ -146,39 +172,55 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
 
 export async function loadHomePageData() {
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
-  const [countries, tours, updatesPage, categories] = await Promise.all([
-    withTimeout(
+  try {
+    const countries = await withTimeout(
       fetchCollectionRecords('countries', [], {
         columns: listColumns('countries'),
         maxRows: 48,
       }).then((rows) => rows.filter(isPublishedRecord)),
-      6000,
+      8000,
       [] as RecordRow[]
-    ),
-    withTimeout(fetchFeaturedTours(12), 12000, [] as RecordRow[]),
-    withTimeout(
+    );
+    const tours = await withTimeout(fetchFeaturedTours(12), 12000, [] as RecordRow[]);
+    const updatesPage = await withTimeout(
       fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((page) => ({
         rows: page.rows,
         total: page.total,
       })),
       15000,
       emptyPage
-    ),
-    withTimeout(
+    );
+    const categories = await withTimeout(
       fetchCollectionRecords('categories', [], {
         columns: listColumns('categories'),
         maxRows: 64,
       }).then((rows) => rows.filter(isPublishedRecord)),
-      6000,
+      8000,
       [] as RecordRow[]
-    ),
-  ]);
-  return toClientProps({
-    countries,
-    tours: tours.slice(0, 12),
-    updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
-    categories,
-  });
+    );
+    return toClientProps({
+      countries,
+      tours: tours.slice(0, 12),
+      updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
+      categories,
+    });
+  } catch (error) {
+    console.warn('[Public] loadHomePageData failed:', error);
+    return toClientProps({
+      countries: [] as RecordRow[],
+      tours: [] as RecordRow[],
+      updates: [] as RecordRow[],
+      categories: [] as RecordRow[],
+    });
+  }
+}
+
+/** One homepage pass: fewer parallel DB connects, nav reused from countries. */
+export async function loadHomePageBundle() {
+  const data = await loadHomePageData();
+  const content = await loadHomePageContent();
+  const destinations = mergePublicDestinations(data.countries ?? []);
+  return { data, content, destinations };
 }
 
 export async function loadAccommodationsPageData(options?: { limit?: number; offset?: number }) {
@@ -746,19 +788,26 @@ export async function loadSafariUpdatesNav(limit = 8): Promise<PublicSafariUpdat
   }
 }
 
-/** Header/footer destination chips — loaded once per cached PublicShell render. */
-export async function loadPublicNavDestinations(): Promise<PublicDestination[]> {
+async function loadPublicNavDestinationsLive(): Promise<PublicDestination[]> {
   try {
     const rows = await withTimeout(
       fetchCollectionRecords('countries', [], {
         columns: listColumns('countries'),
         maxRows: 48,
       }).then((data) => data.filter(isPublishedRecord)),
-      5000,
+      8000,
       [] as RecordRow[]
     );
     return mergePublicDestinations(rows);
   } catch {
     return mergePublicDestinations([]);
   }
+}
+
+/** Header/footer destination chips — cached across requests to avoid duplicate country queries. */
+export async function loadPublicNavDestinations(): Promise<PublicDestination[]> {
+  return unstable_cache(loadPublicNavDestinationsLive, ['public-nav-destinations'], {
+    revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+    tags: [CMS_PUBLIC_CACHE_TAG, 'collection:countries'],
+  })();
 }
