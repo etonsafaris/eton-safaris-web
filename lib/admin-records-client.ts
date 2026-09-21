@@ -41,16 +41,29 @@ export async function fetchAdminCounts(
 }
 
 export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
-  const response = await fetch(`/api/admin/records?table=${encodeURIComponent(table)}`, {
-    credentials: 'include',
-    cache: 'no-store',
-    headers: await authHeaders(),
-  });
+  await syncAdminSessionCookie().catch(() => false);
+
+  async function getOnce() {
+    return fetch(`/api/admin/records?table=${encodeURIComponent(table)}`, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await authHeaders(),
+    });
+  }
+
   try {
+    let response = await getOnce();
+    if (response.status === 401) {
+      await syncAdminSessionCookie();
+      response = await getOnce();
+    }
     const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
     if (!response.ok) {
       console.warn(`[Admin] Could not load ${table}:`, body.error || response.status);
       return [];
+    }
+    if (body.error && (!body.rows || body.rows.length === 0)) {
+      console.warn(`[Admin] Could not load ${table}:`, body.error);
     }
     return body.rows || [];
   } catch (error) {

@@ -98,10 +98,21 @@ export async function GET(
   }
 
   const order = url.searchParams.get('order');
-  let orderSql = '';
+  const orderClauses: string[] = [];
   if (order) {
     const match = /^([a-zA-Z_][a-zA-Z0-9_]*)(?:\.(asc|desc))?$/.exec(order);
-    if (match) orderSql = ` ORDER BY ${match[1]} ${(match[2] || 'asc').toUpperCase()}`;
+    if (match && identifier.test(match[1])) {
+      orderClauses.push(` ORDER BY ${match[1]} ${(match[2] || 'asc').toUpperCase()}`);
+    }
+  }
+  for (const clause of [
+    ' ORDER BY created_date DESC',
+    ' ORDER BY created_at DESC',
+    ' ORDER BY published_at DESC',
+    ' ORDER BY id DESC',
+    '',
+  ]) {
+    if (!orderClauses.includes(clause)) orderClauses.push(clause);
   }
   const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
 
@@ -110,29 +121,39 @@ export async function GET(
     client = await db.connect();
     let result;
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      try {
-        result = await client.query(
-          `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
-          params
-        );
-        break;
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        const missing = columns !== '*' ? missingSelectColumn(detail) : null;
-        if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
-          const next = dropColumnFromSelect(columns, missing);
-          if (next && next !== columns) {
-            console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
-            columns = next;
+      let lastError: unknown = null;
+      for (const orderSql of orderClauses) {
+        try {
+          result = await client.query(
+            `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
+            params
+          );
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+          const detail = error instanceof Error ? error.message : String(error);
+          if (/column .* does not exist/i.test(detail) && orderSql) {
             continue;
           }
+          const missing = columns !== '*' ? missingSelectColumn(detail) : null;
+          if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
+            const next = dropColumnFromSelect(columns, missing);
+            if (next && next !== columns) {
+              console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
+              columns = next;
+              break;
+            }
+          }
+          if (listColumns && columns !== listColumns && columns !== '*') {
+            columns = listColumns;
+            break;
+          }
+          throw error;
         }
-        if (listColumns && columns !== listColumns && columns !== '*') {
-          columns = listColumns;
-          continue;
-        }
-        throw error;
       }
+      if (result) break;
+      if (lastError) throw lastError;
     }
     if (!result) {
       return NextResponse.json({ data: [], total: 0 }, { status: 200 });

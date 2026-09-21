@@ -87,17 +87,23 @@ export async function fetchCollectionPage(
   if (!browser()) return fetchCollectionPageServer(table, aliases, options);
   const params = new URLSearchParams();
   const select = options?.columns || (table === 'tours' ? TOUR_LIST_SELECT : undefined);
+  const pageLimit = options?.limit || 48;
+  const pageOffset = options?.offset ?? 0;
   if (select) params.set('select', select);
-  if (options?.limit) params.set('limit', String(options.limit));
-  if (options?.offset) params.set('range', `${options.offset}-${(options.offset + (options.limit || 48)) - 1}`);
+  params.set('limit', String(pageLimit));
+  params.set('range', `${pageOffset}-${pageOffset + pageLimit - 1}`);
   if (options?.orderBy) params.set('order', `${options.orderBy}.${options.ascending === false ? 'desc' : 'asc'}`);
   params.set('count', '1');
   const filters = options?.filters || {};
   if (filters.country) params.set('ilike.country', `%${filters.country}%`);
   if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
   if (filters.category) params.set('ilike.category', `%${filters.category}%`);
-  const response = await fetch(dataUrl(table, params), { cache: 'default' });
-  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+  const response = await fetch(dataUrl(table, params), { cache: 'no-store', credentials: 'same-origin' });
+  const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[]; total?: number; message?: string };
+  if (!response.ok) {
+    console.warn(`[Admin data] ${table} page failed:`, body.message || response.status);
+    return { rows: [], total: 0 };
+  }
   return { rows: body.data || [], total: body.total ?? body.data?.length ?? 0 };
 }
 
