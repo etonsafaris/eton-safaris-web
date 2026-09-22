@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { publicListColumnsFor } from '@/lib/data-server';
-import { db } from '@/lib/supabase/pool';
+import { withPgClient } from '@/lib/supabase/pool';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,66 +117,66 @@ export async function GET(
   }
   const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
 
-  let client;
   try {
-    client = await db.connect();
-    let result;
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      let lastError: unknown = null;
-      for (const orderSql of orderClauses) {
-        try {
-          result = await client.query(
-            `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
-            params
-          );
-          lastError = null;
-          break;
-        } catch (error) {
-          lastError = error;
-          const detail = error instanceof Error ? error.message : String(error);
-          if (/column .* does not exist/i.test(detail) && orderSql) {
-            continue;
-          }
-          const missing = columns !== '*' ? missingSelectColumn(detail) : null;
-          if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
-            const next = dropColumnFromSelect(columns, missing);
-            if (next && next !== columns) {
-              console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
-              columns = next;
+    return await withPgClient(async (client) => {
+      let result;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        let lastError: unknown = null;
+        for (const orderSql of orderClauses) {
+          try {
+            result = await client.query(
+              `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
+              params
+            );
+            lastError = null;
+            break;
+          } catch (error) {
+            lastError = error;
+            const detail = error instanceof Error ? error.message : String(error);
+            if (/column .* does not exist/i.test(detail) && orderSql) {
+              continue;
+            }
+            const missing = columns !== '*' ? missingSelectColumn(detail) : null;
+            if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
+              const next = dropColumnFromSelect(columns, missing);
+              if (next && next !== columns) {
+                console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
+                columns = next;
+                break;
+              }
+            }
+            if (listColumns && columns !== listColumns && columns !== '*') {
+              columns = listColumns;
               break;
             }
+            throw error;
           }
-          if (listColumns && columns !== listColumns && columns !== '*') {
-            columns = listColumns;
-            break;
-          }
-          throw error;
         }
+        if (result) break;
+        if (lastError) throw lastError;
       }
-      if (result) break;
-      if (lastError) throw lastError;
-    }
-    if (!result) {
-      return NextResponse.json({ data: [], total: 0 }, { status: 200 });
-    }
-    let total = result.rows.length;
-    if (url.searchParams.get('count') === '1' && table !== 'tours') {
-      const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
-      total = countResult.rows[0]?.total || 0;
-    } else if (url.searchParams.get('count') === '1') {
-      total = result.rows.length < limit ? offset + result.rows.length : offset + result.rows.length + limit;
-    }
-    return NextResponse.json(
-      { data: result.rows, total },
-      { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' } }
-    );
+      if (!result) {
+        return NextResponse.json({ data: [], total: 0 }, { status: 200 });
+      }
+      let total = result.rows.length;
+      if (url.searchParams.get('count') === '1' && table !== 'tours') {
+        const countResult = await client.query(`SELECT COUNT(*)::int AS total FROM ${table}${whereSql}`, params);
+        total = countResult.rows[0]?.total || 0;
+      } else if (url.searchParams.get('count') === '1') {
+        total = result.rows.length < limit ? offset + result.rows.length : offset + result.rows.length + limit;
+      }
+      return NextResponse.json(
+        { data: result.rows, total },
+        { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' } }
+      );
+    });
   } catch (error) {
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
+    const message = error instanceof Error ? error.message : 'Could not load data';
+    const status = /too many clients/i.test(message) ? 503 : 503;
     return NextResponse.json(
-      { data: [], error: true, message: 'Could not load data' },
-      { status: 503 }
+      { data: [], error: true, message },
+      { status }
     );
-  } finally {
-    client?.release();
   }
 }

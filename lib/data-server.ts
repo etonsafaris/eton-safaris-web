@@ -330,7 +330,7 @@ async function queryWithColumnFallback(
 }
 
 function isTransientFetchError(message?: string) {
-  return /timeout|terminated|fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|Connect Timeout|520|502|503|504|schema cache|connection/i.test(
+  return /timeout|terminated|fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|Connect Timeout|520|502|503|504|schema cache|connection|too many clients/i.test(
     String(message || '')
   );
 }

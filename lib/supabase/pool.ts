@@ -31,12 +31,14 @@ export function getAivenPool(): PgPool | null {
   const { Pool } = require('pg') as typeof import('pg');
   let pool = global._aivenPool;
   if (!pool) {
+    const poolMax = Math.max(1, Math.min(20, Number(process.env.PG_POOL_MAX) || 4));
     pool = new Pool({
       connectionString: normalizedConnectionString,
       ssl: { rejectUnauthorized: false },
-      max: 20,
-      idleTimeoutMillis: 15000,
-      connectionTimeoutMillis: 4500,
+      // Aiven free tier = 20 connections total (dev + prod + admin). Keep per-process low.
+      max: poolMax,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 8000,
       statement_timeout: 12000,
       allowExitOnIdle: true,
     });
@@ -47,8 +49,8 @@ export function getAivenPool(): PgPool | null {
   return global._aivenPool;
 }
 
-/** Caps parallel connects so ISR + admin + homepage do not exhaust Aiven (20 conn). */
-const PG_SLOT_MAX = 8;
+/** Caps parallel connects so ISR + admin + uploads do not exhaust Aiven (20 conn). */
+const PG_SLOT_MAX = Math.max(1, Math.min(8, Number(process.env.PG_SLOT_MAX) || 3));
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
@@ -95,10 +97,25 @@ export async function queryRows<T extends QueryResultRow = QueryResultRow>(
 }
 
 export const db = {
-  connect() {
+  async connect(): Promise<PoolClient> {
     const pool = getAivenPool();
     if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-    return pool.connect();
+    await acquirePgSlot();
+    try {
+      const client = await pool.connect();
+      const originalRelease = client.release.bind(client);
+      let released = false;
+      client.release = (err?: boolean | Error) => {
+        if (released) return;
+        released = true;
+        originalRelease(err);
+        releasePgSlot();
+      };
+      return client;
+    } catch (error) {
+      releasePgSlot();
+      throw error;
+    }
   },
   async query<T extends QueryResultRow = QueryResultRow>(
     text: string,

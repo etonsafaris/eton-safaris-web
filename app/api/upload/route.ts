@@ -22,9 +22,8 @@ export async function POST(request: Request) {
     const url = await saveMediaFile(file);
     return NextResponse.json({ url });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Image upload failed.' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Image upload failed.';
+    const status = /too many clients/i.test(message) ? 503 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
