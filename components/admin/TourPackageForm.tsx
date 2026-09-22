@@ -197,8 +197,8 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
 
   useEffect(() => {
     if (tourId) return;
-    const presetCountry = searchParams.get('country')?.trim();
-    const presetCategory = searchParams.get('category')?.trim();
+    const presetCountry = searchParams?.get('country')?.trim();
+    const presetCategory = searchParams?.get('category')?.trim();
     if (!presetCountry) return;
     setForm((current) => ({
       ...current,
