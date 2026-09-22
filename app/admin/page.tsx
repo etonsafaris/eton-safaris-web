@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { AdminCountsProvider, useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { collectionIcon } from '@/lib/admin-icons';
-import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import { useAdminSession } from '@/components/admin/useAdminSession';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
@@ -12,7 +12,7 @@ import { fetchAdminTable } from '@/lib/admin-records-client';
 import { getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
-export default function AdminOverviewPage() {
+function AdminOverviewPage() {
   const { user } = useAdminSession();
   const { counts, loading: countsLoading } = useAdminCounts();
   const [bookings, setBookings] = useState<RecordRow[]>([]);
@@ -154,5 +154,13 @@ export default function AdminOverviewPage() {
         <BookingPerformanceChart bookings={bookings} loading={loading} />
       </div>
     </div>
+  );
+}
+
+export default function AdminOverviewRoute() {
+  return (
+    <AdminCountsProvider>
+      <AdminOverviewPage />
+    </AdminCountsProvider>
   );
 }

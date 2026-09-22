@@ -7,8 +7,15 @@ const normalizedConnectionString = connectionString
 
 const isServer = typeof window === 'undefined';
 
-/** Aiven free tier = 20 connections total (all apps + dev). Cap each Node process via PG_POOL_MAX. */
-const POOL_MAX = Math.max(1, Math.min(20, Number(process.env.PG_POOL_MAX) || 5));
+/**
+ * Aiven free tier ≈ 20 connections shared by every deploy + dev machine.
+ * On Vercel each lambda is its own process — default to 1 connection per instance.
+ */
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 1 : 3;
+const POOL_MAX = Math.max(
+  1,
+  Math.min(10, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
+);
 
 declare global {
   // eslint-disable-next-line no-var
@@ -27,8 +34,9 @@ function createAivenPool(): PgPool {
     connectionString: normalizedConnectionString,
     ssl: { rejectUnauthorized: false },
     max: POOL_MAX,
-    idleTimeoutMillis: 15000,
-    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 8000,
+    maxUses: 750,
     statement_timeout: 12000,
     allowExitOnIdle: true,
   });
@@ -56,7 +64,7 @@ export function getAivenPool(): PgPool | null {
 export const getPool = getAivenPool;
 
 /** Caps parallel checkout so ISR + admin + uploads do not exhaust Aiven (20 conn). */
-const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || 3));
+const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || 1));
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
@@ -119,8 +127,10 @@ export const db = {
   async connect(): Promise<PoolClient> {
     const pool = getAivenPool();
     if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-    await acquirePgSlot();
+    let slotHeld = false;
     try {
+      await acquirePgSlot();
+      slotHeld = true;
       const client = await pool.connect();
       const originalRelease = client.release.bind(client);
       let released = false;
@@ -132,7 +142,7 @@ export const db = {
       };
       return client;
     } catch (error) {
-      releasePgSlot();
+      if (slotHeld) releasePgSlot();
       throw error;
     }
   },

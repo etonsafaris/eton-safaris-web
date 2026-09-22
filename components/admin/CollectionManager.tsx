@@ -14,7 +14,6 @@ import {
   adminTableCacheKey,
   peekAdminTableCache,
 } from '@/lib/admin-table-cache';
-import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
 import { IndexStatusBadge, indexStatusForCollectionRecord } from '@/components/admin/IndexStatusBadge';
 import OpsRecordTable, { type OpsColumn } from '@/components/admin/OpsRecordTable';
@@ -96,7 +95,6 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
   const listQuery = adminListQueryString(searchParams);
-  const { counts: adminCounts } = useAdminCounts();
   const isTours = config.id === 'tours';
   const isSafariUpdates = config.id === 'safari_updates';
   const isCountries = config.id === 'countries';
@@ -195,9 +193,12 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       setTourCategoryRows([]);
       return;
     }
-    fetchAdminTablePage('categories', { page: 1, limit: 50, country: activeCountry })
-      .then((result) => setTourCategoryRows(result.rows))
-      .catch(() => setTourCategoryRows([]));
+    const timer = window.setTimeout(() => {
+      fetchAdminTablePage('categories', { page: 1, limit: 50, country: activeCountry })
+        .then((result) => setTourCategoryRows(result.rows))
+        .catch(() => setTourCategoryRows([]));
+    }, 1800);
+    return () => window.clearTimeout(timer);
   }, [isTours, activeCountry]);
 
   useEffect(() => {
@@ -352,9 +353,12 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       setParkRows([]);
       return;
     }
-    fetchAdminTablePage('national_park', { page: 1, limit: 50, country: activeCountry })
-      .then((page) => setParkRows(page.rows))
-      .catch(() => setParkRows([]));
+    const timer = window.setTimeout(() => {
+      fetchAdminTablePage('national_park', { page: 1, limit: 50, country: activeCountry })
+        .then((page) => setParkRows(page.rows))
+        .catch(() => setParkRows([]));
+    }, 1800);
+    return () => window.clearTimeout(timer);
   }, [isAccommodations, activeCountry]);
 
   const columns = useMemo(() => getDynamicColumns(records), [records]);
@@ -461,13 +465,11 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       (!isTours && categoryFilter) ||
       (isSafariUpdates && postKind)
   );
-  const moduleTotal = adminCounts[config.id] ?? 0;
-
   const listTotal = useMemo(() => {
     if (hasListFilters) return filtered.length;
     const base = usesRemotePaging
-      ? Math.max(remoteTotal, moduleTotal, filtered.length)
-      : Math.max(moduleTotal, filtered.length);
+      ? Math.max(remoteTotal, filtered.length)
+      : filtered.length;
     if (loading && usesRemotePaging && page > 1) {
       return Math.max(base, page * PAGE_SIZE);
     }
@@ -476,7 +478,6 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     filtered.length,
     hasListFilters,
     loading,
-    moduleTotal,
     page,
     remoteTotal,
     usesRemotePaging,

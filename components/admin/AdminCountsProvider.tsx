@@ -44,10 +44,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void refresh({ silent: true });
-    }, 1200);
-    return () => window.clearTimeout(timer);
+    void refresh();
   }, [refresh]);
 
   return (

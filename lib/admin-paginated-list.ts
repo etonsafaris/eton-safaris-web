@@ -285,7 +285,7 @@ export async function queryAdminTablePage(
       console.error(`[Admin] Paginated list failed for ${table}:`, message);
       throw new AdminListQueryError(message || `Could not list rows from ${table}`, { cause: error });
     }
-  }, 4);
+  }, 2);
 }
 
 export function isHeavyAdminTable(table: string) {

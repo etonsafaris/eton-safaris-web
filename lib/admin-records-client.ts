@@ -1,3 +1,4 @@
+import { serialAdminApi } from '@/lib/admin-api-serial';
 import {
   adminTableCacheKey,
   bustAdminTableCache,
@@ -31,27 +32,71 @@ function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+const ADMIN_COUNTS_CLIENT_KEY = 'admin:counts:v1';
+const ADMIN_COUNTS_CLIENT_TTL_MS = 90_000;
+
+function readClientCountsCache(): Record<string, number> | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(ADMIN_COUNTS_CLIENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at?: number; counts?: Record<string, number> };
+    if (!parsed.at || !parsed.counts || Date.now() - parsed.at > ADMIN_COUNTS_CLIENT_TTL_MS) {
+      sessionStorage.removeItem(ADMIN_COUNTS_CLIENT_KEY);
+      return null;
+    }
+    return parsed.counts;
+  } catch {
+    return null;
+  }
+}
+
+function writeClientCountsCache(counts: Record<string, number>) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(
+      ADMIN_COUNTS_CLIENT_KEY,
+      JSON.stringify({ at: Date.now(), counts })
+    );
+  } catch {
+    /* ignore quota */
+  }
+}
+
 export async function fetchAdminCounts(
-  items: { id: string; table: string; aliases?: string[] }[]
+  items: { id: string; table: string; aliases?: string[] }[],
+  options?: { bustCache?: boolean }
 ): Promise<Record<string, number>> {
   if (items.length === 0) return {};
+  if (!options?.bustCache) {
+    const cached = readClientCountsCache();
+    if (cached) return cached;
+  }
   try {
-    const response = await fetch('/api/admin/counts', {
-      method: 'POST',
-      credentials: 'include',
-      cache: 'no-store',
-      headers: await authHeaders(),
-      body: JSON.stringify({ items }),
-    });
+    const response = await serialAdminApi(async () =>
+      fetch('/api/admin/counts', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: await authHeaders(),
+        body: JSON.stringify({ items }),
+      })
+    );
     const body = (await response.json().catch(() => ({}))) as { counts?: Record<string, number>; error?: string };
     if (!response.ok) {
       console.warn('[Admin] Counts request failed:', body.error || response.status);
-      return body.counts || {};
+      const stale = readClientCountsCache();
+      if (stale) return stale;
+      throw new Error(body.error || `Counts failed (${response.status})`);
     }
-    return body.counts || {};
+    const counts = body.counts || {};
+    writeClientCountsCache(counts);
+    return counts;
   } catch (error) {
+    const stale = readClientCountsCache();
+    if (stale) return stale;
     console.warn('[Admin] Counts request failed:', error);
-    return {};
+    throw error instanceof Error ? error : new Error('Could not load counts');
   }
 }
 
@@ -83,6 +128,24 @@ export async function fetchAdminTablePage(
     if (cached) return cached;
   }
 
+  return serialAdminApi(() => fetchAdminTablePageLive(table, options, cacheKey, page, limit));
+}
+
+async function fetchAdminTablePageLive(
+  table: string,
+  options: {
+    page?: number;
+    limit?: number;
+    country?: string;
+    park?: string;
+    category?: string;
+    q?: string;
+    bustCache?: boolean;
+  } | undefined,
+  cacheKey: string,
+  page: number,
+  limit: number
+): Promise<AdminTablePageResult> {
   await syncAdminSessionCookie().catch(() => false);
   const params = new URLSearchParams({
     table,
@@ -138,8 +201,11 @@ export async function fetchAdminTablePage(
       return result;
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Could not load records';
-      if (attempt < 3 && /busy|too many clients|timeout|503|502|504/i.test(lastError)) {
-        await sleep(300 * (attempt + 1));
+      if (
+        attempt < 3 &&
+        /busy|too many clients|remaining connection slots|timeout|503|502|504/i.test(lastError)
+      ) {
+        await sleep(500 * Math.pow(2, attempt));
         continue;
       }
       console.warn(`[Admin] Could not load ${table}:`, lastError);
@@ -149,7 +215,7 @@ export async function fetchAdminTablePage(
   throw new Error(lastError);
 }
 
-/** Warm the next page after the current list finishes — avoids stealing DB slots from the active grid. */
+/** Optional next-page warm (off by default — saves DB connections on Aiven). Set NEXT_PUBLIC_ADMIN_PREFETCH=1 to enable. */
 export function prefetchAdminTablePage(
   table: string,
   options: {
@@ -161,13 +227,21 @@ export function prefetchAdminTablePage(
     q?: string;
   }
 ) {
+  if (process.env.NEXT_PUBLIC_ADMIN_PREFETCH !== '1') return;
   window.setTimeout(() => {
     void fetchAdminTablePage(table, options).catch(() => undefined);
-  }, 600);
+  }, 2500);
 }
 
 export function invalidateAdminTableCache(table?: string) {
   bustAdminTableCache(table);
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.removeItem(ADMIN_COUNTS_CLIENT_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
