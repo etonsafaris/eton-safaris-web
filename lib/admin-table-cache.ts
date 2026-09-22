@@ -8,7 +8,8 @@ export type AdminTablePageResult = {
 };
 
 const TTL_MS = 45_000;
-const store = new Map<string, { at: number; value: AdminTablePageResult }>();
+const TTL_MS_EMPTY = 10_000;
+const store = new Map<string, { at: number; ttl: number; value: AdminTablePageResult }>();
 
 export function adminTableCacheKey(
   table: string,
@@ -35,7 +36,7 @@ export function adminTableCacheKey(
 export function peekAdminTableCache(key: string): AdminTablePageResult | null {
   const hit = store.get(key);
   if (!hit) return null;
-  if (Date.now() - hit.at > TTL_MS) {
+  if (Date.now() - hit.at > hit.ttl) {
     store.delete(key);
     return null;
   }
@@ -43,7 +44,8 @@ export function peekAdminTableCache(key: string): AdminTablePageResult | null {
 }
 
 export function writeAdminTableCache(key: string, value: AdminTablePageResult) {
-  store.set(key, { at: Date.now(), value });
+  const ttl = value.total === 0 && value.rows.length === 0 ? TTL_MS_EMPTY : TTL_MS;
+  store.set(key, { at: Date.now(), ttl, value });
 }
 
 export function bustAdminTableCache(table?: string) {

@@ -1,6 +1,10 @@
 export function isPgTooManyClientsError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  return /too many clients already/i.test(message);
+  return (
+    /too many clients already/i.test(message) ||
+    /Database is busy/i.test(message) ||
+    /connection timeout|timeout exceeded|ETIMEDOUT/i.test(message)
+  );
 }
 
 export async function withPgRetry<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {

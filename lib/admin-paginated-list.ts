@@ -1,7 +1,26 @@
 import type { PoolClient } from 'pg';
 import { adminListColumnsFor } from '@/lib/data-server';
+import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
 import { withPgClient } from '@/lib/supabase/pool';
 import type { RecordRow } from '@/lib/types';
+
+export class AdminListQueryError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message);
+    this.name = 'AdminListQueryError';
+    if (options?.cause) (this as Error & { cause?: unknown }).cause = options.cause;
+  }
+}
+
+function isTransientPgError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    isPgTooManyClientsError(error) ||
+    /timeout|timed out|connection terminated|ECONNRESET|ENOTFOUND|ETIMEDOUT|sorry, too many clients/i.test(
+      message
+    )
+  );
+}
 
 export const ADMIN_PAGE_SIZE_DEFAULT = 50;
 export const ADMIN_PAGE_SIZE_MAX = 50;
@@ -206,48 +225,67 @@ export async function queryAdminTablePage(
   const orderColumns = ['created_date', 'created_at', 'published_at', 'publish_date', 'id'];
   const { sql: whereSql, params: whereParams } = buildWhere(options.filters, table);
 
-  try {
-    return await withPgClient(async (client) => {
-      for (let attempt = 0; attempt < 10; attempt += 1) {
-        let droppedColumn = false;
-        for (const orderColumn of orderColumns) {
-          try {
-            return await runListQuery(
-              client,
-              table,
-              columns,
-              whereSql,
-              [...whereParams],
-              orderColumn,
-              offset,
-              limit
-            );
-          } catch (error) {
-            const detail = error instanceof Error ? error.message : String(error);
-            const missing = missingSelectColumn(detail);
-            if (missing && columns.split(',').map((p) => p.trim()).includes(missing)) {
-              const next = dropColumnFromSelect(columns, missing);
-              if (next && next !== columns) {
-                columns = next;
-                droppedColumn = true;
-                break;
+  return withPgRetry(async () => {
+    try {
+      return await withPgClient(async (client) => {
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          let droppedColumn = false;
+          for (const orderColumn of orderColumns) {
+            try {
+              return await runListQuery(
+                client,
+                table,
+                columns,
+                whereSql,
+                [...whereParams],
+                orderColumn,
+                offset,
+                limit
+              );
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              const missing = missingSelectColumn(detail);
+              if (missing && columns.split(',').map((p) => p.trim()).includes(missing)) {
+                const next = dropColumnFromSelect(columns, missing);
+                if (next && next !== columns) {
+                  columns = next;
+                  droppedColumn = true;
+                  break;
+                }
               }
+              if (/column .* does not exist/i.test(detail)) {
+                continue;
+              }
+              throw error;
             }
-            if (/column .* does not exist/i.test(detail)) {
-              console.error(`[Admin] List query failed for ${table} (order ${orderColumn}):`, detail);
-              continue;
-            }
-            throw error;
           }
+          if (!droppedColumn) break;
         }
-        if (!droppedColumn) break;
+        try {
+          return await runListQuery(
+            client,
+            table,
+            columns,
+            whereSql,
+            [...whereParams],
+            'id',
+            offset,
+            limit
+          );
+        } catch (fallbackError) {
+          throw new AdminListQueryError(`Could not list rows from ${table}`, { cause: fallbackError });
+        }
+      });
+    } catch (error) {
+      if (error instanceof AdminListQueryError) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (isTransientPgError(error)) {
+        throw error;
       }
-      return { rows: [], total: 0 };
-    });
-  } catch (error) {
-    console.error(`[Admin] Paginated list failed for ${table}:`, error);
-    return { rows: [], total: 0 };
-  }
+      console.error(`[Admin] Paginated list failed for ${table}:`, message);
+      throw new AdminListQueryError(message || `Could not list rows from ${table}`, { cause: error });
+    }
+  }, 4);
 }
 
 export function isHeavyAdminTable(table: string) {

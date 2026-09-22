@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
+import { withPgRetry } from '@/lib/pg-retry';
 import { withPgClient } from '@/lib/supabase/pool';
 
 const TABLE_ALIASES: Record<string, string[]> = {
@@ -84,26 +85,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    const counts = await withPgClient(async (client) => {
-      const result: Record<string, number> = {};
-      for (const item of items) {
-        if (!item?.id || !item?.table) continue;
-        try {
-          result[item.id] = await countTableWithClient(client, item.table, item.aliases || []);
-        } catch (error) {
-          console.error(`[Admin] Could not count ${item.table}:`, error);
-          result[item.id] = 0;
-        }
-      }
-      return result;
-    });
+    const counts = await withPgRetry(
+      () =>
+        withPgClient(async (client) => {
+          const result: Record<string, number> = {};
+          for (const item of items) {
+            if (!item?.id || !item?.table) continue;
+            try {
+              result[item.id] = await countTableWithClient(client, item.table, item.aliases || []);
+            } catch (error) {
+              console.error(`[Admin] Could not count ${item.table}:`, error);
+              result[item.id] = 0;
+            }
+          }
+          return result;
+        }),
+      3
+    );
     return NextResponse.json({ counts });
   } catch (error) {
     console.error('[Admin] Counts batch failed:', error);
-    const fallback: Record<string, number> = {};
-    for (const item of items) {
-      if (item?.id) fallback[item.id] = 0;
-    }
-    return NextResponse.json({ counts: fallback });
+    const message = error instanceof Error ? error.message : 'Could not load counts';
+    return NextResponse.json({ error: message, counts: {} }, { status: 503 });
   }
 }

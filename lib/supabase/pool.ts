@@ -60,16 +60,25 @@ const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MA
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
+const PG_SLOT_WAIT_MS = Math.max(5000, Number(process.env.PG_SLOT_WAIT_MS) || 25000);
+
 function acquirePgSlot(): Promise<void> {
   if (pgSlotsInUse < PG_SLOT_MAX) {
     pgSlotsInUse += 1;
     return Promise.resolve();
   }
-  return new Promise((resolve) => {
-    pgSlotWaiters.push(() => {
+  return new Promise((resolve, reject) => {
+    const onAcquire = () => {
+      clearTimeout(timer);
       pgSlotsInUse += 1;
       resolve();
-    });
+    };
+    const timer = setTimeout(() => {
+      const index = pgSlotWaiters.indexOf(onAcquire);
+      if (index >= 0) pgSlotWaiters.splice(index, 1);
+      reject(new Error('Database is busy. Wait a moment and click Refresh.'));
+    }, PG_SLOT_WAIT_MS);
+    pgSlotWaiters.push(onAcquire);
   });
 }
 
@@ -85,14 +94,16 @@ function releasePgSlot() {
 export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getAivenPool();
   if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-  await acquirePgSlot();
+  let slotHeld = false;
   let client: PoolClient | null = null;
   try {
+    await acquirePgSlot();
+    slotHeld = true;
     client = await pool.connect();
     return await fn(client);
   } finally {
     client?.release();
-    releasePgSlot();
+    if (slotHeld) releasePgSlot();
   }
 }
 

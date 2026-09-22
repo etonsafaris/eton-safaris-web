@@ -8,9 +8,11 @@ import { allowAdminRequest } from '@/lib/admin-request-auth';
 import {
   ADMIN_PAGE_SIZE_DEFAULT,
   ADMIN_PAGE_SIZE_MAX,
+  AdminListQueryError,
   queryAdminRecordById,
   queryAdminTablePage,
 } from '@/lib/admin-paginated-list';
+import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
@@ -165,9 +167,16 @@ export async function GET(request: Request) {
     console.warn(`[Admin] records GET empty for ${table}:`, lastMessage);
     return NextResponse.json({ rows: [], total: 0, page, pageSize: limit, error: lastMessage });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not load records';
+    const message =
+      error instanceof AdminListQueryError || error instanceof Error
+        ? error.message
+        : 'Could not load records';
     console.error(`[Admin] records GET error for ${table}:`, error);
-    return NextResponse.json({ rows: [], total: 0, error: message }, { status: 500 });
+    const status = isPgTooManyClientsError(error) ? 503 : 500;
+    return NextResponse.json(
+      { rows: [], total: 0, error: message, retryable: status === 503 },
+      { status }
+    );
   }
 }
 

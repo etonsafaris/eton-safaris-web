@@ -1356,12 +1356,20 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{actionError}</div>
       ) : null}
 
-      {error && records.length === 0 ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+      {error ? (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           <p className="font-semibold">Unable to load {config.label}</p>
           <p className="mt-1">{error}</p>
+          <button
+            type="button"
+            onClick={() => load({ bustCache: true })}
+            className="mt-3 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-red-700"
+          >
+            Retry
+          </button>
         </div>
-      ) : loading && records.length === 0 ? (
+      ) : null}
+      {error && records.length === 0 ? null : loading && records.length === 0 ? (
         <div className="py-4">
           {config.view === 'grid' ? (
             <AdminGridSkeleton count={8} />
@@ -1371,7 +1379,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             </div>
           )}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !error && filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-400">
           {isTours ? (
             <>
