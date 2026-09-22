@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
@@ -84,6 +84,7 @@ export default function ExplorePlaceForm(props: ExplorePlaceFormProps) {
 function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
   const listHref = useAdminCollectionListHref('explore');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(placeId);
 
@@ -107,6 +108,13 @@ function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);
   }, []);
+
+  useEffect(() => {
+    if (placeId) return;
+    const presetCountry = searchParams?.get('country')?.trim();
+    if (!presetCountry) return;
+    setCountry((current) => current || presetCountry);
+  }, [placeId, searchParams]);
 
   useEffect(() => {
     if (!placeId) return;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
@@ -86,6 +86,7 @@ export default function NationalParkForm(props: NationalParkFormProps) {
 function NationalParkFormInner({ parkId }: NationalParkFormProps) {
   const listHref = useAdminCollectionListHref('national_park');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(parkId);
 
@@ -110,6 +111,13 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);
   }, []);
+
+  useEffect(() => {
+    if (parkId) return;
+    const presetCountry = searchParams?.get('country')?.trim();
+    if (!presetCountry) return;
+    setCountry((current) => current || presetCountry);
+  }, [parkId, searchParams]);
 
   useEffect(() => {
     if (!parkId) return;

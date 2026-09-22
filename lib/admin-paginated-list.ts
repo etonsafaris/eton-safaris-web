@@ -93,6 +93,42 @@ function sanitizeFilter(value: string) {
     .trim();
 }
 
+/** Only reference columns that exist on each table — bad WHERE clauses return 0 rows with no UI error. */
+function countryFilterSql(table: string, paramIndex: number) {
+  const countryOnly = new Set([
+    'tours',
+    'national_park',
+    'accommodations',
+    'explore',
+    'safari_updates',
+    'categories',
+    'landing_pages',
+    'keywords',
+    'reviews',
+    'bookings',
+    'countries',
+  ]);
+  if (countryOnly.has(table)) {
+    return `country ILIKE $${paramIndex}`;
+  }
+  return `(COALESCE(country::text, '') ILIKE $${paramIndex} OR COALESCE(destination::text, '') ILIKE $${paramIndex})`;
+}
+
+function parkFilterSql(table: string, paramIndex: number) {
+  if (table === 'accommodations') {
+    return `(COALESCE(national_park_name::text, '') ILIKE $${paramIndex} OR COALESCE(location::text, '') ILIKE $${paramIndex})`;
+  }
+  return `(COALESCE(national_park_name::text, '') ILIKE $${paramIndex} OR COALESCE(location::text, '') ILIKE $${paramIndex})`;
+}
+
+const TABLES_WITH_CATEGORY = new Set([
+  'tours',
+  'safari_updates',
+  'categories',
+  'keywords',
+  'notifications',
+]);
+
 function buildWhere(filters: AdminListFilters | undefined, table: string) {
   const params: unknown[] = [];
   const clauses: string[] = [];
@@ -103,20 +139,16 @@ function buildWhere(filters: AdminListFilters | undefined, table: string) {
   if (country) {
     params.push(`%${country}%`);
     const index = params.length;
-    clauses.push(
-      `(country ILIKE $${index} OR destination ILIKE $${index} OR nation ILIKE $${index})`
-    );
+    clauses.push(countryFilterSql(table, index));
   }
-  if (category) {
+  if (category && TABLES_WITH_CATEGORY.has(table)) {
     params.push(`%${category}%`);
     clauses.push(`category ILIKE $${params.length}`);
   }
   if (park) {
     params.push(`%${park}%`);
     const index = params.length;
-    clauses.push(
-      `(COALESCE(national_park_name, '') ILIKE $${index} OR COALESCE(national_park, '') ILIKE $${index} OR COALESCE(park_name, '') ILIKE $${index} OR COALESCE(location, '') ILIKE $${index})`
-    );
+    clauses.push(parkFilterSql(table, index));
   }
   if (q) {
     params.push(`%${q}%`);
@@ -202,6 +234,7 @@ export async function queryAdminTablePage(
               }
             }
             if (/column .* does not exist/i.test(detail)) {
+              console.error(`[Admin] List query failed for ${table} (order ${orderColumn}):`, detail);
               continue;
             }
             throw error;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
@@ -9,7 +9,8 @@ import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
-import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, fetchParksForCountry, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { fetchAdminTablePage } from '@/lib/admin-records-client';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { faqsForEditor } from '@/lib/default-faqs';
@@ -107,6 +108,7 @@ export default function AccommodationForm(props: AccommodationFormProps) {
 function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
   const listHref = useAdminCollectionListHref('accommodations');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(accommodationId);
 
@@ -142,10 +144,18 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
       setParks([]);
       return;
     }
-    fetchParksForCountry(country)
-      .then(setParks)
+    fetchAdminTablePage('national_park', { page: 1, limit: 50, country })
+      .then((page) => setParks(page.rows))
       .catch(() => setParks([]));
   }, [country]);
+
+  useEffect(() => {
+    if (accommodationId) return;
+    const presetCountry = searchParams?.get('country')?.trim();
+    const presetPark = searchParams?.get('park')?.trim();
+    if (presetCountry) setCountry((current) => current || presetCountry);
+    if (presetPark) setNationalPark((current) => current || presetPark);
+  }, [accommodationId, searchParams]);
 
   useEffect(() => {
     if (!accommodationId) return;

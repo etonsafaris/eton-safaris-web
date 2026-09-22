@@ -10,10 +10,12 @@ export function adminListQueryString(searchParams?: URLSearchParams | ReadonlyUR
   }
   const country = searchParams.get('country');
   const category = searchParams.get('category');
+  const park = searchParams.get('park');
   if (country) params.set('country', country);
   if (category) params.set('category', category);
+  if (park) params.set('park', park);
   searchParams.forEach((value, key) => {
-    if (key === 'page' || key === 'country' || key === 'category') return;
+    if (key === 'page' || key === 'country' || key === 'category' || key === 'park') return;
     if (value) params.set(key, value);
   });
   const qs = params.toString();
