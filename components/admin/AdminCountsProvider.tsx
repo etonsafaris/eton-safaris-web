@@ -20,7 +20,7 @@ const AdminCountsContext = createContext<AdminCountsContextValue>({
 
 export function AdminCountsProvider({ children }: { children: React.ReactNode }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async (options?: { silent?: boolean }) => {

@@ -1,7 +1,16 @@
+import {
+  adminTableCacheKey,
+  bustAdminTableCache,
+  peekAdminTableCache,
+  writeAdminTableCache,
+  type AdminTablePageResult,
+} from '@/lib/admin-table-cache';
 import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
 import type { RecordRow } from '@/lib/types';
+
+export type { AdminTablePageResult };
 
 async function accessTokenForAdmin(): Promise<string> {
   const { data } = await supabase.auth.getSession();
@@ -40,13 +49,6 @@ export async function fetchAdminCounts(
   }
 }
 
-export type AdminTablePageResult = {
-  rows: RecordRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
 export async function fetchAdminTablePage(
   table: string,
   options?: {
@@ -55,11 +57,27 @@ export async function fetchAdminTablePage(
     country?: string;
     park?: string;
     category?: string;
+    q?: string;
+    bustCache?: boolean;
   }
 ): Promise<AdminTablePageResult> {
-  await syncAdminSessionCookie().catch(() => false);
   const page = Math.max(1, options?.page ?? 1);
   const limit = Math.min(50, Math.max(1, options?.limit ?? 50));
+  const cacheKey = adminTableCacheKey(table, {
+    page,
+    limit,
+    country: options?.country,
+    park: options?.park,
+    category: options?.category,
+    q: options?.q,
+  });
+
+  if (!options?.bustCache) {
+    const cached = peekAdminTableCache(cacheKey);
+    if (cached) return cached;
+  }
+
+  await syncAdminSessionCookie().catch(() => false);
   const params = new URLSearchParams({
     table,
     page: String(page),
@@ -68,6 +86,7 @@ export async function fetchAdminTablePage(
   if (options?.country) params.set('country', options.country);
   if (options?.park) params.set('park', options.park);
   if (options?.category) params.set('category', options.category);
+  if (options?.q) params.set('q', options.q);
 
   async function getOnce() {
     return fetch(`/api/admin/records?${params.toString()}`, {
@@ -94,16 +113,37 @@ export async function fetchAdminTablePage(
       console.warn(`[Admin] Could not load ${table}:`, body.error || response.status);
       return { rows: [], total: 0, page, pageSize: limit };
     }
-    return {
+    const result = {
       rows: body.rows || [],
       total: body.total ?? body.rows?.length ?? 0,
       page: body.page ?? page,
       pageSize: body.pageSize ?? limit,
     };
+    writeAdminTableCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.warn(`[Admin] Could not load ${table}:`, error);
     return { rows: [], total: 0, page, pageSize: limit };
   }
+}
+
+/** Warm the next page while the user reads the current one (Dav-style snappy paging). */
+export function prefetchAdminTablePage(
+  table: string,
+  options: {
+    page: number;
+    limit?: number;
+    country?: string;
+    park?: string;
+    category?: string;
+    q?: string;
+  }
+) {
+  void fetchAdminTablePage(table, options).catch(() => undefined);
+}
+
+export function invalidateAdminTableCache(table?: string) {
+  bustAdminTableCache(table);
 }
 
 export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
@@ -158,6 +198,7 @@ export async function deleteAdminRecord(table: string, id: string | number): Pro
   );
   const body = (await response.json().catch(() => ({}))) as { error?: string };
   if (!response.ok) throw new Error(body.error || `Could not delete ${table} record`);
+  bustAdminTableCache(table);
 }
 
 export async function saveAdminRecord(
@@ -189,6 +230,7 @@ export async function saveAdminRecord(
     error?: string;
   };
   if (!response.ok) throw new Error(body.error || `Could not save ${table} record`);
+  bustAdminTableCache(table);
   return body.data || [];
 }
 

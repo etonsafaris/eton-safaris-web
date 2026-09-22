@@ -118,6 +118,7 @@ export async function GET(request: Request) {
     country: url.searchParams.get('country')?.trim() || undefined,
     park: url.searchParams.get('park')?.trim() || undefined,
     category: url.searchParams.get('category')?.trim() || undefined,
+    q: url.searchParams.get('q')?.trim() || undefined,
   };
 
   try {

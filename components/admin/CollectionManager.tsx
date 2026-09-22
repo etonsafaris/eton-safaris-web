@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { adminListQueryString } from '@/lib/admin-list-navigation';
 import { useAdminUrlPage } from '@/lib/use-admin-url-page';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
+import AdminGridSkeleton from '@/components/admin/AdminGridSkeleton';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import { collectionUsesAdminPaging } from '@/lib/admin-paging';
+import {
+  adminTableCacheKey,
+  peekAdminTableCache,
+} from '@/lib/admin-table-cache';
 import { useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import AdminItemCard from '@/components/admin/AdminItemCard';
 import { IndexStatusBadge, indexStatusForCollectionRecord } from '@/components/admin/IndexStatusBadge';
@@ -36,6 +42,8 @@ import {
   adminAuthHeaders,
   deleteAdminRecord,
   fetchAdminTablePage,
+  invalidateAdminTableCache,
+  prefetchAdminTablePage,
   saveAdminRecord,
   saveWithColumnFallback,
 } from '@/lib/admin-records-client';
@@ -132,15 +140,15 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const usesFaqs = isCountries || isCategories || isPages || isLandingPages;
   const PAGE_SIZE = 50;
   const [remoteTotal, setRemoteTotal] = useState(0);
-  const usesRemotePaging =
-    isTours ||
-    isNationalPark ||
-    isAccommodations ||
-    isSafariUpdates ||
-    isExplore ||
-    isOps;
+  const usesRemotePaging = collectionUsesAdminPaging(config);
   const { page, setPage, resetPage } = useAdminUrlPage();
   const loadRequestRef = useRef(0);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   async function load(options?: { bustCache?: boolean }) {
     if (!config.table) {
@@ -148,13 +156,33 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       return;
     }
     const requestId = ++loadRequestRef.current;
-    setLoading(true);
+    const remoteQuery = usesRemotePaging && debouncedQuery.length >= 2 ? debouncedQuery : undefined;
+    const cacheKey =
+      usesRemotePaging && config.table
+        ? adminTableCacheKey(config.table, {
+            page,
+            limit: PAGE_SIZE,
+            country: isSafariUpdates ? undefined : countryFilter || undefined,
+            park: isAccommodations ? parkFilter || undefined : undefined,
+            category: isTours ? categoryFilter || undefined : undefined,
+            q: remoteQuery,
+          })
+        : '';
+    const cached = !options?.bustCache && cacheKey ? peekAdminTableCache(cacheKey) : null;
+    if (cached) {
+      setRecords(cached.rows);
+      setRemoteTotal(cached.total);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError('');
     setActionError('');
     try {
       if (options?.bustCache) {
         clearCollectionCache(config.table);
         (config.aliases || []).forEach((alias) => clearCollectionCache(alias));
+        invalidateAdminTableCache(config.table);
       }
       const listOptions = adminListColumnsFor(config.table, config.aliases || []);
       let data: RecordRow[] = [];
@@ -163,12 +191,24 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         const result = await fetchAdminTablePage(config.table, {
           page,
           limit: PAGE_SIZE,
+          bustCache: options?.bustCache,
           country: isSafariUpdates ? undefined : countryFilter || undefined,
           park: isAccommodations ? parkFilter || undefined : undefined,
           category: isTours ? categoryFilter || undefined : undefined,
+          q: remoteQuery,
         });
         data = result.rows ?? [];
         total = result.total ?? 0;
+        if (page < Math.ceil(Math.max(total, 1) / PAGE_SIZE)) {
+          prefetchAdminTablePage(config.table, {
+            page: page + 1,
+            limit: PAGE_SIZE,
+            country: isSafariUpdates ? undefined : countryFilter || undefined,
+            park: isAccommodations ? parkFilter || undefined : undefined,
+            category: isTours ? categoryFilter || undefined : undefined,
+            q: remoteQuery,
+          });
+        }
       } else {
         const listColumns = listOptions ? { columns: listOptions } : undefined;
         data = await fetchCollectionRecords(config.table, config.aliases, listColumns);
@@ -230,7 +270,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.table, usesRemotePaging ? page : -1, countryFilter, parkFilter, categoryFilter]);
+  }, [
+    config.table,
+    usesRemotePaging ? page : -1,
+    countryFilter,
+    parkFilter,
+    categoryFilter,
+    usesRemotePaging ? debouncedQuery : '',
+  ]);
 
   useEffect(() => {
     if (!isAccommodations) return;
@@ -273,11 +320,24 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         if (category !== categoryFilter.toLowerCase()) return false;
       }
       if (!needle) return true;
+      if (usesRemotePaging && debouncedQuery.length >= 2) return true;
       return Object.keys(record ?? {}).some((key) =>
         String(record?.[key] ?? '').toLowerCase().includes(needle)
       );
     });
-  }, [records, query, countryFilter, parkFilter, categoryFilter, postKind, isSafariUpdates, isTours, isAccommodations, usesRemotePaging]);
+  }, [
+    records,
+    query,
+    debouncedQuery,
+    countryFilter,
+    parkFilter,
+    categoryFilter,
+    postKind,
+    isSafariUpdates,
+    isTours,
+    isAccommodations,
+    usesRemotePaging,
+  ]);
 
   const listFilterKey = useMemo(
     () => [config.table, query, countryFilter, parkFilter, categoryFilter, postKind].join('\0'),
@@ -296,7 +356,12 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   }, [listFilterKey, resetPage]);
 
   const hasListFilters = Boolean(
-    query || countryFilter || parkFilter || categoryFilter || (isSafariUpdates && postKind)
+    query ||
+      debouncedQuery ||
+      countryFilter ||
+      parkFilter ||
+      categoryFilter ||
+      (isSafariUpdates && postKind)
   );
   const moduleTotal = adminCounts[config.id] ?? 0;
 
@@ -1189,8 +1254,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           <p className="mt-1">{error}</p>
         </div>
       ) : loading && records.length === 0 ? (
-        <div className="flex justify-center py-20">
-          <AdminLogoLoader label={`Loading ${config.label}`} />
+        <div className="py-4">
+          {config.view === 'grid' ? (
+            <AdminGridSkeleton count={8} />
+          ) : (
+            <div className="flex justify-center py-20">
+              <AdminLogoLoader label={`Loading ${config.label}`} />
+            </div>
+          )}
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-400">

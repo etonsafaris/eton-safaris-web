@@ -27,9 +27,9 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { fetchAdminRecordById, saveWithColumnFallback } from '@/lib/admin-records-client';
+import { fetchAdminRecordById, fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { adminListColumnsFor, fetchCollectionRecords, getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -190,15 +190,11 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
 
   useEffect(() => {
     Promise.all([
-      fetchCollectionRecords('countries', [], {
-        columns: adminListColumnsFor('countries') || 'id,name,title,tagline,image_url,status',
-      }),
-      fetchCollectionRecords('categories', [], {
-        columns: adminListColumnsFor('categories') || 'id,name,title,country,image_url,status',
-      }),
-    ]).then(([countryRows, categoryRows]) => {
-      setCountries(countryRows);
-      setCategories(categoryRows);
+      fetchAdminTablePage('countries', { page: 1, limit: 50 }),
+      fetchAdminTablePage('categories', { page: 1, limit: 50 }),
+    ]).then(([countryPage, categoryPage]) => {
+      setCountries(countryPage.rows);
+      setCategories(categoryPage.rows);
     });
   }, []);
 

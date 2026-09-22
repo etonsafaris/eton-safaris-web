@@ -8,9 +8,9 @@ import {
   savedKeywordSets,
   uniqueKeywords,
 } from '@/lib/keywords';
-import { clearCollectionCache, fetchCollectionRecords, pickString } from '@/lib/data';
+import { clearCollectionCache, pickString } from '@/lib/data';
 import { mergePublicDestinations } from '@/lib/public-destinations';
-import { saveWithColumnFallback } from '@/lib/admin-records-client';
+import { fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';
@@ -39,8 +39,13 @@ export default function KeywordsPanel() {
   async function load() {
     try {
       clearCollectionCache('keywords');
-      const data = await fetchCollectionRecords('keywords', ['keyword', 'seo_keywords']);
-      setRows(data);
+      const page = await fetchAdminTablePage('keywords', {
+        page: 1,
+        limit: 50,
+        country: country || undefined,
+        category: category || undefined,
+      });
+      setRows(page.rows);
       setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load keywords';
@@ -50,15 +55,21 @@ export default function KeywordsPanel() {
   }
 
   useEffect(() => {
-    load();
-    fetchCollectionRecords('categories').then(setCategories).catch((loadError) => console.error(loadError));
-    fetchCollectionRecords('countries')
-      .then((rows) => {
-        const names = mergePublicDestinations(rows).map((item) => item.name);
+    void load();
+    fetchAdminTablePage('categories', { page: 1, limit: 50 })
+      .then((page) => setCategories(page.rows))
+      .catch((loadError) => console.error(loadError));
+    fetchAdminTablePage('countries', { page: 1, limit: 50 })
+      .then((page) => {
+        const names = mergePublicDestinations(page.rows).map((item) => item.name);
         setCountryOptions(names.length ? names : SEEDED_COUNTRIES);
       })
       .catch(() => setCountryOptions(SEEDED_COUNTRIES));
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [country, category]);
 
   const countryCategories = useMemo(
     () =>

@@ -21,13 +21,45 @@ const HEAVY_ADMIN_TABLES = new Set([
   'registered_agents',
   'subscribers',
   'notifications',
+  'countries',
+  'categories',
+  'pages',
+  'landing_pages',
+  'keywords',
+  'reviews',
 ]);
 
 export type AdminListFilters = {
   country?: string;
   park?: string;
   category?: string;
+  /** Server-side search (Dav-style: filter in SQL, not in the browser). */
+  q?: string;
 };
+
+function searchColumnsFor(table: string): string[] {
+  const byTable: Record<string, string[]> = {
+    tours: ['title', 'slug', 'seo_slug', 'country', 'category'],
+    safari_updates: ['title', 'slug', 'seo_slug', 'excerpt', 'country'],
+    countries: ['name', 'slug', 'seo_slug', 'tagline'],
+    categories: ['name', 'slug', 'seo_slug', 'country'],
+    national_park: ['name', 'slug', 'seo_slug', 'country', 'location'],
+    accommodations: ['name', 'slug', 'seo_slug', 'country', 'location'],
+    explore: ['title', 'slug', 'seo_slug', 'country', 'location'],
+    pages: ['title', 'post_title', 'slug', 'seo_slug'],
+    landing_pages: ['title', 'post_title', 'slug', 'seo_slug', 'country'],
+    keywords: ['keywords', 'keyword', 'country', 'category'],
+    reviews: ['author', 'title', 'email', 'country', 'content'],
+    bookings: ['customer_name', 'customer_email', 'tour_title', 'country', 'booking_code'],
+    subscribers: ['email', 'name', 'phone'],
+    notifications: ['title', 'message', 'category'],
+    pesapal_payments: ['reference', 'email', 'status'],
+    quotations_inquiries: ['name', 'email', 'tour', 'message'],
+    contact_inquiries: ['name', 'email', 'message'],
+    inquiries: ['name', 'email', 'message'],
+  };
+  return byTable[table] || ['title', 'name', 'slug', 'email'];
+}
 
 function quoteTable(name: string) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
@@ -61,12 +93,13 @@ function sanitizeFilter(value: string) {
     .trim();
 }
 
-function buildWhere(filters: AdminListFilters | undefined) {
+function buildWhere(filters: AdminListFilters | undefined, table: string) {
   const params: unknown[] = [];
   const clauses: string[] = [];
   const country = sanitizeFilter(filters?.country || '');
   const category = sanitizeFilter(filters?.category || '');
   const park = sanitizeFilter(filters?.park || '');
+  const q = sanitizeFilter(filters?.q || '');
   if (country) {
     params.push(`%${country}%`);
     clauses.push(`country ILIKE $${params.length}`);
@@ -81,6 +114,12 @@ function buildWhere(filters: AdminListFilters | undefined) {
     clauses.push(
       `(COALESCE(national_park_name, '') ILIKE $${index} OR COALESCE(national_park, '') ILIKE $${index} OR COALESCE(park_name, '') ILIKE $${index} OR COALESCE(location, '') ILIKE $${index})`
     );
+  }
+  if (q) {
+    params.push(`%${q}%`);
+    const index = params.length;
+    const parts = searchColumnsFor(table).map((column) => `COALESCE("${column}"::text, '') ILIKE $${index}`);
+    if (parts.length) clauses.push(`(${parts.join(' OR ')})`);
   }
   const sql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
   return { sql, params };
@@ -130,7 +169,7 @@ export async function queryAdminTablePage(
   const offset = Math.max(0, options.offset ?? 0);
   let columns = options.columns || adminListColumnsFor(table) || 'id';
   const orderColumns = ['created_date', 'created_at', 'published_at', 'publish_date', 'id'];
-  const { sql: whereSql, params: whereParams } = buildWhere(options.filters);
+  const { sql: whereSql, params: whereParams } = buildWhere(options.filters, table);
 
   try {
     return await withPgClient(async (client) => {
