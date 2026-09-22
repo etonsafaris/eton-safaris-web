@@ -1,19 +1,48 @@
+import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
+
 type QueryResult = { data: any[] | null; error: { message: string } | null };
 type AuthUser = { id: string; email: string; user_metadata?: Record<string, unknown> };
 type AuthSession = { access_token: string; user: AuthUser };
 
 const AUTH_STORAGE_KEY = 'eton-aiven-auth-token';
 
+function userFromToken(token: string): AuthUser | null {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  const email = emailFromJwtPayload(payload);
+  const id = String(payload.sub || payload.id || '').trim();
+  if (!id || !email) return null;
+  const meta = payload.user_metadata;
+  return {
+    id,
+    email,
+    user_metadata:
+      meta && typeof meta === 'object' && !Array.isArray(meta)
+        ? (meta as Record<string, unknown>)
+        : undefined,
+  };
+}
+
 function storedSession(): AuthSession | null {
   if (typeof window === 'undefined') return null;
   try {
     const token = window.localStorage.getItem(AUTH_STORAGE_KEY);
     if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as AuthUser;
-    return { access_token: token, user: payload };
+    const user = userFromToken(token);
+    if (!user) return null;
+    return { access_token: token, user };
   } catch {
     return null;
   }
+}
+
+function persistSession(session: AuthSession | null) {
+  if (typeof window === 'undefined') return;
+  if (!session?.access_token) {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    return;
+  }
+  window.localStorage.setItem(AUTH_STORAGE_KEY, session.access_token);
 }
 
 class BrowserQuery {
@@ -66,12 +95,62 @@ export const supabase = {
       if (!response.ok || !body.session) {
         return { data: { session: null, user: null }, error: { message: body.error || 'Invalid email or password' } };
       }
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(AUTH_STORAGE_KEY, body.session.access_token);
-      }
+      persistSession(body.session as AuthSession);
       return { data: body.session, error: null };
     },
+    updateUser: async (updates: {
+      email?: string;
+      password?: string;
+      data?: Record<string, unknown>;
+    }) => {
+      const token = storedSession()?.access_token || '';
+      const response = await fetch('/api/auth/update-user', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(updates),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return {
+          data: { user: null },
+          error: { message: String(body.error || 'Could not update account') },
+        };
+      }
+      if (body.session?.access_token && body.user) {
+        persistSession({ access_token: body.session.access_token, user: body.user as AuthUser });
+      }
+      return { data: { user: body.user || null }, error: null };
+    },
+    resetPasswordForEmail: async (_email: string) => ({
+      data: {},
+      error: {
+        message:
+          'Email password reset is not enabled. Use “Forgot password” on the login page or ask an administrator to reset your password.',
+      },
+    }),
+    signUp: async ({
+      email,
+      password,
+      options,
+    }: {
+      email: string;
+      password: string;
+      options?: { data?: Record<string, unknown> };
+    }) => {
+      const id = `agent-${email.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const user: AuthUser = {
+        id,
+        email: email.trim().toLowerCase(),
+        user_metadata: options?.data || {},
+      };
+      return { data: { user, session: null }, error: null };
+    },
     signOut: async () => {
+      persistSession(null);
       if (typeof window !== 'undefined') {
         for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
           const key = window.localStorage.key(index);

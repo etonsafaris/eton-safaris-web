@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { useAdminSession } from '@/components/admin/useAdminSession';
+import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 
@@ -38,10 +39,14 @@ export default function ChangePasswordPage() {
       setSaving(false);
       return;
     }
-    if (user?.id) {
-      await saveWithColumnFallback('profiles', { must_change_password: false }, user.id);
-    } else if (user?.email) {
-      await saveWithColumnFallback('profiles', { must_change_password: false }, { eq: { column: 'email', value: user.email } });
+    await syncAdminSessionCookie().catch(() => false);
+    const profileUser = user as { id?: string; email?: string } | null;
+    if (profileUser?.id) {
+      await saveWithColumnFallback('profiles', { must_change_password: false }, profileUser.id);
+    } else if (profileUser?.email) {
+      await saveWithColumnFallback('profiles', { must_change_password: false }, {
+        eq: { column: 'email', value: profileUser.email },
+      });
     }
     router.replace('/admin');
   }
