@@ -1,8 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Standalone output for reliable Vercel/Docker builds (avoids bundling the full node_modules tree).
+  output: 'standalone',
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   poweredByHeader: false,
   compress: true,
   swcMinify: true,
