@@ -7,50 +7,56 @@ const normalizedConnectionString = connectionString
 
 const isServer = typeof window === 'undefined';
 
+/** Aiven free tier = 20 connections total (all apps + dev). Cap each Node process via PG_POOL_MAX. */
+const POOL_MAX = Math.max(1, Math.min(20, Number(process.env.PG_POOL_MAX) || 5));
+
 declare global {
   // eslint-disable-next-line no-var
-  var aivenPool: PgPool | undefined;
-  // eslint-disable-next-line no-var
   var _aivenPool: PgPool | undefined;
+  // eslint-disable-next-line no-var
+  var aivenPool: PgPool | undefined;
+}
+
+function createAivenPool(): PgPool {
+  if (!normalizedConnectionString) {
+    throw new Error('Aiven DATABASE_URL is not configured.');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Pool } = require('pg') as typeof import('pg');
+  const pool = new Pool({
+    connectionString: normalizedConnectionString,
+    ssl: { rejectUnauthorized: false },
+    max: POOL_MAX,
+    idleTimeoutMillis: 15000,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 12000,
+    allowExitOnIdle: true,
+  });
+  pool.on('error', (err: Error) => {
+    console.error('[Aiven] Unexpected idle pool client error:', err.message);
+  });
+  return pool;
 }
 
 /**
- * One shared Aiven pool per Node process (survives Next.js hot reload).
- * Lazy init keeps `pg` out of the browser bundle.
+ * One shared pool per Node process — survives Next.js hot reload via `global._aivenPool`.
  */
 export function getAivenPool(): PgPool | null {
   if (!isServer || !normalizedConnectionString) return null;
 
-  if (global._aivenPool) return global._aivenPool;
-  if (global.aivenPool) {
-    global._aivenPool = global.aivenPool;
-    return global._aivenPool;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { Pool } = require('pg') as typeof import('pg');
-  let pool = global._aivenPool;
-  if (!pool) {
-    const poolMax = Math.max(1, Math.min(20, Number(process.env.PG_POOL_MAX) || 4));
-    pool = new Pool({
-      connectionString: normalizedConnectionString,
-      ssl: { rejectUnauthorized: false },
-      // Aiven free tier = 20 connections total (dev + prod + admin). Keep per-process low.
-      max: poolMax,
-      idleTimeoutMillis: 10000,
-      connectionTimeoutMillis: 8000,
-      statement_timeout: 12000,
-      allowExitOnIdle: true,
-    });
-    global._aivenPool = pool;
-    global.aivenPool = pool;
+  if (!global._aivenPool) {
+    global._aivenPool = global.aivenPool ?? createAivenPool();
+    global.aivenPool = global._aivenPool;
   }
 
   return global._aivenPool;
 }
 
-/** Caps parallel connects so ISR + admin + uploads do not exhaust Aiven (20 conn). */
-const PG_SLOT_MAX = Math.max(1, Math.min(8, Number(process.env.PG_SLOT_MAX) || 3));
+/** Alias used by API routes and docs. */
+export const getPool = getAivenPool;
+
+/** Caps parallel checkout so ISR + admin + uploads do not exhaust Aiven (20 conn). */
+const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || 3));
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
@@ -73,7 +79,9 @@ function releasePgSlot() {
   if (next) next();
 }
 
-/** Preferred API: one client per operation, always released in `finally`. */
+/**
+ * Preferred API: acquire one client, run queries, always `release()` in `finally`.
+ */
 export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getAivenPool();
   if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
@@ -132,8 +140,9 @@ export const aivenFetch = async (tableName: string, columns = '*') => {
   try {
     const rows = await queryRows(`SELECT ${columns} FROM ${tableName}`);
     return { data: rows, error: null };
-  } catch (error: any) {
-    console.error(`Aiven server query error on [${tableName}]:`, error?.message || error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Aiven server query error on [${tableName}]:`, message);
     return { data: null, error };
   }
 };

@@ -1,3 +1,7 @@
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { CMS_PUBLIC_CACHE_TAG } from '@/lib/cms-public-cache';
@@ -12,8 +16,6 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
 import { withPgClient } from '@/lib/supabase/pool';
-
-export const dynamic = 'force-dynamic';
 
 function quoteIdentifier(value: string) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) throw new Error('Invalid collection table');
