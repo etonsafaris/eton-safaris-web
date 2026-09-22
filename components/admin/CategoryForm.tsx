@@ -26,6 +26,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
@@ -71,14 +72,19 @@ function CategoryFormInner({ categoryId }: CategoryFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(categoryId);
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
-  const [country, setCountry] = useState('');
-  const [categoryImage, setCategoryImage] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
+  const prefillRow = categoryId ? readAdminEditPrefill('categories', categoryId) : null;
+  const [title, setTitle] = useState(() => String(prefillRow?.name || prefillRow?.title || ''));
+  const [description, setDescription] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.description || '')) : ''
+  );
+  const [faqs, setFaqs] = useState<PageFaq[]>(() => (prefillRow ? faqsForEditor(prefillRow, 'categories') : []));
+  const [country, setCountry] = useState(() => String(prefillRow?.country || ''));
+  const [categoryImage, setCategoryImage] = useState(() => String(prefillRow?.image_url || ''));
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
   const [countries, setCountries] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('category'));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('category')
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);

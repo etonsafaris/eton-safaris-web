@@ -39,6 +39,7 @@ import {
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 
@@ -84,28 +85,44 @@ function PageFormInner({ pageId }: PageFormProps) {
   const listHref = useAdminCollectionListHref('pages');
   const router = useRouter();
   const isEdit = Boolean(pageId);
+  const prefillRow = pageId ? readAdminEditPrefill('pages', pageId) : null;
+  const prefillExtras = prefillRow ? parseCmsPageExtras(prefillRow) : null;
 
-  const [title, setTitle] = useState('');
-  const [layout, setLayout] = useState<CmsPageLayout>('standard');
-  const [heroTitle, setHeroTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [content, setContent] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [destinations, setDestinations] = useState(ABOUT_DESTINATION_CHIPS.join(', '));
-  const [featuredImage, setFeaturedImage] = useState('');
+  const [title, setTitle] = useState(() =>
+    String(prefillRow?.title || prefillRow?.name || prefillRow?.post_title || '')
+  );
+  const [layout, setLayout] = useState<CmsPageLayout>(() => prefillExtras?.layout || 'standard');
+  const [heroTitle, setHeroTitle] = useState(() => String(prefillExtras?.hero_title || ''));
+  const [subtitle, setSubtitle] = useState(() => String(prefillExtras?.subtitle || ''));
+  const [excerpt, setExcerpt] = useState(() =>
+    String(prefillExtras?.excerpt || prefillRow?.excerpt || '')
+  );
+  const [content, setContent] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.content || prefillRow.description || '')) : ''
+  );
+  const [videoUrl, setVideoUrl] = useState(() => String(prefillExtras?.video_url || ''));
+  const [destinations, setDestinations] = useState(() =>
+    prefillExtras?.destinations?.length
+      ? prefillExtras.destinations.join(', ')
+      : ABOUT_DESTINATION_CHIPS.join(', ')
+  );
+  const [featuredImage, setFeaturedImage] = useState(() =>
+    String(prefillRow?.image_url || prefillRow?.cover_image || '')
+  );
   const [status, setStatus] = useState<'published' | 'draft'>('published');
   const [ctaLabel, setCtaLabel] = useState('Talk to Us');
   const [ctaHref, setCtaHref] = useState('/contact-us');
   const [blocks, setBlocks] = useState<CmsContentBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<CmsContentBlock>({ title: '', description: '', image_url: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('page'));
+  const [faqs, setFaqs] = useState<PageFaq[]>(() => (prefillRow ? faqsForEditor(prefillRow, 'pages') : []));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('page')
+  );
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
   const [brandTitle, setBrandTitle] = useState(DEFAULT_HOME_PAGE_CONTENT.brandTitle);
   const [brandDescription, setBrandDescription] = useState(DEFAULT_HOME_PAGE_CONTENT.brandDescription);
   const [setsApartHeading, setSetsApartHeading] = useState(DEFAULT_HOME_PAGE_CONTENT.setsApartHeading);

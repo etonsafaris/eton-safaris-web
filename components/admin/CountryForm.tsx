@@ -18,6 +18,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 
@@ -42,15 +43,25 @@ function CountryFormInner({ countryId }: CountryFormProps) {
   const router = useRouter();
   const isEdit = Boolean(countryId);
 
-  const [name, setName] = useState('');
-  const [headline, setHeadline] = useState('');
-  const [bestTimeToVisit, setBestTimeToVisit] = useState('');
-  const [description, setDescription] = useState('');
-  const [summary, setSummary] = useState('');
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
-  const [featuredImage, setFeaturedImage] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('country'));
+  const prefillRow = countryId ? readAdminEditPrefill('countries', countryId) : null;
+  const [name, setName] = useState(() => String(prefillRow?.name || ''));
+  const [headline, setHeadline] = useState(() => String(prefillRow?.tagline || prefillRow?.headline || ''));
+  const [bestTimeToVisit, setBestTimeToVisit] = useState(() =>
+    prefillRow
+      ? parseCmsPageExtras(prefillRow, String(prefillRow.slug || '')).best_time_to_visit ||
+        String(prefillRow.best_time_to_visit || prefillRow.best_time || '')
+      : ''
+  );
+  const [description, setDescription] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.description || '')) : ''
+  );
+  const [summary, setSummary] = useState(() => String(prefillRow?.summary || prefillRow?.excerpt || ''));
+  const [faqs, setFaqs] = useState<PageFaq[]>(() => (prefillRow ? faqsForEditor(prefillRow, 'countries') : []));
+  const [featuredImage, setFeaturedImage] = useState(() => String(prefillRow?.image_url || ''));
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('country')
+  );
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');

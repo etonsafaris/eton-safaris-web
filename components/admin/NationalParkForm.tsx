@@ -20,6 +20,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
@@ -90,23 +91,59 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(parkId);
 
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [descriptionTitle, setDescriptionTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [country, setCountry] = useState('');
-  const [featuredImage, setFeaturedImage] = useState('');
+  const [name, setName] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? String(row.name || '') : '';
+  });
+  const [location, setLocation] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? String(row.location || '') : '';
+  });
+  const [descriptionTitle, setDescriptionTitle] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? String(row.description_title || '') : '';
+  });
+  const [description, setDescription] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? stripEmbeddedContent(String(row.description || '')) : '';
+  });
+  const [country, setCountry] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? String(row.country || '') : '';
+  });
+  const [featuredImage, setFeaturedImage] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? String(row.image_url || '') : '';
+  });
   const [blocks, setBlocks] = useState<ParkBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<ParkBlock>({ title: '', description: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [countries, setCountries] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('park'));
+  const [seo, setSeo] = useState<SeoValues>(() => {
+    if (!parkId) return defaultSeoValues('park');
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? seoValuesFromRecord(row as Record<string, unknown>) : defaultSeoValues('park');
+  });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const [publishedAt, setPublishedAt] = useState(() => {
+    if (!parkId) return '';
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? recordPublishedAt(row) : '';
+  });
+  const [faqs, setFaqs] = useState<PageFaq[]>(() => {
+    if (!parkId) return [];
+    const row = readAdminEditPrefill('national_park', parkId);
+    return row ? faqsForEditor(row, 'national_park') : [];
+  });
 
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);

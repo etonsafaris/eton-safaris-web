@@ -62,6 +62,7 @@ import {
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { destinationPublicPath, landingPreviewPath, pagePublicPath } from '@/lib/cms-routes';
 import { indexableKindForCollectionId } from '@/lib/public-indexing';
+import { stashAdminEditRecord } from '@/lib/admin-edit-prefill';
 import { notifyAdminItemSaved, publishPublicSite } from '@/lib/admin-item-notify';
 import { ensureDefaultCmsPages, ensureDefaultLandingPages } from '@/lib/ensure-cms-defaults';
 import { countryCategoryPath, canonicalCountrySlug, matchesCountry, publicCountrySlug } from '@/lib/country-utils';
@@ -841,40 +842,44 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     }
     const recordId = pickRecordId(record);
     if (recordId != null) {
+      const goEdit = (path: string) => {
+        stashAdminEditRecord(config.id, record, recordId);
+        router.push(`${path}${listQuery}`);
+      };
       if (isTours) {
-        router.push(`/admin/tours/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/tours/${recordId}/edit`);
         return;
       }
       if (isSafariUpdates) {
-        router.push(`/admin/safari_updates/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/safari_updates/${recordId}/edit`);
         return;
       }
       if (isCountries) {
-        router.push(`/admin/countries/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/countries/${recordId}/edit`);
         return;
       }
       if (isCategories) {
-        router.push(`/admin/categories/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/categories/${recordId}/edit`);
         return;
       }
       if (isNationalPark) {
-        router.push(`/admin/national_park/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/national_park/${recordId}/edit`);
         return;
       }
       if (isAccommodations) {
-        router.push(`/admin/accommodations/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/accommodations/${recordId}/edit`);
         return;
       }
       if (isExplore) {
-        router.push(`/admin/explore/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/explore/${recordId}/edit`);
         return;
       }
       if (isPages) {
-        router.push(`/admin/pages/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/pages/${recordId}/edit`);
         return;
       }
       if (isLandingPages) {
-        router.push(`/admin/landing_pages/${recordId}/edit${listQuery}`);
+        goEdit(`/admin/landing_pages/${recordId}/edit`);
         return;
       }
     }

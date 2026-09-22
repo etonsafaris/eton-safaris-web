@@ -10,6 +10,7 @@ import SearchableSelect from '@/components/admin/SearchableSelect';
 import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { adminListColumnsFor, fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { fetchAdminTablePage } from '@/lib/admin-records-client';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -112,26 +113,35 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(accommodationId);
 
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [descriptionTitle, setDescriptionTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [accommodationType, setAccommodationType] = useState('');
-  const [country, setCountry] = useState('');
-  const [nationalPark, setNationalPark] = useState('');
-  const [featuredImage, setFeaturedImage] = useState('');
+  const prefillRow = accommodationId ? readAdminEditPrefill('accommodations', accommodationId) : null;
+  const [name, setName] = useState(() => String(prefillRow?.name || ''));
+  const [location, setLocation] = useState(() => String(prefillRow?.location || ''));
+  const [descriptionTitle, setDescriptionTitle] = useState(() => String(prefillRow?.description_title || ''));
+  const [description, setDescription] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.description || '')) : ''
+  );
+  const [accommodationType, setAccommodationType] = useState(() => String(prefillRow?.type || ''));
+  const [country, setCountry] = useState(() => String(prefillRow?.country || ''));
+  const [nationalPark, setNationalPark] = useState(() =>
+    String(prefillRow?.national_park || prefillRow?.national_park_name || prefillRow?.park || '')
+  );
+  const [featuredImage, setFeaturedImage] = useState(() => String(prefillRow?.image_url || ''));
   const [blocks, setBlocks] = useState<AccommodationBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<AccommodationBlock>({ title: '', description: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [countries, setCountries] = useState<RecordRow[]>([]);
   const [parks, setParks] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('stay'));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('stay')
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
+  const [faqs, setFaqs] = useState<PageFaq[]>(() =>
+    prefillRow ? faqsForEditor(prefillRow, 'accommodations') : []
+  );
 
   useEffect(() => {
     fetchCollectionRecords('countries', [], {

@@ -27,6 +27,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { hasAdminEditPrefill, readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { fetchAdminRecordById, fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
@@ -79,6 +80,21 @@ const DEFAULT_FORM: TourFormState = {
   featured: true,
   slug: '',
 };
+
+function tourFormFromListRow(tour: RecordRow): TourFormState {
+  return {
+    ...DEFAULT_FORM,
+    title: String(tour.title || tour.name || ''),
+    description: stripEmbeddedContent(String(tour.description || tour.content || '')),
+    image_url: String(tour.image_url || tour.cover_image || tour.social_image_url || ''),
+    country: String(tour.country || ''),
+    category: String(tour.category || tour.category_name || ''),
+    duration_days: String(tour.duration_days ?? tour.duration ?? ''),
+    price: String(tour.price ?? ''),
+    slug: String(tour.slug || tour.seo_slug || ''),
+    featured: tour.featured !== false && tour.is_featured !== false,
+  };
+}
 
 const EMPTY_ITINERARY: ItineraryEntry = {
   day: '',
@@ -174,19 +190,33 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEdit = Boolean(tourId);
-  const [form, setForm] = useState<TourFormState>(DEFAULT_FORM);
+  const [form, setForm] = useState<TourFormState>(() => {
+    if (!tourId) return DEFAULT_FORM;
+    const prefill = readAdminEditPrefill('tours', tourId);
+    return prefill ? tourFormFromListRow(prefill) : DEFAULT_FORM;
+  });
   const [itineraries, setItineraries] = useState<ItineraryEntry[]>([]);
   const [draftItinerary, setDraftItinerary] = useState<ItineraryEntry>(EMPTY_ITINERARY);
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [countries, setCountries] = useState<RecordRow[]>([]);
   const [categories, setCategories] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('tour'));
+  const [seo, setSeo] = useState<SeoValues>(() => {
+    if (!tourId) return defaultSeoValues('tour');
+    const prefill = readAdminEditPrefill('tours', tourId);
+    return prefill ? seoValuesFromRecord(prefill as Record<string, unknown>) : defaultSeoValues('tour');
+  });
   const [schemaColumns, setSchemaColumns] = useState<string[] | undefined>();
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [loadingTour, setLoadingTour] = useState(Boolean(tourId));
-  const [publishedAt, setPublishedAt] = useState('');
+  const [loadingTour, setLoadingTour] = useState(
+    () => Boolean(tourId) && !hasAdminEditPrefill('tours', tourId!)
+  );
+  const [publishedAt, setPublishedAt] = useState(() => {
+    if (!tourId) return '';
+    const prefill = readAdminEditPrefill('tours', tourId);
+    return prefill ? recordPublishedAt(prefill) : '';
+  });
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
   useEffect(() => {
@@ -221,7 +251,8 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
   useEffect(() => {
     if (!tourId) return;
     let active = true;
-    setLoadingTour(true);
+    const hadPrefill = hasAdminEditPrefill('tours', tourId);
+    if (!hadPrefill) setLoadingTour(true);
     setError('');
     void fetchAdminRecordById('tours', tourId).then((tour) => {
       if (!active) return;
@@ -437,9 +468,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         </p>
       </div>
 
-      {loadingTour ? (
-        <p className="mt-8 text-sm text-gray-500">Loading saved tour…</p>
-      ) : null}
+      {loadingTour ? <p className="mt-8 text-sm text-gray-500">Loading saved tour…</p> : null}
       {error ? (
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
       ) : null}

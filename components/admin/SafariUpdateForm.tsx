@@ -18,6 +18,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
@@ -51,21 +52,28 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
   const router = useRouter();
   const isEdit = Boolean(postId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prefillRow = postId ? readAdminEditPrefill('safari_updates', postId) : null;
 
-  const [postType, setPostType] = useState<(typeof POST_TYPES)[number]>('Standard Posts');
+  const [postType, setPostType] = useState<(typeof POST_TYPES)[number]>(() =>
+    prefillRow && isLanguagePost(prefillRow) ? 'Language Posts' : 'Standard Posts'
+  );
   const [postTypeOpen, setPostTypeOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [coverImage, setCoverImage] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState(() => String(prefillRow?.title || ''));
+  const [coverImage, setCoverImage] = useState(() => String(prefillRow?.image_url || ''));
+  const [content, setContent] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.content || prefillRow.description || prefillRow.excerpt || '')) : ''
+  );
   const [blocks, setBlocks] = useState<PostBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '', image_url: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('article'));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('article')
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
 
   useEffect(() => {
     if (!postId) return;

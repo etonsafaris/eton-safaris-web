@@ -18,6 +18,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
@@ -88,22 +89,27 @@ function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(placeId);
 
-  const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('');
-  const [descriptionTitle, setDescriptionTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [country, setCountry] = useState('');
-  const [featuredImage, setFeaturedImage] = useState('');
+  const prefillRow = placeId ? readAdminEditPrefill('explore', placeId) : null;
+  const [title, setTitle] = useState(() => String(prefillRow?.title || prefillRow?.name || ''));
+  const [location, setLocation] = useState(() => String(prefillRow?.location || ''));
+  const [descriptionTitle, setDescriptionTitle] = useState(() => String(prefillRow?.description_title || ''));
+  const [description, setDescription] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.description || '')) : ''
+  );
+  const [country, setCountry] = useState(() => String(prefillRow?.country || ''));
+  const [featuredImage, setFeaturedImage] = useState(() => String(prefillRow?.image_url || ''));
   const [blocks, setBlocks] = useState<PlaceBlock[]>([]);
   const [draftBlock, setDraftBlock] = useState<PlaceBlock>({ title: '', description: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [countries, setCountries] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('place'));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('place')
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
+  const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
 
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);

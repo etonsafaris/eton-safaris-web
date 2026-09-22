@@ -18,6 +18,7 @@ import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, pick
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
+import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
@@ -65,23 +66,35 @@ function LandingPageFormInner({ landingId }: LandingPageFormProps) {
   const router = useRouter();
   const isEdit = Boolean(landingId);
 
-  const [title, setTitle] = useState('');
-  const [country, setCountry] = useState('');
-  const [headline, setHeadline] = useState('');
-  const [offerLine, setOfferLine] = useState('');
-  const [readyHeading, setReadyHeading] = useState('');
-  const [ctaLabel, setCtaLabel] = useState('Request a Quote');
-  const [excerpt, setExcerpt] = useState('');
-  const [content, setContent] = useState('');
-  const [featuredImage, setFeaturedImage] = useState('');
-  const [status, setStatus] = useState<'published' | 'draft'>('published');
-  const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const prefillRow = landingId ? readAdminEditPrefill('landing_pages', landingId) : null;
+  const prefillExtras = prefillRow ? parseCmsPageExtras(prefillRow) : null;
+  const [title, setTitle] = useState(() => String(prefillRow?.title || prefillRow?.name || ''));
+  const [country, setCountry] = useState(() => String(prefillRow?.country || ''));
+  const [headline, setHeadline] = useState(() =>
+    String(prefillExtras?.hero_title || prefillRow?.headline || prefillRow?.title || '')
+  );
+  const [offerLine, setOfferLine] = useState(() => String(prefillExtras?.offer_line || ''));
+  const [readyHeading, setReadyHeading] = useState(() => String(prefillExtras?.ready_heading || ''));
+  const [ctaLabel, setCtaLabel] = useState(() => String(prefillExtras?.cta_label || 'Request a Quote'));
+  const [excerpt, setExcerpt] = useState(() =>
+    String(prefillExtras?.excerpt || prefillRow?.excerpt || prefillRow?.summary || '')
+  );
+  const [content, setContent] = useState(() =>
+    prefillRow ? stripEmbeddedContent(String(prefillRow.content || prefillRow.description || '')) : ''
+  );
+  const [featuredImage, setFeaturedImage] = useState(() => String(prefillRow?.image_url || prefillRow?.cover_image || ''));
+  const [status, setStatus] = useState<'published' | 'draft'>(() => prefillExtras?.status || 'published');
+  const [faqs, setFaqs] = useState<PageFaq[]>(() => (prefillRow ? faqsForEditor(prefillRow, 'landing_pages') : []));
   const [countries, setCountries] = useState<RecordRow[]>([]);
-  const [seo, setSeo] = useState<SeoValues>(defaultSeoValues('country'));
+  const [seo, setSeo] = useState<SeoValues>(() =>
+    prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('country')
+  );
   const [saving, setSaving] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
-  const [publishedAt, setPublishedAt] = useState('');
+  const [publishedAt, setPublishedAt] = useState(() =>
+    prefillRow ? recordPublishedAt(prefillRow) || prefillExtras?.published_at || '' : ''
+  );
 
   useEffect(() => {
     fetchCollectionRecords('countries').then(setCountries);
