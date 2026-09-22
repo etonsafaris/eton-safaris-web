@@ -1,12 +1,13 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { adminListQueryString } from '@/lib/admin-list-navigation';
 import { useAdminUrlPage } from '@/lib/use-admin-url-page';
 import { Bell, LayoutGrid, List, Plus, RefreshCw, Search, X } from 'lucide-react';
 import AdminGridSkeleton from '@/components/admin/AdminGridSkeleton';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
+import ToursCountryTabs from '@/components/admin/ToursCountryTabs';
 import { collectionUsesAdminPaging } from '@/lib/admin-paging';
 import {
   adminTableCacheKey,
@@ -91,6 +92,7 @@ export default function CollectionManager({ config }: { config: CollectionConfig
 
 function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const router = useRouter();
+  const pathname = usePathname() || '';
   const searchParams = useSearchParams();
   const listQuery = adminListQueryString(searchParams);
   const { counts: adminCounts } = useAdminCounts();
@@ -144,6 +146,45 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const { page, setPage, resetPage } = useAdminUrlPage();
   const loadRequestRef = useRef(0);
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [tourCategoryRows, setTourCategoryRows] = useState<RecordRow[]>([]);
+  const defaultTourCountry = NAV_COUNTRIES[0]?.name || 'Uganda';
+  const activeCountry = isTours ? searchParams?.get('country') || defaultTourCountry : countryFilter;
+  const activeCategory = isTours ? searchParams?.get('category') || '' : categoryFilter;
+
+  function updateTourFilters(next: { country?: string; category?: string | null }) {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (next.country !== undefined) {
+      if (next.country) params.set('country', next.country);
+      else params.delete('country');
+      params.delete('category');
+      params.delete('page');
+    }
+    if (next.category !== undefined) {
+      if (next.category) params.set('category', next.category);
+      else params.delete('category');
+      params.delete('page');
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname || `/admin/${config.id}`, { scroll: false });
+  }
+
+  useEffect(() => {
+    if (!isTours) return;
+    if (!searchParams?.get('country')) {
+      updateTourFilters({ country: defaultTourCountry });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTours]);
+
+  useEffect(() => {
+    if (!isTours || !activeCountry) {
+      setTourCategoryRows([]);
+      return;
+    }
+    fetchAdminTablePage('categories', { page: 1, limit: 50, country: activeCountry })
+      .then((result) => setTourCategoryRows(result.rows))
+      .catch(() => setTourCategoryRows([]));
+  }, [isTours, activeCountry]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -155,16 +196,24 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       setLoading(false);
       return;
     }
+    if (isTours && !activeCountry) {
+      setRecords([]);
+      setRemoteTotal(0);
+      setLoading(false);
+      return;
+    }
     const requestId = ++loadRequestRef.current;
     const remoteQuery = usesRemotePaging && debouncedQuery.length >= 2 ? debouncedQuery : undefined;
+    const listCountry = isTours ? activeCountry : isSafariUpdates ? undefined : countryFilter || undefined;
+    const listCategory = isTours ? activeCategory || undefined : categoryFilter || undefined;
     const cacheKey =
       usesRemotePaging && config.table
         ? adminTableCacheKey(config.table, {
             page,
             limit: PAGE_SIZE,
-            country: isSafariUpdates ? undefined : countryFilter || undefined,
+            country: listCountry,
             park: isAccommodations ? parkFilter || undefined : undefined,
-            category: isTours ? categoryFilter || undefined : undefined,
+            category: isTours ? listCategory : categoryFilter || undefined,
             q: remoteQuery,
           })
         : '';
@@ -192,9 +241,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           page,
           limit: PAGE_SIZE,
           bustCache: options?.bustCache,
-          country: isSafariUpdates ? undefined : countryFilter || undefined,
+          country: listCountry,
           park: isAccommodations ? parkFilter || undefined : undefined,
-          category: isTours ? categoryFilter || undefined : undefined,
+          category: isTours ? listCategory : categoryFilter || undefined,
           q: remoteQuery,
         });
         data = result.rows ?? [];
@@ -203,9 +252,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           prefetchAdminTablePage(config.table, {
             page: page + 1,
             limit: PAGE_SIZE,
-            country: isSafariUpdates ? undefined : countryFilter || undefined,
+            country: listCountry,
             park: isAccommodations ? parkFilter || undefined : undefined,
-            category: isTours ? categoryFilter || undefined : undefined,
+            category: isTours ? listCategory : categoryFilter || undefined,
             q: remoteQuery,
           });
         }
@@ -273,9 +322,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   }, [
     config.table,
     usesRemotePaging ? page : -1,
-    countryFilter,
+    isTours ? activeCountry : countryFilter,
     parkFilter,
-    categoryFilter,
+    isTours ? activeCategory : categoryFilter,
     usesRemotePaging ? debouncedQuery : '',
   ]);
 
@@ -340,8 +389,26 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   ]);
 
   const listFilterKey = useMemo(
-    () => [config.table, query, countryFilter, parkFilter, categoryFilter, postKind].join('\0'),
-    [config.table, query, countryFilter, parkFilter, categoryFilter, postKind]
+    () =>
+      [
+        config.table,
+        query,
+        isTours ? activeCountry : countryFilter,
+        parkFilter,
+        isTours ? activeCategory : categoryFilter,
+        postKind,
+      ].join('\0'),
+    [
+      config.table,
+      query,
+      isTours,
+      activeCountry,
+      countryFilter,
+      parkFilter,
+      activeCategory,
+      categoryFilter,
+      postKind,
+    ]
   );
   const previousListFilterKey = useRef<string | null>(null);
   useEffect(() => {
@@ -403,17 +470,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
   const categoryOptions = useMemo(() => {
     if (!isTours) return [];
-    const pool = countryFilter
-      ? records.filter((record) =>
-          String(record.country ?? record.destination ?? '')
-            .toLowerCase()
-            .includes(countryFilter.toLowerCase())
-        )
-      : records;
-    return Array.from(
-      new Set(pool.map((record) => String(record.category || record.category_name || '').trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b));
-  }, [records, countryFilter, isTours]);
+    const fromCategories = tourCategoryRows
+      .map((row) => getRecordTitle(row))
+      .filter(Boolean);
+    const fromTours = records
+      .map((record) => String(record.category || record.category_name || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set([...fromCategories, ...fromTours])).sort((a, b) => a.localeCompare(b));
+  }, [records, tourCategoryRows, isTours]);
 
   const parkOptions = useMemo(() => {
     if (!isAccommodations || !countryFilter) return [];
@@ -1119,9 +1183,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           )}
           <span className="rounded-full bg-moss/10 px-3 py-1 text-xs font-medium text-moss">
             {isTours
-              ? countryFilter
-                ? `${listTotal.toLocaleString()} tours in ${countryFilter}`
-                : `${listTotal.toLocaleString()} Total Packages`
+              ? activeCategory
+                ? `${listTotal.toLocaleString()} ${activeCategory} tours · ${activeCountry}`
+                : `${listTotal.toLocaleString()} tours in ${activeCountry}`
               : isNationalPark
                 ? countryFilter
                   ? `${listTotal.toLocaleString()} parks in ${countryFilter}`
@@ -1155,8 +1219,16 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         </div>
       </div>
 
+      {isTours ? (
+        <div className="mb-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 dark:border-white/10 dark:bg-[#161b22]">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Filter by country</p>
+          <ToursCountryTabs value={activeCountry} onChange={(name) => updateTourFilters({ country: name })} />
+        </div>
+      ) : null}
+
       <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row dark:border-white/10 dark:bg-[#161b22]">
-        {(isTours || isCountries || isNationalPark || isAccommodations || isExplore || isCategories || isLandingPages) && (
+        {!isTours &&
+        (isCountries || isNationalPark || isAccommodations || isExplore || isCategories || isLandingPages) && (
           <div className="w-full sm:w-56">
             <SearchableSelect
               value={countryFilter}
@@ -1188,15 +1260,16 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           </div>
         )}
         {isTours && (
-          <div className="w-full sm:w-64">
+          <div className="w-full sm:w-72">
             <SearchableSelect
-              value={categoryFilter}
-              onChange={setCategoryFilter}
+              value={activeCategory}
+              onChange={(value) => updateTourFilters({ category: value || null })}
+              disabled={!activeCountry}
               options={[
-                { value: '', label: 'All categories' },
+                { value: '', label: activeCountry ? 'All safari categories' : 'Select country first' },
                 ...categoryOptions.map((category) => ({ value: category, label: category })),
               ]}
-              placeholder="All categories"
+              placeholder={activeCountry ? 'Filter by category' : 'Select country first'}
             />
           </div>
         )}
@@ -1265,7 +1338,18 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-400">
-          No records found in this collection.
+          {isTours ? (
+            <>
+              <p className="font-semibold text-[#111827] dark:text-white">No tour packages for this filter</p>
+              <p className="mt-2 text-sm">
+                {activeCategory
+                  ? `No “${activeCategory}” tours in ${activeCountry} yet. Try another category or add a new package.`
+                  : `No tours listed for ${activeCountry} yet. Click “Add New Tour” to create one.`}
+              </p>
+            </>
+          ) : (
+            'No records found in this collection.'
+          )}
         </div>
       ) : isOps ? (
         <>

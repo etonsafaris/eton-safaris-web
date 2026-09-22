@@ -44,7 +44,7 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     label: 'Tours',
     table: 'tours',
     icon: 'compass',
-    subtitle: 'Manage safari tours and packages',
+    subtitle: 'Pick a country, then manage safari categories and tour packages for that destination',
     view: 'grid',
     publicPath: '/tours',
     addLabel: 'Add New Tour',

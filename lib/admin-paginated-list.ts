@@ -102,7 +102,10 @@ function buildWhere(filters: AdminListFilters | undefined, table: string) {
   const q = sanitizeFilter(filters?.q || '');
   if (country) {
     params.push(`%${country}%`);
-    clauses.push(`country ILIKE $${params.length}`);
+    const index = params.length;
+    clauses.push(
+      `(country ILIKE $${index} OR destination ILIKE $${index} OR nation ILIKE $${index})`
+    );
   }
   if (category) {
     params.push(`%${category}%`);

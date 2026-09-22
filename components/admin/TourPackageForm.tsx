@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import {
@@ -172,6 +172,7 @@ export default function TourPackageForm(props: TourPackageFormProps) {
 function TourPackageFormInner({ tourId }: TourPackageFormProps) {
   const listHref = useAdminCollectionListHref('tours');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isEdit = Boolean(tourId);
   const [form, setForm] = useState<TourFormState>(DEFAULT_FORM);
   const [itineraries, setItineraries] = useState<ItineraryEntry[]>([]);
@@ -189,14 +190,33 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      fetchAdminTablePage('countries', { page: 1, limit: 50 }),
-      fetchAdminTablePage('categories', { page: 1, limit: 50 }),
-    ]).then(([countryPage, categoryPage]) => {
+    fetchAdminTablePage('countries', { page: 1, limit: 50 }).then((countryPage) => {
       setCountries(countryPage.rows);
-      setCategories(categoryPage.rows);
     });
   }, []);
+
+  useEffect(() => {
+    if (tourId) return;
+    const presetCountry = searchParams.get('country')?.trim();
+    const presetCategory = searchParams.get('category')?.trim();
+    if (!presetCountry) return;
+    setForm((current) => ({
+      ...current,
+      country: current.country || presetCountry,
+      category: current.category || presetCategory || '',
+    }));
+  }, [tourId, searchParams]);
+
+  useEffect(() => {
+    const country = form.country.trim();
+    if (!country) {
+      setCategories([]);
+      return;
+    }
+    fetchAdminTablePage('categories', { page: 1, limit: 50, country })
+      .then((page) => setCategories(page.rows))
+      .catch(() => setCategories([]));
+  }, [form.country]);
 
   useEffect(() => {
     if (!tourId) return;
