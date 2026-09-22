@@ -7,6 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { PUBLIC_SITE_LABELS, SITE, SOCIAL_LINKS } from '@/lib/collections';
+import { whatsappDigitsFromPhone } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 
@@ -174,12 +175,17 @@ export default function SiteFooter() {
         <div>
           <h4 className="site-footer-title">Contact Info</h4>
           <div className="mt-1 space-y-3 text-base text-white">
-            <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 text-white" /> {SITE.address}</p>
-            <a href={`https://wa.me/${SITE.whatsapp}`} className="site-footer-link flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-white" /> {SITE.phoneDisplay}
+            <p className="flex items-start gap-2">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white" /> {home.contactAddress || SITE.address}
+            </p>
+            <a
+              href={`https://wa.me/${whatsappDigitsFromPhone(home.contactPhone || SITE.phoneDisplay)}`}
+              className="site-footer-link flex items-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4 text-white" /> {home.contactPhone || SITE.phoneDisplay}
             </a>
-            <a href={`mailto:${SITE.email}`} className="site-footer-link flex items-center gap-2">
-              <Mail className="h-4 w-4 text-white" /> {SITE.email}
+            <a href={`mailto:${home.contactEmail || SITE.email}`} className="site-footer-link flex items-center gap-2">
+              <Mail className="h-4 w-4 text-white" /> {home.contactEmail || SITE.email}
             </a>
             <Link
               href="/request-a-quote"

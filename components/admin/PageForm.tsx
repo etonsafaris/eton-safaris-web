@@ -28,13 +28,10 @@ import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { fetchCollectionRecordById, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
-  DEFAULT_HOME_FEATURES,
   DEFAULT_HOME_PAGE_CONTENT,
   HOME_PAGE_SLUG,
-  homeFeatureBlocks,
   homePageFieldPack,
   parseHomePageContent,
-  type HomeFeaturePoint,
 } from '@/lib/home-page-content';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
@@ -123,13 +120,10 @@ function PageFormInner({ pageId }: PageFormProps) {
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
-  const [brandTitle, setBrandTitle] = useState(DEFAULT_HOME_PAGE_CONTENT.brandTitle);
-  const [brandDescription, setBrandDescription] = useState(DEFAULT_HOME_PAGE_CONTENT.brandDescription);
-  const [setsApartHeading, setSetsApartHeading] = useState(DEFAULT_HOME_PAGE_CONTENT.setsApartHeading);
-  const [setsApartIntro, setSetsApartIntro] = useState(DEFAULT_HOME_PAGE_CONTENT.setsApartIntro);
-  const [homeFeatures, setHomeFeatures] = useState<HomeFeaturePoint[]>(DEFAULT_HOME_FEATURES);
-  const [homeVideos, setHomeVideos] = useState<string[]>(DEFAULT_HOME_PAGE_CONTENT.videos);
   const [footerAbout, setFooterAbout] = useState(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
+  const [contactAddress, setContactAddress] = useState(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
+  const [contactEmail, setContactEmail] = useState(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
+  const [contactPhone, setContactPhone] = useState(DEFAULT_HOME_PAGE_CONTENT.contactPhone);
 
   useEffect(() => {
     if (!pageId) return;
@@ -151,14 +145,11 @@ function PageFormInner({ pageId }: PageFormProps) {
       const pageSlug = String(page.slug || extras.layout || '');
       if (extras.layout === 'home' || pageSlug === HOME_PAGE_SLUG || /home/i.test(pageSlug)) {
         const home = parseHomePageContent(page);
-        setBrandTitle(home.brandTitle);
-        setBrandDescription(home.brandDescription);
-        setSetsApartHeading(home.setsApartHeading);
-        setSetsApartIntro(home.setsApartIntro);
-        setHomeFeatures(home.features);
-        setHomeVideos(home.videos);
         setFooterAbout(home.footerAbout);
-        setBlocks(homeFeatureBlocks(home.features));
+        setContactAddress(home.contactAddress);
+        setContactEmail(home.contactEmail);
+        setContactPhone(home.contactPhone);
+        setBlocks([]);
       } else {
         const isEditableStoryPage =
           extras.layout === 'community' ||
@@ -214,13 +205,10 @@ function PageFormInner({ pageId }: PageFormProps) {
     const homePack =
       layout === 'home'
         ? homePageFieldPack({
-            brandTitle,
-            brandDescription,
-            setsApartHeading,
-            setsApartIntro,
-            features: homeFeatures,
-            videos: homeVideos,
             footerAbout,
+            contactAddress,
+            contactEmail,
+            contactPhone,
             faqs,
           })
         : null;
@@ -238,7 +226,7 @@ function PageFormInner({ pageId }: PageFormProps) {
       ...(stamp ? { published_at: stamp } : {}),
     });
 
-    const pageBlocks = layout === 'home' ? homeFeatureBlocks(homeFeatures) : blocks;
+    const pageBlocks = layout === 'home' ? [] : blocks;
     const payload = buildSavePayload(
       'pages',
       {
@@ -257,7 +245,7 @@ function PageFormInner({ pageId }: PageFormProps) {
         cta_href: extras.cta_href,
         page_blocks: JSON.stringify(pageBlocks),
         published_at: stamp,
-        content: embedContent(layout === 'home' ? `<p>${brandDescription}</p>` : content, {
+        content: embedContent(layout === 'home' ? `<p>${footerAbout}</p>` : content, {
           blocks: pageBlocks,
           fields: homePack ? { ...extras, ...homePack } : extras,
         }),
@@ -326,13 +314,10 @@ function PageFormInner({ pageId }: PageFormProps) {
                 if (next === 'home') {
                   setTitle('Home Page');
                   setSeo((current) => ({ ...current, slug: HOME_PAGE_SLUG, breadcrumb_title: 'Home Page' }));
-                  setBrandTitle(DEFAULT_HOME_PAGE_CONTENT.brandTitle);
-                  setBrandDescription(DEFAULT_HOME_PAGE_CONTENT.brandDescription);
-                  setSetsApartHeading(DEFAULT_HOME_PAGE_CONTENT.setsApartHeading);
-                  setSetsApartIntro(DEFAULT_HOME_PAGE_CONTENT.setsApartIntro);
-                  setHomeFeatures(DEFAULT_HOME_FEATURES.map((item) => ({ ...item })));
-                  setHomeVideos([...DEFAULT_HOME_PAGE_CONTENT.videos]);
                   setFooterAbout(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
+                  setContactAddress(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
+                  setContactEmail(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
+                  setContactPhone(DEFAULT_HOME_PAGE_CONTENT.contactPhone);
                 }
                 if (next === 'community') {
                   setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
@@ -357,21 +342,23 @@ function PageFormInner({ pageId }: PageFormProps) {
         {layout === 'home' ? (
           <>
             <HomePageFields
-              brandTitle={brandTitle}
-              brandDescription={brandDescription}
-              setsApartHeading={setsApartHeading}
-              setsApartIntro={setsApartIntro}
-              features={homeFeatures}
-              videos={homeVideos}
               footerAbout={footerAbout}
-              onBrandTitle={setBrandTitle}
-              onBrandDescription={setBrandDescription}
-              onSetsApartHeading={setSetsApartHeading}
-              onSetsApartIntro={setSetsApartIntro}
-              onFeatures={setHomeFeatures}
-              onVideos={setHomeVideos}
+              contactAddress={contactAddress}
+              contactEmail={contactEmail}
+              contactPhone={contactPhone}
               onFooterAbout={setFooterAbout}
+              onContactAddress={setContactAddress}
+              onContactEmail={setContactEmail}
+              onContactPhone={setContactPhone}
             />
+            <div className="mt-8">
+              <FaqEditor
+                faqs={faqs}
+                onChange={setFaqs}
+                title="Home page FAQ"
+                description="Questions shown at the bottom of the public home page."
+              />
+            </div>
             <div className="mt-8 max-w-sm">
               <FieldLabel>Status</FieldLabel>
               <SearchableSelect
@@ -615,9 +602,9 @@ function PageFormInner({ pageId }: PageFormProps) {
         coverImageUrl={featuredImage.startsWith('blob:') ? '' : featuredImage}
         contentForReadability={
           layout === 'home'
-            ? `${brandTitle}\n${brandDescription}\n${setsApartHeading}\n${setsApartIntro}\n${homeFeatures
-                .map((item) => `${item.title}\n${item.description}`)
-                .join('\n')}\n${footerAbout}`
+            ? `${footerAbout}\n${contactAddress}\n${contactEmail}\n${contactPhone}\n${faqs
+                .map((item) => `${item.question}\n${item.answer}`)
+                .join('\n')}`
             : `${excerpt}\n${content}\n${blocks.map((block) => block.description).join('\n')}`
         }
         onSave={() => setSeoSaved(true)}

@@ -4,12 +4,7 @@ import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { landingSlugForCountry } from '@/lib/cms-routes';
 import type { CmsPageLayout, PageFaq } from '@/lib/cms-page-model';
 import { COMMUNITY_INITIATIVES } from '@/lib/community-initiatives';
-import {
-  DEFAULT_HOME_FEATURES,
-  DEFAULT_HOME_PAGE_CONTENT,
-  HOME_PAGE_SLUG,
-  homeFeatureBlocks,
-} from '@/lib/home-page-content';
+import { DEFAULT_HOME_PAGE_CONTENT, HOME_PAGE_SLUG } from '@/lib/home-page-content';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
 
@@ -68,17 +63,17 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     layout: 'home',
     image_url: SITE_MEDIA.safariVehicle,
     video_url: '',
-    hero_title: DEFAULT_HOME_PAGE_CONTENT.brandTitle,
-    subtitle: DEFAULT_HOME_PAGE_CONTENT.setsApartIntro,
-    excerpt: DEFAULT_HOME_PAGE_CONTENT.brandDescription.slice(0, 220),
-    content: `<p>${DEFAULT_HOME_PAGE_CONTENT.brandDescription}</p>`,
+    hero_title: 'Home Page',
+    subtitle: '',
+    excerpt: DEFAULT_HOME_PAGE_CONTENT.footerAbout.slice(0, 220),
+    content: `<p>${DEFAULT_HOME_PAGE_CONTENT.footerAbout}</p>`,
     faqs: [],
     seo_title: seoTitle('Home Page'),
-    meta_description: DEFAULT_HOME_PAGE_CONTENT.brandDescription.slice(0, 155),
+    meta_description: DEFAULT_HOME_PAGE_CONTENT.footerAbout.slice(0, 155),
     focus_keyphrase: 'Eton Safaris home page',
     schema_type: 'WebPage',
     breadcrumb_title: 'Home Page',
-    blocks: homeFeatureBlocks(DEFAULT_HOME_FEATURES),
+    blocks: [],
   },
   {
     title: 'About Us',
