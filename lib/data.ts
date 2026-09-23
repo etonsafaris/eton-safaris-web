@@ -226,13 +226,15 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
       }
     }
   }
-  const columns = ['national_park_name', 'national_park', 'park_name', 'park', 'location'];
+  const { stayMatchesParkLoose } = await import('@/lib/park-stay-match');
+  const columns = ['national_park_name', 'national_park', 'park_name', 'park'];
   for (const column of columns) {
-    const params = new URLSearchParams({ limit: String(limit), [`ilike.${column}`]: `%${parkName}%` });
+    const params = new URLSearchParams({ limit: String(Math.max(limit, 48)), [`ilike.${column}`]: `%${parkName}%` });
     const response = await fetch(dataUrl('accommodations', params), { cache: 'default' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
     for (const row of body.data || []) {
+      if (!stayMatchesParkLoose(row, parkName, parkId)) continue;
       const key = String(row.id || getRecordTitle(row)).toLowerCase();
       if (key && !seen.has(key)) {
         seen.add(key);

@@ -69,6 +69,8 @@
     "stays:real": "node scripts/seed-real-park-accommodations.mjs",
     "stays:real-dry": "node scripts/seed-real-park-accommodations.mjs --dry-run",
     "stays:delete-fake": "node scripts/delete-fake-accommodations.mjs",
+    "stays:audit-repair": "node scripts/audit-repair-park-accommodations.mjs",
+    "stays:audit-repair-full": "node scripts/audit-repair-park-accommodations.mjs --then-seed",
     "stays:repair-seo": "node scripts/repair-accommodations-seo.mjs",
     "stays:repair-seo-dry": "node scripts/repair-accommodations-seo.mjs --dry-run",
     "seo:google-off": "node scripts/set-all-google-index-off.mjs",

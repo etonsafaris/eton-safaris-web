@@ -16,6 +16,7 @@ import {
   setCachedCollection,
   setInflightCollection,
 } from '@/lib/collection-cache';
+import { stayMatchesParkLoose } from '@/lib/park-stay-match';
 import type { RecordRow } from '@/lib/types';
 
 // Additional utility functions needed by client components
@@ -1037,6 +1038,8 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     }
   }
 
+  const missingParkColumns = new Set<string>();
+
   async function queryOnce(whereSql: string, params: any[] = []) {
     for (let attempt = 0; attempt < 6; attempt += 1) {
       try {
@@ -1045,7 +1048,13 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
         pushRows(res.rows as RecordRow[]);
         return;
       } catch (error: any) {
-        const missing = selectColumns !== '*' ? missingSelectColumn(error.message) : null;
+        const message = error?.message || '';
+        const missingWhere = message.match(/column "([^"]+)" does not exist/i)?.[1];
+        if (missingWhere) {
+          missingParkColumns.add(missingWhere);
+          return;
+        }
+        const missing = selectColumns !== '*' ? missingSelectColumn(message) : null;
         if (missing && selectColumns.split(',').map((part) => part.trim()).includes(missing)) {
           const next = dropColumnFromSelect(selectColumns, missing);
           if (next && next !== selectColumns) {
@@ -1053,7 +1062,7 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
             continue;
           }
         }
-        console.error('[Aiven] Park stays query failed:', error.message);
+        console.error('[Aiven] Park stays query failed:', message);
         return;
       }
     }
@@ -1064,25 +1073,19 @@ export async function fetchStaysForPark(parkName: string, limit = 10, parkId?: s
     await queryOnce(`WHERE national_park_id = $1 LIMIT ${capped}`, [id]);
   }
   if (merged.length < capped && (shortName || name)) {
-    for (const column of ['national_park_name', 'national_park', 'park_name', 'park', 'location']) {
+    for (const column of ['national_park_name', 'national_park', 'park_name', 'park']) {
+      if (missingParkColumns.has(column)) continue;
       await queryOnce(`WHERE ${column} ILIKE $1 LIMIT 48`, [like]);
       if (merged.length >= capped) break;
     }
+    if (merged.length < capped && !missingParkColumns.has('location')) {
+      await queryOnce(`WHERE location ILIKE $1 LIMIT 48`, [like]);
+    }
   }
 
-  const needle = (shortName || name).toLowerCase();
-  const fullNeedle = name.toLowerCase();
   return merged
     .filter(isPublishedRecord)
-    .filter((item) => {
-      if (id && String(item.national_park_id || '') === id) return true;
-      if (!needle) return false;
-      const parkField = pickString(item, ['national_park_name', 'park', 'park_name']).toLowerCase();
-      const hay = [parkField, pickString(item, ['location']), pickString(item, ['name'])]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(needle) || hay.includes(fullNeedle);
-    })
+    .filter((item) => stayMatchesParkLoose(item, parkName, id))
     .slice(0, capped);
 }
 

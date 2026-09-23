@@ -561,6 +561,8 @@ for (const entry of catalog) {
     type: entry.type,
     country,
     national_park: parkName,
+    national_park_id: park.id,
+    national_park_name: parkName,
     park: parkName,
     park_name: parkName,
     website,
