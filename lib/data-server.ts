@@ -463,6 +463,9 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
     `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   bookings:
     'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
+  keywords: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',
+  keyword: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',
+  seo_keywords: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',
 };
 
 export const PUBLIC_LIST_COLUMNS = ADMIN_LIST_COLUMNS;

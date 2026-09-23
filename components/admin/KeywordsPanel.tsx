@@ -9,8 +9,9 @@ import {
   uniqueKeywords,
 } from '@/lib/keywords';
 import { clearCollectionCache, pickString } from '@/lib/data';
+import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 import { mergePublicDestinations } from '@/lib/public-destinations';
-import { fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
+import { adminAuthHeaders, fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import type { RecordRow } from '@/lib/types';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';
@@ -39,16 +40,28 @@ export default function KeywordsPanel() {
   async function load() {
     try {
       clearCollectionCache('keywords');
-      const page = await fetchAdminTablePage('keywords', {
-        page: 1,
-        limit: 50,
-        country: country || undefined,
-        category: category || undefined,
+      await syncAdminSessionCookie().catch(() => false);
+      const response = await fetch('/api/admin/keywords', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: await adminAuthHeaders(),
       });
-      setRows(page.rows);
+      const body = (await response.json().catch(() => ({}))) as {
+        rows?: RecordRow[];
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(body.error || `Could not load keywords (${response.status})`);
+      }
+      setRows(Array.isArray(body.rows) ? body.rows : []);
       setError('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load keywords';
+      const raw = err instanceof Error ? err.message : 'Failed to load keywords';
+      const message =
+        raw === 'Failed to fetch'
+          ? 'Could not reach the server. Check your connection and try Refresh.'
+          : raw;
       setError(message);
       setRows([]);
     }
@@ -66,10 +79,6 @@ export default function KeywordsPanel() {
       })
       .catch(() => setCountryOptions(SEEDED_COUNTRIES));
   }, []);
-
-  useEffect(() => {
-    void load();
-  }, [country, category]);
 
   const countryCategories = useMemo(
     () =>
@@ -135,7 +144,9 @@ export default function KeywordsPanel() {
     if (uniqueIds.length === 0) return { error: null as { message: string } | null };
     const response = await fetch('/api/admin/keywords', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ ids: uniqueIds }),
     });
     const body = (await response.json().catch(() => ({}))) as { error?: string };

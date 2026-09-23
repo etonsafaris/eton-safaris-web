@@ -50,6 +50,8 @@ const TABLE_ALIASES: Record<string, string[]> = {
   inquiries: ['inquiries', 'contact_inquiries'],
   quotations: ['quotations', 'quotations_inquiries'],
   contact_inquiries: ['contact_inquiries', 'inquiries'],
+  keywords: ['keywords', 'keyword', 'seo_keywords'],
+  national_park: ['national_park', 'national_parks', 'parks'],
 };
 
 async function allowAdmin(request: Request) {

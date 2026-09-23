@@ -17,7 +17,7 @@ import { AdminGlassCard } from '@/components/admin/AdminGlassCard';
 import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import TopDestinationsChart from '@/components/admin/TopDestinationsChart';
-import { SITE } from '@/lib/collections';
+import { MAIN_COLLECTIONS, SITE, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { fetchAdminTable } from '@/lib/admin-records-client';
 import { pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
@@ -63,6 +63,13 @@ const colorClasses = {
     glow: 'bg-sky-500/5',
   },
 };
+
+/** Shown as the four top KPI cards — everything else goes in Quick access. */
+const OVERVIEW_STAT_MODULE_IDS = new Set(['tours', 'bookings', 'safari_updates', 'registered_agents']);
+
+function adminModuleHref(id: string) {
+  return id === 'overview' ? '/admin' : `/admin/${id}`;
+}
 
 function bookedCountriesCount(bookings: RecordRow[]) {
   const set = new Set<string>();
@@ -138,6 +145,14 @@ function AdminDavDashboardInner() {
   const activeCountries = counts.countries ?? 0;
   const bookedCountries = bookedCountriesCount(bookings);
   const initialLoading = countsLoading && bookingsLoading;
+
+  const quickAccessModules = useMemo(
+    () =>
+      [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter(
+        (item) => item.id !== 'overview' && !OVERVIEW_STAT_MODULE_IDS.has(item.id)
+      ),
+    []
+  );
 
   if (initialLoading) {
     return (
@@ -269,24 +284,15 @@ function AdminDavDashboardInner() {
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[
-            { id: 'national_park', label: 'National Parks', href: '/admin/national_park' },
-            { id: 'accommodations', label: 'Accommodations', href: '/admin/accommodations' },
-            { id: 'explore', label: 'Explore', href: '/admin/explore' },
-            { id: 'countries', label: 'Countries', href: '/admin/countries' },
-            { id: 'categories', label: 'Categories', href: '/admin/categories' },
-            { id: 'inquiries', label: 'Inquiries', href: '/admin/inquiries' },
-            { id: 'pages', label: 'Pages', href: '/admin/pages' },
-            { id: 'notifications', label: 'Notifications', href: '/admin/notifications' },
-          ].map((item) => (
+          {quickAccessModules.map((item) => (
             <Link
               key={item.id}
-              href={item.href}
-              className="flex items-center justify-between rounded-2xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 text-sm font-medium text-gray-800 transition hover:border-emerald-500/40 hover:bg-emerald-500/5 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-emerald-500/10"
+              href={adminModuleHref(item.id)}
+              className="flex items-center justify-between gap-2 rounded-2xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 text-sm font-medium text-gray-800 transition hover:border-emerald-500/40 hover:bg-emerald-500/5 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-emerald-500/10"
             >
-              <span>{item.label}</span>
-              <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
-                {(counts[item.id] ?? 0).toLocaleString()}
+              <span className="truncate">{item.label}</span>
+              <span className="shrink-0 tabular-nums text-emerald-600 dark:text-emerald-400">
+                {item.table ? (counts[item.id] ?? 0).toLocaleString() : 'Open'}
               </span>
             </Link>
           ))}

@@ -3,16 +3,11 @@ export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
+import { loadKeywordRows } from '@/lib/admin-keywords-load';
+import { allowAdminRequest } from '@/lib/admin-request-auth';
 import { importKeywordsForScope } from '@/lib/keyword-import';
 import { chipsFromKeywordRows } from '@/lib/keywords';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { requireAdminUser } from '@/lib/require-admin';
-
-function hasAdminSession(request: Request) {
-  const cookie = request.headers.get('cookie') || '';
-  return cookie.split(';').some((part) => part.trim() === `${ADMIN_SESSION_COOKIE}=1`);
-}
 
 function errorMessage(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
@@ -22,31 +17,22 @@ function errorMessage(error: unknown) {
   return 'Failed to save keywords.';
 }
 
-async function isAuthorized(request: Request) {
-  if (hasAdminSession(request)) return true;
-  const auth = await requireAdminUser(request);
-  return auth.ok;
-}
-
 export async function GET(request: Request) {
-  if (!(await isAuthorized(request))) {
+  if (!(await allowAdminRequest(request))) {
     return NextResponse.json({ error: 'Sign in to manage keywords.' }, { status: 401 });
   }
 
   try {
-    const client = createAdminClient();
-    const { data, error } = await client.from('keywords').select('*');
-    if (error) {
-      return NextResponse.json({ error: error.message, rows: [] }, { status: 500 });
-    }
-    return NextResponse.json({ rows: data || [], table: 'keywords' });
+    const { rows, table } = await loadKeywordRows();
+    return NextResponse.json({ rows, table });
   } catch (error) {
+    console.error('[Keywords] GET failed:', error);
     return NextResponse.json({ error: errorMessage(error), rows: [] }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
-  if (!(await isAuthorized(request))) {
+  if (!(await allowAdminRequest(request))) {
     return NextResponse.json({ error: 'Sign in to manage keywords.' }, { status: 401 });
   }
 
@@ -92,7 +78,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!(await isAuthorized(request))) {
+  if (!(await allowAdminRequest(request))) {
     return NextResponse.json({ error: 'Sign in to manage keywords.' }, { status: 401 });
   }
 
