@@ -64,7 +64,7 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
     prefillRow ? stripEmbeddedContent(String(prefillRow.content || prefillRow.description || prefillRow.excerpt || '')) : ''
   );
   const [blocks, setBlocks] = useState<PostBlock[]>([]);
-  const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '', image_url: '' });
+  const [draftBlock, setDraftBlock] = useState<PostBlock>({ title: '', description: '' });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [seo, setSeo] = useState<SeoValues>(() =>
     prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('article')
@@ -91,28 +91,29 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
   }, [postId]);
 
   function addBlock() {
-    if (!draftBlock.title.trim() && !draftBlock.description.trim() && !String(draftBlock.image_url || '').trim()) return;
+    if (!draftBlock.title.trim() && !draftBlock.description.trim()) return;
+    const blockPayload = { title: draftBlock.title, description: draftBlock.description };
     setBlocks((current) => {
       if (editingIndex !== null) {
-        return current.map((block, index) => (index === editingIndex ? draftBlock : block));
+        return current.map((block, index) => (index === editingIndex ? blockPayload : block));
       }
-      return [...current, draftBlock];
+      return [...current, blockPayload];
     });
-    setDraftBlock({ title: '', description: '', image_url: '' });
+    setDraftBlock({ title: '', description: '' });
     setEditingIndex(null);
   }
 
   function editBlock(index: number) {
     const block = blocks[index];
     if (!block) return;
-    setDraftBlock(block);
+    setDraftBlock({ title: block.title, description: block.description });
     setEditingIndex(index);
   }
 
   function deleteBlock(index: number) {
     setBlocks((current) => current.filter((_, itemIndex) => itemIndex !== index));
     if (editingIndex === index) {
-      setDraftBlock({ title: '', description: '', image_url: '' });
+      setDraftBlock({ title: '', description: '' });
       setEditingIndex(null);
     } else if (editingIndex !== null && editingIndex > index) {
       setEditingIndex(editingIndex - 1);
@@ -146,19 +147,20 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
     setError('');
 
     const stamp = publishStampForSave(publishedAt, isEdit);
+    const blocksWithoutImages = blocks.map(({ title, description }) => ({ title, description }));
     const payload = buildSavePayload(
       'safari_updates',
       {
         title,
         content: embedContent(content, {
-          blocks,
+          blocks: blocksWithoutImages,
           fields: {
             ...(stamp ? { published_at: stamp } : {}),
           },
         }),
         excerpt: content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180),
         image_url: coverImage,
-        post_blocks: JSON.stringify(blocks),
+        post_blocks: JSON.stringify(blocksWithoutImages),
         post_type: postType === 'Language Posts' ? 'language' : 'standard',
         published_at: stamp,
         slug: seo.slug || slugify(title),
@@ -303,16 +305,6 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
                 value={draftBlock.title}
                 onChange={(event) => setDraftBlock({ ...draftBlock, title: event.target.value })}
                 className="w-full rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm outline-none transition focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
-              />
-            </div>
-
-            <div>
-              <CoverImageField
-                label="Block Image"
-                folder="safari-updates"
-                value={draftBlock.image_url || ''}
-                onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
-                previewClassName="h-[148px]"
               />
             </div>
 

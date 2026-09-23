@@ -512,7 +512,7 @@ function PageFormInner({ pageId }: PageFormProps) {
               ? 'Saved initiatives appear above with their public images. Click a card to edit it, or fill the form below and press ADD for a new one.'
               : layout === 'about' || layout === 'agency'
                 ? 'These are the same story sections shown on the public page (for example Who We are and What We do). Click a card to edit title, image, and text.'
-                : 'About and Community layouts use blocks for staggered image + text (Who We are, What We do, initiatives).'}
+                : 'Add optional blocks with a title and description below.'}
           </p>
           <div className="mt-6 space-y-6">
             <div>
@@ -535,18 +535,14 @@ function PageFormInner({ pageId }: PageFormProps) {
                 }
               />
             </div>
-            <CoverImageField
-              label={
-                layout === 'community'
-                  ? 'Initiative image'
-                  : layout === 'about' || layout === 'agency'
-                    ? 'Section image'
-                    : 'Block image'
-              }
-              folder="pages"
-              value={draftBlock.image_url || ''}
-              onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
-            />
+            {layout === 'community' || layout === 'about' || layout === 'agency' ? (
+              <CoverImageField
+                label={layout === 'community' ? 'Initiative image' : 'Section image'}
+                folder="pages"
+                value={draftBlock.image_url || ''}
+                onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
+              />
+            ) : null}
             <div>
               <FieldLabel>
                 {layout === 'community'
