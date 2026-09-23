@@ -101,6 +101,40 @@ export default function HomePageClient({
 
   const destinationRows = useMemo(() => destinationListingRows(countries ?? []), [countries]);
 
+  const blogItems = (updates ?? []).map((post, index) => {
+    const image = post ? getRecordImage(post) : '';
+    const slug = post ? publicRecordSlug(post) || String(post?.id ?? '') : '';
+    return (
+      <Link
+        key={String(post?.id ?? index)}
+        href={`/safari-updates/${slug}`}
+        className="group block h-full overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-xl"
+      >
+        {image ? (
+          <HomePageImage
+            src={image}
+            alt=""
+            sizes="(max-width: 640px) 100vw, 25vw"
+            className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex aspect-[4/3] items-center justify-center bg-gray-100 text-sm text-gray-400">
+            No image
+          </div>
+        )}
+        <div className="p-4">
+          {post && recordPublishedAt(post) ? (
+            <p className="text-xs text-gray-400">{formatPublishedDate(recordPublishedAt(post))}</p>
+          ) : null}
+          <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{post ? getRecordTitle(post) : ''}</h4>
+          <p className="mt-2 line-clamp-2 text-sm text-[#666]">
+            {post ? stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content'])) : ''}
+          </p>
+        </div>
+      </Link>
+    );
+  });
+
   const destinationItems = (destinationRows ?? []).map((country, index) => {
     const slug =
       publicCountrySlug(country) ||
@@ -241,46 +275,14 @@ export default function HomePageClient({
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Stay up to date with" title={PUBLIC_SITE_LABELS.blogPosts} />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {(updates ?? []).slice(0, 4).map((post, index) => {
-              const image = post ? getRecordImage(post) : '';
-              const slug = post ? publicRecordSlug(post) || String(post?.id ?? '') : '';
-              return (
-              <Link
-                key={String(post?.id ?? index)}
-                href={`/safari-updates/${slug}`}
-                className="group block overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-xl"
-              >
-                {image ? (
-                  <HomePageImage
-                    src={image}
-                    alt=""
-                    sizes="(max-width: 640px) 100vw, 25vw"
-                    className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-gray-100 text-sm text-gray-400">
-                    No image
-                  </div>
-                )}
-                <div className="p-4">
-                  {post && recordPublishedAt(post) ? (
-                    <p className="text-xs text-gray-400">{formatPublishedDate(recordPublishedAt(post))}</p>
-                  ) : null}
-                  <h4 className="mt-1 font-serif text-lg font-bold text-[#333]">{post ? getRecordTitle(post) : ''}</h4>
-                  <p className="mt-2 line-clamp-2 text-sm text-[#666]">
-                    {post
-                      ? stripPublicMoney(pickPlainText(post, ['excerpt', 'description', 'content']))
-                      : ''}
-                  </p>
-                </div>
-              </Link>
-            );
-            })}
+          <div className="mt-10">
+            <Carousel
+              instant
+              items={blogItems}
+              itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+              emptyMessage="No records found in this collection."
+            />
           </div>
-          {(updates ?? []).length === 0 && (
-            <p className="mt-6 text-center text-gray-500">No records found in this collection.</p>
-          )}
           <div className="mt-8 text-center">
             <Link
               href="/safari-updates"

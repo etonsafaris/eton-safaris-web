@@ -1,3 +1,5 @@
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
+
 export const SEO_SCHEMA_TYPES = [
   { value: 'TouristTrip', label: 'Safari / Tour package' },
   { value: 'TouristDestination', label: 'Country / Destination' },
@@ -74,6 +76,113 @@ export const SEO_FIELD_KEYS = [
   'og_description',
   'seo_settings',
 ] as const;
+
+/** Public pathname for a CMS item (no origin). */
+export function publicPathForSeoContent(
+  contentType: SeoContentType,
+  slug: string,
+  options?: { categoryLabel?: string }
+): string {
+  const segment = slug.trim().replace(/^\/+/, '');
+  switch (contentType) {
+    case 'page':
+      return segment ? `/${segment}` : '/';
+    case 'category': {
+      const label = (options?.categoryLabel || segment).trim();
+      return label ? `/tours?category=${encodeURIComponent(label)}` : '/tours';
+    }
+    case 'tour':
+      return segment ? `/tours/${segment}` : '/tours';
+    case 'country':
+      return segment ? `/destinations/${segment}` : '/destinations';
+    case 'park':
+      return segment ? `/parks/${segment}` : '/parks';
+    case 'stay':
+      return segment ? `/accommodations/${segment}` : '/accommodations';
+    case 'place':
+      return segment ? `/explore/${segment}` : '/explore';
+    case 'article':
+      return segment ? `/safari-updates/${segment}` : '/safari-updates';
+    default:
+      return segment ? `/${segment}` : '/';
+  }
+}
+
+export function canonicalUrlForSeoContent(
+  contentType: SeoContentType,
+  slug: string,
+  options?: { categoryLabel?: string }
+): string {
+  return publicCanonicalUrl(publicPathForSeoContent(contentType, slug, options));
+}
+
+export type SeoAdvancedAutoSnapshot = {
+  breadcrumb_title: string;
+  og_title: string;
+  og_description: string;
+  canonical_url: string;
+};
+
+export function derivedSeoAdvancedFields(
+  values: SeoValues,
+  options: { pageTitle?: string; contentType: SeoContentType; categoryLabel?: string }
+): SeoAdvancedAutoSnapshot {
+  const title = values.seo_title.trim() || String(options.pageTitle || '').trim();
+  const slug = values.slug.trim();
+  const meta = values.meta_description.trim();
+  const categoryLabel = options.categoryLabel || title;
+  const canBuildUrl = Boolean(slug) || (options.contentType === 'category' && categoryLabel);
+  const canonical = canBuildUrl
+    ? canonicalUrlForSeoContent(options.contentType, slug, { categoryLabel })
+    : '';
+
+  return {
+    breadcrumb_title: title,
+    og_title: title,
+    og_description: meta,
+    canonical_url: canonical,
+  };
+}
+
+export function mergeAutoSeoAdvancedFields(
+  values: SeoValues,
+  derived: SeoAdvancedAutoSnapshot,
+  lastAuto: SeoAdvancedAutoSnapshot
+): { values: SeoValues; lastAuto: SeoAdvancedAutoSnapshot; changed: boolean } {
+  const next = { ...values };
+  let changed = false;
+
+  const keys: (keyof SeoAdvancedAutoSnapshot)[] = [
+    'breadcrumb_title',
+    'og_title',
+    'og_description',
+    'canonical_url',
+  ];
+
+  for (const key of keys) {
+    const newVal = derived[key];
+    const cur = values[key].trim();
+    const last = lastAuto[key].trim();
+    if (!newVal && key !== 'og_description') continue;
+    if (!cur || cur === last) {
+      if (next[key] !== newVal) {
+        next[key] = newVal;
+        changed = true;
+      }
+    }
+  }
+
+  const snapshot: SeoAdvancedAutoSnapshot = changed
+    ? {
+        breadcrumb_title: derived.breadcrumb_title,
+        og_title: derived.og_title,
+        og_description: derived.og_description,
+        canonical_url: derived.canonical_url,
+      }
+    : lastAuto;
+
+  return { values: changed ? next : values, lastAuto: snapshot, changed };
+}
 
 export function defaultSeoValues(contentType: SeoContentType = 'page'): SeoValues {
   return {

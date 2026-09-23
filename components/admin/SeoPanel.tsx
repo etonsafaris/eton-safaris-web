@@ -19,6 +19,10 @@ import {
   seoScore,
   seoScorePercent,
   validateSeoSchema,
+  canonicalUrlForSeoContent,
+  derivedSeoAdvancedFields,
+  mergeAutoSeoAdvancedFields,
+  type SeoAdvancedAutoSnapshot,
   type SeoContentType,
   type SeoValues,
 } from '@/lib/seo';
@@ -130,6 +134,19 @@ export default function SeoPanel({
   const valuesRef = useRef(values);
   valuesRef.current = values;
   const lastKeywordScopeRef = useRef('');
+  const lastAdvancedAutoRef = useRef<SeoAdvancedAutoSnapshot>({
+    breadcrumb_title: '',
+    og_title: '',
+    og_description: '',
+    canonical_url: '',
+  });
+
+  const canonicalPreview = useMemo(() => {
+    const slug = values.slug.trim();
+    if (!slug && contentType !== 'category') return '';
+    const label = contentType === 'category' ? values.seo_title.trim() || pageTitle.trim() : undefined;
+    return canonicalUrlForSeoContent(contentType, slug, { categoryLabel: label });
+  }, [contentType, values.slug, values.seo_title, pageTitle]);
 
   useEffect(() => {
     if (keywordLibraryCountry) setKeywordCountry(keywordLibraryCountry);
@@ -345,6 +362,37 @@ export default function SeoPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentForReadability]);
+
+  useEffect(() => {
+    const derived = derivedSeoAdvancedFields(values, {
+      pageTitle,
+      contentType,
+      categoryLabel: contentType === 'category' ? pageTitle : undefined,
+    });
+    if (!derived.breadcrumb_title && !derived.canonical_url) return;
+
+    const { values: next, lastAuto, changed } = mergeAutoSeoAdvancedFields(
+      values,
+      derived,
+      lastAdvancedAutoRef.current
+    );
+    if (changed) {
+      lastAdvancedAutoRef.current = lastAuto;
+      onChange(next);
+    } else if (
+      !lastAdvancedAutoRef.current.breadcrumb_title &&
+      !lastAdvancedAutoRef.current.canonical_url &&
+      (values.breadcrumb_title.trim() || values.canonical_url.trim())
+    ) {
+      lastAdvancedAutoRef.current = {
+        breadcrumb_title: values.breadcrumb_title.trim(),
+        og_title: values.og_title.trim(),
+        og_description: values.og_description.trim(),
+        canonical_url: values.canonical_url.trim(),
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageTitle, contentType, values.seo_title, values.slug, values.meta_description]);
 
   return (
     <div className={className}>
@@ -645,7 +693,7 @@ export default function SeoPanel({
                       <TextInput
                         value={values.canonical_url}
                         onChange={(value) => update('canonical_url', value)}
-                        placeholder={`https://${siteUrl.replace(/^https?:\/\//, '')}/${values.slug || 'your-page'}`}
+                        placeholder={canonicalPreview || `https://${siteUrl.replace(/^https?:\/\//, '')}/${values.slug || 'your-page'}`}
                       />
                       <p className="mt-1.5 text-xs text-[#6b7280]">
                         Leave empty to use the page’s own URL. Set this if the same content lives at another address.
