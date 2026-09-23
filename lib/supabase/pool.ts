@@ -1,4 +1,6 @@
 import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import { isPgTooManyClientsError } from '@/lib/pg-retry';
+import { serialPgWork } from '@/lib/pg-serial';
 
 const connectionString = process.env.DATABASE_URL;
 const normalizedConnectionString = connectionString
@@ -68,7 +70,28 @@ const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MA
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
-const PG_SLOT_WAIT_MS = Math.max(5000, Number(process.env.PG_SLOT_WAIT_MS) || 25000);
+const PG_SLOT_WAIT_MS = Math.max(10000, Number(process.env.PG_SLOT_WAIT_MS) || 45000);
+
+function connectRetryDelayMs(attempt: number) {
+  const base = 350 * Math.pow(2, attempt);
+  return Math.min(12000, base + Math.floor(Math.random() * 300));
+}
+
+async function connectWithRetry(pool: PgPool): Promise<PoolClient> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      return await pool.connect();
+    } catch (error) {
+      lastError = error;
+      if (!isPgTooManyClientsError(error) || attempt >= 7) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, connectRetryDelayMs(attempt)));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Could not connect to database');
+}
 
 function acquirePgSlot(): Promise<void> {
   if (pgSlotsInUse < PG_SLOT_MAX) {
@@ -102,17 +125,19 @@ function releasePgSlot() {
 export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getAivenPool();
   if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
-  let slotHeld = false;
-  let client: PoolClient | null = null;
-  try {
-    await acquirePgSlot();
-    slotHeld = true;
-    client = await pool.connect();
-    return await fn(client);
-  } finally {
-    client?.release();
-    if (slotHeld) releasePgSlot();
-  }
+  return serialPgWork(async () => {
+    let slotHeld = false;
+    let client: PoolClient | null = null;
+    try {
+      await acquirePgSlot();
+      slotHeld = true;
+      client = await connectWithRetry(pool);
+      return await fn(client);
+    } finally {
+      client?.release();
+      if (slotHeld) releasePgSlot();
+    }
+  });
 }
 
 export async function queryRows<T extends QueryResultRow = QueryResultRow>(

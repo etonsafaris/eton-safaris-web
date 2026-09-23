@@ -27,7 +27,9 @@ type CountryFormProps = {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-2 block text-sm font-medium text-[#374151]">{children}</label>;
+  return (
+    <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-gray-200">{children}</label>
+  );
 }
 
 export default function CountryForm(props: CountryFormProps) {
@@ -175,8 +177,8 @@ function CountryFormInner({ countryId }: CountryFormProps) {
         &lt; Back to Destinations
       </Link>
 
-      <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
-        <h1 className="text-center font-serif text-3xl font-bold text-[#111827]">
+      <div className="admin-form-card rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#111827] dark:text-white">
           {isEdit ? 'Edit Destination' : 'Add New Destination'}
         </h1>
 

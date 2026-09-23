@@ -8,7 +8,7 @@ import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { peekAdminCountsCache, writeAdminCountsCache } from '@/lib/admin-counts-server-cache';
-import { withPgRetry } from '@/lib/pg-retry';
+import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
 import { withPgClient } from '@/lib/supabase/pool';
 
 const TABLE_ALIASES: Record<string, string[]> = {
@@ -106,13 +106,17 @@ export async function POST(request: Request) {
           }
           return result;
         }),
-      2
+      6
     );
     writeAdminCountsCache(counts);
     return NextResponse.json({ counts });
   } catch (error) {
     console.error('[Admin] Counts batch failed:', error);
-    const message = error instanceof Error ? error.message : 'Could not load counts';
+    const message = isPgTooManyClientsError(error)
+      ? 'Database is busy. Counts will refresh shortly.'
+      : error instanceof Error
+        ? error.message
+        : 'Could not load counts';
     return NextResponse.json({ error: message, counts: {} }, { status: 503 });
   }
 }

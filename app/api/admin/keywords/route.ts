@@ -5,6 +5,7 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { loadKeywordRows } from '@/lib/admin-keywords-load';
 import { allowAdminRequest } from '@/lib/admin-request-auth';
+import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { importKeywordsForScope } from '@/lib/keyword-import';
 import { chipsFromKeywordRows } from '@/lib/keywords';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -27,7 +28,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ rows, table });
   } catch (error) {
     console.error('[Keywords] GET failed:', error);
-    return NextResponse.json({ error: errorMessage(error), rows: [] }, { status: 500 });
+    const status = isPgTooManyClientsError(error) ? 503 : 500;
+    const message = status === 503 ? 'Database is busy. Please wait and try again.' : errorMessage(error);
+    return NextResponse.json({ error: message, rows: [], retryable: status === 503 }, { status });
   }
 }
 

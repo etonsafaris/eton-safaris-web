@@ -128,7 +128,7 @@ export async function fetchAdminTablePage(
     if (cached && (cached.rows.length > 0 || cached.total > 0)) return cached;
   }
 
-  return fetchAdminTablePageLive(table, options, cacheKey, page, limit);
+  return serialAdminApi(() => fetchAdminTablePageLive(table, options, cacheKey, page, limit));
 }
 
 async function fetchAdminTablePageLive(
@@ -175,7 +175,7 @@ async function fetchAdminTablePageLive(
   }
 
   let lastError = 'Could not load records';
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
     try {
       let response = await getOnce();
       if (response.status === 401) {
@@ -193,8 +193,8 @@ async function fetchAdminTablePageLive(
 
       if (!response.ok) {
         lastError = body.error || `Server error (${response.status})`;
-        if (RETRYABLE_STATUS.has(response.status) && attempt < 3) {
-          await sleep(250 * (attempt + 1));
+        if (RETRYABLE_STATUS.has(response.status) && attempt < 5) {
+          await sleep(400 * Math.pow(2, attempt));
           continue;
         }
         throw new Error(lastError);
@@ -216,12 +216,12 @@ async function fetchAdminTablePageLive(
             ? error.message
             : 'Could not load records';
       if (
-        attempt < 3 &&
+        attempt < 5 &&
         /busy|too many clients|remaining connection slots|timeout|timed out|503|502|504|AbortError/i.test(
           lastError
         )
       ) {
-        await sleep(500 * Math.pow(2, attempt));
+        await sleep(600 * Math.pow(2, attempt));
         continue;
       }
       console.warn(`[Admin] Could not load ${table}:`, lastError);
@@ -267,6 +267,13 @@ export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
 
 /** Full CMS row for edit screens (description, itinerary, SEO, etc.). */
 export async function fetchAdminRecordById(
+  table: string,
+  id: string | number
+): Promise<RecordRow | null> {
+  return serialAdminApi(() => fetchAdminRecordByIdLive(table, id));
+}
+
+async function fetchAdminRecordByIdLive(
   table: string,
   id: string | number
 ): Promise<RecordRow | null> {
@@ -316,6 +323,14 @@ export async function deleteAdminRecord(table: string, id: string | number): Pro
 }
 
 export async function saveAdminRecord(
+  table: string,
+  payload: Record<string, unknown>,
+  id?: string | number | null
+): Promise<Record<string, unknown>[]> {
+  return serialAdminApi(() => saveAdminRecordLive(table, payload, id));
+}
+
+async function saveAdminRecordLive(
   table: string,
   payload: Record<string, unknown>,
   id?: string | number | null
@@ -372,6 +387,10 @@ export const adminAuthHeaders = authHeaders;
 
 /** Keyword library for SEO panel and admin Keywords module. */
 export async function fetchAdminKeywordRows(): Promise<RecordRow[]> {
+  return serialAdminApi(() => fetchAdminKeywordRowsLive());
+}
+
+async function fetchAdminKeywordRowsLive(): Promise<RecordRow[]> {
   await syncAdminSessionCookie().catch(() => false);
   async function getOnce() {
     return fetch('/api/admin/keywords', {
@@ -381,14 +400,35 @@ export async function fetchAdminKeywordRows(): Promise<RecordRow[]> {
       headers: await authHeaders(),
     });
   }
-  let response = await getOnce();
-  if (response.status === 401) {
-    await syncAdminSessionCookie();
-    response = await getOnce();
+  let lastError = 'Could not load keywords';
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      let response = await getOnce();
+      if (response.status === 401) {
+        await syncAdminSessionCookie();
+        response = await getOnce();
+      }
+      const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
+      if (!response.ok) {
+        lastError = body.error || `Could not load keywords (${response.status})`;
+        if (RETRYABLE_STATUS.has(response.status) && attempt < 5) {
+          await sleep(500 * Math.pow(2, attempt));
+          continue;
+        }
+        throw new Error(lastError);
+      }
+      return Array.isArray(body.rows) ? body.rows : [];
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : lastError;
+      if (
+        attempt < 5 &&
+        /busy|too many clients|remaining connection slots|503|502|504/i.test(lastError)
+      ) {
+        await sleep(600 * Math.pow(2, attempt));
+        continue;
+      }
+      throw error instanceof Error ? error : new Error(lastError);
+    }
   }
-  const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
-  if (!response.ok) {
-    throw new Error(body.error || `Could not load keywords (${response.status})`);
-  }
-  return Array.isArray(body.rows) ? body.rows : [];
+  throw new Error(lastError);
 }

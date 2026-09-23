@@ -37,7 +37,9 @@ type CategoryFormProps = {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-2 block text-sm font-semibold text-[#475569]">{children}</label>;
+  return (
+    <label className="mb-2 block text-sm font-semibold text-[#475569] dark:text-gray-200">{children}</label>
+  );
 }
 
 function CountrySelect({
@@ -199,8 +201,8 @@ function CategoryFormInner({ categoryId }: CategoryFormProps) {
         &lt; Back to Categories
       </Link>
 
-      <div className="rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-sm">
-        <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b]">
+      <div className="admin-form-card rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b] dark:text-white">
           {isEdit ? 'Edit Category' : 'Add New Category'}
         </h1>
 

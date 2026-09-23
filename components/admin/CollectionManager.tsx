@@ -206,7 +206,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     return () => window.clearTimeout(timer);
   }, [query]);
 
-  async function load(options?: { bustCache?: boolean }) {
+  async function load(options?: { bustCache?: boolean; autoRetryAttempt?: number }) {
     if (!config.table) {
       setLoading(false);
       return;
@@ -248,6 +248,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     setLoading(true);
     setError('');
     setActionError('');
+    let deferLoadingStop = false;
     try {
       if (options?.bustCache) {
         clearCollectionCache(config.table);
@@ -325,13 +326,28 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       }
     } catch (err) {
       if (requestId !== loadRequestRef.current) return;
-      const message = err instanceof Error ? err.message : 'Failed to load records';
+      const raw = err instanceof Error ? err.message : 'Failed to load records';
+      const retryable = /remaining connection slots|too many clients|database is busy|503|502|504|timed out/i.test(
+        raw
+      );
+      const attempt = options?.autoRetryAttempt ?? 0;
+      if (retryable && attempt < 5) {
+        deferLoadingStop = true;
+        setError('');
+        window.setTimeout(() => {
+          void load({ bustCache: options?.bustCache, autoRetryAttempt: attempt + 1 });
+        }, 700 * Math.pow(2, attempt));
+        return;
+      }
+      const message = retryable
+        ? 'The database was briefly busy. Please wait a moment and click Retry.'
+        : raw;
       console.error(err);
       setError(message);
       setRecords((prev) => (prev.length > 0 ? prev : []));
       setRemoteTotal((prev) => (prev > 0 ? prev : 0));
     } finally {
-      if (requestId === loadRequestRef.current) {
+      if (requestId === loadRequestRef.current && !deferLoadingStop) {
         setLoading(false);
       }
     }
@@ -1359,7 +1375,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           <p className="font-semibold">Unable to load {config.label}</p>
           <p className="mt-1">{error}</p>
           <button
@@ -1541,7 +1557,13 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           <form id={`collection-form-${config.id}`} onSubmit={save} className="w-full max-w-6xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#161b22] sm:p-8">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-serif text-2xl dark:text-white">{editing ? 'Edit item' : config.addLabel || 'Add item'}</h3>
-              <button type="button" onClick={() => setModalOpen(false)}><X /></button>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
+              >
+                <X />
+              </button>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {fields.filter((field) => field.name !== 'slug').map((field) => {
@@ -1550,7 +1572,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                 return (
                   <div
                     key={field.name}
-                    className={`text-sm font-medium text-gray-700 ${field.type === 'textarea' || isImage ? 'sm:col-span-2' : ''}`}
+                    className={`text-sm font-medium text-gray-700 dark:text-gray-200 ${field.type === 'textarea' || isImage ? 'sm:col-span-2' : ''}`}
                   >
                     {isImage ? (
                       <CoverImageField
@@ -1592,7 +1614,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                           required={field.required}
                           value={form[field.name] || ''}
                           onChange={(event) => setForm({ ...form, [field.name]: event.target.value })}
-                          className="mt-1 h-28 w-full rounded-lg border px-3 py-2 focus:border-[#00A651] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
+                          className="admin-form-control mt-1 h-28 w-full resize-y"
                         />
                       </label>
                     ) : field.type === 'select' ? (
@@ -1623,7 +1645,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                               setSeo({ ...seo, seo_title: value });
                             }
                           }}
-                          className="mt-1 w-full rounded-lg border px-3 py-2 focus:border-[#00A651] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
+                          className="admin-form-control mt-1 w-full"
                         />
                       </label>
                     )}
@@ -1668,7 +1690,13 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             ) : null}
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2">Cancel</button>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-gray-700 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 disabled={saving}
@@ -1683,9 +1711,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
       {guestLogsAgent && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:border dark:border-white/10 dark:bg-[#161b22]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-serif text-2xl">
+              <h3 className="font-serif text-2xl dark:text-white">
                 Guest logs · {getRecordTitle(guestLogsAgent) || pickString(guestLogsAgent, ['email'])}
               </h3>
               <button type="button" onClick={() => setGuestLogsAgent(null)} aria-label="Close guest logs">
@@ -1730,9 +1758,9 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
       {paymentHistoryBooking && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:border dark:border-white/10 dark:bg-[#161b22]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-serif text-2xl">
+              <h3 className="font-serif text-2xl dark:text-white">
                 Payment history · {pickString(paymentHistoryBooking, ['guest_name', 'email'])}
               </h3>
               <button type="button" onClick={() => setPaymentHistoryBooking(null)} aria-label="Close payment history">

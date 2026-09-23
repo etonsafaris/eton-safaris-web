@@ -36,7 +36,9 @@ type NationalParkFormProps = {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-2 block text-sm font-medium text-[#4b5563]">{children}</label>;
+  return (
+    <label className="mb-2 block text-sm font-medium text-[#4b5563] dark:text-gray-200">{children}</label>
+  );
 }
 
 function PillInput({
@@ -53,7 +55,7 @@ function PillInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       required={required}
-      className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-sm text-[#111827] outline-none transition focus:border-[#66bba4] focus:bg-white focus:ring-2 focus:ring-[#66bba4]/20"
+      className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-sm text-[#111827] outline-none transition focus:border-[#66bba4] focus:bg-white focus:ring-2 focus:ring-[#66bba4]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white dark:focus:bg-[#1e293b]"
     />
   );
 }
@@ -302,8 +304,8 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
         &lt; Back to National Parks
       </Link>
 
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
-        <h1 className="text-center font-serif text-3xl font-bold text-[#1f2937]">
+      <div className="admin-form-card rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#1f2937] dark:text-white">
           {isEdit ? 'Edit National Park' : 'Add New National Park'}
         </h1>
 

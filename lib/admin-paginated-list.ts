@@ -288,7 +288,7 @@ export async function queryAdminTablePage(
       console.error(`[Admin] Paginated list failed for ${table}:`, message);
       throw new AdminListQueryError(message || `Could not list rows from ${table}`, { cause: error });
     }
-  }, 2);
+  }, 6);
 }
 
 export function isHeavyAdminTable(table: string) {
@@ -304,21 +304,23 @@ export async function queryAdminRecordById(
   if (!idText) return null;
 
   try {
-    return await withPgClient(async (client) => {
-      const quoted = quoteTable(table);
-      const res = await client.query(
-        `SELECT * FROM ${quoted} WHERE CAST(id AS text) = $1 LIMIT 1`,
-        [idText]
-      );
-      if (res.rows[0]) return res.rows[0] as RecordRow;
+    return await withPgRetry(async () =>
+      withPgClient(async (client) => {
+        const quoted = quoteTable(table);
+        const res = await client.query(
+          `SELECT * FROM ${quoted} WHERE CAST(id AS text) = $1 LIMIT 1`,
+          [idText]
+        );
+        if (res.rows[0]) return res.rows[0] as RecordRow;
 
-      const asNumber = Number(idText);
-      if (Number.isFinite(asNumber) && String(asNumber) === idText) {
-        const numeric = await client.query(`SELECT * FROM ${quoted} WHERE id = $1 LIMIT 1`, [asNumber]);
-        if (numeric.rows[0]) return numeric.rows[0] as RecordRow;
-      }
-      return null;
-    });
+        const asNumber = Number(idText);
+        if (Number.isFinite(asNumber) && String(asNumber) === idText) {
+          const numeric = await client.query(`SELECT * FROM ${quoted} WHERE id = $1 LIMIT 1`, [asNumber]);
+          if (numeric.rows[0]) return numeric.rows[0] as RecordRow;
+        }
+        return null;
+      })
+    );
   } catch (error) {
     console.error(`[Admin] Could not load ${table} id=${idText}:`, error);
     return null;

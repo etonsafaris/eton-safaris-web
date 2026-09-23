@@ -49,9 +49,11 @@ export default function CoverImageField({
 
   return (
     <div className={className}>
-      {label ? <label className="mb-2 block text-sm font-medium text-[#374151]">{label}</label> : null}
+      {label ? (
+        <label className="mb-2 block text-sm font-medium text-[#374151] dark:text-gray-200">{label}</label>
+      ) : null}
       <div
-        className={`group relative flex ${previewClassName} flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[#00A651] hover:bg-[#f0fdf4]`}
+        className={`group relative flex ${previewClassName} flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[#00A651] hover:bg-[#f0fdf4] dark:border-white/15 dark:bg-[#0f1419] dark:hover:bg-emerald-500/10`}
       >
         {value && !value.startsWith('blob:') ? (
           <img src={value} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
@@ -60,10 +62,10 @@ export default function CoverImageField({
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#00A651]">
               <ImageIcon className="h-5 w-5 text-white" />
             </div>
-            <p className="mt-3 text-sm font-semibold text-[#111827]">
+            <p className="mt-3 text-sm font-semibold text-[#111827] dark:text-white">
               {optimizing ? 'Optimizing…' : 'Click to add a cover image'}
             </p>
-            <p className="mt-1 text-xs text-[#6b7280]">PNG, JPEG, WebP, or GIF</p>
+            <p className="mt-1 text-xs text-[#6b7280] dark:text-gray-400">PNG, JPEG, WebP, or GIF</p>
           </>
         )}
         {optimizing && value ? (

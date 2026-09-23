@@ -170,12 +170,15 @@ export async function GET(request: Request) {
     console.warn(`[Admin] records GET empty for ${table}:`, lastMessage);
     return NextResponse.json({ rows: [], total: 0, page, pageSize: limit, error: lastMessage });
   } catch (error) {
-    const message =
+    const raw =
       error instanceof AdminListQueryError || error instanceof Error
         ? error.message
         : 'Could not load records';
     console.error(`[Admin] records GET error for ${table}:`, error);
     const status = isPgTooManyClientsError(error) ? 503 : 500;
+    const message = status === 503
+      ? 'Database is busy. Your browser will retry automatically — or click Refresh in a few seconds.'
+      : raw;
     return NextResponse.json(
       { rows: [], total: 0, error: message, retryable: status === 503 },
       { status }

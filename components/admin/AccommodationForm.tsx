@@ -48,7 +48,9 @@ const ACCOMMODATION_TYPES = [
 ];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-2 block text-sm font-medium text-[#64748b]">{children}</label>;
+  return (
+    <label className="mb-2 block text-sm font-medium text-[#64748b] dark:text-gray-200">{children}</label>
+  );
 }
 
 function SoftInput({
@@ -65,7 +67,7 @@ function SoftInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       required={required}
-      className="w-full rounded-lg border-0 bg-[#f9fafb] px-4 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#8aa081]/25"
+      className="w-full rounded-lg border-0 bg-[#f9fafb] px-4 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#8aa081]/25 dark:bg-[#161b22] dark:text-white dark:focus:bg-[#1e293b]"
     />
   );
 }
@@ -334,8 +336,8 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
         &lt; Back to Accommodations
       </Link>
 
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
-        <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b]">
+      <div className="admin-form-card rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b] dark:text-white">
           {isEdit ? 'Edit Accommodation' : 'Add New Accommodation'}
         </h1>
 

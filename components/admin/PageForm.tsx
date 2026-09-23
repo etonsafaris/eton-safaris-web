@@ -45,7 +45,9 @@ type PageFormProps = {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-2 block text-sm font-semibold text-[#374151]">{children}</label>;
+  return (
+    <label className="mb-2 block text-sm font-semibold text-[#374151] dark:text-gray-200">{children}</label>
+  );
 }
 
 function PillInput({
@@ -275,8 +277,8 @@ function PageFormInner({ pageId }: PageFormProps) {
         &lt; Back to Pages
       </Link>
 
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
-        <h1 className="text-center font-serif text-3xl font-bold text-[#111827]">
+      <div className="admin-form-card rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#111827] dark:text-white">
           {isEdit ? 'Edit Page' : 'Add New Page'}
         </h1>
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-[#6b7280]">

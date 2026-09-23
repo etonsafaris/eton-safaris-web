@@ -14,7 +14,7 @@ function retryDelayMs(attempt: number) {
   return Math.min(8000, base + jitter);
 }
 
-export async function withPgRetry<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {
+export async function withPgRetry<T>(fn: () => Promise<T>, attempts = 6): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
