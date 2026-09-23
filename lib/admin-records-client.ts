@@ -125,10 +125,10 @@ export async function fetchAdminTablePage(
 
   if (!options?.bustCache) {
     const cached = peekAdminTableCache(cacheKey);
-    if (cached) return cached;
+    if (cached && (cached.rows.length > 0 || cached.total > 0)) return cached;
   }
 
-  return serialAdminApi(() => fetchAdminTablePageLive(table, options, cacheKey, page, limit));
+  return fetchAdminTablePageLive(table, options, cacheKey, page, limit);
 }
 
 async function fetchAdminTablePageLive(
@@ -157,12 +157,21 @@ async function fetchAdminTablePageLive(
   if (options?.category) params.set('category', options.category);
   if (options?.q) params.set('q', options.q);
 
+  const FETCH_TIMEOUT_MS = 55_000;
+
   async function getOnce() {
-    return fetch(`/api/admin/records?${params.toString()}`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: await authHeaders(),
-    });
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      return await fetch(`/api/admin/records?${params.toString()}`, {
+        credentials: 'include',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: await authHeaders(),
+      });
+    } finally {
+      window.clearTimeout(timer);
+    }
   }
 
   let lastError = 'Could not load records';
@@ -200,10 +209,17 @@ async function fetchAdminTablePageLive(
       writeAdminTableCache(cacheKey, result);
       return result;
     } catch (error) {
-      lastError = error instanceof Error ? error.message : 'Could not load records';
+      lastError =
+        error instanceof Error && error.name === 'AbortError'
+          ? 'Request timed out. Click Refresh to try again.'
+          : error instanceof Error
+            ? error.message
+            : 'Could not load records';
       if (
         attempt < 3 &&
-        /busy|too many clients|remaining connection slots|timeout|503|502|504/i.test(lastError)
+        /busy|too many clients|remaining connection slots|timeout|timed out|503|502|504|AbortError/i.test(
+          lastError
+        )
       ) {
         await sleep(500 * Math.pow(2, attempt));
         continue;

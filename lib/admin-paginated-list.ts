@@ -112,25 +112,28 @@ function sanitizeFilter(value: string) {
     .trim();
 }
 
-/** Only reference columns that exist on each table — bad WHERE clauses return 0 rows with no UI error. */
+function countryMatchColumns(table: string): string[] {
+  const byTable: Record<string, string[]> = {
+    tours: ['country'],
+    national_park: ['country', 'location'],
+    accommodations: ['country', 'location', 'national_park_name'],
+    explore: ['country', 'location'],
+    safari_updates: ['country'],
+    categories: ['country'],
+    landing_pages: ['country'],
+    keywords: ['country'],
+    reviews: ['country'],
+    bookings: ['country', 'destination'],
+    countries: ['name', 'slug'],
+  };
+  return byTable[table] || ['country', 'destination'];
+}
+
+/** Match the same country fields the public site uses (slug/name variants). */
 function countryFilterSql(table: string, paramIndex: number) {
-  const countryOnly = new Set([
-    'tours',
-    'national_park',
-    'accommodations',
-    'explore',
-    'safari_updates',
-    'categories',
-    'landing_pages',
-    'keywords',
-    'reviews',
-    'bookings',
-    'countries',
-  ]);
-  if (countryOnly.has(table)) {
-    return `country ILIKE $${paramIndex}`;
-  }
-  return `(COALESCE(country::text, '') ILIKE $${paramIndex} OR COALESCE(destination::text, '') ILIKE $${paramIndex})`;
+  const columns = countryMatchColumns(table);
+  const parts = columns.map((column) => `COALESCE("${column}"::text, '') ILIKE $${paramIndex}`);
+  return parts.length ? `(${parts.join(' OR ')})` : `country ILIKE $${paramIndex}`;
 }
 
 function parkFilterSql(table: string, paramIndex: number) {

@@ -197,7 +197,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       fetchAdminTablePage('categories', { page: 1, limit: 50, country: activeCountry })
         .then((result) => setTourCategoryRows(result.rows))
         .catch(() => setTourCategoryRows([]));
-    }, 1800);
+    }, 400);
     return () => window.clearTimeout(timer);
   }, [isTours, activeCountry]);
 
@@ -238,13 +238,14 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           })
         : '';
     const cached = !options?.bustCache && cacheKey ? peekAdminTableCache(cacheKey) : null;
-    if (cached) {
+    if (cached && (cached.rows.length > 0 || cached.total > 0)) {
       setRecords(cached.rows);
       setRemoteTotal(cached.total);
       setLoading(false);
-    } else {
-      setLoading(true);
+      setError('');
+      return;
     }
+    setLoading(true);
     setError('');
     setActionError('');
     try {
@@ -357,7 +358,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       fetchAdminTablePage('national_park', { page: 1, limit: 50, country: activeCountry })
         .then((page) => setParkRows(page.rows))
         .catch(() => setParkRows([]));
-    }, 1800);
+    }, 400);
     return () => window.clearTimeout(timer);
   }, [isAccommodations, activeCountry]);
 
