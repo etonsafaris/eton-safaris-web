@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Calendar, LineChart } from 'lucide-react';
+import { AdminGlassCard } from '@/components/admin/AdminGlassCard';
 import { pickDateValue } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -36,12 +38,24 @@ function yScale(maxValue: number) {
 export default function BookingPerformanceChart({
   bookings,
   loading,
+  variant = 'default',
 }: {
   bookings: RecordRow[];
   loading?: boolean;
+  variant?: 'default' | 'dav';
 }) {
-  const year = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
   const [hover, setHover] = useState<number | null>(null);
+
+  const yearOptions = useMemo(() => {
+    const years = new Set<number>([currentYear]);
+    for (const booking of bookings) {
+      const date = bookingMonthDate(booking);
+      if (date) years.add(date.getFullYear());
+    }
+    return Array.from(years).sort((a, b) => b - a);
+  }, [bookings, currentYear]);
 
   const monthly = useMemo(() => {
     const counts = Array.from({ length: 12 }, () => 0);
@@ -56,18 +70,41 @@ export default function BookingPerformanceChart({
   const total = monthly.reduce((sum, count) => sum + count, 0);
   const { top, ticks } = yScale(Math.max(...monthly));
 
-  return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-[#111827] dark:text-white">Booking Performance</h3>
-          <p className="mt-0.5 text-sm text-[#6b7280] dark:text-gray-400">
-            Bookings created each month in {year}
-          </p>
+  const chartBody = (
+    <>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {variant === 'dav' ? (
+            <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+              <LineChart className="h-5 w-5" />
+            </div>
+          ) : null}
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Booking Performance</h3>
+            <p className="mt-0.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+              {variant === 'dav' ? `Monthly trends for ${year}` : `Bookings created each month in ${year}`}
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-[#111827] dark:text-white">{loading ? '—' : total}</p>
-          <p className="text-xs font-medium text-[#6b7280] dark:text-gray-400">this year</p>
+        <div className="flex items-center gap-3">
+          {variant === 'dav' ? (
+            <div className="relative">
+              <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <select
+                value={year}
+                onChange={(event) => setYear(Number(event.target.value))}
+                className="cursor-pointer appearance-none rounded-xl border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-8 text-sm font-semibold transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+          <div className="text-right">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '—' : total}</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">this year</p>
+          </div>
         </div>
       </div>
 
@@ -132,6 +169,16 @@ export default function BookingPerformanceChart({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (variant === 'dav') {
+    return <AdminGlassCard className="p-6">{chartBody}</AdminGlassCard>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+      {chartBody}
     </div>
   );
 }

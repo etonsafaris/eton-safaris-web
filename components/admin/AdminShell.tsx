@@ -24,6 +24,7 @@ import { useAdminNotifications } from '@/components/admin/useAdminNotifications'
 import { MAIN_COLLECTIONS, SYSTEM_COLLECTIONS } from '@/lib/collections';
 import { canAccessModule, collectionIdFromPath, isOwnerAdminEmail, parseModules } from '@/lib/admin-access';
 import { collectionIcon } from '@/lib/admin-icons';
+import { useAdminTheme } from '@/components/admin/AdminThemeProvider';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
 
@@ -60,8 +61,8 @@ function NavLink({
         collapsed ? 'lg:justify-center lg:gap-0 lg:px-0' : ''
       } ${
         active
-          ? 'bg-[#00A651] text-white shadow-sm'
-          : 'text-[#4b5563] hover:bg-[#ecfdf3] hover:text-[#111827] dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white'
+          ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
+          : 'text-gray-600 hover:bg-emerald-500/10 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white'
       }`}
     >
       <span className="relative shrink-0">
@@ -91,7 +92,8 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, ready } = useAdminSession();
   const { unread: unreadNotifications } = useAdminNotifications();
-  const [dark, setDark] = useState(false);
+  const { actualTheme, toggleTheme } = useAdminTheme();
+  const dark = actualTheme === 'dark';
   const [role, setRole] = useState('');
   const [allowedModules, setAllowedModules] = useState<string[]>([]);
   const [accessAlert, setAccessAlert] = useState('');
@@ -103,11 +105,6 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('admin-theme');
-    if (stored === 'dark') {
-      setDark(true);
-      document.documentElement.classList.add('dark');
-    }
     if (localStorage.getItem('admin-sidebar-collapsed') === '1') {
       setCollapsed(true);
     }
@@ -158,13 +155,6 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     localStorage.setItem('admin-sidebar-collapsed', next ? '1' : '0');
   }
 
-  function toggleDark() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('admin-theme', next ? 'dark' : 'light');
-  }
-
   function canAccess(id: string) {
     return canAccessModule(
       id,
@@ -212,7 +202,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-[#f3f4f6] font-ui dark:bg-[#0a0c10]">
+      <div className="flex h-dvh items-center justify-center bg-gray-50 font-ui dark:bg-gray-950">
         <AdminLogoLoader label="Loading dashboard" />
       </div>
     );
@@ -220,7 +210,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-[#f3f4f6] font-ui dark:bg-[#0a0c10]">
+      <div className="flex h-dvh items-center justify-center bg-gray-50 font-ui dark:bg-gray-950">
         <AdminLogoLoader label="Redirecting to sign in" />
       </div>
     );
@@ -249,7 +239,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#f3f4f6] font-ui text-[#111827] dark:bg-[#0a0c10] dark:text-white">
+    <div className="admin-shell flex h-dvh overflow-hidden bg-gray-50 font-ui text-gray-900 dark:bg-gray-950 dark:text-gray-50">
       <AdminFavicon />
       {accessAlert && (
         <div className="fixed right-6 top-6 z-50 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
@@ -266,9 +256,9 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-dvh flex-col border-r border-[#e5e7eb] bg-white transition-all duration-200 dark:border-white/10 dark:bg-[#111318] lg:static lg:translate-x-0 ${
-          collapsed ? 'lg:w-[76px]' : 'lg:w-[256px]'
-        } w-[256px] ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-40 flex h-dvh flex-col border-r border-gray-200 bg-white transition-all duration-200 dark:border-gray-800 dark:bg-gray-900 lg:static lg:translate-x-0 ${
+          collapsed ? 'lg:w-20' : 'lg:w-[280px]'
+        } w-[280px] ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         <div className={`flex shrink-0 items-center border-b border-[#e5e7eb] py-3 dark:border-white/10 ${collapsed ? 'justify-between px-3 lg:justify-center lg:px-2' : 'justify-between px-4'}`}>
           {collapsed ? (
@@ -335,7 +325,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#e5e7eb] bg-white px-4 dark:border-white/10 dark:bg-[#111318] sm:px-6">
+        <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-white/80 px-4 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80 sm:px-6">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
@@ -393,7 +383,12 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
             </form>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={toggleDark} className="rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5" aria-label="Toggle dark mode">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="rounded-xl border border-gray-200 bg-gray-50 p-2 text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800"
+              aria-label="Toggle dark mode"
+            >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             {canAccess('notifications') ? <NotificationBell /> : null}
@@ -468,7 +463,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-950 sm:p-5 lg:p-6">{children}</main>
       </div>
     </div>
   );
