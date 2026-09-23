@@ -61,17 +61,31 @@ export function savedKeywordSets(rows: Array<RecordRow | Record<string, unknown>
   return Array.from(groups.values());
 }
 
+function normalizeScopeToken(value: string) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
 export function keywordRowMatchesScope(
   row: RecordRow | Record<string, unknown>,
   country: string,
   category: string
 ): boolean {
   const data = asRecord(row);
-  const rowCountry = String(data.country || '').trim();
-  const rowCategory = String(data.category || '').trim();
-  const matchesCountry = !rowCountry || rowCountry.toLowerCase() === country.toLowerCase();
-  const matchesCategory = rowCategory.toLowerCase() === category.toLowerCase();
-  return Boolean(category) && matchesCountry && matchesCategory;
+  const rowCountry = normalizeScopeToken(String(data.country || ''));
+  const rowCategory = normalizeScopeToken(String(data.category || ''));
+  const targetCountry = normalizeScopeToken(country);
+  const targetCategory = normalizeScopeToken(category);
+  if (!targetCategory) return false;
+  const matchesCountry =
+    !rowCountry || !targetCountry || rowCountry === targetCountry || rowCountry.includes(targetCountry);
+  const matchesCategory =
+    rowCategory === targetCategory ||
+    rowCategory.includes(targetCategory) ||
+    targetCategory.includes(rowCategory);
+  return matchesCountry && matchesCategory;
 }
 
 export function chipsFromKeywordRows(rows: Array<RecordRow | Record<string, unknown>>): string[] {

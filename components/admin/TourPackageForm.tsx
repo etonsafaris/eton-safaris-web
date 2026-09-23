@@ -116,13 +116,15 @@ function SectionHeader({
       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00A651] text-white">
         <Icon className="h-4 w-4" />
       </div>
-      <h2 className="text-lg font-bold text-[#111827]">{title}</h2>
+      <h2 className="text-lg font-bold text-[#111827] dark:text-white">{title}</h2>
     </div>
   );
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-1.5 block text-sm font-semibold text-[#374151]">{children}</label>;
+  return (
+    <label className="mb-1.5 block text-sm font-semibold text-[#374151] dark:text-gray-200">{children}</label>
+  );
 }
 
 function TextInput({
@@ -144,7 +146,7 @@ function TextInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className={`w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 ${className}`}
+      className={`w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white dark:placeholder:text-gray-500 ${className}`}
     />
   );
 }
@@ -179,7 +181,7 @@ type TourPackageFormProps = {
 
 export default function TourPackageForm(props: TourPackageFormProps) {
   return (
-    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500 dark:text-gray-400">Loading form…</p>}>
       <TourPackageFormInner {...props} />
     </Suspense>
   );
@@ -451,17 +453,17 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
     <form id="tour-package-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
         href={listHref}
-        className="inline-flex items-center gap-2 text-sm text-[#6b7280] transition hover:text-[#111827]"
+        className="inline-flex items-center gap-2 text-sm text-[#6b7280] transition hover:text-[#111827] dark:text-gray-400 dark:hover:text-white"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Tours
       </Link>
 
       <div className="mt-4">
-        <h1 className="font-serif text-3xl font-bold text-[#111827]">
+        <h1 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">
           {isEdit ? 'Edit Tour Package' : 'Create New Tour Package'}
         </h1>
-        <p className="mt-1 text-sm text-[#6b7280]">
+        <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">
           {isEdit
             ? 'Update the saved tour details below, then click Save.'
             : 'Fill in the details below to add a new safari experience.'}
@@ -473,7 +475,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
       ) : null}
 
-      <div className="mt-8 space-y-8 rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
+      <div className="mt-8 space-y-8 rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
         <section>
           <SectionHeader icon={FileText} title="Tour Overview" />
           <div className="space-y-4">
@@ -516,7 +518,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
                 value={form.highlights}
                 onChange={(event) => updateField('highlights', event.target.value)}
                 rows={8}
-                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
             <CoverImageField
@@ -531,7 +533,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
           </div>
         </section>
 
-        <section className="rounded-xl bg-[#f9fafb] p-6">
+        <section className="rounded-xl bg-[#f9fafb] p-6 dark:bg-white/5">
           <SectionHeader icon={BookOpen} title="Logistics" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
@@ -585,7 +587,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
                 value={form.price_includes}
                 onChange={(event) => updateField('price_includes', event.target.value)}
                 rows={6}
-                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
               />
             </div>
             <div>
@@ -594,41 +596,46 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
                 value={form.price_excludes}
                 onChange={(event) => updateField('price_excludes', event.target.value)}
                 rows={6}
-                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm leading-relaxed text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
               />
             </div>
           </div>
         </section>
 
         <section>
-          <div className="mb-5 flex items-center justify-between border-b border-[#e5e7eb] pb-5">
+          <div className="mb-5 flex items-center justify-between border-b border-[#e5e7eb] pb-5 dark:border-white/10">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00A651] text-white">
                 <Calendar className="h-4 w-4" />
               </div>
-              <h2 className="text-lg font-bold text-[#111827]">Daily Itinerary</h2>
+              <h2 className="text-lg font-bold text-[#111827] dark:text-white">Daily Itinerary</h2>
             </div>
           </div>
 
           {itineraries.length > 0 && (
             <div className="mb-8">
-              <h3 className="font-serif text-2xl font-bold text-[#1e293b]">
+              <h3 className="font-serif text-2xl font-bold text-[#1e293b] dark:text-white">
                 Itineraries ({itineraries.length})
               </h3>
               {itineraries.length > 1 ? (
-                <p className="mt-1 text-sm text-[#6b7280]">
+                <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">
                   Use the arrows to change day order — this order is what guests see on the public tour page.
                 </p>
               ) : null}
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {itineraries.map((entry, index) => (
-                  <article key={`${entry.day}-${index}`} className="flex flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+                  <article
+                    key={`${entry.day}-${index}`}
+                    className="flex flex-col rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0f1419]"
+                  >
                     <div className="flex items-start gap-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00A651] text-[10px] font-bold text-white">
                         Day {index + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-serif text-base font-bold text-[#1e293b]">{entry.title || `Day ${index + 1}`}</h4>
+                        <h4 className="font-serif text-base font-bold text-[#1e293b] dark:text-white">
+                          {entry.title || `Day ${index + 1}`}
+                        </h4>
                         {entry.description && (
                           <p className="mt-1 line-clamp-3 text-sm text-[#6b7280]">
                             {entry.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
@@ -636,7 +643,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
                         )}
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
+                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3 dark:border-white/10">
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
@@ -675,7 +682,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
           )}
 
           <div>
-            <p className="mb-4 text-sm font-bold text-[#111827]">
+            <p className="mb-4 text-sm font-bold text-[#111827] dark:text-white">
               {editingDay !== null ? `Edit Day ${editingDay + 1}` : `New Day ${itineraries.length + 1}`}
             </p>
 
@@ -757,12 +764,12 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
             </div>
 
             <div>
-              <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
+              <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827] dark:text-white">
                 <span className="h-2 w-2 rounded-full bg-[#facc15]" />
                 Featured Status
               </p>
-              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-4 py-4">
-                <span className="text-sm font-medium text-[#374151]">Show on Landing Page</span>
+              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#0f1419]">
+                <span className="text-sm font-medium text-[#374151] dark:text-gray-200">Show on Landing Page</span>
                 <button
                   type="button"
                   role="switch"

@@ -74,8 +74,10 @@ function ToolbarButton({
         event.preventDefault();
         onClick?.();
       }}
-      className={`flex h-8 min-w-[32px] items-center justify-center rounded border px-1.5 text-[#374151] ${
-        active ? 'border-[#00A651] bg-white' : 'border-transparent hover:border-[#d1d5db] hover:bg-white'
+      className={`flex h-8 min-w-[32px] items-center justify-center rounded border px-1.5 text-[#374151] dark:text-gray-200 ${
+        active
+          ? 'border-[#00A651] bg-white dark:bg-[#1e293b]'
+          : 'border-transparent hover:border-[#d1d5db] hover:bg-white dark:hover:border-white/20 dark:hover:bg-white/10'
       }`}
     >
       {children}
@@ -222,15 +224,17 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="wysiwyg-editor-container w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20">
-      <div className="flex w-full flex-wrap border-b border-[#e5e7eb] bg-[#f3f4f6]">
+    <div className="wysiwyg-editor-container w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-white focus-within:border-[#00A651] focus-within:ring-2 focus-within:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#1e293b]">
+      <div className="flex w-full flex-wrap border-b border-[#e5e7eb] bg-[#f3f4f6] dark:border-white/10 dark:bg-[#0f172a]">
         {TABS.map((item) => (
           <button
             key={item}
             type="button"
             onClick={() => setTab(item)}
             className={`px-3 py-2 text-[11px] font-semibold ${
-              tab === item ? 'border-b-2 border-[#2b579a] bg-white text-[#2b579a]' : 'text-[#4b5563] hover:bg-white/70'
+              tab === item
+                ? 'border-b-2 border-[#2b579a] bg-white text-[#2b579a] dark:bg-[#1e293b] dark:text-sky-400'
+                : 'text-[#4b5563] hover:bg-white/70 dark:text-gray-300 dark:hover:bg-white/10'
             }`}
           >
             {item}
@@ -238,14 +242,14 @@ export default function RichTextEditor({
         ))}
       </div>
 
-      <div className="flex w-full flex-wrap items-center gap-0.5 border-b border-[#e5e7eb] bg-[#f8fafc] px-2 py-1.5">
+      <div className="flex w-full flex-wrap items-center gap-0.5 border-b border-[#e5e7eb] bg-[#f8fafc] px-2 py-1.5 dark:border-white/10 dark:bg-[#1e293b]">
         <ToolbarButton title="Browse or update image" onClick={addImage}>
           <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton title="Browse or update video" onClick={addVideo}>
           <Video className="h-4 w-4" />
         </ToolbarButton>
-        <span className="mx-1 h-6 w-px bg-[#d1d5db]" />
+        <span className="mx-1 h-6 w-px bg-[#d1d5db] dark:bg-white/20" />
         {tab === 'File' && (
           <>
             <ToolbarButton title="Print" onClick={printEditor}>
@@ -254,7 +258,7 @@ export default function RichTextEditor({
             <ToolbarButton title="Clear" onClick={() => onChange('')}>
               Delete
             </ToolbarButton>
-            <span className="ml-2 text-xs text-[#6b7280]">Word Count: {wordCount}</span>
+            <span className="ml-2 text-xs text-[#6b7280] dark:text-gray-400">Word Count: {wordCount}</span>
           </>
         )}
         {tab === 'Home' && (
@@ -271,7 +275,7 @@ export default function RichTextEditor({
                 setFont(event.target.value);
                 run('fontName', event.target.value);
               }}
-              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs"
+              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs dark:border-white/10 dark:bg-[#0f172a] dark:text-gray-200"
             >
               {FONTS.map((item) => (
                 <option key={item}>{item}</option>
@@ -289,7 +293,7 @@ export default function RichTextEditor({
                 }
                 emit();
               }}
-              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs"
+              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs dark:border-white/10 dark:bg-[#0f172a] dark:text-gray-200"
             >
               {SIZES.map((item) => (
                 <option key={item}>{item}</option>
@@ -301,7 +305,7 @@ export default function RichTextEditor({
                 run('formatBlock', event.target.value);
                 emit();
               }}
-              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs"
+              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs dark:border-white/10 dark:bg-[#0f172a] dark:text-gray-200"
               title="Styles"
             >
               <option value="p">Paragraph</option>
@@ -444,7 +448,7 @@ export default function RichTextEditor({
                   emit();
                 }
               }}
-              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs"
+              className="h-8 rounded border border-[#d1d5db] bg-white px-2 text-xs dark:border-white/10 dark:bg-[#0f172a] dark:text-gray-200"
               title="Line spacing"
             >
               {LINE_HEIGHTS.map((item) => (
@@ -461,13 +465,15 @@ export default function RichTextEditor({
           </ToolbarButton>
         )}
         {(tab === 'References' || tab === 'Mailings' || tab === 'View' || tab === 'Help') && (
-          <p className="px-2 text-xs text-[#6b7280]">
+          <p className="px-2 text-xs text-[#6b7280] dark:text-gray-400">
             {tab === 'Help' ? 'Press Alt+0 for editor help. Pasted Word/Google Docs formatting is kept unless you clear it from the toolbar.' : `${tab} tools are available in Home and Insert.`}
           </p>
         )}
       </div>
       {mediaStatus ? (
-        <p className="border-b border-[#e5e7eb] bg-[#f0fdf4] px-3 py-1 text-xs text-[#166534]">{mediaStatus}</p>
+        <p className="border-b border-[#e5e7eb] bg-[#f0fdf4] px-3 py-1 text-xs text-[#166534] dark:border-white/10 dark:bg-emerald-500/10 dark:text-emerald-400">
+          {mediaStatus}
+        </p>
       ) : null}
       <input
         ref={imageInputRef}
@@ -501,7 +507,7 @@ export default function RichTextEditor({
         onInput={emit}
         onPaste={handlePaste}
         onClick={markSelectedMedia}
-        className={`description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)] [&_img[data-eton-media]]:ring-2 [&_img[data-eton-media]]:ring-[#00A651] [&_video[data-eton-media]]:ring-2 [&_video[data-eton-media]]:ring-[#00A651] ${
+        className={`description-box w-full resize-y overflow-auto bg-white px-3 py-3 text-[15px] leading-[1.6] text-[#111827] outline-none empty:before:text-[#9ca3af] empty:before:content-[attr(data-placeholder)] dark:bg-[#1e293b] dark:text-gray-100 dark:empty:before:text-gray-500 [&_img[data-eton-media]]:ring-2 [&_img[data-eton-media]]:ring-[#00A651] [&_video[data-eton-media]]:ring-2 [&_video[data-eton-media]]:ring-[#00A651] ${
           onFaqsChange ? 'description-box--with-faq' : ''
         }`}
         style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
@@ -517,7 +523,7 @@ export default function RichTextEditor({
       ) : null}
 
       {showFooter && (
-        <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-[#fafafa] px-4 py-2 text-xs text-[#6b7280]">
+        <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-[#fafafa] px-4 py-2 text-xs text-[#6b7280] dark:border-white/10 dark:bg-[#0f172a] dark:text-gray-400">
           <span>Word Count: {wordCount}</span>
           <span>Pasted formatting is kept unless you change it with the toolbar</span>
         </div>

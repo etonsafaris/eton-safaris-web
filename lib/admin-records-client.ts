@@ -369,3 +369,26 @@ export async function saveWithColumnFallback(
 }
 
 export const adminAuthHeaders = authHeaders;
+
+/** Keyword library for SEO panel and admin Keywords module. */
+export async function fetchAdminKeywordRows(): Promise<RecordRow[]> {
+  await syncAdminSessionCookie().catch(() => false);
+  async function getOnce() {
+    return fetch('/api/admin/keywords', {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: await authHeaders(),
+    });
+  }
+  let response = await getOnce();
+  if (response.status === 401) {
+    await syncAdminSessionCookie();
+    response = await getOnce();
+  }
+  const body = (await response.json().catch(() => ({}))) as { rows?: RecordRow[]; error?: string };
+  if (!response.ok) {
+    throw new Error(body.error || `Could not load keywords (${response.status})`);
+  }
+  return Array.isArray(body.rows) ? body.rows : [];
+}

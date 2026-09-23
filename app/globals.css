@@ -880,3 +880,38 @@ html[data-theme='dark'] .admin-shell ::selection {
   background: #10b981;
   color: #fff;
 }
+
+/* Admin forms: readable text on dark surfaces (tour editor, SEO, grids) */
+html.dark .admin-shell .text-\[\#111827\],
+html[data-theme='dark'] .admin-shell .text-\[\#111827\] {
+  color: #f9fafb;
+}
+
+html.dark .admin-shell .text-\[\#374151\],
+html[data-theme='dark'] .admin-shell .text-\[\#374151\] {
+  color: #e5e7eb;
+}
+
+html.dark .admin-shell .text-\[\#1e293b\],
+html[data-theme='dark'] .admin-shell .text-\[\#1e293b\] {
+  color: #f1f5f9;
+}
+
+html.dark .admin-shell .text-\[\#6b7280\],
+html[data-theme='dark'] .admin-shell .text-\[\#6b7280\] {
+  color: #9ca3af;
+}
+
+html.dark .admin-shell .wysiwyg-editor-container .description-box,
+html[data-theme='dark'] .admin-shell .wysiwyg-editor-container .description-box {
+  color: #f1f5f9;
+}
+
+html.dark .admin-shell .wysiwyg-editor-container .description-box p,
+html.dark .admin-shell .wysiwyg-editor-container .description-box li,
+html.dark .admin-shell .wysiwyg-editor-container .description-box span,
+html[data-theme='dark'] .admin-shell .wysiwyg-editor-container .description-box p,
+html[data-theme='dark'] .admin-shell .wysiwyg-editor-container .description-box li,
+html[data-theme='dark'] .admin-shell .wysiwyg-editor-container .description-box span {
+  color: #f1f5f9;
+}

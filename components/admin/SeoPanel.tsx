@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, ChevronDown, Circle, Info, X } from 'lucide-react';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE_LOGO } from '@/lib/collections';
-import { clearCollectionCache, fetchCollectionRecords, pickString, slugify } from '@/lib/data';
-import { chipsFromKeywordRows, keywordRowMatchesScope } from '@/lib/keywords';
+import { pickString, slugify } from '@/lib/data';
+import { fetchAdminKeywordRows, fetchAdminTablePage } from '@/lib/admin-records-client';
+import { chipsFromKeywordRows, keywordRowMatchesScope, uniqueKeywords } from '@/lib/keywords';
 import {
   analyzeReadability,
   analyzeSeo,
@@ -44,7 +45,9 @@ type SeoPanelProps = {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="mb-1.5 block text-sm font-semibold text-[#374151]">{children}</label>;
+  return (
+    <label className="mb-1.5 block text-sm font-semibold text-[#374151] dark:text-gray-200">{children}</label>
+  );
 }
 
 function TextInput({
@@ -63,7 +66,7 @@ function TextInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className={`w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 ${className}`}
+      className={`w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white dark:placeholder:text-gray-500 ${className}`}
     />
   );
 }
@@ -89,10 +92,10 @@ function CharacterBar({
   const width = Math.min(100, Math.round((length / max) * 100));
   return (
     <div className="mt-2">
-      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
         <div className={`h-full transition-all ${qualityTone(length, min, ideal, max)}`} style={{ width: `${width}%` }} />
       </div>
-      <p className="mt-1 text-xs text-[#6b7280]">{length}/{max} characters</p>
+      <p className="mt-1 text-xs text-[#6b7280] dark:text-gray-400">{length}/{max} characters</p>
     </div>
   );
 }
@@ -122,7 +125,11 @@ export default function SeoPanel({
   const [keywordCountry, setKeywordCountry] = useState(keywordLibraryCountry || 'Uganda');
   const [keywordCategory, setKeywordCategory] = useState(keywordLibraryCategory || '');
   const [libraryCategories, setLibraryCategories] = useState<{ value: string; label: string }[]>([]);
+  const [keywordsLoading, setKeywordsLoading] = useState(false);
   const [toast, setToast] = useState('');
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
+  const lastKeywordScopeRef = useRef('');
 
   useEffect(() => {
     if (keywordLibraryCountry) setKeywordCountry(keywordLibraryCountry);
@@ -209,15 +216,38 @@ export default function SeoPanel({
     );
   }
 
+  const applyKeywordsForScope = useCallback(
+    async (country: string, category: string) => {
+      const scopeKey = `${country.trim().toLowerCase()}::${category.trim().toLowerCase()}`;
+      if (!category.trim()) return;
+      setKeywordsLoading(true);
+      try {
+        const rows = await fetchAdminKeywordRows();
+        const matched = chipsFromKeywordRows(
+          rows.filter((row) => keywordRowMatchesScope(row, country, category))
+        );
+        lastKeywordScopeRef.current = scopeKey;
+        const current = valuesRef.current;
+        if (matched.length > 0) {
+          onChange({
+            ...current,
+            focus_keywords: uniqueKeywords([...matched, ...current.focus_keywords]),
+          });
+        }
+      } catch (error) {
+        console.error('[SEO] Keyword library load failed:', error);
+      } finally {
+        setKeywordsLoading(false);
+      }
+    },
+    [onChange]
+  );
+
   useEffect(() => {
-    fetchCollectionRecords('categories')
-      .then((rows) => {
+    fetchAdminTablePage('categories', { page: 1, limit: 50, country: keywordCountry || undefined })
+      .then((page) => {
         setLibraryCategories(
-          rows
-            .filter((row) => {
-              const value = pickString(row, ['country']);
-              return !value || value.toLowerCase() === keywordCountry.toLowerCase();
-            })
+          page.rows
             .map((row) => ({
               value: pickString(row, ['title', 'name']),
               label: pickString(row, ['title', 'name']),
@@ -225,24 +255,35 @@ export default function SeoPanel({
             .filter((item) => item.value)
         );
       })
-      .catch((error) => console.error(error));
+      .catch((error) => console.error('[SEO] Categories load failed:', error));
   }, [keywordCountry]);
 
   useEffect(() => {
-    if (!keywordCategory) return;
-    clearCollectionCache('keywords');
-    fetchCollectionRecords('keywords', ['keyword', 'seo_keywords'])
-      .then((rows) => {
-        const matched = chipsFromKeywordRows(
-          rows.filter((row) => {
-            return keywordRowMatchesScope(row, keywordCountry, keywordCategory);
-          })
-        );
-        if (matched.length > 0) onChange({ ...values, focus_keywords: matched });
-      })
-      .catch((error) => console.error('[SEO] Keyword library load failed:', error));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keywordCountry, keywordCategory]);
+    if (keywordCategory) return;
+    if (!keywordLibraryCategory) return;
+    const needle = keywordLibraryCategory.trim().toLowerCase();
+    const hit = libraryCategories.find((item) => item.value.toLowerCase() === needle);
+    if (hit) setKeywordCategory(hit.value);
+  }, [keywordCategory, keywordLibraryCategory, libraryCategories]);
+
+  useEffect(() => {
+    const country = (keywordLibraryCountry || keywordCountry).trim();
+    const category = (keywordLibraryCategory || keywordCategory).trim();
+    if (!category.trim()) return;
+    void applyKeywordsForScope(country || keywordCountry, category);
+  }, [
+    keywordCountry,
+    keywordCategory,
+    keywordLibraryCountry,
+    keywordLibraryCategory,
+    applyKeywordsForScope,
+  ]);
+
+  useEffect(() => {
+    if (!keywordLibraryCategory.trim()) return;
+    if (keywordCategory.trim()) return;
+    setKeywordCategory(keywordLibraryCategory);
+  }, [keywordLibraryCategory, keywordCategory]);
 
   const socialImageUrl =
     coverImageUrl && !coverImageUrl.startsWith('blob:') && !coverImageUrl.startsWith('data:')
@@ -307,7 +348,7 @@ export default function SeoPanel({
 
   return (
     <div className={className}>
-      <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-5 py-4 text-left shadow-sm">
+      <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-5 py-4 text-left shadow-sm dark:border-white/10 dark:bg-[#161b22]">
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
@@ -321,8 +362,10 @@ export default function SeoPanel({
             {scorePercent}
           </span>
           <div>
-            <span className="font-bold text-[#111827]">SEO</span>
-            <span className="ml-2 text-sm text-[#6b7280]">{scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}</span>
+            <span className="font-bold text-[#111827] dark:text-white">SEO</span>
+            <span className="ml-2 text-sm text-[#6b7280] dark:text-gray-400">
+              {scorePercent}% {score === 'good' ? 'optimized' : 'needs work'}
+            </span>
           </div>
           {indexStatus ? <IndexStatusBadge status={indexStatus} size="md" /> : null}
         </button>
@@ -331,7 +374,7 @@ export default function SeoPanel({
             type="button"
             onClick={() => setOpen((current) => !current)}
             aria-label={open ? 'Collapse SEO panel' : 'Expand SEO panel'}
-            className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6]"
+            className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-400 dark:hover:bg-white/5"
           >
             <ChevronDown className={`h-5 w-5 transition ${open ? 'rotate-180' : ''}`} />
           </button>
@@ -339,13 +382,13 @@ export default function SeoPanel({
       </div>
 
       {open && (
-        <div className="mt-2 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+        <div className="mt-2 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm dark:border-white/10 dark:bg-[#161b22]">
           {indexStatus ? (
-            <p className="border-b border-[#e5e7eb] bg-[#f8fafc] px-4 py-2.5 text-xs text-[#475569]">
+            <p className="border-b border-[#e5e7eb] bg-[#f8fafc] px-4 py-2.5 text-xs text-[#475569] dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
               Google: <strong>{indexStatus.label}</strong> — {indexStatus.reason}
             </p>
           ) : null}
-          <div className="flex border-b border-[#e5e7eb] px-4">
+          <div className="flex border-b border-[#e5e7eb] px-4 dark:border-white/10">
             {(['seo', 'readability', 'schema'] as const).map((item) => (
               <button
                 key={item}
@@ -353,8 +396,8 @@ export default function SeoPanel({
                 onClick={() => setTab(item)}
                 className={`px-4 py-3 text-sm font-medium capitalize transition ${
                   tab === item
-                    ? 'border-b-2 border-[#00A651] text-[#111827]'
-                    : 'text-[#6b7280] hover:text-[#111827]'
+                    ? 'border-b-2 border-[#00A651] text-[#111827] dark:text-white'
+                    : 'text-[#6b7280] hover:text-[#111827] dark:text-gray-400 dark:hover:text-white'
                 }`}
               >
                 {item}
@@ -372,21 +415,21 @@ export default function SeoPanel({
                       value={values.focus_keyphrase}
                       onChange={(event) => update('focus_keyphrase', event.target.value)}
                       placeholder="e.g. Luxury Safari"
-                      className="w-full rounded-lg border border-[#e5e7eb] px-3.5 py-2.5 pr-10 text-sm outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 pr-10 text-sm text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
                     />
                     <Info className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
                   </div>
-                  <p className="mt-1.5 text-xs text-[#6b7280]">
+                  <p className="mt-1.5 text-xs text-[#6b7280] dark:text-gray-400">
                     The main keyword you want this page to rank for.
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4">
+                <div className="rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4 dark:border-white/10 dark:bg-white/5">
                   <div className="mb-3 flex items-center gap-2">
                     <span className="h-4 w-1 rounded-full bg-[#00A651]" />
-                    <p className="text-sm font-semibold text-[#111827]">Google Preview</p>
+                    <p className="text-sm font-semibold text-[#111827] dark:text-white">Google Preview</p>
                   </div>
-                  <div className="rounded-lg border border-[#e5e7eb] bg-white p-4">
+                  <div className="rounded-lg border border-[#e5e7eb] bg-white p-4 dark:border-white/10 dark:bg-[#0f1419]">
                     <div className="flex items-center gap-2 text-xs text-[#6b7280]">
                       <img src={SITE_LOGO} alt="" className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
                       <span>
@@ -414,7 +457,7 @@ export default function SeoPanel({
                     value={values.slug}
                     onChange={() => undefined}
                     placeholder="generated-from-seo-title"
-                    className="bg-[#f9fafb] text-[#6b7280]"
+                    className="bg-[#f9fafb] text-[#6b7280] dark:bg-white/5 dark:text-gray-400"
                   />
                   <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">
                     The slug is generated from the SEO title and stays locked to that value.
@@ -428,7 +471,7 @@ export default function SeoPanel({
                     onChange={(event) => update('meta_description', event.target.value)}
                     rows={4}
                     placeholder="Modify your meta description here"
-                    className="w-full resize-y rounded-lg border border-[#e5e7eb] px-3.5 py-3 text-sm outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                    className="w-full resize-y rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
                   />
                   <CharacterBar length={values.meta_description.length} min={70} ideal={120} max={160} />
                 </div>
@@ -458,6 +501,7 @@ export default function SeoPanel({
                       <SearchableSelect
                         value={keywordCountry}
                         onChange={(value) => {
+                          lastKeywordScopeRef.current = '';
                           setKeywordCountry(value);
                           setKeywordCategory('');
                         }}
@@ -469,9 +513,14 @@ export default function SeoPanel({
                       />
                       <SearchableSelect
                         value={keywordCategory}
-                        onChange={setKeywordCategory}
+                        onChange={(value) => {
+                          lastKeywordScopeRef.current = '';
+                          setKeywordCategory(value);
+                          void applyKeywordsForScope(keywordCountry, value);
+                        }}
                         options={libraryCategories}
                         placeholder="Category"
+                        disabled={!keywordCountry}
                       />
                     </div>
                   </div>
@@ -489,16 +538,18 @@ export default function SeoPanel({
                     minHeightClass="min-h-[88px]"
                   />
                   <p className="mt-1.5 text-xs text-[#6b7280]">
-                    Select a country and category to load every keyword saved for that pair. You can still type more and press Enter.
+                    {keywordsLoading
+                      ? 'Loading keywords for this country and category…'
+                      : 'Choose country and category — saved keywords fill in automatically. You can still type more and press Enter.'}
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setAdvancedOpen((current) => !current)}
-                  className="flex w-full items-center justify-between rounded-lg border border-[#e5e7eb] px-4 py-3 text-left"
+                  className="flex w-full items-center justify-between rounded-lg border border-[#e5e7eb] px-4 py-3 text-left dark:border-white/10"
                 >
-                  <span className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-[#374151] dark:text-gray-200">
                     <Circle className="h-2 w-2 fill-[#9ca3af] text-[#9ca3af]" />
                     Advanced SEO
                   </span>
@@ -508,7 +559,7 @@ export default function SeoPanel({
                 </button>
 
                 {advancedOpen && (
-                  <div className="space-y-4 rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4">
+                  <div className="space-y-4 rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4 dark:border-white/10 dark:bg-white/5">
                     <div>
                       <FieldLabel>Robots Meta</FieldLabel>
                       <p className="mb-2 text-xs text-[#6b7280]">
@@ -517,7 +568,7 @@ export default function SeoPanel({
                           : 'Allow search engines to show this page in search results and follow its links.'}
                       </p>
                       <div className="flex flex-wrap gap-5">
-                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                        <label className="flex items-center gap-2 text-sm text-[#374151] dark:text-gray-200">
                           <input
                             type="radio"
                             name="robots-index"
@@ -527,7 +578,7 @@ export default function SeoPanel({
                           />
                           Index
                         </label>
-                        <label className="flex items-center gap-2 text-sm text-[#374151]">
+                        <label className="flex items-center gap-2 text-sm text-[#374151] dark:text-gray-200">
                           <input
                             type="radio"
                             name="robots-index"
@@ -565,7 +616,7 @@ export default function SeoPanel({
                       <FieldLabel>Meta robots advanced</FieldLabel>
                       <div className="space-y-2">
                         {ROBOTS_ADVANCED_OPTIONS.map((option) => (
-                          <label key={option.value} className="flex items-center gap-2 text-sm text-[#374151]">
+                          <label key={option.value} className="flex items-center gap-2 text-sm text-[#374151] dark:text-gray-200">
                             <input
                               type="checkbox"
                               checked={values.robots_advanced.includes(option.value)}
@@ -624,7 +675,7 @@ export default function SeoPanel({
                 <div>
                   <div className="mb-3 flex items-center gap-2">
                     <span className="h-4 w-1 rounded-full bg-orange-400" />
-                    <p className="text-sm font-semibold text-[#111827]">SEO Analysis results</p>
+                    <p className="text-sm font-semibold text-[#111827] dark:text-white">SEO Analysis results</p>
                   </div>
                   <ul className="space-y-2 text-sm">
                     {analysis.map((item) => (
@@ -634,8 +685,8 @@ export default function SeoPanel({
                           item.type === 'error'
                             ? 'text-red-600'
                             : item.type === 'info'
-                              ? 'text-[#374151]'
-                              : 'text-green-700'
+                              ? 'text-[#374151] dark:text-gray-300'
+                              : 'text-green-700 dark:text-green-400'
                         }`}
                       >
                         {item.type === 'error' ? (
@@ -658,11 +709,11 @@ export default function SeoPanel({
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <FieldLabel>Readability analysis</FieldLabel>
-                    <p className="text-sm text-[#6b7280]">
+                    <p className="text-sm text-[#6b7280] dark:text-gray-400">
                       Reviewing: {pageTitle || values.seo_title || 'Untitled item'}
                     </p>
                   </div>
-                  <div className="rounded-full bg-[#ecfdf5] px-3 py-1 text-sm font-semibold text-[#047857]">
+                  <div className="rounded-full bg-[#ecfdf5] px-3 py-1 text-sm font-semibold text-[#047857] dark:bg-emerald-500/20 dark:text-emerald-400">
                     Flesch {flesch || 0}
                   </div>
                 </div>
@@ -671,7 +722,11 @@ export default function SeoPanel({
                     <li
                       key={item.message}
                       className={`flex items-start gap-2 ${
-                        item.type === 'error' ? 'text-red-600' : item.type === 'ok' ? 'text-green-700' : 'text-[#374151]'
+                        item.type === 'error'
+                          ? 'text-red-600 dark:text-red-400'
+                          : item.type === 'ok'
+                            ? 'text-green-700 dark:text-green-400'
+                            : 'text-[#374151] dark:text-gray-300'
                       }`}
                     >
                       {item.type === 'error' ? (
@@ -702,7 +757,7 @@ export default function SeoPanel({
                 <button
                   type="button"
                   onClick={generateSchema}
-                  className="rounded-lg border border-[#00A651] px-4 py-2 text-sm font-semibold text-[#00A651] hover:bg-[#f0fdf4]"
+                  className="rounded-lg border border-[#00A651] px-4 py-2 text-sm font-semibold text-[#00A651] hover:bg-[#f0fdf4] dark:hover:bg-emerald-500/10"
                 >
                   Generate schema from this page
                 </button>
@@ -713,7 +768,7 @@ export default function SeoPanel({
                     onChange={(event) => update('seo_schema', event.target.value)}
                     rows={12}
                     placeholder='{"@context":"https://schema.org","@type":"TouristTrip","name":"..."}'
-                    className="w-full rounded-lg border border-[#e5e7eb] px-3.5 py-3 font-mono text-xs outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
+                    className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 font-mono text-xs text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-gray-100"
                   />
                   <p className={`mt-2 text-xs ${schemaCheck.ok ? 'text-[#047857]' : 'text-red-600'}`}>
                     {schemaCheck.message}
@@ -727,7 +782,7 @@ export default function SeoPanel({
             )}
 
             {onSave && (
-              <div className="flex items-center justify-between border-t border-[#e5e7eb] pt-4">
+              <div className="flex items-center justify-between border-t border-[#e5e7eb] pt-4 dark:border-white/10">
                 {toast ? <p className="text-sm font-medium text-[#00A651]">{toast}</p> : <span />}
                 <button
                   type="button"
