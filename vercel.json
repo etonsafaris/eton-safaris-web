@@ -5,6 +5,11 @@
       "schedule": "0 8 * * *"
     }
   ],
+  "build": {
+    "env": {
+      "SKIP_BUILD_STAYS": "1"
+    }
+  },
   "functions": {
     "app/page.tsx": {
       "maxDuration": 30
@@ -16,8 +21,6 @@
       "maxDuration": 30
     }
   },
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install --no-fund --no-audit",
   "git": {

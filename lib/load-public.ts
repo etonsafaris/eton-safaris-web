@@ -38,9 +38,13 @@ import {
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
+import { skipParkStaysDuringBuild } from '@/lib/build-phase';
 import type { RecordRow } from '@/lib/types';
 
-const STATIC_DETAIL_BUILD_LIMIT = 48;
+const STATIC_DETAIL_BUILD_LIMIT = 24;
+
+const FAKE_STAY_SLUG_RE =
+  /-(river|savannah|forest|hilltop|horizon|baobab|mist|sunset|valley|lagoon|canyon|plateau|oasis|crest|trail)-(luxury|safari)-(lodge|camp|hotel|bandas)(-|$)/i;
 
 function listColumns(table: string, aliases: string[] = []) {
   return publicListColumnsFor(table, aliases);
@@ -445,13 +449,14 @@ export async function loadParkDetail(slug: string) {
     ]);
     const published = park && isPublishedRecord(park) ? park : null;
     const parkName = published ? getRecordTitle(published) : '';
-    const stays = parkName
-      ? await withTimeout(
-          fetchStaysForPark(parkName, 10, published?.id != null ? String(published.id) : undefined),
-          4000,
-          [] as RecordRow[]
-        )
-      : [];
+    const stays =
+      parkName && !skipParkStaysDuringBuild()
+        ? await withTimeout(
+            fetchStaysForPark(parkName, 10, published?.id != null ? String(published.id) : undefined),
+            4000,
+            [] as RecordRow[]
+          )
+        : [];
     const rows = parkPage?.rows ?? [];
     const others = published
       ? rows
@@ -715,6 +720,7 @@ export async function loadStaticAccommodationParams(): Promise<{ slug: string }[
     return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
+      .filter((slug) => !FAKE_STAY_SLUG_RE.test(slug))
       .slice(0, STATIC_DETAIL_BUILD_LIMIT)
       .map((slug) => ({ slug }));
   } catch {
