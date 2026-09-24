@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef } from 'react';
 import { internalPathFromHref } from '@/lib/internal-link';
-import { resolvePublicContentPath, warmResolvePublicContentPath } from '@/lib/public-content-link';
+import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-path-utils';
 
 type PublicHtmlProps = {
   html: string;
@@ -12,7 +12,21 @@ type PublicHtmlProps = {
   style?: React.CSSProperties;
 };
 
-const PREFETCH_LIMIT = 12;
+async function resolvePathForNavigation(path: string): Promise<string> {
+  const trimmed = path.trim();
+  if (!trimmed || isPrefixedPublicPath(trimmed)) {
+    return normalizePrefixedPublicPath(trimmed || '/');
+  }
+  try {
+    const response = await fetch(`/api/public/resolve-path?path=${encodeURIComponent(trimmed)}`, {
+      credentials: 'same-origin',
+    });
+    const body = (await response.json().catch(() => ({}))) as { path?: string };
+    return body.path || normalizePrefixedPublicPath(trimmed);
+  } catch {
+    return normalizePrefixedPublicPath(trimmed);
+  }
+}
 
 export default function PublicHtml({ html, className, style }: PublicHtmlProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -24,7 +38,7 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
       if (navigatingRef.current) return;
       navigatingRef.current = true;
       try {
-        const target = await resolvePublicContentPath(internalPath);
+        const target = await resolvePathForNavigation(internalPath);
         router.push(target);
       } finally {
         window.setTimeout(() => {
@@ -63,50 +77,19 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
     root.addEventListener('click', onClick);
 
     const prefetched = new Set<string>();
-    const prefetchPath = (path: string) => {
-      void warmResolvePublicContentPath(path).then((resolved) => {
-        const base = resolved.split('#')[0];
-        if (!base || prefetched.has(base)) return;
-        prefetched.add(base);
-        router.prefetch(base);
-      });
-    };
-
-    const onWarm = (event: Event) => {
-      const anchor = event.currentTarget as HTMLAnchorElement;
+    root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
       const href = anchor.getAttribute('href');
       if (!href) return;
       const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
-      if (internal) prefetchPath(internal);
-    };
-
-    const links = root.querySelectorAll<HTMLAnchorElement>('a[href]');
-    links.forEach((anchor, index) => {
-      const href = anchor.getAttribute('href');
-      if (href) {
-        const pageOrigin = window.location.origin;
-        const internal = internalPathFromHref(href, { pageOrigin });
-        if (internal) {
-          void warmResolvePublicContentPath(internal).then((resolved) => {
-            if (resolved && resolved !== href) anchor.setAttribute('href', resolved);
-          });
-        }
-      }
-
-      anchor.addEventListener('mouseenter', onWarm, { once: true });
-      anchor.addEventListener('focus', onWarm, { once: true });
-      if (index < PREFETCH_LIMIT && href) {
-        const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
-        if (internal) prefetchPath(internal);
-      }
+      if (!internal || !isPrefixedPublicPath(internal)) return;
+      const base = normalizePrefixedPublicPath(internal).split('#')[0];
+      if (!base || prefetched.has(base)) return;
+      prefetched.add(base);
+      router.prefetch(base);
     });
 
     return () => {
       root.removeEventListener('click', onClick);
-      links.forEach((anchor) => {
-        anchor.removeEventListener('mouseenter', onWarm);
-        anchor.removeEventListener('focus', onWarm);
-      });
     };
   }, [html, onClick, router]);
 
@@ -119,7 +102,6 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
   );
 }
 
-/** Next.js Link wrapper for a resolved in-app path (used where we build links in React). */
 export function PublicContentLink({
   href,
   className,

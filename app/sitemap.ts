@@ -16,6 +16,7 @@ import {
   sitemapPriorityForRecord,
 } from '@/lib/public-indexing';
 import type { RecordRow } from '@/lib/types';
+import { skipStaticGenerationDuringBuild } from '@/lib/build-phase';
 
 export const revalidate = 3600;
 
@@ -76,6 +77,9 @@ function indexableRow(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  if (skipStaticGenerationDuringBuild()) {
+    return [entry('', now, 1, 'daily')];
+  }
   const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
     sitemapFetch('tours'),
     sitemapFetch('national_park', ['national_parks', 'parks']),

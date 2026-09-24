@@ -17,7 +17,7 @@ import { resolvePublicImage } from '@/lib/public-image';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
-export const revalidate = 900;
+export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
 
 const PAGE_SIZE = 48;

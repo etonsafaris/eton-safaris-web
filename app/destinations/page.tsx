@@ -3,7 +3,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadPublishedRecords } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export { revalidate } from '@/lib/public-page-config';
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Safari Destinations | Eton Safaris',

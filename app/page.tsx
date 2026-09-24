@@ -12,8 +12,8 @@ import type { PublicDestination } from '@/lib/public-destinations';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
-/** Static on Vercel CDN; refresh from Aiven every 15 minutes. */
-export const revalidate = 900;
+/** Render on demand so `next build` does not fan out DB connections. */
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: {

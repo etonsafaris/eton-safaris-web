@@ -38,7 +38,7 @@ import {
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
-import { skipParkStaysDuringBuild } from '@/lib/build-phase';
+import { skipParkStaysDuringBuild, skipStaticGenerationDuringBuild } from '@/lib/build-phase';
 import type { RecordRow } from '@/lib/types';
 
 const STATIC_DETAIL_BUILD_LIMIT = 24;
@@ -654,6 +654,7 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
 }
 
 export async function loadStaticCategoryParams(): Promise<{ slug: string; category: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const page = await fetchCollectionPage('categories', [], {
       limit: STATIC_DETAIL_BUILD_LIMIT * 2,
@@ -683,6 +684,7 @@ export async function loadStaticCategoryParams(): Promise<{ slug: string; catego
 
 /** Slugs to pre-render at build time (ISR + CDN). */
 export async function loadStaticTourParams(): Promise<{ slug: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const featured = await fetchFeaturedTours(STATIC_DETAIL_BUILD_LIMIT);
     const fromFeatured = featured
@@ -705,6 +707,7 @@ export async function loadStaticTourParams(): Promise<{ slug: string }[]> {
 }
 
 export function loadStaticDestinationParams(): { slug: string }[] {
+  if (skipStaticGenerationDuringBuild()) return [];
   const slugs = new Set<string>();
   for (const item of [...NAV_COUNTRIES, ...OTHER_DESTINATIONS]) {
     if (item.slug) slugs.add(item.slug);
@@ -713,6 +716,7 @@ export function loadStaticDestinationParams(): { slug: string }[] {
 }
 
 export async function loadStaticAccommodationParams(): Promise<{ slug: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const rows = await loadPublishedRecords('accommodations', [], {
       columns: 'id,slug,seo_slug,title,published',
@@ -729,6 +733,7 @@ export async function loadStaticAccommodationParams(): Promise<{ slug: string }[
 }
 
 export async function loadStaticParkParams(): Promise<{ slug: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const rows = await loadPublishedRecords('national_park', ['national_parks', 'parks'], {
       columns: 'id,slug,seo_slug,title,published',
@@ -744,6 +749,7 @@ export async function loadStaticParkParams(): Promise<{ slug: string }[]> {
 }
 
 export async function loadStaticExploreParams(): Promise<{ slug: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const rows = await loadPublishedRecords('explore', [], {
       columns: 'id,slug,seo_slug,title,published',
@@ -759,6 +765,7 @@ export async function loadStaticExploreParams(): Promise<{ slug: string }[]> {
 }
 
 export async function loadStaticSafariUpdateParams(): Promise<{ slug: string }[]> {
+  if (skipStaticGenerationDuringBuild()) return [];
   try {
     const page = await fetchPublicSafariUpdatesPage({
       limit: STATIC_DETAIL_BUILD_LIMIT,
