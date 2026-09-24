@@ -36,7 +36,7 @@ export default async function HomePage() {
   try {
     const bundle = await Promise.race([
       loadHomePageBundle(),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('home bundle timeout')), 14000)),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('home bundle timeout')), 8000)),
     ]);
     data = normalizeHomePagePayload(bundle.data);
     homeContent = resolveHomePageContent(bundle.content);

@@ -16,7 +16,7 @@ import {
 import { SITE_MEDIA } from '@/lib/site-media';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export { revalidate } from '@/lib/public-page-config';
 
 const PAGE_SIZE = 48;
 

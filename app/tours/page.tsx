@@ -3,7 +3,7 @@ import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export { revalidate } from '@/lib/public-page-config';
 export const dynamicParams = true;
 
 export const metadata: Metadata = {

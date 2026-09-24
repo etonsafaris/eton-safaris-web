@@ -1,9 +1,9 @@
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadPublishedRecords } from '@/lib/load-public';
+import { loadDestinationsIndexCountries } from '@/lib/load-public';
 import { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export { revalidate } from '@/lib/public-page-config';
 
 export const metadata: Metadata = {
   title: 'Safari Destinations | Eton Safaris',
@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DestinationsIndexPage() {
-  let countries: Awaited<ReturnType<typeof loadPublishedRecords>> = [];
+  let countries: Awaited<ReturnType<typeof loadDestinationsIndexCountries>> = [];
   try {
-    countries = await loadPublishedRecords('countries');
+    countries = await loadDestinationsIndexCountries();
   } catch (error) {
     console.warn('[Public] Destinations index failed:', error);
   }
