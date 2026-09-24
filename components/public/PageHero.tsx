@@ -85,16 +85,19 @@ export default function PageHero({
     ? customItems
     : [...customItems, { label: 'Published', value: publishedLabel }];
   const showForestBar = true;
-  const fullBleedHero = isTour || isCountry || isUpdate || isPark;
+  const fullViewportHero = isCountry || isUpdate || isPark;
+  const tourHeroHeight = 'h-[min(40svh,360px)] md:h-[min(44svh,420px)]';
 
   const heroImage = (
     <section
       className={`relative w-full overflow-hidden bg-[#1f3d2b] ${
-        fullBleedHero && showForestBar
-          ? 'min-h-0 flex-1'
-          : isPolicy
-            ? 'h-[min(56svh,520px)]'
-            : 'h-[min(38svh,340px)] md:h-[min(42svh,380px)]'
+        isTour
+          ? tourHeroHeight
+          : fullViewportHero && showForestBar
+            ? 'min-h-0 flex-1'
+            : isPolicy
+              ? 'h-[min(56svh,520px)]'
+              : 'h-[min(38svh,340px)] md:h-[min(42svh,380px)]'
       }`}
     >
       {src ? (
@@ -118,49 +121,70 @@ export default function PageHero({
           </div>
         </div>
       ) : (
-        <div
-          className={`absolute inset-0 flex px-4 md:px-8 ${
-            isTour ? 'items-center justify-start' : 'items-center justify-center'
-          }`}
-        >
-          <div className={isTour ? 'mx-auto w-full max-w-[1200px] text-left' : 'text-center'}>
-            {isTour && backHref ? (
-              <Link
-                href={backHref}
-                className="mb-3 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
-                style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
-              >
-                ← {backLabel || 'Back'}
-              </Link>
-            ) : null}
-            <h1
-              className={`mb-2 text-white ${
-                isTour
-                  ? 'font-serif max-w-3xl text-3xl font-bold md:text-5xl'
-                  : isPolicy
-                    ? 'font-merry text-[40px] font-semibold italic leading-[48px]'
-                    : isCountry
-                      ? 'font-serif text-[32px] font-semibold italic leading-tight md:text-[40px]'
-                      : 'font-serif text-3xl font-bold md:text-5xl'
-              }`}
-              style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+        <>
+          {isTour && backHref ? (
+            <Link
+              href={backHref}
+              className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 text-sm text-white/80 hover:text-white md:left-8 md:top-6"
+              style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
             >
-              {title}
-            </h1>
-            {subtitle && !isTour && !isCountry && !isPark ? (
-              <p className="text-xs font-semibold uppercase tracking-widest text-sage md:text-sm">{subtitle}</p>
-            ) : null}
+              ← {backLabel || 'Back'}
+            </Link>
+          ) : null}
+          <div
+            className={`absolute inset-0 flex items-center justify-center px-5 md:px-10 ${
+              isTour ? 'pb-2 pt-12 md:pt-14' : ''
+            }`}
+          >
+            <div className="w-full max-w-[1100px] text-center">
+              {!isTour && backHref ? (
+                <Link
+                  href={backHref}
+                  className="mb-3 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
+                  style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
+                >
+                  ← {backLabel || 'Back'}
+                </Link>
+              ) : null}
+              <h1
+                className={`mb-2 text-white ${
+                  isTour
+                    ? 'mx-auto font-serif text-2xl font-bold leading-snug sm:text-3xl md:text-4xl lg:text-[2.75rem] lg:leading-tight'
+                    : isPolicy
+                      ? 'font-merry text-[40px] font-semibold italic leading-[48px]'
+                      : isCountry
+                        ? 'font-serif text-[32px] font-semibold italic leading-tight md:text-[40px]'
+                        : 'font-serif text-3xl font-bold md:text-5xl'
+                }`}
+                style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+              >
+                {title}
+              </h1>
+              {subtitle && !isTour && !isCountry && !isPark ? (
+                <p className="text-xs font-semibold uppercase tracking-widest text-sage md:text-sm">{subtitle}</p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </section>
   );
 
   const forestMeta = (
     <div className="shrink-0 bg-forest text-white">
-      <div className="mx-auto flex max-w-[1200px] flex-col gap-2 px-4 py-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:px-6 md:py-3">
-        <PageBreadcrumbs currentTitle={title} tone="forest" />
-        <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2 md:gap-10">
+      <div
+        className={`mx-auto max-w-[1200px] px-4 md:px-6 ${
+          isTour ? 'flex flex-col gap-2 py-2.5 md:flex-row md:items-center md:justify-between md:gap-6 md:py-2.5' : 'flex flex-col gap-2 py-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:py-3'
+        }`}
+      >
+        <div className={isTour ? 'min-w-0 flex-1 md:max-w-[55%]' : 'min-w-0'}>
+          <PageBreadcrumbs currentTitle={title} tone="forest" truncateCurrent={isTour} />
+        </div>
+        <div
+          className={`flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 md:gap-8 ${
+            isTour ? 'md:justify-end' : ''
+          }`}
+        >
           {customItems.length > 0 ? (
             customWithPublished.map((item) => (
               <ForestMetaItem
@@ -208,7 +232,7 @@ export default function PageHero({
     <>
       <PageFavicon title={title} />
       {showForestBar ? (
-        <div className={fullBleedHero ? 'flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] flex-col' : ''}>
+        <div className={fullViewportHero ? 'flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] flex-col' : ''}>
           {heroImage}
           {forestMeta}
         </div>

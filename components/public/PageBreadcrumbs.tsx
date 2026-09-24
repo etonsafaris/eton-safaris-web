@@ -32,9 +32,12 @@ function countryFromSafarisSegment(segment: string) {
 export default function PageBreadcrumbs({
   currentTitle,
   tone = 'light',
+  truncateCurrent = false,
 }: {
   currentTitle: string;
   tone?: 'light' | 'forest';
+  /** Shorten the current page label so the forest meta bar stays one compact row. */
+  truncateCurrent?: boolean;
 }) {
   const pathname = usePathname() || '/';
   const parts = pathname.split('/').filter(Boolean);
@@ -84,7 +87,13 @@ export default function PageBreadcrumbs({
             /
           </span>
           {crumb.last ? (
-            <span className={forest ? 'font-medium text-white' : 'font-medium text-[#222]'} aria-current="page">
+            <span
+              className={`${
+                forest ? 'font-medium text-white' : 'font-medium text-[#222]'
+              } ${truncateCurrent ? 'line-clamp-1 max-w-[14rem] truncate sm:max-w-[20rem] md:max-w-[28rem]' : ''}`}
+              title={truncateCurrent ? crumb.label : undefined}
+              aria-current="page"
+            >
               {crumb.label}
             </span>
           ) : (
