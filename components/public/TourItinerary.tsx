@@ -2,6 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { ItineraryDay } from '@/lib/itinerary';
 
@@ -37,10 +38,7 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
                 style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
               >
                 {day.description ? (
-                  <div
-                    className="public-prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: publicBodyHtml(day.description) }}
-                  />
+                  <PublicHtml className="public-prose max-w-none" html={publicBodyHtml(day.description)} />
                 ) : (
                   <p className="public-prose">Details for this day will be shared with your itinerary.</p>
                 )}

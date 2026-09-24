@@ -36,6 +36,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import PageFaqList from '@/components/public/PageFaqList';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { bestTimeToVisit } from '@/lib/country-planning';
@@ -189,10 +190,10 @@ export default function CountryPageContent({
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3">
           <div className="md:col-span-2">
             {descriptionHtml ? (
-              <div className="public-prose" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+              <PublicHtml className="public-prose" html={descriptionHtml} />
             ) : null}
             {summaryIsDistinct ? (
-              <div className="public-prose mt-8" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
+              <PublicHtml className="public-prose mt-8" html={summaryHtml} />
             ) : null}
             <PageFaqList faqs={faqs} tone="light" className="mt-10" />
           </div>

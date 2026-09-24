@@ -24,6 +24,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -145,11 +146,9 @@ export default function SafariUpdateDetailClient({
                 {getRecordTitle(post)}
               </h2>
             )}
-            <div
+            <PublicHtml
               className="public-prose max-w-none text-black"
-              dangerouslySetInnerHTML={{
-                __html: publicBodyHtml(visibleRecordHtml(post, ['content', 'description'])),
-              }}
+              html={publicBodyHtml(visibleRecordHtml(post, ['content', 'description']))}
             />
             <ContentBlocks record={post} />
           </>

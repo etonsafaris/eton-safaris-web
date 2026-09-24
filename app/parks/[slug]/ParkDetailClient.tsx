@@ -28,6 +28,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { useCmsLive } from '@/lib/cms-live';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
@@ -195,9 +196,9 @@ export default function ParkDetailClient({
             {pickStoredString(park, ['description_title'])}
           </h2>
         )}
-        <div
+        <PublicHtml
           className="public-prose max-w-none text-black"
-          dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(park, ['description'])) }}
+          html={publicBodyHtml(visibleRecordHtml(park, ['description']))}
         />
         <ContentBlocks record={park} />
       </ContentDetailLayout>

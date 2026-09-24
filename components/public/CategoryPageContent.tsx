@@ -25,6 +25,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { categoryPageHtml } from '@/lib/category-copy';
@@ -185,7 +186,7 @@ export default function CategoryPageContent({
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 md:grid-cols-3">
           <div className="md:col-span-2">
             {categoryBody ? (
-              <div className="public-prose" dangerouslySetInnerHTML={{ __html: categoryBody }} />
+              <PublicHtml className="public-prose" html={categoryBody} />
             ) : ready ? (
               <p className="text-[#222]">
                 Discover {categoryTitle.toLowerCase()} tour packages in {countryTitle}.

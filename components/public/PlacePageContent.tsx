@@ -23,6 +23,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { useCmsLive } from '@/lib/cms-live';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
@@ -142,7 +143,7 @@ export default function PlacePageContent({
           <div className="md:col-span-2">
             {descriptionTitle ? <h2 className="content-subheading">{descriptionTitle}</h2> : null}
             {descriptionHtml ? (
-              <div className="public-prose" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+              <PublicHtml className="public-prose" html={descriptionHtml} />
             ) : ready && !place ? (
               <p className="text-[#222]">This place could not be found.</p>
             ) : !descriptionHtml && ready ? (

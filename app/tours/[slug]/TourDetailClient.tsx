@@ -25,6 +25,7 @@ import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { stripPublicMoney } from '@/lib/public-money';
 import { splitContentList } from '@/lib/content-list';
 import { parseItinerariesFromRecord } from '@/lib/itinerary';
@@ -281,12 +282,10 @@ export default function TourDetailClient({
                 {pickStoredString(tour, ['description_title'])}
               </h2>
             ) : null}
-            <div
+            <PublicHtml
               className="public-prose max-w-none text-black"
               style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
-              dangerouslySetInnerHTML={{
-                __html: publicBodyHtml(visibleRecordHtml(tour, ['description', 'content', 'excerpt'])),
-              }}
+              html={publicBodyHtml(visibleRecordHtml(tour, ['description', 'content', 'excerpt']))}
             />
 
             {highlights.length > 0 && (
@@ -354,10 +353,7 @@ export default function TourDetailClient({
                   Journey Details
                 </h2>
                 {journeyDetails ? (
-                  <div
-                    className="public-prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: publicBodyHtml(journeyDetails) }}
-                  />
+                  <PublicHtml className="public-prose max-w-none" html={publicBodyHtml(journeyDetails)} />
                 ) : null}
                 {journeyMap ? (
                   <img src={journeyMap} alt="Journey map" width={1200} height={675} loading="lazy" decoding="async" className="mt-4 w-full rounded-xl object-cover" />

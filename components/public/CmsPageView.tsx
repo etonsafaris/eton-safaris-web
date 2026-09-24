@@ -10,6 +10,7 @@ import ResponsiveImage from '@/components/public/ResponsiveImage';
 import SectionHeading from '@/components/public/SectionHeading';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import type { CmsContentBlock, CmsPageLayout, PageFaq } from '@/lib/cms-page-model';
 
 function toHtml(content: string) {
@@ -77,7 +78,7 @@ function AboutStory({
                   <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
                 ) : null}
                 {copy ? (
-                  <div className="public-prose mt-4 max-w-none" dangerouslySetInnerHTML={{ __html: copy }} />
+                  <PublicHtml className="public-prose mt-4 max-w-none" html={copy} />
                 ) : null}
               </div>
             </div>
@@ -88,7 +89,7 @@ function AboutStory({
   }
 
   return html ? (
-    <div className="public-prose mx-auto max-w-4xl" dangerouslySetInnerHTML={{ __html: html }} />
+    <PublicHtml className="public-prose mx-auto max-w-4xl" html={html} />
   ) : null;
 }
 
@@ -116,7 +117,7 @@ export default function CmsPageView({
         <PageHero title={title} image={image} variant="policy" published={published} />
         <section className="bg-[#edf2f2] pb-10">
           {html ? (
-            <div className="dav-policies mx-4 bg-white p-[30px] lg:mx-[100px]" dangerouslySetInnerHTML={{ __html: html }} />
+            <PublicHtml className="dav-policies mx-4 bg-white p-[30px] lg:mx-[100px]" html={html} />
           ) : content.trim() ? (
             <div className="dav-policies public-article-body mx-4 whitespace-pre-wrap bg-white p-[30px] lg:mx-[100px]">
               {content}
@@ -137,7 +138,7 @@ export default function CmsPageView({
         <section className="mx-auto max-w-4xl px-4 py-16 text-center">
           <SectionHeading label="Giving back" title="Tourism That Transforms Lives" />
           {html ? (
-            <div className="public-prose mx-auto mt-6 max-w-3xl text-[#666]" dangerouslySetInnerHTML={{ __html: html }} />
+            <PublicHtml className="public-prose mx-auto mt-6 max-w-3xl text-[#666]" html={html} />
           ) : null}
         </section>
         {blocks.length > 0 ? (
@@ -154,10 +155,7 @@ export default function CmsPageView({
                     )}
                     <div className="p-6">
                       <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
-                      <div
-                        className="public-prose mt-3 text-[#666]"
-                        dangerouslySetInnerHTML={{ __html: toHtml(block.description) }}
-                      />
+                      <PublicHtml className="public-prose mt-3 text-[#666]" html={toHtml(block.description)} />
                     </div>
                   </article>
                 ))}
@@ -238,9 +236,9 @@ export default function CmsPageView({
       <section className="bg-white px-4 py-14 text-[#222] md:py-16">
         <div className="mx-auto max-w-3xl">
           {html ? (
-            <div
+            <PublicHtml
               className="public-prose max-w-none [&_h4]:font-serif [&_h4]:text-2xl [&_h4]:italic"
-              dangerouslySetInnerHTML={{ __html: html }}
+              html={html}
             />
           ) : (
             <div className="public-article-body whitespace-pre-wrap text-sm leading-relaxed text-[#444] md:text-base">{content}</div>

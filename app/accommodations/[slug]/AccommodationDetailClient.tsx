@@ -24,6 +24,7 @@ import {
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -146,9 +147,9 @@ export default function AccommodationDetailClient({
             {pickStoredString(item, ['description_title'])}
           </h2>
         )}
-        <div
+        <PublicHtml
           className="public-prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: publicBodyHtml(visibleRecordHtml(item, ['description'])) }}
+          html={publicBodyHtml(visibleRecordHtml(item, ['description']))}
         />
         <ContentBlocks record={item} />
       </ContentDetailLayout>

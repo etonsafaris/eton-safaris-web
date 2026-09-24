@@ -1,6 +1,7 @@
 'use client';
 
 import { publicBodyHtml } from '@/lib/embedded-content';
+import PublicHtml from '@/components/public/PublicHtml';
 import { parseBlocksFromRecord, parseContentBlocks } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -20,10 +21,7 @@ export default function ContentBlocks({
         <section key={`${block.title}-${index}`}>
           {block.title && <h2 className="content-subheading">{block.title}</h2>}
           {block.description && (
-            <div
-              className="public-prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: publicBodyHtml(block.description) }}
-            />
+            <PublicHtml className="public-prose max-w-none" html={publicBodyHtml(block.description)} />
           )}
         </section>
       ))}

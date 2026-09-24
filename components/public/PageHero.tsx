@@ -85,19 +85,16 @@ export default function PageHero({
     ? customItems
     : [...customItems, { label: 'Published', value: publishedLabel }];
   const showForestBar = true;
-  const fullViewportHero = isCountry || isUpdate || isPark;
-  const tourHeroHeight = 'h-[min(40svh,360px)] md:h-[min(44svh,420px)]';
+  const fullViewportHero = isTour || isCountry || isUpdate || isPark;
 
   const heroImage = (
     <section
       className={`relative w-full overflow-hidden bg-[#1f3d2b] ${
-        isTour
-          ? tourHeroHeight
-          : fullViewportHero && showForestBar
-            ? 'min-h-0 flex-1'
-            : isPolicy
-              ? 'h-[min(56svh,520px)]'
-              : 'h-[min(38svh,340px)] md:h-[min(42svh,380px)]'
+        fullViewportHero && showForestBar
+          ? 'min-h-0 flex-1'
+          : isPolicy
+            ? 'h-[min(56svh,520px)]'
+            : 'h-[min(38svh,340px)] md:h-[min(42svh,380px)]'
       }`}
     >
       {src ? (
