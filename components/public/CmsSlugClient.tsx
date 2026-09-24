@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useCmsLive } from '@/lib/cms-live';
 import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
@@ -15,6 +15,7 @@ import {
   matchCmsRecord,
   pageAliases,
   resolvePublicSlug,
+  resolvePublicSlugLenient,
 } from '@/lib/cms-routes';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { LANDING_PAGE_DEFAULTS, STATIC_PAGES } from '@/lib/static-pages';
@@ -53,9 +54,10 @@ export default function CmsSlugClient({
   initialNestedIsCategory?: boolean;
 }) {
   const params = useParams<{ slug?: string | string[]; category?: string | string[] }>();
-  const rawSlug = paramValue(params?.slug);
+  const pathname = usePathname() || '';
+  const rawSlug = paramValue(params?.slug) || pathname.split('/').filter(Boolean)[0] || '';
   const categorySlug = paramValue(params?.category);
-  const resolved = resolvePublicSlug(rawSlug);
+  const resolved = resolvePublicSlugLenient(rawSlug) || resolvePublicSlug(rawSlug);
   const live = useCmsLive();
   const [page, setPage] = useState<RecordRow | null>(initialPage);
   const [country, setCountry] = useState<RecordRow | null>(initialCountry);
@@ -63,6 +65,10 @@ export default function CmsSlugClient({
   const [nestedIsCategory, setNestedIsCategory] = useState(initialNestedIsCategory);
   const [forceCountry, setForceCountry] = useState(Boolean(initialCountry && resolved?.kind === 'country'));
   const [ready, setReady] = useState(Boolean(initialCountry || initialPage || initialNestedPlace || initialNestedIsCategory));
+
+  useEffect(() => {
+    setReady(Boolean(initialCountry || initialPage || initialNestedPlace || initialNestedIsCategory));
+  }, [rawSlug, initialCountry, initialPage, initialNestedPlace, initialNestedIsCategory]);
 
   useEffect(() => {
     let mounted = true;
@@ -142,7 +148,7 @@ export default function CmsSlugClient({
   const showCountry = resolved?.kind === 'country' || forceCountry;
 
   if (!resolved) {
-    if (!ready) {
+    if (!rawSlug) {
       return (
         <PublicShell>
           <PublicPageLoader label="Loading page" />
@@ -152,6 +158,14 @@ export default function CmsSlugClient({
     return (
       <PublicShell>
         <PublicRecordUnavailable />
+      </PublicShell>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <PublicShell>
+        <PublicPageLoader label="Loading page" />
       </PublicShell>
     );
   }

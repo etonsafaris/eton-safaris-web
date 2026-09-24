@@ -1,5 +1,21 @@
 import { SITE } from '@/lib/collections';
 
+function normalizeHost(hostname: string) {
+  return hostname.replace(/^www\./i, '').toLowerCase();
+}
+
+function siteHosts(options?: { siteOrigin?: string }) {
+  const siteOrigin = options?.siteOrigin || new URL(SITE.url).origin;
+  const hosts = new Set<string>();
+  try {
+    hosts.add(normalizeHost(new URL(siteOrigin).hostname));
+  } catch {
+    /* ignore */
+  }
+  hosts.add('etonsafaris.com');
+  return hosts;
+}
+
 /** Same-site path for client navigation, or null for external / special links. */
 export function internalPathFromHref(
   href: string,
@@ -16,12 +32,19 @@ export function internalPathFromHref(
 
   const siteOrigin = options?.siteOrigin || new URL(SITE.url).origin;
   const pageOrigin = options?.pageOrigin;
+  const allowedHosts = siteHosts(options);
 
   try {
     const url = new URL(raw, pageOrigin || siteOrigin);
-    const allowed = new Set([siteOrigin]);
-    if (pageOrigin) allowed.add(pageOrigin);
-    if (!allowed.has(url.origin)) return null;
+    const host = normalizeHost(url.hostname);
+    if (!allowedHosts.has(host)) {
+      if (pageOrigin) {
+        const pageHost = normalizeHost(new URL(pageOrigin).hostname);
+        if (host !== pageHost) return null;
+      } else {
+        return null;
+      }
+    }
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return null;

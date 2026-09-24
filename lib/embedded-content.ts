@@ -1,3 +1,4 @@
+import { rewriteContentAnchorHrefs } from '@/lib/content-anchor-rewrite';
 import { stripPublicMoney } from '@/lib/public-money';
 import { sanitizeWordHtml } from '@/lib/sanitize-html';
 
@@ -101,5 +102,5 @@ export function recordBodyHtml(record: Record<string, unknown> | null | undefine
 }
 
 export function publicBodyHtml(html: string): string {
-  return stripPublicMoney(sanitizeWordHtml(stripEmbeddedContent(html)));
+  return rewriteContentAnchorHrefs(stripPublicMoney(sanitizeWordHtml(stripEmbeddedContent(html))));
 }
