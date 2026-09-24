@@ -28,7 +28,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { hasAdminEditPrefill, readAdminEditPrefill } from '@/lib/admin-edit-prefill';
-import { fetchAdminRecordById, fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
+import { fetchAdminTablePage, loadAdminEditRecord, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
@@ -256,10 +256,14 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
     const hadPrefill = hasAdminEditPrefill('tours', tourId);
     if (!hadPrefill) setLoadingTour(true);
     setError('');
-    void fetchAdminRecordById('tours', tourId).then((tour) => {
+    void loadAdminEditRecord('tours', tourId).then((tour) => {
       if (!active) return;
       setLoadingTour(false);
       if (!tour) {
+        if (hadPrefill) {
+          setError('Full tour details could not be refreshed. You can still edit from the list preview — save when done.');
+          return;
+        }
         setError('Could not load this tour. Go back to the list and try Edit again.');
         return;
       }

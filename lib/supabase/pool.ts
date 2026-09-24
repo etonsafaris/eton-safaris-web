@@ -70,7 +70,10 @@ const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MA
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
-const PG_SLOT_WAIT_MS = Math.max(10000, Number(process.env.PG_SLOT_WAIT_MS) || 45000);
+const PG_SLOT_WAIT_MS = Math.max(
+  5000,
+  Number(process.env.PG_SLOT_WAIT_MS) || (process.env.VERCEL ? 12000 : 45000)
+);
 
 function connectRetryDelayMs(attempt: number) {
   const base = 350 * Math.pow(2, attempt);
@@ -79,12 +82,13 @@ function connectRetryDelayMs(attempt: number) {
 
 async function connectWithRetry(pool: PgPool): Promise<PoolClient> {
   let lastError: unknown;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+  const maxAttempts = process.env.VERCEL ? 4 : 8;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       return await pool.connect();
     } catch (error) {
       lastError = error;
-      if (!isPgTooManyClientsError(error) || attempt >= 7) {
+      if (!isPgTooManyClientsError(error) || attempt >= maxAttempts - 1) {
         throw error;
       }
       await new Promise((resolve) => setTimeout(resolve, connectRetryDelayMs(attempt)));

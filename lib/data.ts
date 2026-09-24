@@ -265,9 +265,14 @@ export async function searchTours(options: {
 
 export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {
   if (!browser()) return fetchCollectionRecordByIdServer(table, String(id), aliases);
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    const { loadAdminEditRecord } = await import('@/lib/admin-records-client');
+    const adminRow = await loadAdminEditRecord(table, id, aliases);
+    if (adminRow) return adminRow;
+  }
   for (const name of [table, ...aliases]) {
-    const params = new URLSearchParams({ 'eq.id': String(id), limit: '1' });
-    const response = await fetch(dataUrl(name, params), { cache: 'default' });
+    const params = new URLSearchParams({ 'eq.id': String(id), limit: '1', select: '*' });
+    const response = await fetch(dataUrl(name, params), { cache: 'no-store', credentials: 'same-origin' });
     if (!response.ok) continue;
     const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
     if (body.data?.[0]) return body.data[0];

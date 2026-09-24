@@ -125,7 +125,7 @@ export async function fetchAdminTablePage(
 
   if (!options?.bustCache) {
     const cached = peekAdminTableCache(cacheKey);
-    if (cached && (cached.rows.length > 0 || cached.total > 0)) return cached;
+    if (cached && cached.rows.length > 0) return cached;
   }
 
   return serialAdminApi(() => fetchAdminTablePageLive(table, options, cacheKey, page, limit));
@@ -157,7 +157,7 @@ async function fetchAdminTablePageLive(
   if (options?.category) params.set('category', options.category);
   if (options?.q) params.set('q', options.q);
 
-  const FETCH_TIMEOUT_MS = 55_000;
+  const FETCH_TIMEOUT_MS = 28_000;
 
   async function getOnce() {
     const controller = new AbortController();
@@ -283,33 +283,81 @@ async function fetchAdminRecordByIdLive(
     id: String(id),
   });
 
+  const FETCH_TIMEOUT_MS = 28_000;
+
   async function getOnce() {
-    return fetch(`/api/admin/records?${params.toString()}`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: await authHeaders(),
-    });
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      return await fetch(`/api/admin/records?${params.toString()}`, {
+        credentials: 'include',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: await authHeaders(),
+      });
+    } finally {
+      window.clearTimeout(timer);
+    }
   }
 
-  try {
-    let response = await getOnce();
-    if (response.status === 401) {
-      await syncAdminSessionCookie();
-      response = await getOnce();
-    }
-    const body = (await response.json().catch(() => ({}))) as {
-      row?: RecordRow | null;
-      error?: string;
-    };
-    if (!response.ok) {
-      console.warn(`[Admin] Could not load ${table}#${id}:`, body.error || response.status);
+  let lastError = 'Could not load record';
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      let response = await getOnce();
+      if (response.status === 401) {
+        await syncAdminSessionCookie();
+        response = await getOnce();
+      }
+      const body = (await response.json().catch(() => ({}))) as {
+        row?: RecordRow | null;
+        error?: string;
+      };
+      if (!response.ok) {
+        lastError = body.error || `Server error (${response.status})`;
+        if (RETRYABLE_STATUS.has(response.status) && attempt < 5) {
+          await sleep(400 * Math.pow(2, attempt));
+          continue;
+        }
+        console.warn(`[Admin] Could not load ${table}#${id}:`, lastError);
+        return null;
+      }
+      return body.row ?? null;
+    } catch (error) {
+      lastError =
+        error instanceof Error && error.name === 'AbortError'
+          ? 'Request timed out'
+          : error instanceof Error
+            ? error.message
+            : 'Could not load record';
+      if (
+        attempt < 5 &&
+        /busy|too many clients|remaining connection slots|timeout|timed out|503|502|504|AbortError/i.test(
+          lastError
+        )
+      ) {
+        await sleep(600 * Math.pow(2, attempt));
+        continue;
+      }
+      console.warn(`[Admin] Could not load ${table}#${id}:`, lastError);
       return null;
     }
-    return body.row ?? null;
-  } catch (error) {
-    console.warn(`[Admin] Could not load ${table}#${id}:`, error);
-    return null;
   }
+  return null;
+}
+
+/** Full CMS row for edit screens (uses admin API with retries). */
+export async function loadAdminEditRecord(
+  table: string,
+  id: string | number,
+  aliases: string[] = []
+): Promise<RecordRow | null> {
+  const primary = await fetchAdminRecordById(table, id);
+  if (primary) return primary;
+  for (const alias of aliases) {
+    const row = await fetchAdminRecordById(alias, id);
+    if (row) return row;
+  }
+  return null;
 }
 
 export async function deleteAdminRecord(table: string, id: string | number): Promise<void> {

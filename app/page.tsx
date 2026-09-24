@@ -12,8 +12,8 @@ import type { PublicDestination } from '@/lib/public-destinations';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
-/** Render on demand so `next build` does not fan out DB connections. */
-export const dynamic = 'force-dynamic';
+/** ISR: serve cached HTML at the edge; refresh from Aiven every 15 minutes. */
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +34,10 @@ export default async function HomePage() {
 
   let navDestinations: PublicDestination[] | undefined;
   try {
-    const bundle = await loadHomePageBundle();
+    const bundle = await Promise.race([
+      loadHomePageBundle(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('home bundle timeout')), 14000)),
+    ]);
     data = normalizeHomePagePayload(bundle.data);
     homeContent = resolveHomePageContent(bundle.content);
     navDestinations = bundle.destinations;

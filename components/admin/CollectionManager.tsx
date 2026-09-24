@@ -238,7 +238,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           })
         : '';
     const cached = !options?.bustCache && cacheKey ? peekAdminTableCache(cacheKey) : null;
-    if (cached && (cached.rows.length > 0 || cached.total > 0)) {
+    if (cached && cached.rows.length > 0) {
       setRecords(cached.rows);
       setRemoteTotal(cached.total);
       setLoading(false);

@@ -128,37 +128,29 @@ async function fetchPublicRecordResilient(
   slug: string,
   aliases: string[] = []
 ): Promise<RecordRow | null> {
-  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 18000, null);
+  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 8000, null);
   if (first) return first;
-  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 24000, null);
+  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 10000, null);
 }
 
 export async function loadHomePageContent(): Promise<HomePageContent | null> {
   try {
-    const slugCandidates = [
-      HOME_PAGE_SLUG,
-      ...pageAliases(HOME_PAGE_SLUG),
-      'home',
-      'homepage',
-    ];
-    const seen = new Set<string>();
-    for (const slug of slugCandidates) {
-      const key = normalizeSlug(slug);
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      const row = await withTimeout(fetchRecordByPublicSlug('pages', slug), 8000, null);
-      if (row && isPublishedRecord(row)) {
-        return parseHomePageContent(row);
-      }
+    const row = await withTimeout(
+      fetchRecordByPublicSlug('pages', HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG)),
+      5000,
+      null
+    );
+    if (row && isPublishedRecord(row)) {
+      return parseHomePageContent(row);
     }
 
     const page = await withTimeout(
       fetchCollectionPage('pages', [], {
         columns: listColumns('pages'),
-        limit: 8,
+        limit: 4,
         offset: 0,
       }),
-      8000,
+      5000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const match =
@@ -166,9 +158,7 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
       page.rows.find((row) => isPublishedRecord(row)) ||
       null;
     if (!match || !isPublishedRecord(match)) return null;
-    const id = String(match.id || '');
-    const full = id ? await withTimeout(fetchCollectionRecordById('pages', id), 8000, match) : match;
-    return parseHomePageContent(full || match);
+    return parseHomePageContent(match);
   } catch {
     return null;
   }
@@ -177,31 +167,33 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
 export async function loadHomePageData() {
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
   try {
-    const countries = await withTimeout(
-      fetchCollectionRecords('countries', [], {
-        columns: listColumns('countries'),
-        maxRows: 48,
-      }).then((rows) => rows.filter(isPublishedRecord)),
-      8000,
-      [] as RecordRow[]
-    );
-    const tours = await withTimeout(fetchFeaturedTours(12), 12000, [] as RecordRow[]);
-    const updatesPage = await withTimeout(
-      fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((page) => ({
-        rows: page.rows,
-        total: page.total,
-      })),
-      15000,
-      emptyPage
-    );
-    const categories = await withTimeout(
-      fetchCollectionRecords('categories', [], {
-        columns: listColumns('categories'),
-        maxRows: 64,
-      }).then((rows) => rows.filter(isPublishedRecord)),
-      8000,
-      [] as RecordRow[]
-    );
+    const [countries, tours, updatesPage, categories] = await Promise.all([
+      withTimeout(
+        fetchCollectionRecords('countries', [], {
+          columns: listColumns('countries'),
+          maxRows: 48,
+        }).then((rows) => rows.filter(isPublishedRecord)),
+        6000,
+        [] as RecordRow[]
+      ),
+      withTimeout(fetchFeaturedTours(12), 6000, [] as RecordRow[]),
+      withTimeout(
+        fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((page) => ({
+          rows: page.rows,
+          total: page.total,
+        })),
+        6000,
+        emptyPage
+      ),
+      withTimeout(
+        fetchCollectionRecords('categories', [], {
+          columns: listColumns('categories'),
+          maxRows: 64,
+        }).then((rows) => rows.filter(isPublishedRecord)),
+        6000,
+        [] as RecordRow[]
+      ),
+    ]);
     return toClientProps({
       countries,
       tours: tours.slice(0, 12),
@@ -219,12 +211,18 @@ export async function loadHomePageData() {
   }
 }
 
-/** One homepage pass: fewer parallel DB connects, nav reused from countries. */
-export async function loadHomePageBundle() {
-  const data = await loadHomePageData();
-  const content = await loadHomePageContent();
+async function loadHomePageBundleLive() {
+  const [data, content] = await Promise.all([loadHomePageData(), loadHomePageContent()]);
   const destinations = mergePublicDestinations(data.countries ?? []);
   return { data, content, destinations };
+}
+
+/** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
+export async function loadHomePageBundle() {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v2'], {
+    revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+    tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
+  })();
 }
 
 export async function loadAccommodationsPageData(options?: { limit?: number; offset?: number }) {
