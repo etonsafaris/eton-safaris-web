@@ -1,9 +1,12 @@
 'use client';
 
+import Image from 'next/image';
+import { useState } from 'react';
 import { DEFAULT_COUNTRY_HERO } from '@/lib/country-heroes';
-import { resolvePublicImage } from '@/lib/public-image';
 import { COUNTRY_IMAGE_DIMENSIONS, OFFICIAL_COMMUNITY_HERO_PATHS } from '@/lib/official-country-assets';
-import { cardImageSrc, countryDestinationCardSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
+import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
+import { resolvePublicImage } from '@/lib/public-image';
+import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 import { SITE_MEDIA } from '@/lib/site-media';
 
 type ResponsiveImageProps = {
@@ -33,16 +36,19 @@ export default function ResponsiveImage({
   height,
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
+  const [displaySrc, setDisplaySrc] = useState(resolved || '');
   if (!resolved) return null;
+
   const heroQuality = quality ?? 85;
   const isHomeDestination =
     variant === 'card' && width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
-  const displaySrc =
+  const optimizedSrc =
     variant === 'hero'
-      ? heroImageSrc(resolved, heroQuality)
+      ? heroImageSrc(displaySrc, heroQuality)
       : isHomeDestination
-        ? countryDestinationCardSrc(resolved)
-        : cardImageSrc(resolved);
+        ? countryDestinationCardSrc(displaySrc)
+        : cardImageSrc(displaySrc);
+
   const dims =
     variant === 'hero'
       ? COUNTRY_IMAGE_DIMENSIONS.countryHero
@@ -51,43 +57,48 @@ export default function ResponsiveImage({
         : COUNTRY_IMAGE_DIMENSIONS.countryCard;
   const imgWidth = width ?? dims.width;
   const imgHeight = height ?? dims.height;
-  const srcSet = imageSrcSet(resolved);
   const motionClass = variant === 'hero' ? 'hero-motion' : '';
+  const useFill = variant === 'hero' || className?.includes('absolute');
+  const unoptimized = displaySrc.startsWith('/api/media/');
+
+  const shared = {
+    alt,
+    priority,
+    quality: heroQuality,
+    placeholder: 'blur' as const,
+    blurDataURL: IMAGE_BLUR_DATA_URL,
+    sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
+    unoptimized,
+    onError: () => {
+      const fallback = variant === 'hero' ? HERO_FALLBACK : CARD_FALLBACK;
+      if (displaySrc !== fallback) setDisplaySrc(fallback);
+    },
+  };
+
+  if (useFill) {
+    return (
+      <div className={['relative h-full w-full overflow-hidden', motionClass].filter(Boolean).join(' ')}>
+        <Image
+          {...shared}
+          src={optimizedSrc}
+          fill
+          className={['object-cover', className?.replace('absolute inset-0', '').trim()].filter(Boolean).join(' ')}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+        />
+      </div>
+    );
+  }
+
   return (
-    <picture>
-      <img
-        src={displaySrc}
-        srcSet={srcSet || undefined}
-        sizes={sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw')}
-        width={imgWidth}
-        height={imgHeight}
-        alt={alt}
-        className={[className, motionClass].filter(Boolean).join(' ')}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        decoding={priority ? 'sync' : 'async'}
-        referrerPolicy="no-referrer"
-        onError={(event) => {
-          const image = event.currentTarget;
-          const original = resolvePublicImage(src) || '';
-          if (!image.dataset.fallback && original && image.src !== original) {
-            image.dataset.fallback = '1';
-            image.removeAttribute('srcset');
-            image.src = original;
-            image.style.visibility = '';
-            return;
-          }
-          const fallback = variant === 'hero' ? HERO_FALLBACK : CARD_FALLBACK;
-          if (!image.dataset.fallbackUltimate && fallback && image.src !== fallback) {
-            image.dataset.fallbackUltimate = '1';
-            image.removeAttribute('srcset');
-            image.src = fallback;
-            image.style.visibility = '';
-            return;
-          }
-          image.style.visibility = 'hidden';
-        }}
-      />
-    </picture>
+    <Image
+      {...shared}
+      src={optimizedSrc}
+      width={imgWidth}
+      height={imgHeight}
+      className={[className, motionClass].filter(Boolean).join(' ')}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : 'auto'}
+    />
   );
 }

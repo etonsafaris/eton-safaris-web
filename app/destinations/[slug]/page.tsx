@@ -5,11 +5,20 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { loadCountryPageDataResilient } from '@/lib/load-public';
+import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export { revalidate } from '@/lib/public-page-config';
+export const revalidate = 900;
 export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    return await loadStaticDestinationParams();
+  } catch (error) {
+    console.warn('[Public] Destination static params failed:', error);
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = countrySlugFromLanding(params.slug);

@@ -51,7 +51,11 @@ import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
-const STATIC_DETAIL_BUILD_LIMIT = 24;
+import { STATIC_PARAM_COLUMNS, staticBuildParamLimit } from '@/lib/static-build';
+
+function staticDetailBuildLimit() {
+  return staticBuildParamLimit();
+}
 
 const FAKE_STAY_SLUG_RE =
   /-(river|savannah|forest|hilltop|horizon|baobab|mist|sunset|valley|lagoon|canyon|plateau|oasis|crest|trail)-(luxury|safari)-(lodge|camp|hotel|bandas)(-|$)/i;
@@ -981,7 +985,7 @@ export async function loadStaticCategoryParams(): Promise<{ slug: string; catego
   if (skipStaticGenerationDuringBuild()) return [];
   try {
     const page = await fetchCollectionPage('categories', [], {
-      limit: STATIC_DETAIL_BUILD_LIMIT * 2,
+      limit: staticDetailBuildLimit() * 2,
       offset: 0,
     });
     const params: { slug: string; category: string }[] = [];
@@ -1000,7 +1004,7 @@ export async function loadStaticCategoryParams(): Promise<{ slug: string; catego
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0, STATIC_DETAIL_BUILD_LIMIT * 2);
+    }).slice(0, staticDetailBuildLimit() * 2);
   } catch {
     return [];
   }
@@ -1010,7 +1014,8 @@ export async function loadStaticCategoryParams(): Promise<{ slug: string; catego
 export async function loadStaticTourParams(): Promise<{ slug: string }[]> {
   if (skipStaticGenerationDuringBuild()) return [];
   try {
-    const featured = await fetchFeaturedTours(STATIC_DETAIL_BUILD_LIMIT);
+    const limit = staticDetailBuildLimit();
+    const featured = await fetchFeaturedTours(limit);
     const fromFeatured = featured
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug));
@@ -1018,23 +1023,34 @@ export async function loadStaticTourParams(): Promise<{ slug: string }[]> {
       return fromFeatured.map((slug) => ({ slug }));
     }
     const rows = await loadPublishedRecords('tours', [], {
-      columns: 'id,slug,seo_slug,title,published',
+      columns: STATIC_PARAM_COLUMNS.tours,
     });
     return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
-      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .slice(0, limit)
       .map((slug) => ({ slug }));
   } catch {
     return [];
   }
 }
 
-export function loadStaticDestinationParams(): { slug: string }[] {
+export async function loadStaticDestinationParams(): Promise<{ slug: string }[]> {
   if (skipStaticGenerationDuringBuild()) return [];
   const slugs = new Set<string>();
   for (const item of [...NAV_COUNTRIES, ...OTHER_DESTINATIONS]) {
     if (item.slug) slugs.add(item.slug);
+  }
+  try {
+    const rows = await loadPublishedRecords('countries', [], {
+      columns: STATIC_PARAM_COLUMNS.countries,
+    });
+    for (const row of rows) {
+      const slug = publicRecordSlug(row) || publicCountrySlug(row);
+      if (slug) slugs.add(slug);
+    }
+  } catch {
+    // seeded NAV/OTHER slugs still pre-render
   }
   return [...slugs].map((slug) => ({ slug }));
 }
@@ -1043,13 +1059,13 @@ export async function loadStaticAccommodationParams(): Promise<{ slug: string }[
   if (skipStaticGenerationDuringBuild()) return [];
   try {
     const rows = await loadPublishedRecords('accommodations', [], {
-      columns: 'id,slug,seo_slug,title,published',
+      columns: STATIC_PARAM_COLUMNS.accommodations,
     });
     return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
       .filter((slug) => !FAKE_STAY_SLUG_RE.test(slug))
-      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .slice(0, staticDetailBuildLimit())
       .map((slug) => ({ slug }));
   } catch {
     return [];
@@ -1060,12 +1076,12 @@ export async function loadStaticParkParams(): Promise<{ slug: string }[]> {
   if (skipStaticGenerationDuringBuild()) return [];
   try {
     const rows = await loadPublishedRecords('national_park', ['national_parks', 'parks'], {
-      columns: 'id,slug,seo_slug,title,published',
+      columns: STATIC_PARAM_COLUMNS.national_park,
     });
     return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
-      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .slice(0, staticDetailBuildLimit())
       .map((slug) => ({ slug }));
   } catch {
     return [];
@@ -1081,7 +1097,7 @@ export async function loadStaticExploreParams(): Promise<{ slug: string }[]> {
     return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
-      .slice(0, STATIC_DETAIL_BUILD_LIMIT)
+      .slice(0, staticDetailBuildLimit())
       .map((slug) => ({ slug }));
   } catch {
     return [];
@@ -1091,13 +1107,13 @@ export async function loadStaticExploreParams(): Promise<{ slug: string }[]> {
 export async function loadStaticSafariUpdateParams(): Promise<{ slug: string }[]> {
   if (skipStaticGenerationDuringBuild()) return [];
   try {
-    const page = await fetchPublicSafariUpdatesPage({
-      limit: STATIC_DETAIL_BUILD_LIMIT,
-      offset: 0,
+    const rows = await loadPublishedRecords('safari_updates', [], {
+      columns: STATIC_PARAM_COLUMNS.safari_updates,
     });
-    return page.rows
+    return rows
       .map((row) => publicRecordSlug(row))
       .filter((slug): slug is string => Boolean(slug))
+      .slice(0, staticDetailBuildLimit())
       .map((slug) => ({ slug }));
   } catch {
     return [];

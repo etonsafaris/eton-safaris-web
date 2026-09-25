@@ -11,7 +11,12 @@ export const dynamicParams = true;
 type PageProps = { params: { slug: string } };
 
 export async function generateStaticParams() {
-  return loadStaticParkParams();
+  try {
+    return await loadStaticParkParams();
+  } catch (error) {
+    console.warn('[Public] Park static params failed:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

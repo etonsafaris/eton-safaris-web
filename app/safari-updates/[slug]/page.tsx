@@ -11,7 +11,12 @@ export const dynamicParams = true;
 type PageProps = { params: { slug: string } };
 
 export async function generateStaticParams() {
-  return loadStaticSafariUpdateParams();
+  try {
+    return await loadStaticSafariUpdateParams();
+  } catch (error) {
+    console.warn('[Public] Safari update static params failed:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

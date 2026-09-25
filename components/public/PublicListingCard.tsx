@@ -1,5 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
+import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { stripPublicMoney } from '@/lib/public-money';
+import { resolvePublicImage } from '@/lib/public-image';
+import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
 
 export default function PublicListingCard({
   href,
@@ -22,6 +26,9 @@ export default function PublicListingCard({
 }) {
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
   const to = typeof href === 'string' && href.trim() ? href : '/';
+  const cardImage = image ? resolvePublicImage(image) : '';
+  const { width, height } = COUNTRY_IMAGE_DIMENSIONS.tourCard;
+  const unoptimized = cardImage.startsWith('/api/media/');
 
   return (
     <Link
@@ -30,8 +37,19 @@ export default function PublicListingCard({
       className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        {image ? (
-          <img src={image} alt={title || ''} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
+        {cardImage ? (
+          <Image
+            src={cardImage}
+            alt={title || ''}
+            width={width}
+            height={height}
+            quality={85}
+            placeholder="blur"
+            blurDataURL={IMAGE_BLUR_DATA_URL}
+            unoptimized={unoptimized}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
         )}
