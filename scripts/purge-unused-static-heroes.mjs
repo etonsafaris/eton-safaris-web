@@ -28,20 +28,21 @@ function walk(dir, files = []) {
 }
 
 const corpus = walk(root).map((file) => readFileSync(file, 'utf8')).join('\n');
-const COUNTRY_HERO_BASES = [
-  'botswana',
-  'dr-congo',
-  'egypt',
-  'ethiopia',
-  'kenya',
-  'malawi',
-  'namibia',
-  'rwanda',
-  'south-africa',
-  'tanzania',
-  'uganda',
-  'zambia',
-];
+/** Canonical filenames only — see lib/official-country-assets.ts */
+const OFFICIAL_COUNTRY_FILENAMES = new Set([
+  'uganda.jpg',
+  'kenya.jpg',
+  'tanzania.jpg',
+  'rwanda.webp',
+  'botswana.jpg',
+  'egypt.webp',
+  'namibia.jpg',
+  'south-africa.webp',
+  'dr-congo.jpg',
+  'ethiopia.jpg',
+  'malawi.webp',
+  'zambia.webp',
+]);
 
 const alwaysKeep = new Set([
   '/eton-safaris-gorilla.png',
@@ -55,7 +56,7 @@ const alwaysKeep = new Set([
 function isProtectedHeroFile(name) {
   const pathRef = `/heroes/${name}`;
   if (alwaysKeep.has(pathRef)) return true;
-  return COUNTRY_HERO_BASES.some((base) => name === base || name.startsWith(`${base}-`) || name.startsWith(`${base}.`));
+  return OFFICIAL_COUNTRY_FILENAMES.has(name);
 }
 
 if (!existsSync(heroesDir)) {

@@ -1,6 +1,7 @@
 'use client';
 
 import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { resolvePublicImage } from '@/lib/public-image';
 
 type HomePageImageProps = {
@@ -11,6 +12,8 @@ type HomePageImageProps = {
   quality?: number;
   variant?: 'hero' | 'card';
   sizes?: string;
+  width?: number;
+  height?: number;
 };
 
 /** Home sections: CMS (https) and local `/heroes` — one code path, no blank Next/Image 404s. */
@@ -22,9 +25,18 @@ export default function HomePageImage({
   quality,
   variant = 'card',
   sizes,
+  width,
+  height,
 }: HomePageImageProps) {
   const resolved = resolvePublicImage(src);
   if (!resolved) return null;
+  const isHomeDestination = width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
+  const dims =
+    variant === 'hero'
+      ? COUNTRY_IMAGE_DIMENSIONS.countryHero
+      : isHomeDestination
+        ? COUNTRY_IMAGE_DIMENSIONS.homeDestination
+        : COUNTRY_IMAGE_DIMENSIONS.countryCard;
 
   return (
     <ResponsiveImage
@@ -34,6 +46,8 @@ export default function HomePageImage({
       priority={priority}
       quality={quality}
       sizes={sizes}
+      width={width ?? dims.width}
+      height={height ?? dims.height}
       className={className}
     />
   );

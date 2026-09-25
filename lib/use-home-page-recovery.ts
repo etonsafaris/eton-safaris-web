@@ -7,7 +7,7 @@ import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { mergeHomePagePayload } from '@/lib/home-page-fallback';
 import { normalizeHomePagePayload, safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import type { PublicDestination } from '@/lib/public-destinations';
-import type { RecordRow } from '@/lib/types';
+import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 
 type HomeBundleResponse = {
   data?: Partial<HomePagePayload> | null;
@@ -43,21 +43,19 @@ export function useHomePageRecovery(options: {
 
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      fetch('/api/public/home-bundle', { credentials: 'same-origin' })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((body: HomeBundleResponse | null) => {
-          if (cancelled || !body?.data) return;
-          setData((current) => {
-            const merged = mergeHomePagePayload(normalizeHomePagePayload(body.data), current);
-            const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
-            if (slides.length) setHeroSlides(slides);
-            else if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
-              setHeroSlides(body.heroSlides);
-            }
-            return merged;
-          });
-        })
-        .catch(() => undefined);
+      void (async () => {
+        const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
+        if (cancelled || !body?.data) return;
+        setData((current) => {
+          const merged = mergeHomePagePayload(normalizeHomePagePayload(body.data), current);
+          const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+          if (slides.length) setHeroSlides(slides);
+          else if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
+            setHeroSlides(body.heroSlides);
+          }
+          return merged;
+        });
+      })();
     }, 400);
 
     return () => {

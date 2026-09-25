@@ -30,6 +30,7 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import PageFaqList from '@/components/public/PageFaqList';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 import { bestTimeToVisit } from '@/lib/country-planning';
 import type { RecordRow } from '@/lib/types';
 
@@ -81,17 +82,14 @@ export default function CountryPageContent({
 
   useCmsPageReload(async () => {
     try {
-      const response = await fetch(`/api/public/country-page?slug=${encodeURIComponent(slug)}`, {
-        credentials: 'same-origin',
-      });
-      if (!response.ok) return;
-      const body = (await response.json()) as {
+      const body = await fetchJsonSafe<{
         country?: RecordRow | null;
         categories?: RecordRow[];
         tours?: RecordRow[];
         parks?: RecordRow[];
         places?: RecordRow[];
-      };
+      }>(`/api/public/country-page?slug=${encodeURIComponent(slug)}`);
+      if (!body) return;
       if (body.country) setCountry(body.country);
       if (body.categories?.length) setCategories(body.categories);
       if (body.tours?.length) setTours(body.tours);

@@ -1,5 +1,9 @@
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
+import {
+  OFFICIAL_COUNTRY_HERO_PATHS,
+  officialCountryHeroPath,
+} from '@/lib/official-country-assets';
 import { getRecordImage } from '@/lib/record-image';
 import { isBundledHeroAsset, isDeployableImageUrl, isLiveCmsImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
@@ -32,30 +36,25 @@ export function resolveCountrySlug(slug?: string | null, record?: RecordRow | nu
   return countrySlugFromLanding(slug || fromRecord) || normalizeSlug(slug || fromRecord);
 }
 
-/** Bundled safari art shipped under `public/heroes` (restored from repo history). */
-const FILES: Record<string, string> = {
-  uganda: '/heroes/uganda.jpg',
-  kenya: '/heroes/kenya.jpg',
-  tanzania: '/heroes/tanzania.jpg',
-  rwanda: '/heroes/rwanda.webp',
-  botswana: '/heroes/botswana.jpg',
-  egypt: '/heroes/egypt.webp',
-  namibia: '/heroes/namibia.jpg',
-  'south-africa': '/heroes/south-africa.webp',
-  'dr-congo': '/heroes/dr-congo.jpg',
-  ethiopia: '/heroes/ethiopia.jpg',
-  malawi: '/heroes/malawi.webp',
-  zambia: '/heroes/zambia.webp',
-};
+const FILES = OFFICIAL_COUNTRY_HERO_PATHS;
 
 /** Generic safari fallback — never the Eton logo on destination cards. */
-export const DEFAULT_COUNTRY_HERO = '/heroes/kenya.jpg';
+export const DEFAULT_COUNTRY_HERO = officialCountryHeroPath('kenya');
 
 export const COUNTRY_HERO_IMAGES = FILES;
 
 export function bundledCountryHero(slug?: string | null) {
   const key = countrySlugFromLanding(slug || '') || normalizeSlug(slug || '');
-  return FILES[key] || DEFAULT_COUNTRY_HERO;
+  return officialCountryHeroPath(key || 'kenya');
+}
+
+/** Map legacy duplicate `/heroes` paths to the single official file per country. */
+export function canonicalizeBundledCountryHero(slug: string, src: string) {
+  const pathname = imagePathname(src.trim());
+  if (!pathname.startsWith('/heroes/')) return src;
+  const official = bundledCountryHero(slug);
+  if (isBundledHeroForSlug(slug, src)) return official;
+  return official;
 }
 
 /**
@@ -68,7 +67,7 @@ export function countryHeroImage(slug?: string | null, record?: RecordRow | null
   if (isDeployableImageUrl(fromCms)) {
     if (isLiveCmsImage(fromCms)) return fromCms;
     if (isBundledHeroAsset(fromCms) && slugKey && isBundledHeroForSlug(slugKey, fromCms)) {
-      return fromCms;
+      return canonicalizeBundledCountryHero(slugKey, fromCms);
     }
   }
   return bundledCountryHero(slugKey || slug);

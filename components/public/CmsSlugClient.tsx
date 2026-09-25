@@ -27,6 +27,7 @@ import {
   isPublishedRecord,
 } from '@/lib/data';
 import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel } from '@/lib/country-utils';
+import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 import type { RecordRow } from '@/lib/types';
 
 function paramValue(value: string | string[] | undefined) {
@@ -87,14 +88,10 @@ export default function CmsSlugClient({
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {
-      const response = await fetch(`/api/public/country-page?slug=${encodeURIComponent(countrySlug)}`, {
-        credentials: 'same-origin',
-      });
-      let countryMatch: RecordRow | null = null;
-      if (response.ok) {
-        const body = (await response.json()) as { country?: RecordRow | null };
-        countryMatch = body.country || null;
-      }
+      const body = await fetchJsonSafe<{ country?: RecordRow | null }>(
+        `/api/public/country-page?slug=${encodeURIComponent(countrySlug)}`
+      );
+      const countryMatch = body?.country || null;
       let categoryMatch = null;
       let placeMatch = null;
       if (categorySlug) {

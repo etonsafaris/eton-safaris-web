@@ -49,3 +49,7 @@ export function heroImageSrc(src: string, quality = 100) {
 export function cardImageSrc(src: string) {
   return sizedImageUrl(src, 640, 68);
 }
+
+export function countryDestinationCardSrc(src: string) {
+  return sizedImageUrl(src, 800, 72);
+}

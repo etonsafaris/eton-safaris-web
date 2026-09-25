@@ -94,21 +94,23 @@ export default function HomePageClient({
   }, [recoveredHeroSlides, initialHeroSlides]);
 
   useEffect(() => {
-    heroSlides.forEach((item, index) => {
-      const url = resolvePublicImage(item?.image);
-      if (!url) return;
+    if (!heroSlides.length) return;
+    const nextIndex = (slide + 1) % heroSlides.length;
+    for (const index of [slide, nextIndex]) {
+      const url = resolvePublicImage(heroSlides[index]?.image);
+      if (!url) continue;
       const img = new window.Image();
       img.decoding = 'async';
-      try {
-        if (index === 0 && 'fetchPriority' in img) {
-          (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high';
+      if (index === slide && 'fetchPriority' in img) {
+        try {
+          (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = index === 0 ? 'high' : 'low';
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore unsupported browsers
       }
       img.src = url;
-    });
-  }, [heroSlides]);
+    }
+  }, [heroSlides, slide]);
 
   useEffect(() => {
     if (heroSlides.length === 0) return undefined;
@@ -183,14 +185,19 @@ export default function HomePageClient({
       canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||
       '';
     const countryImage = countryHeroImage(slug, country as RecordRow);
+    const countryLabel = publicCountryLabel(country as RecordRow, slug);
     return (
       <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-sm">
           {countryImage ? (
             <HomePageImage
               src={countryImage}
-              alt=""
+              alt={countryLabel ? `Safari tours in ${countryLabel}` : ''}
+              variant="card"
               sizes="(max-width: 768px) 100vw, 33vw"
+              width={800}
+              height={500}
+              priority={false}
               className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
             />
           ) : (
@@ -226,11 +233,13 @@ export default function HomePageClient({
           <HomePageImage
             key={current.image}
             src={current.image}
-            alt=""
+            alt={current?.title ? String(current.title) : 'Eton Safaris destination'}
             variant="hero"
             priority={true}
             quality={90}
             sizes="100vw"
+            width={1440}
+            height={900}
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="pointer-events-none absolute inset-0 bg-black/20" />

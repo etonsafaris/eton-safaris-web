@@ -93,6 +93,8 @@
     "media:purge-unused:execute": "node scripts/purge-unused-media.mjs --execute",
     "static:purge-unused-heroes": "node scripts/purge-unused-static-heroes.mjs",
     "static:purge-unused-heroes:execute": "node scripts/purge-unused-static-heroes.mjs --execute",
+    "heroes:prune-conflicts": "node scripts/prune-conflicting-country-heroes.mjs",
+    "heroes:prune-conflicts:execute": "node scripts/prune-conflicting-country-heroes.mjs --execute",
     "countries:clear-wrong-images": "node scripts/clear-wrong-country-image-urls.mjs",
     "countries:clear-wrong-images:execute": "node scripts/clear-wrong-country-image-urls.mjs --execute"
   },

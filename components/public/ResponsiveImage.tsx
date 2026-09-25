@@ -2,7 +2,8 @@
 
 import { SITE_LOGO } from '@/lib/collections';
 import { resolvePublicImage } from '@/lib/public-image';
-import { cardImageSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
+import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
+import { cardImageSrc, countryDestinationCardSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
   src: string;
@@ -12,6 +13,8 @@ type ResponsiveImageProps = {
   priority?: boolean;
   quality?: number;
   variant?: 'hero' | 'card';
+  width?: number;
+  height?: number;
 };
 
 const ULTIMATE_FALLBACK = SITE_LOGO;
@@ -24,12 +27,28 @@ export default function ResponsiveImage({
   priority = false,
   quality,
   variant = 'card',
+  width,
+  height,
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
   if (!resolved) return null;
   const heroQuality = quality ?? 85;
+  const isHomeDestination =
+    variant === 'card' && width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const displaySrc =
-    variant === 'hero' ? heroImageSrc(resolved, heroQuality) : cardImageSrc(resolved);
+    variant === 'hero'
+      ? heroImageSrc(resolved, heroQuality)
+      : isHomeDestination
+        ? countryDestinationCardSrc(resolved)
+        : cardImageSrc(resolved);
+  const dims =
+    variant === 'hero'
+      ? COUNTRY_IMAGE_DIMENSIONS.countryHero
+      : isHomeDestination
+        ? COUNTRY_IMAGE_DIMENSIONS.homeDestination
+        : COUNTRY_IMAGE_DIMENSIONS.countryCard;
+  const imgWidth = width ?? dims.width;
+  const imgHeight = height ?? dims.height;
   const srcSet = imageSrcSet(resolved);
   const motionClass = variant === 'hero' ? 'hero-motion' : '';
   return (
@@ -38,6 +57,8 @@ export default function ResponsiveImage({
         src={displaySrc}
         srcSet={srcSet || undefined}
         sizes={sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw')}
+        width={imgWidth}
+        height={imgHeight}
         alt={alt}
         className={[className, motionClass].filter(Boolean).join(' ')}
         loading={priority ? 'eager' : 'lazy'}
