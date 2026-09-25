@@ -1,7 +1,6 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { countryHeroImage } from '@/lib/country-heroes';
-import { recordMatchesCountrySlug } from '@/lib/country-utils';
+import { homeCarouselHeroImage } from '@/lib/country-heroes';
 import { resolvePublicImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
@@ -36,15 +35,14 @@ const HERO_COPY: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-/** Home carousel: admin country photos first, then shipped `/heroes/*` art for that slug. */
-export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[] {
+/** Home carousel: shipped `/heroes/*` only — instant LCP; country pages still use CMS heroes. */
+export function buildHomeHeroSlides(_countries: RecordRow[] = []): HomeHeroSlide[] {
   return NAV_COUNTRIES.map(({ slug, name }) => {
-    const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
     const copy = HERO_COPY[slug] || {
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = countryHeroImage(slug, dbCountry);
+    const image = homeCarouselHeroImage(slug);
     return {
       title: copy.title,
       subtitle: copy.subtitle,

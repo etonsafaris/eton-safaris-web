@@ -5,15 +5,25 @@ import { isBundledHeroAsset, isDeployableImageUrl, isLiveCmsImage } from '@/lib/
 import type { RecordRow } from '@/lib/types';
 
 /** Only paths that exist under `public/heroes` (no phantom .jpg stubs). */
+/** Paths must exist under `public/heroes` in git (see `git ls-files public/heroes`). */
 const BUNDLED_HERO_FILES: Record<string, string> = {
-  rwanda: '/heroes/rwanda.webp',
-  egypt: '/heroes/egypt.webp',
-  malawi: '/heroes/malawi.webp',
-  zambia: '/heroes/zambia.webp',
-  'south-africa': '/heroes/south-africa.webp',
+  uganda: '/heroes/egypt-1440.webp',
+  kenya: '/heroes/south-africa.avif',
+  tanzania: '/heroes/community-tourism-1440.webp',
+  rwanda: '/heroes/community-conservation-1440.webp',
+  egypt: '/heroes/egypt-1440.webp',
+  malawi: '/heroes/community-employment-1440.webp',
+  zambia: '/heroes/egypt-1440.webp',
+  'south-africa': '/heroes/south-africa.avif',
 };
 
-export const DEFAULT_COUNTRY_HERO = '/heroes/zambia.webp';
+/** Home carousel only — always fast local art (never wait on CMS/CDN for LCP). */
+export function homeCarouselHeroImage(slug?: string | null) {
+  const key = countrySlugFromLanding(slug || '') || normalizeSlug(slug || '');
+  return bundledCountryHero(key) || DEFAULT_COUNTRY_HERO;
+}
+
+export const DEFAULT_COUNTRY_HERO = '/heroes/egypt-1440.webp';
 
 export const COUNTRY_HERO_IMAGES = BUNDLED_HERO_FILES;
 

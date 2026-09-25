@@ -98,6 +98,19 @@ export default function HomePageClient({
   }, [recoveredHeroSlides, initialHeroSlides, countries]);
 
   useEffect(() => {
+    heroSlides.forEach((item, index) => {
+      const url = resolvePublicImage(item?.image);
+      if (!url) return;
+      const img = new window.Image();
+      img.decoding = 'async';
+      if (index === 0) {
+        img.fetchPriority = 'high';
+      }
+      img.src = url;
+    });
+  }, [heroSlides]);
+
+  useEffect(() => {
     if (heroSlides.length === 0) return undefined;
     const timer = setInterval(() => setSlide((value) => (value + 1) % heroSlides.length), 7000);
     return () => clearInterval(timer);

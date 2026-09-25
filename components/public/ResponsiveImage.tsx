@@ -1,5 +1,6 @@
 'use client';
 
+import { SITE_LOGO } from '@/lib/collections';
 import { resolvePublicImage } from '@/lib/public-image';
 import { cardImageSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
 
@@ -13,6 +14,8 @@ type ResponsiveImageProps = {
   variant?: 'hero' | 'card';
 };
 
+const ULTIMATE_FALLBACK = SITE_LOGO;
+
 export default function ResponsiveImage({
   src,
   alt = '',
@@ -24,15 +27,13 @@ export default function ResponsiveImage({
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
   if (!resolved) return null;
-  const heroQuality = quality ?? 100;
+  const heroQuality = quality ?? 85;
   const displaySrc =
     variant === 'hero' ? heroImageSrc(resolved, heroQuality) : cardImageSrc(resolved);
   const srcSet = imageSrcSet(resolved);
-  const avifSrcSet = /^\/heroes\//.test(resolved) ? srcSet.replace(/\.webp(?=\s|,|$)/g, '.avif') : '';
   const motionClass = variant === 'hero' ? 'hero-motion' : '';
   return (
     <picture>
-      {avifSrcSet ? <source type="image/avif" srcSet={avifSrcSet} sizes={sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw')} /> : null}
       <img
         src={displaySrc}
         srcSet={srcSet || undefined}
@@ -45,9 +46,20 @@ export default function ResponsiveImage({
         referrerPolicy="no-referrer"
         onError={(event) => {
           const image = event.currentTarget;
-          image.srcset = '';
-          image.removeAttribute('srcset');
-          image.style.visibility = 'hidden';
+          const original = resolvePublicImage(src) || '';
+          if (!image.dataset.fallback && original && image.src !== original) {
+            image.dataset.fallback = '1';
+            image.removeAttribute('srcset');
+            image.src = original;
+            image.style.visibility = '';
+            return;
+          }
+          if (!image.dataset.fallbackUltimate && image.src !== ULTIMATE_FALLBACK) {
+            image.dataset.fallbackUltimate = '1';
+            image.removeAttribute('srcset');
+            image.src = ULTIMATE_FALLBACK;
+            image.style.visibility = '';
+          }
         }}
       />
     </picture>

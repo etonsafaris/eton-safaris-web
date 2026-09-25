@@ -26,9 +26,12 @@ export default async function HomePage() {
   const bundle = await loadHomePageBundleResilient();
   const { data, homeContent, destinations, needsClientRefresh } = prepareHomePageRenderState(bundle);
   const initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(data.countries));
+  const lcpHero = initialHeroSlides[0]?.image || '/heroes/egypt-1440.webp';
 
   return (
-    <PublicShellServer initialDestinations={destinations}>
+    <>
+      <link rel="preload" as="image" href={lcpHero} fetchPriority="high" />
+      <PublicShellServer initialDestinations={destinations}>
       <HomePageClient
         initialHeroSlides={initialHeroSlides}
         initialCountries={data.countries}
@@ -38,6 +41,7 @@ export default async function HomePage() {
         initialHomeContent={homeContent}
         needsClientRefresh={needsClientRefresh}
       />
-    </PublicShellServer>
+      </PublicShellServer>
+    </>
   );
 }

@@ -10,10 +10,15 @@ function withSearchParams(src: string, params: Record<string, string>) {
   }
 }
 
+/** Shipped under `public/heroes` — use as-is (no `-1440.webp` rewrite; many variants are not in the repo). */
+function isLocalHeroAsset(src: string) {
+  return /^\/heroes\/[^/]+\.(?:png|jpe?g|webp|avif)$/i.test(src);
+}
+
 export function sizedImageUrl(src: string, width: number, quality = 70): string {
   if (!src) return src;
-  if (/^\/heroes\/.*\.(?:png|jpe?g|webp)$/i.test(src)) {
-    return src.replace(/\.(?:png|jpe?g|webp)$/i, `-${width}.webp`);
+  if (isLocalHeroAsset(src)) {
+    return src;
   }
   if (src.includes('images.unsplash.com')) {
     return withSearchParams(src, {
@@ -32,7 +37,8 @@ export function sizedImageUrl(src: string, width: number, quality = 70): string 
 
 export function imageSrcSet(src: string, widths: number[] = DEFAULT_WIDTHS): string {
   if (!src) return '';
-  if (!src.includes('images.unsplash.com') && !src.includes('res.cloudinary.com') && !/^\/heroes\//.test(src)) return '';
+  if (isLocalHeroAsset(src)) return '';
+  if (!src.includes('images.unsplash.com') && !src.includes('res.cloudinary.com')) return '';
   return widths.map((width) => `${sizedImageUrl(src, width)} ${width}w`).join(', ');
 }
 

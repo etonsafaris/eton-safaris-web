@@ -53,7 +53,7 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="hidden items-center lg:flex">
-        <Link href="/" className={navClass(homeActive)}>
+        <Link href="/" prefetch className={navClass(homeActive)}>
           Home
         </Link>
         {primary.length > 0 ? (
@@ -64,6 +64,7 @@ export default function SiteHeader() {
                 <Link
                   key={destination.slug}
                   href={destinationPublicPath(destination.slug)}
+                  prefetch
                   className="site-nav-dropdown-item"
                 >
                   <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
@@ -80,6 +81,7 @@ export default function SiteHeader() {
                 <Link
                   key={destination.slug}
                   href={destinationPublicPath(destination.slug)}
+                  prefetch
                   className="site-nav-dropdown-item"
                 >
                   <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
@@ -88,13 +90,13 @@ export default function SiteHeader() {
             </div>
           </div>
         ) : null}
-        <Link href="/safari-updates" className={navClass(pathname.startsWith('/safari-updates'))}>
+        <Link href="/safari-updates" prefetch className={navClass(pathname.startsWith('/safari-updates'))}>
           {PUBLIC_SITE_LABELS.blogPosts}
         </Link>
-        <Link  href="/community-support" className={navClass(pathname.startsWith('/community'))}>
+        <Link href="/community-support" prefetch className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
-        <Link  href="/contact-us" className={navClass(pathname.startsWith('/contact'))}>
+        <Link href="/contact-us" prefetch className={navClass(pathname.startsWith('/contact'))}>
           {PUBLIC_SITE_LABELS.getInTouch}
         </Link>
       </nav>
