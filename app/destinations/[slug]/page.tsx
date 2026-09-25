@@ -4,7 +4,7 @@ import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadCountryPageData } from '@/lib/load-public';
+import { loadCountryPageDataResilient } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -38,19 +38,7 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   }
 
   const fallbackName = countryLabelFromSlug(slug);
-  let data: Awaited<ReturnType<typeof loadCountryPageData>>;
-  try {
-    data = await loadCountryPageData(slug);
-  } catch (error) {
-    console.error('[Destination detail] Failed to load country:', error);
-    data = {
-      country: null,
-      categories: [],
-      tours: [],
-      parks: [],
-      places: [],
-    };
-  }
+  const data = await loadCountryPageDataResilient(slug);
   const country =
     data.country ||
     ({

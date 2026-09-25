@@ -11,24 +11,14 @@ import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
-import {
-  categoryMatchesCountry,
-  countryCategoryPath,
-  matchesCountry,
-  publicCountryLabel,
-  recordMatchesCountrySlug,
-} from '@/lib/country-utils';
+import { countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { COUNTRY_SPECIALISTS_LINE, countryArticleHtml, countryHeroTitle, stripParkListFromCountryHtml } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
-  fetchCollectionRecordById,
-  fetchCollectionRecords,
-  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
-  isPublishedRecord,
   pickString,
   publicRecordSlug,
   recordCardBlurb,
@@ -77,10 +67,8 @@ export default function CountryPageContent({
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
   const [ready, setReady] = useState(true);
-  const hasServerContent = Boolean(
-    pickString(countryProp || {}, ['description', 'country_description', 'overview', 'summary', 'excerpt'])?.trim() ||
-      initialTours.length > 0
-  );
+  /** SSR always ships a country shell — skip mount-time full-table refetch (major speed win). */
+  const hasServerContent = Boolean(slug && countryProp);
 
   useEffect(() => {
     setCountry(countryProp);
@@ -92,30 +80,24 @@ export default function CountryPageContent({
 
   useCmsPageReload(async () => {
     try {
-      const [countryRows, allCategories, countryTours] = await Promise.all([
-        fetchCollectionRecords('countries', [], { maxRows: 48 }),
-        fetchCollectionRecords('categories', [], { maxRows: 64 }),
-        resolvePublicTours({ country: publicCountryLabel(countryProp, slug) || slug, limit: 48 }),
-      ]);
-      const match = countryRows.find((row) => recordMatchesCountrySlug(row, slug)) || null;
-      let nextCountry = countryProp;
-      if (match) {
-        const full =
-          match.id != null
-            ? (await fetchCollectionRecordById('countries', String(match.id))) || match
-            : match;
-        if (isPublishedRecord(full)) nextCountry = full;
-      }
-      setCountry(nextCountry);
-      setCategories(
-        allCategories.filter(isPublishedRecord).filter((category) => categoryMatchesCountry(category, slug))
-      );
-      if (countryTours.length) {
-        const matched = countryTours.filter((tour) => matchesCountry(tour, slug));
-        setTours(matched.length ? matched : countryTours);
-      }
+      const response = await fetch(`/api/public/country-page?slug=${encodeURIComponent(slug)}`, {
+        credentials: 'same-origin',
+      });
+      if (!response.ok) return;
+      const body = (await response.json()) as {
+        country?: RecordRow | null;
+        categories?: RecordRow[];
+        tours?: RecordRow[];
+        parks?: RecordRow[];
+        places?: RecordRow[];
+      };
+      if (body.country) setCountry(body.country);
+      if (body.categories?.length) setCategories(body.categories);
+      if (body.tours?.length) setTours(body.tours);
+      if (body.parks?.length) setParks(body.parks);
+      if (body.places?.length) setPlaces(body.places);
     } catch (error) {
-      console.error('[Supabase] Failed to load country page data:', error);
+      console.error('[Country page] Live refresh failed:', error);
     } finally {
       setReady(true);
     }

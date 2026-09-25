@@ -3,7 +3,7 @@ import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, landingCmsSlug } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadCountryPageData } from '@/lib/load-public';
+import { loadCountryPageDataResilient } from '@/lib/load-public';
 
 /**
  * Admin-only preview (guests are redirected to /destinations/{country} in middleware).
@@ -15,7 +15,7 @@ export default async function LandingAdminPreviewPage({ params }: { params: { sl
 
   let data;
   try {
-    data = await loadCountryPageData(slug);
+    data = await loadCountryPageDataResilient(slug);
   } catch (error) {
     console.error('[Landing preview] Failed to load country:', error);
     notFound();

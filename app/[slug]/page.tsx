@@ -14,7 +14,7 @@ import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
-import { loadCountryPageData } from '@/lib/load-public';
+import { loadCountryPageDataResilient } from '@/lib/load-public';
 
 type PageProps = {
   params: { slug: string };
@@ -71,14 +71,9 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
   }
   const isCountryAlias = resolved.kind === 'country';
   const countrySlug = resolved.countrySlug || resolved.canonical;
-  let countryData: Awaited<ReturnType<typeof loadCountryPageData>> | null = null;
+  let countryData: Awaited<ReturnType<typeof loadCountryPageDataResilient>> | null = null;
   if (isCountryAlias) {
-    try {
-      countryData = await loadCountryPageData(countrySlug);
-    } catch (error) {
-      console.warn('[Public] CMS country slug load failed:', countrySlug, error);
-      countryData = null;
-    }
+    countryData = await loadCountryPageDataResilient(countrySlug);
   }
   let initialPage = null;
   if (!isCountryAlias) {

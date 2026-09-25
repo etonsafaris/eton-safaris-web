@@ -39,6 +39,12 @@ import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import { skipParkStaysDuringBuild, skipStaticGenerationDuringBuild } from '@/lib/build-phase';
+import {
+  EMPTY_COUNTRY_PAGE_DATA,
+  isCountryPageDataSparse,
+  withCountryPageFallback,
+  type CountryPageData,
+} from '@/lib/country-page-fallback';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
@@ -386,28 +392,71 @@ export async function loadDestinationsIndexCountries() {
 export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
-    return await cachedPublic(
-      ['country-page-data-v2', normalized],
+    const cached = await cachedPublic(
+      ['country-page-data-v3', normalized],
       ['collection:countries', `country:${normalized}`],
       () => loadCountryPageDataInner(normalized)
     );
+    if (!isCountryPageDataSparse(cached)) return cached;
+    const retry = await loadCountryPageDataInner(normalized);
+    return isCountryPageDataSparse(retry) ? cached : retry;
   } catch (error) {
     console.warn('[Public] loadCountryPageData failed:', slug, error);
-    const countryName = publicCountryLabel(null, slug) || slug;
-    return {
-      country: countryName
-        ? ({ name: countryName, title: countryName, slug } as RecordRow)
-        : null,
-      categories: [] as RecordRow[],
-      tours: [] as RecordRow[],
-      parks: [] as RecordRow[],
-      places: [] as RecordRow[],
-    };
+    return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
+  }
+}
+
+const COUNTRY_PAGE_WAIT_MS = 12000;
+
+/** Never throws — used by destination routes and recovery API. */
+export async function loadCountryPageDataResilient(slug: string): Promise<CountryPageData> {
+  const normalized = normalizeSlug(slug);
+  try {
+    const raced = await Promise.race([
+      loadCountryPageData(normalized),
+      new Promise<CountryPageData | null>((resolve) =>
+        setTimeout(() => resolve(null), COUNTRY_PAGE_WAIT_MS)
+      ),
+    ]);
+    let data = raced || EMPTY_COUNTRY_PAGE_DATA;
+    if (isCountryPageDataSparse(data)) {
+      const retry = await loadCountryPageDataInner(normalized).catch(() => EMPTY_COUNTRY_PAGE_DATA);
+      if (!isCountryPageDataSparse(retry)) data = retry;
+    }
+    if (!data.tours.length) {
+      const label =
+        publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
+      const tours = await withTimeout(
+        resolvePublicTours({ country: label, limit: 48 }),
+        8000,
+        [] as RecordRow[]
+      ).catch(() => [] as RecordRow[]);
+      if (tours.length) {
+        const matched = tours.filter((row) => matchesCountry(row, normalized));
+        data = { ...data, tours: matched.length ? matched : tours };
+      }
+    }
+    return withCountryPageFallback(data, normalized);
+  } catch (error) {
+    console.warn('[Public] loadCountryPageDataResilient failed:', normalized, error);
+    return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
   }
 }
 
 async function loadCountryPageDataInner(slug: string) {
-  const countryMeta = await withTimeout(fetchRecordByPublicSlug('countries', slug), 6000, null);
+  const [countryMeta, categoriesRaw] = await Promise.all([
+    withTimeout(fetchRecordByPublicSlug('countries', slug), 6000, null),
+    withTimeout(
+      fetchCollectionRecords('categories', [], {
+        columns: listColumns('categories'),
+        maxRows: 80,
+      })
+        .then((rows) => rows.filter(isPublishedRecord))
+        .catch(() => [] as RecordRow[]),
+      6000,
+      [] as RecordRow[]
+    ),
+  ]);
   let country: RecordRow | null = countryMeta;
   if (countryMeta?.id != null) {
     country = await withTimeout(
@@ -416,31 +465,24 @@ async function loadCountryPageDataInner(slug: string) {
       countryMeta
     );
   }
-  const categories = await withTimeout(
-    fetchCollectionRecords('categories', [], {
-      columns: listColumns('categories'),
-      maxRows: 80,
-    })
-      .then((rows) => rows.filter(isPublishedRecord))
-      .catch(() => [] as RecordRow[]),
-    6000,
-    [] as RecordRow[]
-  );
+  const categories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
     slug;
   const countryId = country?.id != null ? String(country.id) : undefined;
   const [tours, parks, explorePage] = await Promise.all([
-    resolvePublicTours({ country: countryName, limit: 48 }).catch(() => [] as RecordRow[]),
-    withTimeout(fetchParksForCountry(countryName, 24, countryId), 8000, [] as RecordRow[]),
+    withTimeout(resolvePublicTours({ country: countryName, limit: 48 }), 6000, [] as RecordRow[]).catch(
+      () => [] as RecordRow[]
+    ),
+    withTimeout(fetchParksForCountry(countryName, 20, countryId), 6000, [] as RecordRow[]),
     withTimeout(
       fetchCollectionPage('explore', [], {
         columns: listColumns('explore'),
-        limit: 48,
+        limit: 32,
         offset: 0,
       }),
-      6000,
+      5000,
       { rows: [] as RecordRow[], total: 0 }
     ),
   ]);
@@ -460,7 +502,7 @@ async function loadCountryPageDataInner(slug: string) {
         : countryName
           ? fallbackCountry
           : null,
-    categories: categories.filter((row) => categoryMatchesCountry(row, slug)),
+    categories,
     tours: matchedTours.length ? matchedTours : tours,
     parks: parks.filter(isPublishedRecord),
     places,
