@@ -39,6 +39,8 @@ import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import { skipParkStaysDuringBuild, skipStaticGenerationDuringBuild } from '@/lib/build-phase';
+import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
+import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
 const STATIC_DETAIL_BUILD_LIMIT = 24;
@@ -622,8 +624,8 @@ export async function loadParkDetail(slug: string) {
 
 async function loadSafariUpdateDetailLive(slug: string) {
   try {
-    const [post, updatePage] = await Promise.all([
-      fetchPublicRecordResilient('safari_updates', slug),
+    const [resolved, updatePage] = await Promise.all([
+      withTimeout(resolveSafariUpdatePost(slug), 12000, null),
       withTimeout(
         fetchPublicSafariUpdatesPage({ limit: 20, offset: 0 }),
         6000,
@@ -631,7 +633,7 @@ async function loadSafariUpdateDetailLive(slug: string) {
       ),
     ]);
     const published =
-      post && isPublishedRecord(post) && !isLanguagePost(post) ? post : null;
+      resolved && isPublishedRecord(resolved) && !isLanguagePost(resolved) ? resolved : null;
     const related = published
       ? (updatePage?.rows ?? [])
           .filter((row) => String(row?.id) !== String(published.id || ''))
@@ -662,11 +664,54 @@ async function loadSafariUpdateDetailLive(slug: string) {
 
 export async function loadSafariUpdateDetail(slug: string) {
   const normalized = normalizeSlug(slug);
-  return cachedPublic(
-    ['safari-update-detail-v1', normalized],
+  const cached = await cachedPublic(
+    ['safari-update-detail-v2', normalized],
     ['collection:safari_updates', `safari_update:${normalized}`],
     () => loadSafariUpdateDetailLive(normalized)
   );
+  if (cached.post) return cached;
+  const retry = await loadSafariUpdateDetailLive(normalized);
+  return retry.post ? retry : cached;
+}
+
+const SAFARI_DETAIL_WAIT_MS = 12000;
+
+/** Used by the detail page and recovery API — does not throw on slow DB. */
+export async function loadSafariUpdateDetailResilient(slug: string) {
+  const normalized = normalizeSlug(slug);
+  try {
+    const detail = await Promise.race([
+      loadSafariUpdateDetail(normalized),
+      new Promise<typeof EMPTY_SAFARI_UPDATE_DETAIL>((resolve) =>
+        setTimeout(() => resolve(EMPTY_SAFARI_UPDATE_DETAIL), SAFARI_DETAIL_WAIT_MS)
+      ),
+    ]);
+    if (detail.post) return detail;
+    const post = await withTimeout(resolveSafariUpdatePost(normalized), 10000, null);
+    if (!post) return detail;
+    return {
+      post,
+      related: detail.related ?? [],
+      tours: detail.tours ?? [],
+    };
+  } catch (error) {
+    console.warn('[Public] loadSafariUpdateDetailResilient failed:', normalized, error);
+    return EMPTY_SAFARI_UPDATE_DETAIL;
+  }
+}
+
+export async function loadSafariUpdatesListingResilient(options?: { limit?: number; offset?: number }) {
+  const limit = options?.limit ?? 48;
+  const offset = options?.offset ?? 0;
+  try {
+    let loaded = await loadSafariUpdatesPageData({ limit, offset });
+    if (loaded.posts.length) return loaded;
+    loaded = await loadSafariUpdatesPageDataLive(limit, offset);
+    return loaded;
+  } catch (error) {
+    console.warn('[Public] Safari updates listing resilient load failed:', error);
+    return { posts: [] as RecordRow[], total: 0 };
+  }
 }
 
 export async function loadAccommodationDetail(slug: string) {

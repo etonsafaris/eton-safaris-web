@@ -17,6 +17,7 @@ import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload'
 import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
+import { stashPublicReadRecord } from '@/lib/public-read-prefill';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import {
@@ -135,6 +136,7 @@ export default function HomePageClient({
       <Link
         key={String(post?.id ?? index)}
         href={`/safari-updates/${slug}`}
+        onClick={() => post && stashPublicReadRecord('safari_updates', post)}
         className="group block h-full overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-xl"
       >
         {image ? (

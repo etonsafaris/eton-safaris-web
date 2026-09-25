@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadSafariUpdateDetail, loadStaticSafariUpdateParams } from '@/lib/load-public';
+import { loadSafariUpdateDetailResilient, loadStaticSafariUpdateParams } from '@/lib/load-public';
 import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SafariUpdateDetailPage({ params }: PageProps) {
   const { post, related, tours } = await safePublicLoad(
     'safari update detail page',
-    () => loadSafariUpdateDetail(params.slug),
+    () => loadSafariUpdateDetailResilient(params.slug),
     EMPTY_SAFARI_UPDATE_DETAIL,
     params.slug
   );

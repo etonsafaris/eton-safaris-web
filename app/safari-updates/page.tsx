@@ -1,19 +1,9 @@
-import ListingPager from '@/components/public/ListingPager';
-import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageHero from '@/components/public/PageHero';
-import PublicListingCard from '@/components/public/PublicListingCard';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadSafariUpdatesPageData } from '@/lib/load-public';
-import {
-  formatPublishedDate,
-  getRecordImage,
-  getRecordTitle,
-  publicRecordSlug,
-  recordCardBlurb,
-  recordPublishedAt,
-} from '@/lib/data';
+import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
+import { loadSafariUpdatesListingResilient } from '@/lib/load-public';
+import { recordPublishedAt } from '@/lib/data';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
-import { resolvePublicImage } from '@/lib/public-image';
 import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
@@ -36,10 +26,10 @@ export default async function SafariUpdatesPage({
   searchParams?: { page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
-  let posts: Awaited<ReturnType<typeof loadSafariUpdatesPageData>>['posts'] = [];
+  let posts: Awaited<ReturnType<typeof loadSafariUpdatesListingResilient>>['posts'] = [];
   let total = 0;
   try {
-    const loaded = await loadSafariUpdatesPageData({
+    const loaded = await loadSafariUpdatesListingResilient({
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
     });
@@ -61,34 +51,12 @@ export default async function SafariUpdatesPage({
         image={SITE_MEDIA.safariUpdatesHero || SITE_MEDIA.wildlifeNationalPark || SITE_MEDIA.elephantSunset}
         published={latest ? recordPublishedAt(latest) || undefined : undefined}
       />
-      <ListingSection>
-        {posts.length === 0 ? (
-          <p className="text-center text-gray-500">No records found in this collection.</p>
-        ) : (
-          <>
-            <ListingGrid>
-              {posts.map((post, index) => (
-                <PublicListingCard
-                  key={String(post.id ?? index)}
-                  href={`/safari-updates/${publicRecordSlug(post)}`}
-                  image={resolvePublicImage(getRecordImage(post) || '', SITE_MEDIA.safariUpdatesHero) || undefined}
-                  title={getRecordTitle(post)}
-                  date={formatPublishedDate(post)}
-                  description={recordCardBlurb(post)}
-                  cta="Read More"
-                />
-              ))}
-            </ListingGrid>
-            <ListingPager
-              basePath="/safari-updates"
-              page={page}
-              pageSize={PAGE_SIZE}
-              total={total}
-              label="updates"
-            />
-          </>
-        )}
-      </ListingSection>
+      <SafariUpdatesListingClient
+        initialPosts={posts}
+        initialTotal={total}
+        page={page}
+        pageSize={PAGE_SIZE}
+      />
     </PublicShellServer>
   );
 }

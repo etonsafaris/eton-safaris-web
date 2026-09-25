@@ -9,6 +9,7 @@ export default function PublicListingCard({
   location,
   description,
   cta = 'Read More',
+  onNavigate,
 }: {
   href: string;
   image?: string;
@@ -17,12 +18,17 @@ export default function PublicListingCard({
   location?: string;
   description?: string;
   cta?: string;
+  onNavigate?: () => void;
 }) {
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
   const to = typeof href === 'string' && href.trim() ? href : '/';
 
   return (
-    <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link
+      href={to}
+      onClick={() => onNavigate?.()}
+      className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md"
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
           <img src={image} alt={title || ''} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
