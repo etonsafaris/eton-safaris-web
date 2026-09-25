@@ -28,6 +28,21 @@ function walk(dir, files = []) {
 }
 
 const corpus = walk(root).map((file) => readFileSync(file, 'utf8')).join('\n');
+const COUNTRY_HERO_BASES = [
+  'botswana',
+  'dr-congo',
+  'egypt',
+  'ethiopia',
+  'kenya',
+  'malawi',
+  'namibia',
+  'rwanda',
+  'south-africa',
+  'tanzania',
+  'uganda',
+  'zambia',
+];
+
 const alwaysKeep = new Set([
   '/eton-safaris-gorilla.png',
   '/heroes/community-hero-768.webp',
@@ -36,6 +51,12 @@ const alwaysKeep = new Set([
   '/heroes/community-employment-1440.webp',
   '/heroes/talk-to-us-480.webp',
 ]);
+
+function isProtectedHeroFile(name) {
+  const pathRef = `/heroes/${name}`;
+  if (alwaysKeep.has(pathRef)) return true;
+  return COUNTRY_HERO_BASES.some((base) => name === base || name.startsWith(`${base}-`) || name.startsWith(`${base}.`));
+}
 
 if (!existsSync(heroesDir)) {
   console.log('No public/heroes directory.');
@@ -48,7 +69,7 @@ const used = [];
 
 for (const name of onDisk) {
   const pathRef = `/heroes/${name}`;
-  if (alwaysKeep.has(pathRef) || corpus.includes(pathRef) || corpus.includes(name)) {
+  if (isProtectedHeroFile(name) || alwaysKeep.has(pathRef) || corpus.includes(pathRef) || corpus.includes(name)) {
     used.push(name);
     continue;
   }

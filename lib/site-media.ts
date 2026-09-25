@@ -1,7 +1,5 @@
-import { SITE_LOGO } from '@/lib/collections';
-
-/** Generic section heroes — logo only. Country/tour/park covers come from CMS in Aiven. */
-const GENERIC = SITE_LOGO;
+/** Generic section heroes when CMS has no cover — never the brand logo on content cards. */
+const GENERIC = '/heroes/community-hero-768.webp';
 
 export const SITE_MEDIA = {
   communityHero: '/heroes/community-hero-768.webp',

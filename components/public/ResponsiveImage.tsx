@@ -54,12 +54,14 @@ export default function ResponsiveImage({
             image.style.visibility = '';
             return;
           }
-          if (!image.dataset.fallbackUltimate && image.src !== ULTIMATE_FALLBACK) {
+          if (variant === 'hero' && !image.dataset.fallbackUltimate && image.src !== ULTIMATE_FALLBACK) {
             image.dataset.fallbackUltimate = '1';
             image.removeAttribute('srcset');
             image.src = ULTIMATE_FALLBACK;
             image.style.visibility = '';
+            return;
           }
+          image.style.visibility = 'hidden';
         }}
       />
     </picture>
