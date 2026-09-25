@@ -1,7 +1,7 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { recordMatchesCountrySlug } from '@/lib/country-utils';
+import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { resolvePublicImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 

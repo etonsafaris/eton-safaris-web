@@ -11,8 +11,7 @@ import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
-import { buildHomeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
-import { fallbackHomeCountryRows } from '@/lib/home-page-fallback';
+import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
 import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
@@ -91,11 +90,8 @@ export default function HomePageClient({
       Boolean(resolvePublicImage(item?.image))
     );
     if (fromRecovery.length) return fromRecovery;
-    const fromProps = safeHeroSlides(initialHeroSlides ?? []);
-    if (fromProps.length) return fromProps;
-    const seedCountries = countries.length ? countries : fallbackHomeCountryRows();
-    return safeHeroSlides(buildHomeHeroSlides(seedCountries));
-  }, [recoveredHeroSlides, initialHeroSlides, countries]);
+    return safeHeroSlides(initialHeroSlides ?? []);
+  }, [recoveredHeroSlides, initialHeroSlides]);
 
   useEffect(() => {
     heroSlides.forEach((item, index) => {
@@ -103,8 +99,12 @@ export default function HomePageClient({
       if (!url) return;
       const img = new window.Image();
       img.decoding = 'async';
-      if (index === 0) {
-        img.fetchPriority = 'high';
+      try {
+        if (index === 0 && 'fetchPriority' in img) {
+          (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high';
+        }
+      } catch {
+        // ignore unsupported browsers
       }
       img.src = url;
     });

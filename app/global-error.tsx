@@ -16,13 +16,27 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#00A651]">Eton Safaris</p>
             <h1 className="mt-3 font-serif text-3xl font-bold text-gray-900">Something went wrong</h1>
             <p className="mt-3 text-gray-600">Refresh this page or try again in a moment.</p>
-            <button
-              type="button"
-              onClick={() => reset()}
-              className="mt-6 rounded-lg bg-[#00A651] px-5 py-2.5 font-semibold text-white"
-            >
-              Try again
-            </button>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    reset();
+                  } catch {
+                    window.location.reload();
+                  }
+                }}
+                className="rounded-lg bg-[#00A651] px-5 py-2.5 font-semibold text-white"
+              >
+                Try again
+              </button>
+              <a
+                href="/"
+                className="rounded-lg border border-gray-300 px-5 py-2.5 font-semibold text-gray-700"
+              >
+                Go home
+              </a>
+            </div>
           </div>
         </main>
       </body>

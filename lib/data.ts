@@ -280,28 +280,7 @@ export async function fetchCollectionRecordById(table: string, id: string | numb
   return null;
 }
 
-// Keep utility functions that are used by client components
-export function getRecordImage(record: RecordRow): string | null {
-  const preferred = [
-    'image_url',
-    'cover_image',
-    'featured_image',
-    'thumbnail',
-    'photo',
-    'banner',
-    'picture',
-    'social_image_url',
-  ];
-  let found: string | null = null;
-  for (const key of preferred) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) {
-      found = value.trim();
-      break;
-    }
-  }
-  return found;
-}
+export { getRecordImage } from '@/lib/record-image';
 
 export function getRecordTitle(record: RecordRow): string {
   const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'customer_name', 'author', 'email'];
