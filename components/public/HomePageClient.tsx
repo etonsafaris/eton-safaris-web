@@ -158,7 +158,10 @@ export default function HomePageClient({
           <HomePageImage
             src={image}
             alt=""
+            variant="card"
             sizes="(max-width: 640px) 100vw, 25vw"
+            width={640}
+            height={480}
             className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (

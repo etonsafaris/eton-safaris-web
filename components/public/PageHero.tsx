@@ -103,6 +103,8 @@ export default function PageHero({
           alt={title}
           variant="hero"
           priority
+          width={1440}
+          height={900}
           className="h-full w-full object-cover"
         />
       ) : (

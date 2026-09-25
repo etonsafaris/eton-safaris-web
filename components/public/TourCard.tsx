@@ -53,6 +53,9 @@ export default function TourCard({
             <ResponsiveImage
               src={image}
               alt={tourTitle}
+              variant="card"
+              width={640}
+              height={480}
               className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (

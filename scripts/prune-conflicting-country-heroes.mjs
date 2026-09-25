@@ -67,6 +67,7 @@ for (const name of readdirSync(heroesDir)) {
   if (keep.has(name)) continue;
   if (isCountryAsset(name)) remove.push(name);
   if (/^community-/i.test(name) && !COMMUNITY.has(`/heroes/${name}`)) remove.push(name);
+  if (/^talk-to-us/i.test(name) && name !== 'talk-to-us-480.webp') remove.push(name);
 }
 
 const unique = [...new Set(remove)];

@@ -1,9 +1,10 @@
 'use client';
 
-import { SITE_LOGO } from '@/lib/collections';
+import { DEFAULT_COUNTRY_HERO } from '@/lib/country-heroes';
 import { resolvePublicImage } from '@/lib/public-image';
-import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
+import { COUNTRY_IMAGE_DIMENSIONS, OFFICIAL_COMMUNITY_HERO_PATHS } from '@/lib/official-country-assets';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc, imageSrcSet } from '@/lib/responsive-image';
+import { SITE_MEDIA } from '@/lib/site-media';
 
 type ResponsiveImageProps = {
   src: string;
@@ -17,7 +18,8 @@ type ResponsiveImageProps = {
   height?: number;
 };
 
-const ULTIMATE_FALLBACK = SITE_LOGO;
+const HERO_FALLBACK = SITE_MEDIA.communityHero || OFFICIAL_COMMUNITY_HERO_PATHS[0];
+const CARD_FALLBACK = DEFAULT_COUNTRY_HERO;
 
 export default function ResponsiveImage({
   src,
@@ -62,7 +64,7 @@ export default function ResponsiveImage({
         alt={alt}
         className={[className, motionClass].filter(Boolean).join(' ')}
         loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'low'}
+        fetchPriority={priority ? 'high' : 'auto'}
         decoding={priority ? 'sync' : 'async'}
         referrerPolicy="no-referrer"
         onError={(event) => {
@@ -75,10 +77,11 @@ export default function ResponsiveImage({
             image.style.visibility = '';
             return;
           }
-          if (variant === 'hero' && !image.dataset.fallbackUltimate && image.src !== ULTIMATE_FALLBACK) {
+          const fallback = variant === 'hero' ? HERO_FALLBACK : CARD_FALLBACK;
+          if (!image.dataset.fallbackUltimate && fallback && image.src !== fallback) {
             image.dataset.fallbackUltimate = '1';
             image.removeAttribute('srcset');
-            image.src = ULTIMATE_FALLBACK;
+            image.src = fallback;
             image.style.visibility = '';
             return;
           }

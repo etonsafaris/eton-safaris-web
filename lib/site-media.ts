@@ -1,13 +1,15 @@
+import { OFFICIAL_COMMUNITY_HERO_PATHS } from '@/lib/official-country-assets';
+
 /** Generic section heroes when CMS has no cover — never the brand logo on content cards. */
-const GENERIC = '/heroes/community-hero-768.webp';
+const GENERIC = OFFICIAL_COMMUNITY_HERO_PATHS[0];
 
 export const SITE_MEDIA = {
-  communityHero: '/heroes/community-hero-768.webp',
-  communityTourism: '/heroes/community-tourism-1440.webp',
-  communityEducation: '/heroes/community-employment-1440.webp',
-  communityConservation: '/heroes/community-conservation-1440.webp',
-  communityEmployment: '/heroes/community-employment-1440.webp',
-  talkToUsHero: '/heroes/talk-to-us-480.webp',
+  communityHero: OFFICIAL_COMMUNITY_HERO_PATHS[0],
+  communityTourism: OFFICIAL_COMMUNITY_HERO_PATHS[1],
+  communityEducation: OFFICIAL_COMMUNITY_HERO_PATHS[3],
+  communityConservation: OFFICIAL_COMMUNITY_HERO_PATHS[2],
+  communityEmployment: OFFICIAL_COMMUNITY_HERO_PATHS[3],
+  talkToUsHero: OFFICIAL_COMMUNITY_HERO_PATHS[4],
   safariUpdatesHero: GENERIC,
   gorillasForest: GENERIC,
   wildlifeNationalPark: GENERIC,

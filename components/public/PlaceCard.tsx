@@ -54,9 +54,12 @@ export default function PlaceCard({
           <img
             src={image}
             alt={title || ''}
+            width={640}
+            height={480}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
             loading="lazy"
             decoding="async"
+            fetchPriority="low"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
