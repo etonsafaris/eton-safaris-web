@@ -26,7 +26,7 @@ export default async function HomePage() {
   const bundle = await loadHomePageBundleResilient();
   const { data, homeContent, destinations, needsClientRefresh } = prepareHomePageRenderState(bundle);
   const initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(data.countries));
-  const lcpHero = initialHeroSlides[0]?.image || '/heroes/egypt-1440.webp';
+  const lcpHero = initialHeroSlides[0]?.image || '/eton-safaris-gorilla.png';
 
   return (
     <>

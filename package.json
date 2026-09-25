@@ -88,7 +88,13 @@
     "seed:seychelles-beach-keywords": "node scripts/seed-remaining-country-keywords.mjs seychelles",
     "cleanup:layouts": "node scripts/backup-and-normalize-layouts.js",
     "diagnose:layouts": "node scripts/diagnose-layout-values.js",
-    "seo:enable-all": "node scripts/enable-all-public-indexing.mjs"
+    "seo:enable-all": "node scripts/enable-all-public-indexing.mjs",
+    "media:purge-unused": "node scripts/purge-unused-media.mjs",
+    "media:purge-unused:execute": "node scripts/purge-unused-media.mjs --execute",
+    "static:purge-unused-heroes": "node scripts/purge-unused-static-heroes.mjs",
+    "static:purge-unused-heroes:execute": "node scripts/purge-unused-static-heroes.mjs --execute",
+    "countries:clear-wrong-images": "node scripts/clear-wrong-country-image-urls.mjs",
+    "countries:clear-wrong-images:execute": "node scripts/clear-wrong-country-image-urls.mjs --execute"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
