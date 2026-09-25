@@ -12,6 +12,7 @@ import {
   matchesCategoryValue,
   matchesCountry,
   publicCountryLabel,
+  publicCountrySlug,
   recordCountryValues,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
@@ -45,6 +46,7 @@ import {
   withCountryPageFallback,
   type CountryPageData,
 } from '@/lib/country-page-fallback';
+import { fallbackHomeCountryRows, orderHomeCountryRows } from '@/lib/home-page-fallback';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
@@ -180,6 +182,42 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
   }
 }
 
+async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> {
+  const published = rows.filter(isPublishedRecord);
+  const usedIds = new Set<string>();
+  const navRows: RecordRow[] = [];
+
+  for (const nav of NAV_COUNTRIES) {
+    let match = published.find((row) => recordMatchesCountrySlug(row, nav.slug));
+    if (!match) {
+      match = await withTimeout(fetchRecordByPublicSlug('countries', nav.slug), 4500, null);
+      if (match?.id != null) {
+        match = await withTimeout(
+          fetchCollectionRecordById('countries', String(match.id)),
+          4500,
+          match
+        );
+      }
+    }
+    if (match && isPublishedRecord(match)) {
+      navRows.push(match);
+      if (match.id != null) usedIds.add(String(match.id));
+    } else {
+      navRows.push({ slug: nav.slug, name: nav.name, title: nav.name, status: 'published' });
+    }
+  }
+
+  const rest: RecordRow[] = [];
+  for (const row of published) {
+    if (row.id != null && usedIds.has(String(row.id))) continue;
+    const slug = publicCountrySlug(row);
+    if (slug && NAV_COUNTRIES.some((item) => item.slug === slug)) continue;
+    rest.push(row);
+  }
+
+  return [...navRows, ...rest];
+}
+
 async function loadHomePageCountriesSlice() {
   const rows = await withTimeout(
     fetchCollectionRecords('countries', [], {
@@ -189,7 +227,8 @@ async function loadHomePageCountriesSlice() {
     6000,
     [] as RecordRow[]
   );
-  return rows;
+  const hydrated = await ensureNavCountryRecords(rows);
+  return orderHomeCountryRows(hydrated);
 }
 
 async function loadHomePageCategoriesSlice() {
@@ -293,7 +332,21 @@ export async function loadHomePageBundle() {
   })();
 }
 
-const HOME_BUNDLE_WAIT_MS = 10000;
+const HOME_BUNDLE_WAIT_MS = 8000;
+
+function instantHomeFallbackBundle() {
+  const countries = fallbackHomeCountryRows();
+  return {
+    data: toClientProps({
+      countries,
+      tours: [] as RecordRow[],
+      updates: [] as RecordRow[],
+      categories: [] as RecordRow[],
+    }),
+    content: null,
+    destinations: mergePublicDestinations(countries),
+  };
+}
 
 /** Never throws — used by `/` and `/api/public/home-bundle` so a slow DB cannot blank the home page. */
 export async function loadHomePageBundleResilient() {
@@ -303,16 +356,20 @@ export async function loadHomePageBundleResilient() {
       new Promise<null>((resolve) => setTimeout(() => resolve(null), HOME_BUNDLE_WAIT_MS)),
     ]);
     if (bundle) return bundle;
-    console.warn('[Public] Home bundle wait exceeded — serving fallbacks');
-    return { data: await loadHomePageData(), content: null, destinations: [] as PublicDestination[] };
+    console.warn('[Public] Home bundle wait exceeded — serving instant fallbacks');
+    return instantHomeFallbackBundle();
   } catch (error) {
     console.error('[Public] Home bundle failed:', error);
-    return { data: await loadHomePageData().catch(() => ({
-      countries: [] as RecordRow[],
-      tours: [] as RecordRow[],
-      updates: [] as RecordRow[],
-      categories: [] as RecordRow[],
-    })), content: null, destinations: [] as PublicDestination[] };
+    try {
+      const data = await loadHomePageData();
+      return {
+        data,
+        content: null,
+        destinations: mergePublicDestinations(data.countries ?? []),
+      };
+    } catch {
+      return instantHomeFallbackBundle();
+    }
   }
 }
 
@@ -406,7 +463,7 @@ export async function loadCountryPageData(slug: string) {
   }
 }
 
-const COUNTRY_PAGE_WAIT_MS = 12000;
+const COUNTRY_PAGE_WAIT_MS = 9000;
 
 /** Never throws — used by destination routes and recovery API. */
 export async function loadCountryPageDataResilient(slug: string): Promise<CountryPageData> {

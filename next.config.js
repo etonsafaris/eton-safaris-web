@@ -84,6 +84,10 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=30, stale-while-revalidate=120' }],
       },
       {
+        source: '/api/public/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=900, stale-while-revalidate=3600' }],
+      },
+      {
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'private, no-store, must-revalidate' }],
       },
@@ -108,6 +112,10 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        source: '/heroes/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
         source: '/:all*(ico|svg|jpg|jpeg|png|webp|avif|woff|woff2|mp4|webm|mov)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
@@ -116,7 +124,6 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/404', destination: '/', permanent: false },
-      { source: '/eton-safaris-logo.png', destination: '/eton-safaris-gorilla.png', permanent: false },
       { source: '/pages/terms', destination: '/terms-of-services', permanent: true },
       { source: '/pages/privacy', destination: '/privacy-policies', permanent: true },
       { source: '/pages/about', destination: '/about-us', permanent: true },

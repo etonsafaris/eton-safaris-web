@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HomePageContent } from '@/lib/home-page-content';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
+import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { mergeHomePagePayload } from '@/lib/home-page-fallback';
-import { normalizeHomePagePayload, type HomePagePayload } from '@/lib/home-page-payload';
+import { normalizeHomePagePayload, safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import type { PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 
@@ -32,7 +33,11 @@ export function useHomePageRecovery(options: {
 
   useEffect(() => {
     const sparse =
-      needsClientRefresh || data.tours.length === 0 || data.updates.length === 0 || data.countries.length === 0;
+      needsClientRefresh ||
+      heroSlides.length === 0 ||
+      data.tours.length === 0 ||
+      data.updates.length === 0 ||
+      data.countries.length === 0;
     if (!sparse || attemptedRef.current) return undefined;
     attemptedRef.current = true;
 
@@ -42,12 +47,15 @@ export function useHomePageRecovery(options: {
         .then((res) => (res.ok ? res.json() : null))
         .then((body: HomeBundleResponse | null) => {
           if (cancelled || !body?.data) return;
-          setData((current) =>
-            mergeHomePagePayload(normalizeHomePagePayload(body.data), current)
-          );
-          if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
-            setHeroSlides(body.heroSlides);
-          }
+          setData((current) => {
+            const merged = mergeHomePagePayload(normalizeHomePagePayload(body.data), current);
+            const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+            if (slides.length) setHeroSlides(slides);
+            else if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
+              setHeroSlides(body.heroSlides);
+            }
+            return merged;
+          });
         })
         .catch(() => undefined);
     }, 400);
@@ -56,7 +64,7 @@ export function useHomePageRecovery(options: {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [needsClientRefresh, data.tours.length, data.updates.length, data.countries.length]);
+  }, [needsClientRefresh, heroSlides.length, data.tours.length, data.updates.length, data.countries.length]);
 
   return { data, heroSlides };
 }
