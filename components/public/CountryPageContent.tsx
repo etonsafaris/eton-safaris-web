@@ -13,7 +13,8 @@ import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
 import { countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
-import { COUNTRY_SPECIALISTS_LINE, countryArticleHtml, countryHeroTitle, stripParkListFromCountryHtml } from '@/lib/country-landing-copy';
+import { resolveCountryDescriptionHtml } from '@/lib/country-page-copy';
+import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle } from '@/lib/country-landing-copy';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
@@ -111,14 +112,7 @@ export default function CountryPageContent({
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
   const published = useEnsurePublishedAt('countries', country, extras.published_at);
 
-  const countryHtml = stripParkListFromCountryHtml(
-    toProseHtml(
-      country
-        ? visibleRecordHtml(country, ['description', 'content', 'about']) || countryArticleHtml(slug)
-        : countryArticleHtml(slug)
-    )
-  );
-  const descriptionHtml = countryHtml;
+  const descriptionHtml = resolveCountryDescriptionHtml(slug, country);
   const summaryHtml = toProseHtml(extras.excerpt) || toProseHtml(country ? visibleRecordHtml(country, ['summary']) : '');
   const summaryIsDistinct =
     Boolean(summaryHtml) &&

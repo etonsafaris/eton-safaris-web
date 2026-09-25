@@ -26,7 +26,7 @@ import {
   fetchCollectionRecords,
   isPublishedRecord,
 } from '@/lib/data';
-import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
+import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel } from '@/lib/country-utils';
 import type { RecordRow } from '@/lib/types';
 
 function paramValue(value: string | string[] | undefined) {
@@ -87,25 +87,28 @@ export default function CmsSlugClient({
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {
-      const [countryRows, categoryRows, placeRows] = await Promise.all([
-        fetchCollectionRecords('countries'),
-        categorySlug ? fetchCollectionRecords('categories') : Promise.resolve([]),
-        categorySlug ? fetchCollectionRecords('explore') : Promise.resolve([]),
-      ]);
-      const countryMatch =
-        countryRows.find((row) => recordMatchesCountrySlug(row, countrySlug)) ||
-        countryRows.find((row) =>
-          recordMatchesCountrySlug(row, countrySlugFromLanding(canonical))
-        ) ||
-        null;
-      const categoryMatch = categorySlug
-        ? findCategoryBySlug(categoryRows.filter(isPublishedRecord), categorySlug, countrySlug)
-        : null;
-      const placeMatch =
-        categorySlug && !categoryMatch
-          ? findPlaceBySlug(placeRows.filter(isPublishedRecord), categorySlug, countrySlug) ||
-            findPlaceBySlug(placeRows, categorySlug, countrySlug)
-          : null;
+      const response = await fetch(`/api/public/country-page?slug=${encodeURIComponent(countrySlug)}`, {
+        credentials: 'same-origin',
+      });
+      let countryMatch: RecordRow | null = null;
+      if (response.ok) {
+        const body = (await response.json()) as { country?: RecordRow | null };
+        countryMatch = body.country || null;
+      }
+      let categoryMatch = null;
+      let placeMatch = null;
+      if (categorySlug) {
+        const [categoryRows, placeRows] = await Promise.all([
+          fetchCollectionRecords('categories', [], { maxRows: 80 }),
+          fetchCollectionRecords('explore', [], { maxRows: 80 }),
+        ]);
+        categoryMatch = findCategoryBySlug(categoryRows.filter(isPublishedRecord), categorySlug, countrySlug);
+        placeMatch =
+          !categoryMatch
+            ? findPlaceBySlug(placeRows.filter(isPublishedRecord), categorySlug, countrySlug) ||
+              findPlaceBySlug(placeRows, categorySlug, countrySlug)
+            : null;
+      }
       if (mounted) {
         setCountry(countryMatch);
         setNestedIsCategory(Boolean(categoryMatch));
@@ -179,6 +182,7 @@ export default function CmsSlugClient({
       countryLabelFromSlug(countrySlug);
     const merged: RecordRow = {
       ...(country || {}),
+      slug: countrySlug,
       title: countryName,
       name: countryName,
     };

@@ -1,5 +1,7 @@
 'use client';
 
+import { NAV_COUNTRIES } from '@/lib/collections';
+import { destinationPublicPath } from '@/lib/cms-routes';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -12,6 +14,7 @@ const WARM_ROUTES = [
   '/accommodations',
   '/contact-us',
   '/community-support',
+  ...NAV_COUNTRIES.map(({ slug }) => destinationPublicPath(slug)),
 ];
 
 /** Prefetch main nav targets during idle time so header clicks feel instant. */

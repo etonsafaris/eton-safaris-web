@@ -4,6 +4,7 @@ import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
+import { countryHeroImage } from '@/lib/country-heroes';
 import { loadCountryPageDataResilient } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
@@ -45,10 +46,14 @@ export default async function DestinationCountryPage({ params }: { params: { slu
       name: fallbackName,
       title: fallbackName,
       slug,
+      status: 'published',
     } as const);
+  const heroSrc = countryHeroImage(slug, country);
 
   return (
-    <PublicShellServer>
+    <>
+      {heroSrc ? <link rel="preload" as="image" href={heroSrc} fetchPriority="high" /> : null}
+      <PublicShellServer>
       <CountryPageContent
         key={slug}
         slug={slug}
@@ -59,5 +64,6 @@ export default async function DestinationCountryPage({ params }: { params: { slu
         initialPlaces={data.places}
       />
     </PublicShellServer>
+    </>
   );
 }

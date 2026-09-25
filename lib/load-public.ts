@@ -463,7 +463,7 @@ export async function loadCountryPageData(slug: string) {
   }
 }
 
-const COUNTRY_PAGE_WAIT_MS = 9000;
+const COUNTRY_PAGE_WAIT_MS = 7000;
 
 /** Never throws — used by destination routes and recovery API. */
 export async function loadCountryPageDataResilient(slug: string): Promise<CountryPageData> {
@@ -475,9 +475,31 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
         setTimeout(() => resolve(null), COUNTRY_PAGE_WAIT_MS)
       ),
     ]);
-    let data = raced || EMPTY_COUNTRY_PAGE_DATA;
+    if (!raced) {
+      console.warn('[Public] Country page wait exceeded — fast shell:', normalized);
+      const meta = await withTimeout(fetchRecordByPublicSlug('countries', normalized), 3500, null);
+      let data = withCountryPageFallback(
+        meta ? { ...EMPTY_COUNTRY_PAGE_DATA, country: meta } : EMPTY_COUNTRY_PAGE_DATA,
+        normalized
+      );
+      const label =
+        publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
+      const tours = await withTimeout(
+        resolvePublicTours({ country: label, limit: 24 }),
+        5000,
+        [] as RecordRow[]
+      ).catch(() => [] as RecordRow[]);
+      if (tours.length) {
+        const matched = tours.filter((row) => matchesCountry(row, normalized));
+        data = { ...data, tours: matched.length ? matched : tours };
+      }
+      return data;
+    }
+    let data = raced;
     if (isCountryPageDataSparse(data)) {
-      const retry = await loadCountryPageDataInner(normalized).catch(() => EMPTY_COUNTRY_PAGE_DATA);
+      const retry = await withTimeout(loadCountryPageDataInner(normalized), 6000, EMPTY_COUNTRY_PAGE_DATA).catch(
+        () => EMPTY_COUNTRY_PAGE_DATA
+      );
       if (!isCountryPageDataSparse(retry)) data = retry;
     }
     if (!data.tours.length) {
