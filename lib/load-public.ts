@@ -172,40 +172,88 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
   }
 }
 
-export async function loadHomePageData() {
+async function loadHomePageCountriesSlice() {
+  const rows = await withTimeout(
+    fetchCollectionRecords('countries', [], {
+      columns: listColumns('countries'),
+      maxRows: 48,
+    }).then((data) => data.filter(isPublishedRecord)),
+    6000,
+    [] as RecordRow[]
+  );
+  return rows;
+}
+
+async function loadHomePageCategoriesSlice() {
+  return await withTimeout(
+    fetchCollectionRecords('categories', [], {
+      columns: listColumns('categories'),
+      maxRows: 64,
+    }).then((rows) => rows.filter(isPublishedRecord)),
+    6000,
+    [] as RecordRow[]
+  );
+}
+
+async function loadHomePageToursSlice() {
+  let tours = await withTimeout(fetchFeaturedTours(12), 6000, [] as RecordRow[]);
+  if (!tours.length) {
+    tours = await withTimeout(fetchFeaturedTours(12), 10000, [] as RecordRow[]);
+  }
+  if (!tours.length) {
+    try {
+      const listing = await loadToursPageData();
+      tours = listing.tours.slice(0, 12);
+    } catch {
+      tours = [];
+    }
+  }
+  return tours.slice(0, 12);
+}
+
+async function loadHomePageUpdatesSlice() {
   const emptyPage = { rows: [] as RecordRow[], total: 0 };
+  let page = await withTimeout(
+    fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((result) => ({
+      rows: result.rows,
+      total: result.total,
+    })),
+    6000,
+    emptyPage
+  );
+  if (!page.rows.length) {
+    page = await withTimeout(
+      fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((result) => ({
+        rows: result.rows,
+        total: result.total,
+      })),
+      10000,
+      emptyPage
+    );
+  }
+  if (!page.rows.length) {
+    try {
+      const listing = await loadSafariUpdatesPageData({ limit: 8, offset: 0 });
+      page = { rows: listing.posts, total: listing.total };
+    } catch {
+      page = emptyPage;
+    }
+  }
+  return page.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8);
+}
+
+export async function loadHomePageData() {
   try {
-    const [countries, tours, updatesPage, categories] = await Promise.all([
-      withTimeout(
-        fetchCollectionRecords('countries', [], {
-          columns: listColumns('countries'),
-          maxRows: 48,
-        }).then((rows) => rows.filter(isPublishedRecord)),
-        6000,
-        [] as RecordRow[]
-      ),
-      withTimeout(fetchFeaturedTours(12), 6000, [] as RecordRow[]),
-      withTimeout(
-        fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((page) => ({
-          rows: page.rows,
-          total: page.total,
-        })),
-        6000,
-        emptyPage
-      ),
-      withTimeout(
-        fetchCollectionRecords('categories', [], {
-          columns: listColumns('categories'),
-          maxRows: 64,
-        }).then((rows) => rows.filter(isPublishedRecord)),
-        6000,
-        [] as RecordRow[]
-      ),
+    const [countries, tours, updates, categories] = await Promise.all([
+      loadHomePageCountriesSlice(),
+      loadHomePageToursSlice(),
+      loadHomePageUpdatesSlice(),
+      loadHomePageCategoriesSlice(),
     ]);
     return toClientProps({
       countries,
-      tours: tours.slice(0, 12),
-      updates: updatesPage.rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row)).slice(0, 8),
+      tours,
+      updates,
       categories,
     });
   } catch (error) {
@@ -219,18 +267,45 @@ export async function loadHomePageData() {
   }
 }
 
+async function loadHomePageContentCached() {
+  return cachedPublic(['home-page-content-v1'], ['collection:pages'], () => loadHomePageContent());
+}
+
 async function loadHomePageBundleLive() {
-  const [data, content] = await Promise.all([loadHomePageData(), loadHomePageContent()]);
+  const [data, content] = await Promise.all([loadHomePageData(), loadHomePageContentCached()]);
   const destinations = mergePublicDestinations(data.countries ?? []);
   return { data, content, destinations };
 }
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v2'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v3'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
+}
+
+const HOME_BUNDLE_WAIT_MS = 10000;
+
+/** Never throws — used by `/` and `/api/public/home-bundle` so a slow DB cannot blank the home page. */
+export async function loadHomePageBundleResilient() {
+  try {
+    const bundle = await Promise.race([
+      loadHomePageBundle(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), HOME_BUNDLE_WAIT_MS)),
+    ]);
+    if (bundle) return bundle;
+    console.warn('[Public] Home bundle wait exceeded — serving fallbacks');
+    return { data: await loadHomePageData(), content: null, destinations: [] as PublicDestination[] };
+  } catch (error) {
+    console.error('[Public] Home bundle failed:', error);
+    return { data: await loadHomePageData().catch(() => ({
+      countries: [] as RecordRow[],
+      tours: [] as RecordRow[],
+      updates: [] as RecordRow[],
+      categories: [] as RecordRow[],
+    })), content: null, destinations: [] as PublicDestination[] };
+  }
 }
 
 async function loadAccommodationsPageDataLive(limit: number, offset: number) {

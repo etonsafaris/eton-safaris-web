@@ -1,14 +1,9 @@
 import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
-import {
-  EMPTY_HOME_PAGE_PAYLOAD,
-  normalizeHomePagePayload,
-  resolveHomePageContent,
-  safeHeroSlides,
-} from '@/lib/home-page-payload';
-import { loadHomePageBundle } from '@/lib/load-public';
-import type { PublicDestination } from '@/lib/public-destinations';
+import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
+import { safeHeroSlides } from '@/lib/home-page-payload';
+import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
 
@@ -28,46 +23,20 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  let data = EMPTY_HOME_PAGE_PAYLOAD;
-  let homeContent = resolveHomePageContent(null);
-  let initialHeroSlides = safeHeroSlides([]);
-
-  let navDestinations: PublicDestination[] | undefined;
-  try {
-    const bundle = await Promise.race([
-      loadHomePageBundle(),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('home bundle timeout')), 8000)),
-    ]);
-    data = normalizeHomePagePayload(bundle.data);
-    homeContent = resolveHomePageContent(bundle.content);
-    navDestinations = bundle.destinations;
-  } catch (error) {
-    console.error('[Public] Home page bundle failed:', error);
-    data = EMPTY_HOME_PAGE_PAYLOAD;
-    homeContent = resolveHomePageContent(null);
-  }
-
-  try {
-    initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(data.countries));
-  } catch (error) {
-    console.error('[Public] Home hero slides failed:', error);
-    initialHeroSlides = safeHeroSlides([]);
-  }
-
-  const countries = data?.countries ?? [];
-  const tours = data?.tours ?? [];
-  const updates = data?.updates ?? [];
-  const categories = data?.categories ?? [];
+  const bundle = await loadHomePageBundleResilient();
+  const { data, homeContent, destinations, needsClientRefresh } = prepareHomePageRenderState(bundle);
+  const initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(data.countries));
 
   return (
-    <PublicShellServer initialDestinations={navDestinations}>
+    <PublicShellServer initialDestinations={destinations}>
       <HomePageClient
-        initialHeroSlides={initialHeroSlides ?? []}
-        initialCountries={countries}
-        initialTours={tours}
-        initialUpdates={updates}
-        initialCategories={categories}
+        initialHeroSlides={initialHeroSlides}
+        initialCountries={data.countries}
+        initialTours={data.tours}
+        initialUpdates={data.updates}
+        initialCategories={data.categories}
         initialHomeContent={homeContent}
+        needsClientRefresh={needsClientRefresh}
       />
     </PublicShellServer>
   );

@@ -11,10 +11,12 @@ import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
-import { resolveHomePageContent } from '@/lib/home-page-payload';
+import { buildHomeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
+import { fallbackHomeCountryRows } from '@/lib/home-page-fallback';
+import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
+import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { canonicalCountrySlug, publicCountrySlug, publicCountryLabel } from '@/lib/country-utils';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import {
@@ -44,6 +46,7 @@ type HomePageClientProps = {
   initialUpdates: RecordRow[];
   initialCategories: RecordRow[];
   initialHomeContent?: HomePageContent | null;
+  needsClientRefresh?: boolean;
 };
 
 export default function HomePageClient({
@@ -53,21 +56,45 @@ export default function HomePageClient({
   initialUpdates,
   initialCategories,
   initialHomeContent,
+  needsClientRefresh = false,
 }: HomePageClientProps) {
   const [slide, setSlide] = useState(0);
   const homeContent = useMemo(
     () => resolveHomePageContent(initialHomeContent),
     [initialHomeContent]
   );
-  const countries = initialCountries ?? [];
-  const tours = initialTours ?? [];
-  const updates = initialUpdates ?? [];
-  const categories = initialCategories ?? [];
 
-  const heroSlides = useMemo(
-    () => (initialHeroSlides ?? []).filter((item) => Boolean(resolvePublicImage(item?.image))),
-    [initialHeroSlides]
+  const initialPayload = useMemo(
+    () => ({
+      countries: initialCountries ?? [],
+      tours: initialTours ?? [],
+      updates: initialUpdates ?? [],
+      categories: initialCategories ?? [],
+    }),
+    [initialCategories, initialCountries, initialTours, initialUpdates]
   );
+
+  const { data: liveData, heroSlides: recoveredHeroSlides } = useHomePageRecovery({
+    initialData: initialPayload,
+    initialHeroSlides: initialHeroSlides ?? [],
+    needsClientRefresh,
+  });
+
+  const countries = liveData.countries;
+  const tours = liveData.tours;
+  const updates = liveData.updates;
+  const categories = liveData.categories;
+
+  const heroSlides = useMemo(() => {
+    const fromRecovery = (recoveredHeroSlides ?? []).filter((item) =>
+      Boolean(resolvePublicImage(item?.image))
+    );
+    if (fromRecovery.length) return fromRecovery;
+    const fromProps = safeHeroSlides(initialHeroSlides ?? []);
+    if (fromProps.length) return fromProps;
+    const seedCountries = countries.length ? countries : fallbackHomeCountryRows();
+    return safeHeroSlides(buildHomeHeroSlides(seedCountries));
+  }, [recoveredHeroSlides, initialHeroSlides, countries]);
 
   useEffect(() => {
     if (heroSlides.length === 0) return undefined;
