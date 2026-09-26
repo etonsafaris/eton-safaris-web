@@ -1,0 +1,2 @@
+# For purge_conflicting_countries.py
+psycopg2-binary>=2.9.9

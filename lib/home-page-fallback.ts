@@ -1,18 +1,45 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { publicCountrySlug } from '@/lib/country-utils';
+import { officialCountryHeroPath } from '@/lib/official-country-assets';
+import { pickString } from '@/lib/data';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { resolveHomePageContent, type HomePagePayload, normalizeHomePagePayload } from '@/lib/home-page-payload';
 import type { RecordRow } from '@/lib/types';
 
-/** Minimal published country rows so destination + hero sections always have content. */
+function countryRowSlug(row: RecordRow): string {
+  return (
+    publicCountrySlug(row) ||
+    NAV_COUNTRIES.find((nav) => recordMatchesCountrySlug(row, nav.slug))?.slug ||
+    ''
+  );
+}
+
+/** Align CMS country row with official hero path when cover is missing or a conflicting duplicate. */
+export function sanitizeCountryRowForDisplay(row: RecordRow): RecordRow {
+  const slug = countryRowSlug(row);
+  if (!slug) return row;
+  const official = officialCountryHeroPath(slug);
+  const current = pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']);
+  const path = current.split('?')[0];
+  const conflict =
+    !current ||
+    /\/heroes\/community/i.test(path) ||
+    /eton-safaris-gorilla/i.test(path) ||
+    (path.startsWith('/heroes/') && path !== official.split('?')[0]);
+  if (!conflict) return row;
+  return { ...row, image_url: official, slug: row.slug || slug };
+}
+
+/** Minimal published country rows — official hero path only (no legacy thumbnails). */
 export function fallbackHomeCountryRows(): RecordRow[] {
   return NAV_COUNTRIES.map(({ slug, name }) => ({
     slug,
     name,
     title: name,
     status: 'published',
+    image_url: officialCountryHeroPath(slug),
   }));
 }
 
@@ -53,9 +80,10 @@ export function mergeHomePagePayload(
   live: HomePagePayload,
   fallback: HomePagePayload = STATIC_FALLBACK_HOME_PAYLOAD
 ): HomePagePayload {
-  const countries = live.countries.length
+  const countries = (live.countries.length
     ? orderHomeCountryRows(live.countries)
-    : orderHomeCountryRows(fallback.countries);
+    : orderHomeCountryRows(fallback.countries)
+  ).map(sanitizeCountryRowForDisplay);
   return {
     countries,
     tours: live.tours.length ? live.tours : fallback.tours,
