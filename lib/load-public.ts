@@ -121,6 +121,11 @@ function toClientProps<T>(value: T): T {
   ) as T;
 }
 
+/** CMS static pages — fail fast during SSG when Aiven pool is exhausted. */
+export async function loadCmsPageResilient(slug: string, ms = 8000) {
+  return withTimeout(loadCmsPage(slug), ms, null);
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(fallback), ms);
