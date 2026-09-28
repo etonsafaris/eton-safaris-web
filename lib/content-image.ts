@@ -6,7 +6,13 @@ import {
 } from '@/lib/category-display-image';
 import { publicCountrySlug, canonicalCountrySlug } from '@/lib/country-utils';
 import { officialCountryHeroPath } from '@/lib/official-country-assets';
-import { isLiveCmsImage, isStoredCmsMediaPath, normalizeStoredMediaPath, resolvePublicImage } from '@/lib/public-image';
+import {
+  isLiveCmsImage,
+  isStoredCmsMediaPath,
+  isSupabaseStorageUrl,
+  normalizeStoredMediaPath,
+  resolvePublicImage,
+} from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function pickString(record: RecordRow, keys: string[]): string {
@@ -127,6 +133,7 @@ function resolveImageFieldForRecord(
   options?: { skipGenericStockUnsplash?: boolean }
 ): string | null {
   const normalized = normalizeStoredMediaPath(value.trim());
+  if (isSupabaseStorageUrl(normalized)) return null;
   if (isGenericStockUnsplashUrl(normalized) && options?.skipGenericStockUnsplash) {
     return null;
   }

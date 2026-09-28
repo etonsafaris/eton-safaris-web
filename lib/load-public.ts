@@ -456,7 +456,7 @@ async function loadToursPageDataLive() {
 }
 
 export async function loadToursPageData() {
-  return cachedPublic(['tours-page-data-v3-tour-cms-images'], ['collection:tours'], loadToursPageDataLive);
+  return cachedPublic(['tours-page-data-v4-aiven-media-only'], ['collection:tours'], loadToursPageDataLive);
 }
 
 export async function loadDestinationsIndexCountries() {
@@ -469,7 +469,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v6-tour-cms-images', normalized],
+      ['country-page-data-v7-aiven-media-only', normalized],
       ['collection:countries', `country:${normalized}`],
       () => loadCountryPageDataInner(normalized)
     );

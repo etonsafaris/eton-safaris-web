@@ -96,6 +96,7 @@ function normalizeCardImageUrl(raw: string): string {
 const BROKEN_MARKERS = [
   'eton-safaris-gorilla',
   'media.base44.com',
+  'supabase.co/storage',
   '/object/authenticated/',
   '/object/sign/',
   'placeholder',

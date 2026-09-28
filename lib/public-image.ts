@@ -2,6 +2,12 @@ export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
 
+/** Legacy Supabase Storage — images must be served from Aiven `media_files` via `/api/media/`. */
+export function isSupabaseStorageUrl(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  return /supabase\.co\/storage/i.test(value.trim());
+}
+
 /** Uploaded files saved as `/api/media/{id}` or the `/cms-media/{id}` rewrite alias. */
 export function isStoredCmsMediaPath(value: unknown): boolean {
   if (typeof value !== 'string') return false;
@@ -61,6 +67,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
   if (src.startsWith('{') || src.startsWith('[')) return false;
   if (/^(blob:|data:)/i.test(src)) return false;
   if (/media\.base44\.com/i.test(src)) return false;
+  if (isSupabaseStorageUrl(src)) return false;
   if (/\/object\/authenticated\//i.test(src) || /\/object\/sign\//i.test(src)) return false;
 
   const normalized = normalizeStoredMediaPath(src);
@@ -72,6 +79,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
 
   try {
     const url = new URL(src);
+    if (/supabase\.co$/i.test(url.hostname)) return false;
     if (isLocalDevHost(url.hostname)) return false;
     if (isThisSiteHost(url.hostname) && isLocalUploadPath(url.pathname)) {
       return allowLocalOnlyPaths();
@@ -110,6 +118,7 @@ export function isLiveCmsImage(value: unknown): value is string {
   const src = value.trim();
   const pathname = imagePathname(src);
   if (pathname.startsWith('/heroes/')) return false;
+  if (isSupabaseStorageUrl(src)) return false;
   if (/images\.unsplash\.com/i.test(src)) return false;
   if (isStoredCmsMediaPath(pathname) || pathname.startsWith('/api/media/')) return true;
   return true;

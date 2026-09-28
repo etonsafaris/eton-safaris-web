@@ -138,7 +138,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
-        <link rel="preconnect" href="https://motdytmcyozioshhgdvh.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body className="bg-white font-sans">

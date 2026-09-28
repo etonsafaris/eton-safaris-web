@@ -36,6 +36,7 @@ const DEFAULT_SAFARI = unsplash('photo-1516426122078-c23e9931aeeb');
 const BROKEN_MARKERS = [
   'eton-safaris-gorilla',
   'media.base44.com',
+  'supabase.co/storage',
   '/uploads/',
   'localhost',
   '127.0.0.1',
