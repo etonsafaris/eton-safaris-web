@@ -10,6 +10,7 @@ import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
+import HomeCategoriesSection from '@/components/public/HomeCategoriesSection';
 import PageFaqList from '@/components/public/PageFaqList';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
@@ -299,6 +300,8 @@ export default function HomePageClient({
       ) : null}
 
       <TourSearchBar tours={tours ?? []} categories={categories ?? []} destinations={destinationOptions ?? []} />
+
+      <HomeCategoriesSection categories={categories} />
 
       <section className="cv-auto py-16">
         <div className="mx-auto max-w-7xl px-4">

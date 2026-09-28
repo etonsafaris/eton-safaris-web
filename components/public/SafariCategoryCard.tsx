@@ -1,4 +1,5 @@
-import { getRecordImage, getRecordTitle } from '@/lib/data';
+import CategoryThumbnail from '@/components/public/CategoryThumbnail';
+import { getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 import Link from 'next/link';
 
@@ -24,23 +25,33 @@ export default function SafariCategoryCard({
   image: imageOverride,
 }: SafariCategoryCardProps) {
   const title = getRecordTitle(category);
-  const image = imageOverride || getRecordImage(category);
 
   const inner = (
     <>
-      <div className="h-[130px] overflow-hidden rounded-[15px] bg-gray-100">
-        {image ? (
+      <div
+        className="relative h-[130px] w-full overflow-hidden rounded-[15px] bg-gray-100"
+        style={{ minHeight: 130, aspectRatio: '320 / 130' }}
+      >
+        {imageOverride ? (
           <img
-            src={image}
+            src={imageOverride}
             alt={title}
             width={320}
             height={130}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
+            onError={(event) => {
+              try {
+                const img = event.currentTarget;
+                img.style.visibility = 'hidden';
+              } catch {
+                // ignore
+              }
+            }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
+          <CategoryThumbnail category={category} alt={title ? `${title} safari category` : 'Safari category'} />
         )}
       </div>
       <h5 className="px-1 py-3 text-center text-[15px] font-medium leading-[18px] text-[#323637]">

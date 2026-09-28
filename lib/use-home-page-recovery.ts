@@ -37,7 +37,8 @@ export function useHomePageRecovery(options: {
       heroSlides.length === 0 ||
       data.tours.length === 0 ||
       data.updates.length === 0 ||
-      data.countries.length === 0;
+      data.countries.length === 0 ||
+      data.categories.length === 0;
     if (!sparse || attemptedRef.current) return undefined;
     attemptedRef.current = true;
 
@@ -62,7 +63,14 @@ export function useHomePageRecovery(options: {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [needsClientRefresh, heroSlides.length, data.tours.length, data.updates.length, data.countries.length]);
+  }, [
+    needsClientRefresh,
+    heroSlides.length,
+    data.tours.length,
+    data.updates.length,
+    data.countries.length,
+    data.categories.length,
+  ]);
 
   return { data, heroSlides };
 }

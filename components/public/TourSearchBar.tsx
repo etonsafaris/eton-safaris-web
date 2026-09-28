@@ -433,7 +433,7 @@ export default function TourSearchBar({
 
               <option value="">All activities</option>
 
-              {categories.map((item, index) => (
+              {categories?.map((item, index) => (
 
                 <option key={String(item.id ?? index)} value={getRecordTitle(item)}>
 

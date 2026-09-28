@@ -95,7 +95,12 @@ export function mergeHomePagePayload(
 /** True when live CMS data is missing key home sections (before render-time merge). */
 export function isHomeLiveDataSparse(data?: Partial<HomePagePayload> | null): boolean {
   const normalized = normalizeHomePagePayload(data);
-  return normalized.tours.length === 0 || normalized.updates.length === 0 || normalized.countries.length === 0;
+  return (
+    normalized.tours.length === 0 ||
+    normalized.updates.length === 0 ||
+    normalized.countries.length === 0 ||
+    normalized.categories.length === 0
+  );
 }
 
 export type HomePageRenderState = {

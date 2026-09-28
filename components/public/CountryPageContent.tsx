@@ -117,7 +117,7 @@ export default function CountryPageContent({
     summaryHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() !==
       descriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-  const categoryItems = categories.map((category, index) => (
+  const categoryItems = (categories ?? [])?.map((category, index) => (
     <SafariCategoryCard
       key={String(category.id ?? index)}
       category={category}
