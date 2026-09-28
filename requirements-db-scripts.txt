@@ -1,2 +1,2 @@
-# For purge_conflicting_countries.py
+# For purge_conflicting_countries.py and load_real_safari_photos.py
 psycopg2-binary>=2.9.9
