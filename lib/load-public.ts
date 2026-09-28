@@ -417,8 +417,8 @@ async function loadToursPageDataLive() {
   try {
     const [tourPage, categories, countries] = await Promise.all([
       withTimeout(
-        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }),
-        6000,
+        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 120, offset: 0 }),
+        12000,
         { rows: [] as RecordRow[], total: 0 }
       ),
       withTimeout(
@@ -432,16 +432,23 @@ async function loadToursPageDataLive() {
         [] as RecordRow[]
       ),
     ]);
+    let tours = tourPage.rows.filter(isPublishedRecord);
+    if (!tours.length) {
+      tours = await withTimeout(resolvePublicTours({ limit: 120 }), 10000, [] as RecordRow[]).catch(
+        () => [] as RecordRow[]
+      );
+    }
     return toClientProps({
-      tours: tourPage.rows.filter(isPublishedRecord),
-      total: Math.max(tourPage.total, tourPage.rows.length),
+      tours,
+      total: Math.max(tourPage.total, tours.length, tourPage.rows.length),
       categories: categories.filter(isPublishedRecord),
       countries: countries.filter(isPublishedRecord),
     });
   } catch {
+    const fallback = await resolvePublicTours({ limit: 120 }).catch(() => [] as RecordRow[]);
     return {
-      tours: [] as RecordRow[],
-      total: 0,
+      tours: fallback,
+      total: fallback.length,
       categories: [] as RecordRow[],
       countries: [] as RecordRow[],
     };
@@ -449,7 +456,7 @@ async function loadToursPageDataLive() {
 }
 
 export async function loadToursPageData() {
-  return cachedPublic(['tours-page-data-v1'], ['collection:tours'], loadToursPageDataLive);
+  return cachedPublic(['tours-page-data-v2-resolve'], ['collection:tours'], loadToursPageDataLive);
 }
 
 export async function loadDestinationsIndexCountries() {
@@ -787,21 +794,26 @@ async function loadSafariUpdateDetailLive(slug: string) {
           .slice(0, 20)
       : [];
     const country = published ? pickStoredString(published, ['country', 'category']) : '';
-    const tours = published
+    const countryKey = country ? canonicalCountrySlug(country) || normalizeSlug(country) : '';
+    const toursRaw = published
       ? await withTimeout(
           resolvePublicTours({
             country,
-            limit: 12,
+            limit: 24,
             excludeId: published.id != null ? String(published.id) : undefined,
           }),
-          6000,
+          8000,
           [] as RecordRow[]
         )
       : [];
+    const tours = countryKey
+      ? (toursRaw ?? []).filter((row) => matchesCountry(row, countryKey))
+      : toursRaw ?? [];
+    const tourPool = tours.length ? tours : (toursRaw ?? []).slice(0, 12);
     return toClientProps({
       post: published,
       related,
-      tours: (tours ?? []).slice(0, 12),
+      tours: tourPool.slice(0, 12),
     });
   } catch (error) {
     console.warn('[Public] loadSafariUpdateDetail failed:', slug, error);

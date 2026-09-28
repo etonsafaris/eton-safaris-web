@@ -470,6 +470,30 @@ export function stripHtml(value: string): string {
     .trim();
 }
 
-export function visibleRecordHtml(record: RecordRow | null | undefined, keys: string[] = ['description', 'content', 'summary', 'excerpt', 'overview', 'about', 'body']): string {
-  return stripEmbeddedContent(pickString(record || {}, keys));
+const BODY_FIELD_KEYS = [
+  'content',
+  'description',
+  'body',
+  'html',
+  'post_content',
+  'article',
+  'text',
+  'summary',
+  'excerpt',
+  'overview',
+  'about',
+];
+
+export function visibleRecordHtml(
+  record: RecordRow | null | undefined,
+  keys: string[] = BODY_FIELD_KEYS
+): string {
+  const merged = [...keys, ...BODY_FIELD_KEYS];
+  const html = stripEmbeddedContent(pickString(record || {}, merged));
+  if (html) return html;
+  const blocks = record?.content_blocks ?? record?.blocks;
+  if (typeof blocks === 'string' && blocks.trim()) {
+    return stripEmbeddedContent(blocks);
+  }
+  return '';
 }

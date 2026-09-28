@@ -22,9 +22,8 @@ export default function SpeakToExpertCard({
     const destination = countryName || 'destination';
     return (
       <aside className={`bg-[#f8f9fa] px-5 py-[17px] ${className}`}>
-        <h2 className="mb-3 text-center font-merry text-[1.4rem] font-medium italic leading-[1.4] text-[#343434]">
-          Speak to an expert
-          <br /> who&apos;s there
+        <h2 className="mb-3 text-center font-merry text-[1.4rem] font-medium italic leading-snug text-[#343434]">
+          Speak to an expert who&apos;s there
         </h2>
         <div className="flex items-start">
           <img

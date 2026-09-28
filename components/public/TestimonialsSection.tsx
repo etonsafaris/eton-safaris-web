@@ -119,6 +119,10 @@ export default function TestimonialsSection() {
     );
   });
 
+  if (!reviews.length) {
+    return null;
+  }
+
   return (
     <section className="bg-forest py-14 text-white md:py-20">
       <div className="mx-auto max-w-[900px] px-4 md:px-6">

@@ -17,9 +17,11 @@ import type { RecordRow } from '@/lib/types';
 export default function TourCard({
   tour,
   durationBadge = false,
+  showPublishedDate = true,
 }: {
   tour: RecordRow | null | undefined;
   durationBadge?: boolean;
+  showPublishedDate?: boolean;
 }) {
   if (!tour) {
     return (
@@ -71,7 +73,7 @@ export default function TourCard({
       <div className="flex flex-1 flex-col p-4">
         <Link href={`/tours/${slug}`} className="block">
           <h3 className="public-article-body text-[15px] font-bold leading-snug text-[#111]">{tourTitle}</h3>
-          {formatPublishedDate(tour) ? (
+          {showPublishedDate && formatPublishedDate(tour) ? (
             <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">
               {formatPublishedDate(tour)}
             </p>

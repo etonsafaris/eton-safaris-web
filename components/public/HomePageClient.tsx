@@ -37,6 +37,7 @@ import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { resolvePublicImage } from '@/lib/public-image';
 import { stripPublicMoney } from '@/lib/public-money';
+import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import type { RecordRow } from '@/lib/types';
 
 type HomePageClientProps = {
@@ -135,7 +136,7 @@ export default function HomePageClient({
     const preferred = pool.filter(
       (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
     );
-    return (preferred.length ? preferred : pool).slice(0, 12);
+    return orderHomeFeaturedTours(preferred.length ? preferred : pool, 12);
   }, [tours]);
 
   const tourItems = (featuredTours ?? []).map((tour, index) => (

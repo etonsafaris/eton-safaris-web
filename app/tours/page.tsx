@@ -12,6 +12,17 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://etonsafaris.com/tours',
   },
+  openGraph: {
+    title: 'Safari Tours | Eton Safaris',
+    description:
+      'Browse gorilla trekking and wildlife safari tours across Uganda, Kenya, Tanzania, and Rwanda.',
+    url: 'https://etonsafaris.com/tours',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Safari Tours | Eton Safaris',
+  },
 };
 
 function param(value?: string | string[]) {

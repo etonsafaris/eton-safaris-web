@@ -3,6 +3,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { officialCountryHeroPath } from '@/lib/official-country-assets';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
+import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import { safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { NAV_COUNTRIES } from '@/lib/collections';
@@ -41,8 +42,8 @@ function pickFeaturedTours(tours: RecordRow[]): RecordRow[] {
     const preferred = pool?.filter(
       (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
     );
-    const list = (preferred?.length ? preferred : pool)?.slice(0, 12) ?? [];
-    return list;
+    const list = preferred?.length ? preferred : pool;
+    return orderHomeFeaturedTours(list ?? [], 12);
   } catch (error) {
     console.warn('[Public] Home featured tours pick failed:', error);
     return [];

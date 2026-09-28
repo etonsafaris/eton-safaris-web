@@ -9,10 +9,11 @@ import ListingSection, { ListingGrid } from '@/components/public/ListingSection'
 import PageFaqList from '@/components/public/PageFaqList';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
-import { fetchCollectionPage, getRecordImage, isPublishedRecord, recordPublishedAt, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
+import { fetchCollectionPage, getRecordImage, isPublishedRecord, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
 import DiscoverySearchSection from '@/components/public/DiscoverySearchSection';
 import { bestFaqsFor } from '@/lib/best-faqs';
+import { deriveCategoriesFromTours } from '@/lib/derive-tour-categories';
 import type { RecordRow } from '@/lib/types';
 
 export default function ToursPageClient({
@@ -86,6 +87,11 @@ export default function ToursPageClient({
 
   const destinationOptions = useMemo(() => publicDestinationNames(mergePublicDestinations(countries)), [countries]);
 
+  const activityCategories = useMemo(
+    () => deriveCategoriesFromTours(categories, tours),
+    [categories, tours]
+  );
+
   const filtered = useMemo(
     () => searchPublishedTours(tours, q, destination, category, days),
     [tours, q, destination, category, days]
@@ -98,15 +104,14 @@ export default function ToursPageClient({
         subtitle={
           q || destination || category || days
             ? `${filtered.length.toLocaleString()} package${filtered.length === 1 ? '' : 's'}${q ? ` for “${q}”` : ''}${destination ? ` in ${destination}` : ''}${category ? ` · ${category}` : ''}${days ? ` · ${days} days` : ''}${depart ? ` · departing ${depart}` : ''}`
-            : `${(initialTotal || filtered.length).toLocaleString()} Total Packages from the live database.`
+            : `${(initialTotal || tours.length || filtered.length).toLocaleString()} safari packages available`
         }
         image={filtered[0] ? getRecordImage(filtered[0]) : undefined}
-        published={filtered[0] ? recordPublishedAt(filtered[0]) || undefined : undefined}
       />
       <div className="bg-[#f3f3f3] pb-4 pt-2">
         <TourSearchBar
           tours={tours}
-          categories={categories}
+          categories={activityCategories}
           destinations={destinationOptions}
           initialQuery={q}
           initialDestination={destination || 'All destinations'}
@@ -125,7 +130,7 @@ export default function ToursPageClient({
           <div className="mt-8">
             <ListingGrid>
               {filtered.map((tour, index) => (
-                <TourCard key={String(tour.id ?? index)} tour={tour} />
+                <TourCard key={String(tour.id ?? index)} tour={tour} showPublishedDate={false} />
               ))}
             </ListingGrid>
           </div>

@@ -184,7 +184,9 @@ export default function SafariUpdateDetailClient({
             )}
             <PublicHtml
               className="public-prose max-w-none text-black"
-              html={publicBodyHtml(visibleRecordHtml(post, ['content', 'description']))}
+              html={publicBodyHtml(
+                visibleRecordHtml(post, ['content', 'description', 'body', 'html', 'post_content', 'article'])
+              )}
             />
             <ContentBlocks record={post} />
           </>
