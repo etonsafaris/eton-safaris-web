@@ -125,7 +125,10 @@ export const supabase = {
       }
       return { data: { user: body.user || null }, error: null };
     },
-    resetPasswordForEmail: async (_email: string) => ({
+    resetPasswordForEmail: async (
+      _email: string,
+      _options?: { redirectTo?: string }
+    ) => ({
       data: {},
       error: {
         message:

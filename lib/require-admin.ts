@@ -23,7 +23,7 @@ async function findStaffAgentByEmail(
       const row = result.rows[0];
       if (!row) continue;
       if (isOwnerAdminEmail(String(row.email || row.Email || ''))) return row;
-      if (isStaffRole(row.role) && agentIsActive(row)) return row;
+      if (isStaffRole(row.role) && agentIsActive(row as import('@/lib/types').RecordRow)) return row;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (!/relation .* does not exist/i.test(message)) {

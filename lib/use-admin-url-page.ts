@@ -17,10 +17,11 @@ export function useAdminUrlPage(maxPage?: number) {
   const pathname = usePathname() || '';
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryString = searchParams?.toString() ?? '';
 
   const page = useMemo(
-    () => parseAdminPageParam(searchParams.get('page'), maxPage),
-    [searchParams, maxPage]
+    () => parseAdminPageParam(new URLSearchParams(queryString).get('page'), maxPage),
+    [queryString, maxPage]
   );
 
   const setPage = useCallback(
@@ -28,25 +29,25 @@ export function useAdminUrlPage(maxPage?: number) {
       const resolved = typeof next === 'function' ? next(page) : next;
       let safe = Math.max(1, resolved);
       if (maxPage && maxPage > 0) safe = Math.min(safe, maxPage);
-      const params = new URLSearchParams(searchParams.toString());
+      const nextParams = new URLSearchParams(queryString);
       if (safe <= 1) {
-        params.delete('page');
+        nextParams.delete('page');
       } else {
-        params.set('page', String(safe));
+        nextParams.set('page', String(safe));
       }
-      const qs = params.toString();
+      const qs = nextParams.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [maxPage, page, pathname, router, searchParams]
+    [maxPage, page, pathname, router, queryString]
   );
 
   const resetPage = useCallback(() => {
-    if (!searchParams.get('page')) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('page');
-    const qs = params.toString();
+    if (!new URLSearchParams(queryString).get('page')) return;
+    const nextParams = new URLSearchParams(queryString);
+    nextParams.delete('page');
+    const qs = nextParams.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams]);
+  }, [pathname, router, queryString]);
 
   return { page, setPage, resetPage };
 }

@@ -19,9 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
     description: values.meta_description || (row && pickString(row, ['excerpt', 'meta_description'])) || undefined,
     path: '/community-support',
     image: (row && getRecordImage(row)) || undefined,
-    alternates: {
-      canonical: 'https://etonsafaris.com/community-support',
-    },
   });
 }
 

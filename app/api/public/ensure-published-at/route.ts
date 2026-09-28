@@ -63,7 +63,8 @@ export async function POST(request: Request) {
     }
 
     const stamp = publishStampForSave(
-      String(row.created_at || row.created_date || row.updated_at || row.updated_date || '')
+      String(row.created_at || row.created_date || row.updated_at || row.updated_date || ''),
+      true
     );
 
     const saved = await saveWithColumnFallback(table, { published_at: stamp }, { id, client });

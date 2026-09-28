@@ -33,7 +33,7 @@ export function useCmsPageReload(
     }
     
     isReloading.current = true;
-    void reload().finally(() => {
+    void Promise.resolve(reload()).finally(() => {
       isReloading.current = false;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

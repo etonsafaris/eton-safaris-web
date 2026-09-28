@@ -126,7 +126,10 @@ async function handleIpn(request: Request) {
     const supabase = createAdminClient();
     let paymentQuery = supabase.from('pesapal_payments').select('*');
     if (trackingId) {
-      paymentQuery = paymentQuery.or(`order_tracking_id.eq.${trackingId},reference.eq.${reference}`);
+      paymentQuery = paymentQuery.or([
+        { column: 'order_tracking_id', value: trackingId },
+        { column: 'reference', value: reference },
+      ]);
     } else {
       paymentQuery = paymentQuery.eq('reference', reference);
     }

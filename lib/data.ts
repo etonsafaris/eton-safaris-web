@@ -320,7 +320,10 @@ export function pickNumber(record: RecordRow, keys: string[], fallback = 0): num
 
 export function pickRecordId(record: RecordRow | null | undefined): string | number | null {
   if (!record) return null;
-  return record.id ?? record.ID ?? record.Id ?? null;
+  const raw = record.id ?? record.ID ?? record.Id ?? null;
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'string' || typeof raw === 'number') return raw;
+  return String(raw);
 }
 
 export function pickDateValue(record: RecordRow, keys: string[], fallback = ''): string {

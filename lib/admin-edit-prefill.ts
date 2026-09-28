@@ -17,7 +17,7 @@ export function stashAdminEditRecord(
   const id = recordId != null ? String(recordId) : pickRecordId(record);
   if (!id) return;
   try {
-    sessionStorage.setItem(storageKey(collectionId, id), JSON.stringify(record));
+    sessionStorage.setItem(storageKey(collectionId, String(id)), JSON.stringify(record));
   } catch {
     // private mode / quota
   }

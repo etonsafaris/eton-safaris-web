@@ -93,7 +93,7 @@ export default function SafariUpdateDetailClient({
             };
             if (cancelled) return;
             if (isReadableSafariPost(body.post)) {
-              setPost(body.post);
+              setPost(body.post ?? null);
               if (body.related?.length) setRelated(body.related);
               if (body.tours?.length) setTours(body.tours);
             }
@@ -118,7 +118,7 @@ export default function SafariUpdateDetailClient({
           tours?: RecordRow[];
         };
         if (cancelled || !isReadableSafariPost(body.post)) return;
-        setPost(body.post);
+        setPost(body.post ?? null);
         if (body.related?.length) setRelated(body.related);
         if (body.tours?.length) setTours(body.tours);
       } catch (error) {

@@ -10,7 +10,7 @@ async function findAuthUserByEmail(client: SupabaseClient, email: string): Promi
   if (!needle.includes('@')) return null;
   try {
     const listed = await client.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const match = listed.data.users.find((user) => asEmail(user.email || '') === needle);
+    const match = listed.data.users.find((user: User) => asEmail(user.email || '') === needle);
     if (match) return match;
   } catch {
     return null;

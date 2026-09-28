@@ -32,7 +32,7 @@ function resolveOptions(
   client?: DatabaseClient
 ): Required<Pick<SaveOptions, 'client'>> & SaveOptions {
   if (isSaveOptions(idOrOptions)) {
-    return { ...idOrOptions, client: idOrOptions.client || client || defaultClient };
+    return { ...idOrOptions, client: idOrOptions.client || client || createAdminClient() };
   }
   return {
     id: idOrOptions ?? undefined,
@@ -292,7 +292,13 @@ export async function saveWithColumnFallback(
         continue;
       }
 
-      return { data: null, error: { message: writeOnly.error.message, code: writeOnly.error.code } };
+      return {
+        data: null,
+        error: {
+          message: writeOnly.error.message,
+          code: 'code' in writeOnly.error ? String(writeOnly.error.code) : undefined,
+        },
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch';
       if (attempt < 2 && /failed to fetch|networkerror|load failed/i.test(message)) {

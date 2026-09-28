@@ -30,7 +30,6 @@ function createAivenPool(): PgPool {
   if (!normalizedConnectionString) {
     throw new Error('Aiven DATABASE_URL is not configured.');
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Pool } = require('pg') as typeof import('pg');
   const pool = new Pool({
     connectionString: normalizedConnectionString,

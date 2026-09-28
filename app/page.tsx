@@ -7,6 +7,7 @@ import { safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
+import type { PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 import { Metadata } from 'next';
 
@@ -92,7 +93,7 @@ function safeHomeListMap<T>(
 
 export default async function HomePage() {
   let homeContent = null;
-  let destinations = undefined as ReturnType<typeof prepareHomePageRenderState>['destinations'];
+  let destinations: PublicDestination[] | undefined;
   let needsClientRefresh = false;
   let payload: HomePagePayload = {
     countries: [],

@@ -34,8 +34,15 @@ export default function CoverImageField({
     setOptimizing(true);
     setError('');
     try {
-      const url = await uploadOptimizedImage(file, folder);
-      if (typeof window !== 'undefined' && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) && !isLiveCmsImage(url) && !url.startsWith('/api/media/') && !url.startsWith('/cms-media/')) {
+      const url: string = await uploadOptimizedImage(file, folder);
+      const href = String(url);
+      const isMediaPath = href.startsWith('/api/media/') || href.startsWith('/cms-media/');
+      const deployableOnProd = isMediaPath || isLiveCmsImage(href);
+      if (
+        typeof window !== 'undefined' &&
+        !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) &&
+        !deployableOnProd
+      ) {
         throw new Error(
           'This image will not appear on the public website. Upload a JPG, PNG, or WebP and try again.'
         );

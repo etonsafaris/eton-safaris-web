@@ -198,15 +198,17 @@ async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> 
   const navRows: RecordRow[] = [];
 
   for (const nav of NAV_COUNTRIES) {
-    let match = published.find((row) => recordMatchesCountrySlug(row, nav.slug));
+    let match: RecordRow | undefined = published.find((row) => recordMatchesCountrySlug(row, nav.slug));
     if (!match) {
-      match = await withTimeout(fetchRecordByPublicSlug('countries', nav.slug), 4500, null);
+      match =
+        (await withTimeout(fetchRecordByPublicSlug('countries', nav.slug), 4500, null)) ?? undefined;
       if (match?.id != null) {
-        match = await withTimeout(
-          fetchCollectionRecordById('countries', String(match.id)),
-          4500,
-          match
-        );
+        match =
+          (await withTimeout(
+            fetchCollectionRecordById('countries', String(match.id)),
+            4500,
+            match
+          )) ?? undefined;
       }
     }
     if (match && isPublishedRecord(match)) {
