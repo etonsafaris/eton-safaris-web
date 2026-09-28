@@ -57,15 +57,6 @@ function pickHomeCountries(countries: RecordRow[]): RecordRow[] {
   }
 }
 
-function pickHomeCategories(categories: RecordRow[]): RecordRow[] {
-  try {
-    return categories?.slice(0, 64) ?? [];
-  } catch (error) {
-    console.warn('[Public] Home categories slice failed:', error);
-    return [];
-  }
-}
-
 export default async function HomePage() {
   let homeContent = null;
   let destinations = undefined as ReturnType<typeof prepareHomePageRenderState>['destinations'];
@@ -105,7 +96,6 @@ export default async function HomePage() {
 
   const featuredTours = pickFeaturedTours(tours);
   const homeCountries = pickHomeCountries(countries);
-  const homeCategories = pickHomeCategories(categories);
 
   return (
     <>
@@ -116,7 +106,7 @@ export default async function HomePage() {
           initialCountries={homeCountries ?? []}
           initialTours={featuredTours?.length ? featuredTours : tours ?? []}
           initialUpdates={updates ?? []}
-          initialCategories={homeCategories ?? []}
+          initialCategories={categories ?? []}
           initialHomeContent={homeContent}
           needsClientRefresh={needsClientRefresh}
         />
