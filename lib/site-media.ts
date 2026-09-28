@@ -1,20 +1,20 @@
-import { OFFICIAL_COMMUNITY_HERO_PATHS } from '@/lib/official-country-assets';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 
 /** Generic section heroes when CMS has no cover — never the brand logo on content cards. */
-const GENERIC = OFFICIAL_COMMUNITY_HERO_PATHS[0];
+const GENERIC = countryHeroRemoteFallback('uganda');
 
 export const SITE_MEDIA = {
-  communityHero: OFFICIAL_COMMUNITY_HERO_PATHS[0],
-  communityTourism: OFFICIAL_COMMUNITY_HERO_PATHS[1],
-  communityEducation: OFFICIAL_COMMUNITY_HERO_PATHS[3],
-  communityConservation: OFFICIAL_COMMUNITY_HERO_PATHS[2],
-  communityEmployment: OFFICIAL_COMMUNITY_HERO_PATHS[3],
-  talkToUsHero: OFFICIAL_COMMUNITY_HERO_PATHS[4],
+  communityHero: GENERIC,
+  communityTourism: countryHeroRemoteFallback('kenya'),
+  communityEducation: countryHeroRemoteFallback('rwanda'),
+  communityConservation: countryHeroRemoteFallback('tanzania'),
+  communityEmployment: countryHeroRemoteFallback('kenya'),
+  talkToUsHero: countryHeroRemoteFallback('uganda'),
   safariUpdatesHero: GENERIC,
-  gorillasForest: GENERIC,
-  wildlifeNationalPark: GENERIC,
-  safariVehicle: GENERIC,
-  elephantSunset: GENERIC,
+  gorillasForest: countryHeroRemoteFallback('uganda'),
+  wildlifeNationalPark: countryHeroRemoteFallback('kenya'),
+  safariVehicle: countryHeroRemoteFallback('tanzania'),
+  elephantSunset: countryHeroRemoteFallback('botswana'),
   gorillaVideo:
     'https://videos.pexels.com/video-files/31223125/13336255_720_1280_60fps.mp4',
   gorillaVideoFallback:

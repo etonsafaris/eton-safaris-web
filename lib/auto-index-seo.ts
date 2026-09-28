@@ -18,6 +18,7 @@ import {
   type SeoValues,
 } from '@/lib/seo';
 import { indexableContentKindForTable, type IndexableContentKind } from '@/lib/public-indexing';
+import { resolvePublicSiteOrigin } from '@/lib/site-origin';
 import type { RecordRow } from '@/lib/types';
 
 const MIN_BODY_WORDS: Record<IndexableContentKind, number> = {
@@ -44,15 +45,7 @@ function wordCount(text: string) {
 }
 
 export function publicSiteBaseUrl() {
-  const explicit =
-    (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SITE_URL : '') ||
-    (typeof window !== 'undefined' ? (window as unknown as { __ETON_SITE_URL?: string }).__ETON_SITE_URL : '') ||
-    '';
-  if (explicit.trim()) return explicit.trim().replace(/\/$/, '');
-  const vercel =
-    typeof process !== 'undefined' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '';
-  if (vercel) return vercel.replace(/\/$/, '');
-  return SITE.url.replace(/\/$/, '');
+  return resolvePublicSiteOrigin();
 }
 
 function kindToContentType(kind: IndexableContentKind): SeoContentType {

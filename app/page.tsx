@@ -1,7 +1,7 @@
 import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
-import { officialCountryHeroPath } from '@/lib/official-country-assets';
+import { buildHomeHeroSlides, fallbackHomeHeroSlides } from '@/lib/home-hero-slides';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
 import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import { safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
@@ -121,13 +121,15 @@ export default async function HomePage() {
 
   let initialHeroSlides = safeHeroSlides([]);
   try {
-    initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(countries));
+    const built = safeHeroSlides(buildHomeHeroSlides(countries));
+    initialHeroSlides = built.length ? built : safeHeroSlides(fallbackHomeHeroSlides());
   } catch (error) {
     console.warn('[Public] Home hero slides failed:', error);
+    initialHeroSlides = safeHeroSlides(fallbackHomeHeroSlides());
   }
 
   const lcpHero =
-    initialHeroSlides?.[0]?.image || officialCountryHeroPath(NAV_COUNTRIES?.[0]?.slug || 'uganda');
+    initialHeroSlides?.[0]?.image || countryHeroRemoteFallback(NAV_COUNTRIES?.[0]?.slug || 'uganda');
 
   let featuredTours: RecordRow[] = [];
   let homeCountries: RecordRow[] = [];

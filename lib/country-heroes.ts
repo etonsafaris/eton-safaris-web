@@ -1,5 +1,6 @@
 import { countrySlugFromLanding } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import {
   OFFICIAL_COUNTRY_HERO_PATHS,
   officialCountryHeroPath,
@@ -39,13 +40,13 @@ export function resolveCountrySlug(slug?: string | null, record?: RecordRow | nu
 const FILES = OFFICIAL_COUNTRY_HERO_PATHS;
 
 /** Generic safari fallback — never the Eton logo on destination cards. */
-export const DEFAULT_COUNTRY_HERO = officialCountryHeroPath('kenya');
+export const DEFAULT_COUNTRY_HERO = countryHeroRemoteFallback('kenya');
 
 export const COUNTRY_HERO_IMAGES = FILES;
 
 export function bundledCountryHero(slug?: string | null) {
   const key = countrySlugFromLanding(slug || '') || normalizeSlug(slug || '');
-  return officialCountryHeroPath(key || 'kenya');
+  return countryHeroRemoteFallback(key || 'kenya');
 }
 
 /** Map legacy duplicate `/heroes` paths to the single official file per country. */

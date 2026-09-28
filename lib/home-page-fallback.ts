@@ -1,7 +1,7 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { publicCountrySlug } from '@/lib/country-utils';
-import { officialCountryHeroPath } from '@/lib/official-country-assets';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { pickString } from '@/lib/data';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { HomePageContent } from '@/lib/home-page-content';
@@ -20,16 +20,17 @@ function countryRowSlug(row: RecordRow): string {
 export function sanitizeCountryRowForDisplay(row: RecordRow): RecordRow {
   const slug = countryRowSlug(row);
   if (!slug) return row;
-  const official = officialCountryHeroPath(slug);
+  const fallbackHero = countryHeroRemoteFallback(slug);
   const current = pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']);
   const path = current.split('?')[0];
   const conflict =
     !current ||
+    /supabase\.co\/storage/i.test(current) ||
     /\/heroes\/community/i.test(path) ||
     /eton-safaris-gorilla/i.test(path) ||
-    (path.startsWith('/heroes/') && path !== official.split('?')[0]);
+    (path.startsWith('/heroes/') && !current.startsWith('http'));
   if (!conflict) return row;
-  return { ...row, image_url: official, slug: row.slug || slug };
+  return { ...row, image_url: fallbackHero, slug: row.slug || slug };
 }
 
 /** Minimal published country rows — official hero path only (no legacy thumbnails). */
@@ -39,7 +40,7 @@ export function fallbackHomeCountryRows(): RecordRow[] {
     name,
     title: name,
     status: 'published',
-    image_url: officialCountryHeroPath(slug),
+    image_url: countryHeroRemoteFallback(slug),
   }));
 }
 

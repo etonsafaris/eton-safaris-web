@@ -338,7 +338,7 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v7-categories'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v8-hero-images'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();

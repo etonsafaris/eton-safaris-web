@@ -2,6 +2,7 @@ import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { resolvePublicImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
@@ -51,6 +52,23 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       cta: `Explore ${name}`,
       href: destinationPublicPath(slug),
       image,
+    };
+  }).filter((slide) => Boolean(resolvePublicImage(slide.image)));
+}
+
+/** Guaranteed slides when CMS rows or filters removed every image. */
+export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
+  return NAV_COUNTRIES.map(({ slug, name }) => {
+    const copy = HERO_COPY[slug] || {
+      title: `Discover ${name}`,
+      subtitle: `Discover unforgettable safari experiences in ${name}.`,
+    };
+    return {
+      title: copy.title,
+      subtitle: copy.subtitle,
+      cta: `Explore ${name}`,
+      href: destinationPublicPath(slug),
+      image: countryHeroRemoteFallback(slug),
     };
   }).filter((slide) => Boolean(resolvePublicImage(slide.image)));
 }

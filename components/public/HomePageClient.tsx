@@ -11,7 +11,7 @@ import SectionHeading from '@/components/public/SectionHeading';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
-import type { HomeHeroSlide } from '@/lib/home-hero-slides';
+import { fallbackHomeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
 import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
 import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
@@ -91,7 +91,9 @@ export default function HomePageClient({
       Boolean(resolvePublicImage(item?.image))
     );
     if (fromRecovery.length) return fromRecovery;
-    return safeHeroSlides(initialHeroSlides ?? []);
+    const initial = safeHeroSlides(initialHeroSlides ?? []);
+    if (initial.length) return initial;
+    return safeHeroSlides(fallbackHomeHeroSlides());
   }, [recoveredHeroSlides, initialHeroSlides]);
 
   useEffect(() => {

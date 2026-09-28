@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DEFAULT_COUNTRY_HERO } from '@/lib/country-heroes';
-import { COUNTRY_IMAGE_DIMENSIONS, OFFICIAL_COMMUNITY_HERO_PATHS } from '@/lib/official-country-assets';
+import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
 import { resolvePublicImage } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
@@ -23,7 +23,7 @@ type ResponsiveImageProps = {
   useErrorFallback?: boolean;
 };
 
-const HERO_FALLBACK = SITE_MEDIA.communityHero || OFFICIAL_COMMUNITY_HERO_PATHS[0];
+const HERO_FALLBACK = SITE_MEDIA.communityHero || DEFAULT_COUNTRY_HERO;
 const CARD_FALLBACK = DEFAULT_COUNTRY_HERO;
 
 export default function ResponsiveImage({
@@ -38,9 +38,12 @@ export default function ResponsiveImage({
   height,
   useErrorFallback = true,
 }: ResponsiveImageProps) {
-  const resolved = resolvePublicImage(src);
+  const resolved = resolvePublicImage(src) || src.trim();
   const [displaySrc, setDisplaySrc] = useState(resolved || '');
-  if (!resolved) return null;
+  useEffect(() => {
+    setDisplaySrc(resolvePublicImage(src) || src.trim());
+  }, [src]);
+  if (!displaySrc) return null;
 
   const heroQuality = quality ?? 85;
   const isHomeDestination =
@@ -62,7 +65,8 @@ export default function ResponsiveImage({
   const imgHeight = height ?? dims.height;
   const motionClass = variant === 'hero' ? 'hero-motion' : '';
   const useFill = variant === 'hero' || className?.includes('absolute');
-  const unoptimized = displaySrc.startsWith('/api/media/');
+  const unoptimized =
+    displaySrc.startsWith('/api/media/') || displaySrc.includes('images.unsplash.com');
 
   const shared = {
     alt,

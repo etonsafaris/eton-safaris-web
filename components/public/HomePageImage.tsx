@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { resolvePublicImage } from '@/lib/public-image';
 
@@ -28,8 +30,12 @@ export default function HomePageImage({
   width,
   height,
 }: HomePageImageProps) {
-  const resolved = resolvePublicImage(src);
-  if (!resolved) return null;
+  const normalized = resolvePublicImage(src) || countryHeroRemoteFallback('kenya');
+  const [displaySrc, setDisplaySrc] = useState(normalized);
+  useEffect(() => {
+    setDisplaySrc(resolvePublicImage(src) || countryHeroRemoteFallback('kenya'));
+  }, [src]);
+  if (!displaySrc) return null;
   const isHomeDestination = width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const dims =
     variant === 'hero'
@@ -40,7 +46,7 @@ export default function HomePageImage({
 
   return (
     <ResponsiveImage
-      src={resolved}
+      src={displaySrc}
       alt={alt}
       variant={variant}
       priority={priority}
@@ -49,6 +55,7 @@ export default function HomePageImage({
       width={width ?? dims.width}
       height={height ?? dims.height}
       className={className}
+      useErrorFallback={true}
     />
   );
 }
