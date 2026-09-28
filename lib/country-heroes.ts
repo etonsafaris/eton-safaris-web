@@ -4,7 +4,7 @@ import {
   OFFICIAL_COUNTRY_HERO_PATHS,
   officialCountryHeroPath,
 } from '@/lib/official-country-assets';
-import { getRecordImage } from '@/lib/record-image';
+import { getPublicRecordImage } from '@/lib/record-image';
 import { isBundledHeroAsset, isDeployableImageUrl, isLiveCmsImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
@@ -63,9 +63,9 @@ export function canonicalizeBundledCountryHero(slug: string, src: string) {
  */
 export function countryHeroImage(slug?: string | null, record?: RecordRow | null) {
   const slugKey = resolveCountrySlug(slug, record);
-  const fromCms = record ? getRecordImage(record) : null;
+  const fromCms = record ? getPublicRecordImage(record) : null;
   if (isDeployableImageUrl(fromCms)) {
-    if (isLiveCmsImage(fromCms)) return fromCms;
+    if (isLiveCmsImage(fromCms) && !fromCms.includes('/heroes/community')) return fromCms;
     if (isBundledHeroAsset(fromCms) && slugKey && isBundledHeroForSlug(slugKey, fromCms)) {
       return canonicalizeBundledCountryHero(slugKey, fromCms);
     }

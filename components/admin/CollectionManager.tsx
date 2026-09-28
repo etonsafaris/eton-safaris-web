@@ -23,7 +23,7 @@ import {
   fetchCollectionRecords,
   formatColumnLabel,
   getDynamicColumns,
-  getRecordImage,
+  getRecordImageRaw,
   getRecordTitle,
   pickString,
   pickNumber,
@@ -1490,7 +1490,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="grid"
                   href={publicHref(record)}
-                  image={getRecordImage(record) || undefined}
+                  image={getRecordImageRaw(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
@@ -1508,7 +1508,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="list"
                   href={publicHref(record)}
-                  image={getRecordImage(record) || undefined}
+                  image={getRecordImageRaw(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}

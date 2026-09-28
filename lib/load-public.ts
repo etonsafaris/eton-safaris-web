@@ -46,7 +46,7 @@ import {
   withCountryPageFallback,
   type CountryPageData,
 } from '@/lib/country-page-fallback';
-import { fallbackHomeCountryRows, orderHomeCountryRows } from '@/lib/home-page-fallback';
+import { fallbackHomeCountryRows, orderHomeCountryRows, sanitizeCountryRowForDisplay } from '@/lib/home-page-fallback';
 import { resolveCountryPageCategories } from '@/lib/country-page-categories';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
@@ -460,7 +460,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v4-tour-categories', normalized],
+      ['country-page-data-v5-dedupe-categories', normalized],
       ['collection:countries', `country:${normalized}`],
       () => loadCountryPageDataInner(normalized)
     );
@@ -596,13 +596,15 @@ async function loadCountryPageDataInner(slug: string) {
     title: countryName,
     slug,
   };
+  const displayCountry =
+    country && isPublishedRecord(country)
+      ? sanitizeCountryRowForDisplay(country)
+      : countryName
+        ? sanitizeCountryRowForDisplay(fallbackCountry)
+        : null;
+
   return {
-    country:
-      country && isPublishedRecord(country)
-        ? country
-        : countryName
-          ? fallbackCountry
-          : null,
+    country: displayCountry,
     categories,
     tours: toursForPage,
     parks: parks.filter(isPublishedRecord),

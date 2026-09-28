@@ -94,10 +94,13 @@ ACCOMMODATION_PHOTOS: dict[str, str] = {
 
 TABLE_CANDIDATES: list[tuple[str, tuple[str, ...]]] = [
     ("tours", ("tours",)),
-    ("destinations", ("destinations", "countries")),
     ("categories", ("categories",)),
     ("national_parks", ("national_parks", "national_park", "parks")),
     ("accommodations", ("accommodations",)),
+    ("explore", ("explore",)),
+    ("safari_updates", ("safari_updates",)),
+    ("pages", ("pages",)),
+    ("landing_pages", ("landing_pages",)),
 ]
 
 TABLE_RULES: dict[str, list[tuple[str, str]]] = {
@@ -117,6 +120,10 @@ TABLE_RULES: dict[str, list[tuple[str, str]]] = {
         key=lambda x: len(x[0]),
         reverse=True,
     ),
+    "explore": sorted({**PARK_PHOTOS, **COUNTRY_PHOTOS}.items(), key=lambda x: len(x[0]), reverse=True),
+    "safari_updates": sorted(CATEGORY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
+    "pages": sorted(CATEGORY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
+    "landing_pages": sorted(COUNTRY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
 }
 
 TITLE_COLUMNS = ("title", "name", "post_title", "label")
@@ -156,6 +163,8 @@ BROKEN_MARKERS = (
     "/object/sign/",
     "placeholder",
     "via.placeholder",
+    "/heroes/community",
+    "/heroes/talk-to-us",
 )
 
 
@@ -256,6 +265,10 @@ def process_table(
     execute: bool,
     force_all: bool,
 ) -> tuple[int, int]:
+    if physical_name == "countries":
+        print("  [skip] countries — run purge_conflicting_countries.py for official /heroes paths")
+        return 0, 0
+
     cols = existing_columns(cur, physical_name)
     img_col = pick_primary_image_column(cols)
     if not img_col:
@@ -286,10 +299,15 @@ def process_table(
 
         current = row.get(img_col)
         sets: dict[str, str] = {}
-        if force_all or is_broken_image(current) or str(current).strip() != new_url:
+        if force_all or is_broken_image(current):
             sets[img_col] = new_url
         if "social_image_url" in extra and (force_all or is_broken_image(row.get("social_image_url"))):
             sets["social_image_url"] = new_url
+        for col in extra:
+            if col == "social_image_url" or col in sets:
+                continue
+            if force_all or is_broken_image(row.get(col)):
+                sets[col] = new_url
         if not sets:
             continue
 
