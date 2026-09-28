@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
-import { adminImageSrcFromUrl } from '@/lib/admin-image';
+import { ADMIN_DEFAULT_CARD_IMAGE, adminImageSrcFromUrl } from '@/lib/admin-image';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import { isLiveCmsImage } from '@/lib/public-image';
 
@@ -26,7 +26,8 @@ export default function CoverImageField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [optimizing, setOptimizing] = useState(false);
   const [error, setError] = useState('');
-  const previewSrc = adminImageSrcFromUrl(value);
+  const [brokenPreview, setBrokenPreview] = useState(false);
+  const previewSrc = brokenPreview ? ADMIN_DEFAULT_CARD_IMAGE : adminImageSrcFromUrl(value);
 
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -47,6 +48,7 @@ export default function CoverImageField({
           'This image will not appear on the public website. Upload a JPG, PNG, or WebP and try again.'
         );
       }
+      setBrokenPreview(false);
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Image could not be added. Check storage permissions.');
@@ -71,7 +73,10 @@ export default function CoverImageField({
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
             decoding="async"
-            onError={() => setError('Preview failed — URL may be dead. Re-upload or paste a new image URL.')}
+            onError={() => {
+              setBrokenPreview(true);
+              setError('Preview failed — showing default thumbnail. Re-upload or paste a new image URL.');
+            }}
           />
         ) : (
           <>
@@ -101,7 +106,10 @@ export default function CoverImageField({
       </div>
       <input
         value={value.startsWith('blob:') ? '' : value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          setBrokenPreview(false);
+          onChange(event.target.value);
+        }}
         placeholder="Image URL"
         className="mt-3 w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
       />

@@ -1,6 +1,9 @@
 import { getRecordImageRaw } from '@/lib/record-image';
 import type { RecordRow } from '@/lib/types';
 
+/** Local fallback when CMS rows have no image or remote URLs fail in the admin UI. */
+export const ADMIN_DEFAULT_CARD_IMAGE = '/images/official-default-safari.jpg';
+
 const BROKEN_ADMIN_PREVIEW_MARKERS = [
   'eton-safaris-gorilla',
   'media.base44.com',
@@ -26,6 +29,11 @@ export function adminImageSrcFromUrl(url: string | null | undefined): string | n
   } catch {
     return null;
   }
+}
+
+/** Never pass an empty/invalid value into card `src` — always returns a usable path or URL. */
+export function resolveAdminCardImageSrc(url: string | null | undefined): string {
+  return adminImageSrcFromUrl(url) ?? ADMIN_DEFAULT_CARD_IMAGE;
 }
 
 /** First raw image field on a row, safe for admin list cards and form previews. */

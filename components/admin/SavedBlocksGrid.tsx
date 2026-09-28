@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, SquarePen, Trash2 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import AdminSafeImage from '@/components/admin/AdminSafeImage';
 
 export type ContentBlock = {
   title: string;
@@ -58,15 +59,15 @@ export default function SavedBlocksGrid({
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {blocks.map((block, index) => {
           const preview = previewText(block.description);
-          const image = String(block.image_url || '').trim();
+          const image = block.image_url;
           return (
             <article
               key={`${block.title}-${index}`}
               className="flex min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm"
             >
-              {image ? (
-                <img src={image} alt="" className="h-36 w-full object-cover" loading="lazy" decoding="async" />
-              ) : null}
+              <div className="h-36 w-full overflow-hidden bg-[#e8ece9]">
+                <AdminSafeImage src={image} alt="" className="h-36 w-full object-cover" />
+              </div>
               <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d1fae5] text-xs font-bold text-[#047857]">

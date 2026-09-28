@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { adminImageSrcFromUrl } from '@/lib/admin-image';
+import { useState } from 'react';
+import AdminSafeImage from '@/components/admin/AdminSafeImage';
 import Link from 'next/link';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
@@ -30,11 +30,6 @@ export default function AdminItemCard({
   extraActions?: React.ReactNode;
 }) {
   const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
-  const [displaySrc, setDisplaySrc] = useState<string | null>(() => adminImageSrcFromUrl(image));
-
-  useEffect(() => {
-    setDisplaySrc(adminImageSrcFromUrl(image));
-  }, [image]);
 
   const actions = (
     <div className="flex flex-wrap items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
@@ -84,18 +79,7 @@ export default function AdminItemCard({
 
   const imageBlock = (
     <div className={`relative overflow-hidden bg-[#e8ece9] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
-      {displaySrc ? (
-        <img
-          src={displaySrc}
-          alt=""
-          className="h-full w-full object-cover"
-          loading="lazy"
-          decoding="async"
-          onError={() => setDisplaySrc(null)}
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center text-xs text-gray-400">No image</div>
-      )}
+      <AdminSafeImage src={image} alt="" className="h-full w-full object-cover" />
       <span className="absolute left-3 top-3 rounded bg-[#00A651] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
         {badge}
       </span>
