@@ -1,4 +1,5 @@
 import { getRecordImageRaw } from '@/lib/record-image';
+import { normalizeStoredMediaPath } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 /** Local fallback when CMS rows have no image or remote URLs fail in the admin UI. */
@@ -16,7 +17,7 @@ const BROKEN_ADMIN_PREVIEW_MARKERS = [
 export function adminImageSrcFromUrl(url: string | null | undefined): string | null {
   try {
     if (!url || typeof url !== 'string') return null;
-    const trimmed = url.trim();
+    const trimmed = normalizeStoredMediaPath(url.trim());
     if (!trimmed || trimmed.startsWith('blob:')) return null;
     const lower = trimmed.toLowerCase();
     for (const marker of BROKEN_ADMIN_PREVIEW_MARKERS) {

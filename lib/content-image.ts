@@ -5,7 +5,7 @@ import {
 } from '@/lib/category-display-image';
 import { publicCountrySlug, canonicalCountrySlug } from '@/lib/country-utils';
 import { officialCountryHeroPath } from '@/lib/official-country-assets';
-import { resolvePublicImage } from '@/lib/public-image';
+import { isLiveCmsImage, isStoredCmsMediaPath, normalizeStoredMediaPath, resolvePublicImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function pickString(record: RecordRow, keys: string[]): string {
@@ -64,7 +64,7 @@ export function sanitizeContentImageUrl(
   record?: RecordRow | null
 ): string | null {
   if (!src || typeof src !== 'string') return null;
-  const trimmed = src.trim();
+  const trimmed = normalizeStoredMediaPath(src.trim());
   if (!trimmed || isBrokenCategoryImageUrl(trimmed)) return null;
 
   const deployed = resolvePublicImage(trimmed);
@@ -127,8 +127,13 @@ export function getPublicRecordImage(record: RecordRow | null | undefined): stri
   for (const key of IMAGE_FIELD_KEYS) {
     const value = record[key];
     if (typeof value !== 'string' || !value.trim()) continue;
-    const clean = sanitizeContentImageUrl(value, record);
+    const normalized = normalizeStoredMediaPath(value.trim());
+    const clean = sanitizeContentImageUrl(normalized, record);
     if (clean) return clean;
+    if (isLiveCmsImage(normalized) || isStoredCmsMediaPath(normalized)) {
+      const deployed = resolvePublicImage(normalized);
+      if (deployed) return deployed;
+    }
   }
 
   return fallbackContentImageForRecord(record);

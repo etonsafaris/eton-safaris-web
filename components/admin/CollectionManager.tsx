@@ -80,7 +80,8 @@ import {
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
-import { resolveAdminPreviewImage, safeAdminRecordRows } from '@/lib/admin-image';
+import { safeAdminRecordRows } from '@/lib/admin-image';
+import { getRecordImageRaw } from '@/lib/record-image';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   return (
@@ -1501,7 +1502,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="grid"
                   href={publicHref(record)}
-                  image={resolveAdminPreviewImage(record) || undefined}
+                  image={getRecordImageRaw(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
@@ -1519,7 +1520,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="list"
                   href={publicHref(record)}
-                  image={resolveAdminPreviewImage(record) || undefined}
+                  image={getRecordImageRaw(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}

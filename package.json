@@ -99,7 +99,9 @@
     "countries:clear-wrong-images": "node scripts/clear-wrong-country-image-urls.mjs",
     "countries:clear-wrong-images:execute": "node scripts/clear-wrong-country-image-urls.mjs --execute",
     "images:fix-conflicts": "node scripts/fix-conflicting-images.mjs",
-    "images:fix-conflicts:execute": "node scripts/fix-conflicting-images.mjs --execute"
+    "images:fix-conflicts:execute": "node scripts/fix-conflicting-images.mjs --execute",
+    "images:restore-tours": "node scripts/restore-tour-upload-images.mjs",
+    "images:restore-tours:execute": "node scripts/restore-tour-upload-images.mjs --execute"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

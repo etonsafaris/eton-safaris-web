@@ -36,17 +36,20 @@ const DEFAULT_SAFARI = unsplash('photo-1516426122078-c23e9931aeeb');
 const BROKEN_MARKERS = [
   'eton-safaris-gorilla',
   'media.base44.com',
-  '/media/',
   '/uploads/',
   'localhost',
   '127.0.0.1',
   '/object/authenticated/',
   '/object/sign/',
-  'placeholder',
   'via.placeholder',
   '/heroes/community',
   '/heroes/talk-to-us',
 ];
+
+function isStoredCmsMediaPath(value) {
+  const path = String(value || '').trim().split('?')[0];
+  return /^\/(?:api\/media|cms-media)\/[a-f0-9]{32}$/i.test(path);
+}
 
 const IMAGE_COLUMNS = [
   'image_url',
@@ -116,7 +119,15 @@ function isBroken(value) {
   if (value == null) return true;
   const text = String(value).trim();
   if (!text || ['null', 'undefined', 'none', '-'].includes(text.toLowerCase())) return true;
+  if (isStoredCmsMediaPath(text)) return false;
+  if (text.startsWith('/') && !text.startsWith('//')) {
+    if (text.startsWith('/heroes/') || text.startsWith('/api/media/') || text.startsWith('/cms-media/')) {
+      return false;
+    }
+    if (!/^https?:/i.test(text)) return true;
+  }
   const lower = text.toLowerCase();
+  if (lower.includes('placeholder') && !lower.includes('images.unsplash.com')) return true;
   return BROKEN_MARKERS.some((m) => lower.includes(m));
 }
 

@@ -82,13 +82,14 @@ export function isBrokenCategoryImageUrl(value: unknown): boolean {
   if (value == null) return true;
   const text = String(value).trim();
   if (!text || /^(null|undefined|none|-)$/i.test(text)) return true;
+  if (/^\/(?:api\/media|cms-media)\/[a-f0-9]{32}/i.test(text.split('?')[0])) return false;
   const lower = text.toLowerCase();
   for (const marker of BROKEN_MARKERS) {
     if (lower.includes(marker)) return true;
   }
   if (/^\/(media|uploads)\//i.test(text)) return true;
   if (text.startsWith('/') && !text.startsWith('/heroes/') && !text.startsWith('//')) {
-    if (!text.startsWith('/api/media/')) return true;
+    if (!/^\/(?:api\/media|cms-media)\//i.test(text)) return true;
   }
   return false;
 }
