@@ -117,6 +117,20 @@ const IMAGE_FIELD_KEYS = [
   'social_image_url',
 ] as const;
 
+/** Any `/api/media/{id}` on the row (any image column), normalized for public `src`. */
+export function pickAivenMediaFromRecord(record: RecordRow | null | undefined): string | null {
+  if (!record || typeof record !== 'object') return null;
+  for (const key of IMAGE_FIELD_KEYS) {
+    const value = record[key];
+    if (typeof value !== 'string' || !value.trim()) continue;
+    const normalized = normalizeStoredMediaPath(value.trim());
+    if (isSupabaseStorageUrl(normalized)) continue;
+    if (!isStoredCmsMediaPath(normalized)) continue;
+    return resolvePublicImage(normalized) || normalized;
+  }
+  return null;
+}
+
 /** Raw CMS value — use in Admin so uploads and `/api/media/` URLs display as stored. */
 export function getRecordImageRaw(record: RecordRow | null | undefined): string | null {
   if (!record || typeof record !== 'object') return null;
@@ -174,6 +188,9 @@ export function resolveTourCardImage(record: RecordRow | null | undefined): stri
 /** Public site: sanitized URL with safari / official hero fallback (never the brand logo). */
 export function getPublicRecordImage(record: RecordRow | null | undefined): string | null {
   if (!record || typeof record !== 'object') return null;
+
+  const aivenMedia = pickAivenMediaFromRecord(record);
+  if (aivenMedia) return aivenMedia;
 
   if (isTourLikeRecord(record)) {
     return resolveTourCardImage(record);

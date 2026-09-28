@@ -280,7 +280,12 @@ export async function fetchCollectionRecordById(table: string, id: string | numb
   return null;
 }
 
-export { getPublicRecordImage, getRecordImage, getRecordImageRaw } from '@/lib/record-image';
+export {
+  getPublicRecordImage,
+  getRecordImage,
+  getRecordImageRaw,
+  pickAivenMediaFromRecord,
+} from '@/lib/record-image';
 
 export function getRecordTitle(record: RecordRow): string {
   const preferred = ['title', 'name', 'label', 'subject', 'heading', 'keyword', 'guest_name', 'customer_name', 'author', 'email'];

@@ -102,6 +102,8 @@
     "images:fix-conflicts:execute": "node scripts/fix-conflicting-images.mjs --execute",
     "images:restore-tours": "node scripts/restore-tour-upload-images.mjs",
     "images:restore-tours:execute": "node scripts/restore-tour-upload-images.mjs --execute",
+    "images:restore-aiven": "node scripts/restore-aiven-primary-images.mjs",
+    "images:restore-aiven:execute": "node scripts/restore-aiven-primary-images.mjs --execute",
     "images:purge-supabase": "node scripts/purge-supabase-image-urls.mjs",
     "images:purge-supabase:execute": "node scripts/purge-supabase-image-urls.mjs --execute",
     "images:purge-supabase:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate"
