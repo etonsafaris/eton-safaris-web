@@ -48,9 +48,22 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   }
 
   const fallbackName = countryLabelFromSlug(slug);
-  const data = await loadCountryPageDataResilient(slug);
+  let data: Awaited<ReturnType<typeof loadCountryPageDataResilient>>;
+  try {
+    data = await loadCountryPageDataResilient(slug);
+  } catch (error) {
+    console.warn('[Public] Destination page data failed:', slug, error);
+    data = {
+      country: null,
+      categories: [],
+      tours: [],
+      parks: [],
+      places: [],
+    };
+  }
+
   const country =
-    data.country ||
+    data?.country ||
     ({
       name: fallbackName,
       title: fallbackName,
@@ -58,6 +71,10 @@ export default async function DestinationCountryPage({ params }: { params: { slu
       status: 'published',
     } as const);
   const heroSrc = countryHeroImage(slug, country);
+  const initialCategories = Array.isArray(data?.categories) ? data.categories : [];
+  const initialTours = Array.isArray(data?.tours) ? data.tours : [];
+  const initialParks = Array.isArray(data?.parks) ? data.parks : [];
+  const initialPlaces = Array.isArray(data?.places) ? data.places : [];
 
   return (
     <>
@@ -67,10 +84,10 @@ export default async function DestinationCountryPage({ params }: { params: { slu
         key={slug}
         slug={slug}
         country={country}
-        initialCategories={data.categories}
-        initialTours={data.tours}
-        initialParks={data.parks}
-        initialPlaces={data.places}
+        initialCategories={initialCategories}
+        initialTours={initialTours}
+        initialParks={initialParks}
+        initialPlaces={initialPlaces}
       />
     </PublicShellServer>
     </>

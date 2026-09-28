@@ -47,6 +47,7 @@ import {
   type CountryPageData,
 } from '@/lib/country-page-fallback';
 import { fallbackHomeCountryRows, orderHomeCountryRows } from '@/lib/home-page-fallback';
+import { resolveCountryPageCategories } from '@/lib/country-page-categories';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
@@ -459,7 +460,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v3', normalized],
+      ['country-page-data-v4-tour-categories', normalized],
       ['collection:countries', `country:${normalized}`],
       () => loadCountryPageDataInner(normalized)
     );
@@ -500,7 +501,12 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
       ).catch(() => [] as RecordRow[]);
       if (tours.length) {
         const matched = tours.filter((row) => matchesCountry(row, normalized));
-        data = { ...data, tours: matched.length ? matched : tours };
+        const tourPool = matched.length ? matched : tours;
+        data = {
+          ...data,
+          tours: tourPool,
+          categories: resolveCountryPageCategories(normalized, data.categories, tourPool),
+        };
       }
       return data;
     }
@@ -521,7 +527,12 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
       ).catch(() => [] as RecordRow[]);
       if (tours.length) {
         const matched = tours.filter((row) => matchesCountry(row, normalized));
-        data = { ...data, tours: matched.length ? matched : tours };
+        const tourPool = matched.length ? matched : tours;
+        data = {
+          ...data,
+          tours: tourPool,
+          categories: resolveCountryPageCategories(normalized, data.categories, tourPool),
+        };
       }
     }
     return withCountryPageFallback(data, normalized);
@@ -553,7 +564,7 @@ async function loadCountryPageDataInner(slug: string) {
       countryMeta
     );
   }
-  const categories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
+  const countryCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
@@ -575,6 +586,8 @@ async function loadCountryPageDataInner(slug: string) {
     ),
   ]);
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
+  const toursForPage = matchedTours.length ? matchedTours : tours;
+  const categories = resolveCountryPageCategories(slug, countryCategories, toursForPage);
   const places = explorePage.rows
     .filter(isPublishedRecord)
     .filter((row) => matchesCountry(row, slug) || recordMatchesCountrySlug(row, slug));
@@ -591,7 +604,7 @@ async function loadCountryPageDataInner(slug: string) {
           ? fallbackCountry
           : null,
     categories,
-    tours: matchedTours.length ? matchedTours : tours,
+    tours: toursForPage,
     parks: parks.filter(isPublishedRecord),
     places,
   };

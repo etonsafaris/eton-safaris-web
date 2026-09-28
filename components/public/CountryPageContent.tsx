@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { resolveCountryCategoryCardImage } from '@/lib/category-display-image';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import Carousel from '@/components/public/Carousel';
 import SafariCategoryCard from '@/components/public/SafariCategoryCard';
@@ -11,7 +12,7 @@ import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
-import { countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
+import { categoryPublicSlug, countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { resolveCountryDescriptionHtml } from '@/lib/country-page-copy';
 import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle } from '@/lib/country-landing-copy';
@@ -117,14 +118,24 @@ export default function CountryPageContent({
     summaryHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() !==
       descriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-  const categoryItems = (categories ?? [])?.map((category, index) => (
-    <SafariCategoryCard
-      key={String(category.id ?? index)}
-      category={category}
-      titleOnly
-      href={countryCategoryPath(slug, category)}
-    />
-  ));
+  const categoryItems = useMemo(() => {
+    try {
+      return (categories ?? [])
+        .filter((category) => category && (getRecordTitle(category) || category.slug))
+        .map((category, index) => (
+          <SafariCategoryCard
+            key={String(category?.id ?? categoryPublicSlug(category) ?? index)}
+            category={category}
+            titleOnly
+            href={countryCategoryPath(slug, category)}
+            image={resolveCountryCategoryCardImage(category, { countrySlug: slug, tours })}
+          />
+        ));
+    } catch (error) {
+      console.error('[Country page] Category carousel failed:', error);
+      return [];
+    }
+  }, [categories, slug, tours]);
 
   return (
     <>

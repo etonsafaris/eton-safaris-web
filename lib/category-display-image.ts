@@ -1,3 +1,4 @@
+import { canonicalCountrySlug, filterToursByCategory } from '@/lib/country-utils';
 import { getRecordTitle } from '@/lib/data';
 import { getRecordImage } from '@/lib/record-image';
 import type { RecordRow } from '@/lib/types';
@@ -43,6 +44,31 @@ export const CATEGORY_STOCK_IMAGES: { pattern: RegExp; url: string }[] = [
 
 export const DEFAULT_CATEGORY_CARD_IMAGE = cardPhoto('1516426122078-c23e9931aeeb');
 
+/** When category keywords do not match, prefer a country-appropriate safari scene. */
+const COUNTRY_ECOSYSTEM_CARD_IMAGES: Record<string, string> = {
+  uganda: cardPhoto('1523805009345-744884127a0'),
+  kenya: cardPhoto('1516426122078-c23e9931aeeb'),
+  tanzania: cardPhoto('1516026672272-bc52d61a55d9'),
+  rwanda: cardPhoto('1551969014-7d9720413452'),
+  'dr-congo': cardPhoto('1547471080-7cc2caa45a84'),
+  'south-africa': cardPhoto('1516426122078-c23e9931aeeb'),
+  botswana: cardPhoto('1509316975850-ff9c5deb6cd8'),
+  zambia: cardPhoto('1549363331-4fa7cdb8f802'),
+};
+
+export function stockImageForCountryCategory(countrySlug: string, categoryLabel: string): string {
+  const fromLabel = stockImageForCategoryLabel(categoryLabel);
+  if (fromLabel !== DEFAULT_CATEGORY_CARD_IMAGE) return fromLabel;
+  const key = canonicalCountrySlug(countrySlug);
+  if (key && COUNTRY_ECOSYSTEM_CARD_IMAGES[key]) return COUNTRY_ECOSYSTEM_CARD_IMAGES[key];
+  return DEFAULT_CATEGORY_CARD_IMAGE;
+}
+
+function normalizeCardImageUrl(raw: string): string {
+  if (/images\.unsplash\.com/i.test(raw)) return `${raw.split('?')[0]}?${CARD_UNSPLASH_PARAMS}`;
+  return raw;
+}
+
 const BROKEN_MARKERS = [
   'eton-safaris-gorilla',
   'media.base44.com',
@@ -82,12 +108,48 @@ export function resolveCategoryDisplayImage(category: RecordRow | null | undefin
   const title = getRecordTitle(category);
   const raw = getRecordImage(category);
   if (raw && !isBrokenCategoryImageUrl(raw)) {
-    if (/images\.unsplash\.com/i.test(raw)) return raw.split('?')[0] + `?${CARD_UNSPLASH_PARAMS}`;
+    if (/images\.unsplash\.com/i.test(raw)) return normalizeCardImageUrl(raw);
     if (/^https?:\/\//i.test(raw) || raw.startsWith('/api/media/') || raw.startsWith('/heroes/')) {
       return raw;
     }
   }
   return stockImageForCategoryLabel(title);
+}
+
+/** Country category carousel: CMS → matching tour photo → keyword / ecosystem stock (never logo). */
+export function resolveCountryCategoryCardImage(
+  category: RecordRow | null | undefined,
+  context?: { countrySlug?: string; tours?: RecordRow[] | null }
+): string {
+  try {
+    if (!category) {
+      return stockImageForCountryCategory(context?.countrySlug || '', '');
+    }
+
+    const title = getRecordTitle(category);
+    const cmsRaw = getRecordImage(category);
+    if (cmsRaw && !isBrokenCategoryImageUrl(cmsRaw)) {
+      if (/images\.unsplash\.com/i.test(cmsRaw)) return normalizeCardImageUrl(cmsRaw);
+      if (/^https?:\/\//i.test(cmsRaw) || cmsRaw.startsWith('/api/media/') || cmsRaw.startsWith('/heroes/')) {
+        return cmsRaw;
+      }
+    }
+
+    const tours = context?.tours ?? [];
+    if (tours.length) {
+      const inCategory = filterToursByCategory(tours, category);
+      for (const tour of inCategory) {
+        const tourImg = getRecordImage(tour);
+        if (!tourImg || isBrokenCategoryImageUrl(tourImg)) continue;
+        if (/images\.unsplash\.com/i.test(tourImg)) return normalizeCardImageUrl(tourImg);
+        if (/^https?:\/\//i.test(tourImg) || tourImg.startsWith('/api/media/')) return tourImg;
+      }
+    }
+
+    return stockImageForCountryCategory(context?.countrySlug || '', title);
+  } catch {
+    return stockImageForCountryCategory(context?.countrySlug || '', category ? getRecordTitle(category) : '');
+  }
 }
 
 export const CATEGORY_THUMB_WIDTH = 320;
