@@ -56,6 +56,30 @@ const COUNTRY_ECOSYSTEM_CARD_IMAGES: Record<string, string> = {
   zambia: cardPhoto('1549363331-4fa7cdb8f802'),
 };
 
+/** Unsplash IDs we inject as category/country stock — skip for tour cards when hunting for real uploads. */
+const STOCK_UNSPLASH_PHOTO_IDS = new Set(
+  [
+    ...CATEGORY_STOCK_IMAGES.map((item) => item.url),
+    ...Object.values(COUNTRY_ECOSYSTEM_CARD_IMAGES),
+    DEFAULT_CATEGORY_CARD_IMAGE,
+  ]
+    .map((url) => {
+      const match = url.match(/\/photo-([a-z0-9-]+)/i) || url.match(/\/([a-z0-9-]+)\?/i);
+      return match?.[1]?.replace(/^photo-/, '') || '';
+    })
+    .filter(Boolean)
+);
+
+export function isGenericStockUnsplashUrl(value: string | null | undefined): boolean {
+  if (!value || !/images\.unsplash\.com/i.test(value)) return false;
+  const id =
+    value.match(/\/photo-([a-z0-9-]+)/i)?.[1] ||
+    value.match(/images\.unsplash\.com\/([a-z0-9-]+)/i)?.[1] ||
+    '';
+  const normalized = id.replace(/^photo-/, '');
+  return normalized ? STOCK_UNSPLASH_PHOTO_IDS.has(normalized) : false;
+}
+
 export function stockImageForCountryCategory(countrySlug: string, categoryLabel: string): string {
   const fromLabel = stockImageForCategoryLabel(categoryLabel);
   if (fromLabel !== DEFAULT_CATEGORY_CARD_IMAGE) return fromLabel;

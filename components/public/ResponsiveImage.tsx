@@ -19,6 +19,8 @@ type ResponsiveImageProps = {
   variant?: 'hero' | 'card';
   width?: number;
   height?: number;
+  /** When false, do not swap to Kenya hero / stock on load errors (tour CMS covers). */
+  useErrorFallback?: boolean;
 };
 
 const HERO_FALLBACK = SITE_MEDIA.communityHero || OFFICIAL_COMMUNITY_HERO_PATHS[0];
@@ -34,6 +36,7 @@ export default function ResponsiveImage({
   variant = 'card',
   width,
   height,
+  useErrorFallback = true,
 }: ResponsiveImageProps) {
   const resolved = resolvePublicImage(src);
   const [displaySrc, setDisplaySrc] = useState(resolved || '');
@@ -70,6 +73,7 @@ export default function ResponsiveImage({
     sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
     unoptimized,
     onError: () => {
+      if (!useErrorFallback) return;
       const fallback = variant === 'hero' ? HERO_FALLBACK : CARD_FALLBACK;
       if (displaySrc !== fallback) setDisplaySrc(fallback);
     },

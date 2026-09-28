@@ -82,6 +82,7 @@ import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } fr
 import { faqsForEditor } from '@/lib/default-faqs';
 import { safeAdminRecordRows } from '@/lib/admin-image';
 import { getRecordImageRaw } from '@/lib/record-image';
+import { absolutePublicSiteUrl } from '@/lib/public-site-url';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   return (
@@ -559,34 +560,36 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   }, [records]);
 
   function publicHref(record: RecordRow): string | null {
+    let path: string | null = null;
     if (config.id === 'categories') {
       const country = pickString(record, ['country']);
       const countryKey = canonicalCountrySlug(country) || publicCountrySlug({ name: country, slug: country });
       // Path uses current category name via categoryPublicSlug (not a stale rename slug).
-      if (countryKey) return countryCategoryPath(countryKey, record);
-      const value = pickString(record, ['name', 'title']) || pickString(record, ['slug']);
-      return value ? `/tours?category=${encodeURIComponent(value)}` : null;
-    }
-    if (config.id === 'countries') {
+      if (countryKey) path = countryCategoryPath(countryKey, record);
+      else {
+        const value = pickString(record, ['name', 'title']) || pickString(record, ['slug']);
+        path = value ? `/tours?category=${encodeURIComponent(value)}` : null;
+      }
+    } else if (config.id === 'countries') {
       const slug = publicCountrySlug(record) || slugify(getRecordTitle(record));
-      return slug ? destinationPublicPath(slug) : null;
+      path = slug ? destinationPublicPath(slug) : null;
+    } else {
+      const slug =
+        publicRecordSlug(record) ||
+        pickString(record, ['slug']) ||
+        (record.id !== undefined && record.id !== null ? String(record.id) : '') ||
+        slugify(getRecordTitle(record));
+      if (config.id === 'pages' && slug) {
+        if (slug === 'home-page' || slug === 'home' || slug === 'homepage') path = '/';
+        else path = pagePublicPath(slug);
+      } else if (config.id === 'landing_pages') {
+        const landingSlug = pickString(record, ['slug', 'seo_slug']) || pickString(record, ['country']);
+        path = landingSlug ? landingPreviewPath(landingSlug) : null;
+      } else if (config.publicPath && slug) {
+        path = `${config.publicPath.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`;
+      }
     }
-    const slug =
-      publicRecordSlug(record) ||
-      pickString(record, ['slug']) ||
-      (record.id !== undefined && record.id !== null ? String(record.id) : '') ||
-      slugify(getRecordTitle(record));
-    if (config.id === 'pages' && slug) {
-      if (slug === 'home-page' || slug === 'home' || slug === 'homepage') return '/';
-      return pagePublicPath(slug);
-    }
-    if (config.id === 'landing_pages') {
-      const landingSlug = pickString(record, ['slug', 'seo_slug']) || pickString(record, ['country']);
-      return landingSlug ? landingPreviewPath(landingSlug) : null;
-    }
-    if (!config.publicPath) return null;
-    if (!slug) return null;
-    return `${config.publicPath.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`;
+    return absolutePublicSiteUrl(path);
   }
 
   function cardIndexBadge(record: RecordRow) {

@@ -1,6 +1,7 @@
 import {
   DEFAULT_CATEGORY_CARD_IMAGE,
   isBrokenCategoryImageUrl,
+  isGenericStockUnsplashUrl,
   stockImageForCountryCategory,
 } from '@/lib/category-display-image';
 import { publicCountrySlug, canonicalCountrySlug } from '@/lib/country-utils';
@@ -120,20 +121,62 @@ export function getRecordImageRaw(record: RecordRow | null | undefined): string 
   return null;
 }
 
-/** Public site: sanitized URL with safari / official hero fallback (never the brand logo). */
-export function getPublicRecordImage(record: RecordRow | null | undefined): string | null {
+function resolveImageFieldForRecord(
+  record: RecordRow,
+  value: string,
+  options?: { skipGenericStockUnsplash?: boolean }
+): string | null {
+  const normalized = normalizeStoredMediaPath(value.trim());
+  if (isGenericStockUnsplashUrl(normalized) && options?.skipGenericStockUnsplash) {
+    return null;
+  }
+  const clean = sanitizeContentImageUrl(normalized, record);
+  if (clean) return clean;
+  if (isLiveCmsImage(normalized) || isStoredCmsMediaPath(normalized)) {
+    return resolvePublicImage(normalized) || null;
+  }
+  if (!options?.skipGenericStockUnsplash && /images\.unsplash\.com/i.test(normalized)) {
+    const deployed = resolvePublicImage(normalized);
+    if (deployed && !isBrokenCategoryImageUrl(deployed)) return deployed;
+  }
+  return null;
+}
+
+/** Tour listing/detail cards: CMS uploads only — never inject giraffe / category stock art. */
+export function resolveTourCardImage(record: RecordRow | null | undefined): string | null {
   if (!record || typeof record !== 'object') return null;
 
   for (const key of IMAGE_FIELD_KEYS) {
     const value = record[key];
     if (typeof value !== 'string' || !value.trim()) continue;
-    const normalized = normalizeStoredMediaPath(value.trim());
-    const clean = sanitizeContentImageUrl(normalized, record);
-    if (clean) return clean;
-    if (isLiveCmsImage(normalized) || isStoredCmsMediaPath(normalized)) {
-      const deployed = resolvePublicImage(normalized);
-      if (deployed) return deployed;
-    }
+    const resolved = resolveImageFieldForRecord(record, value, { skipGenericStockUnsplash: true });
+    if (resolved) return resolved;
+  }
+
+  for (const key of IMAGE_FIELD_KEYS) {
+    const value = record[key];
+    if (typeof value !== 'string' || !value.trim()) continue;
+    if (isGenericStockUnsplashUrl(normalizeStoredMediaPath(value.trim()))) continue;
+    const resolved = resolveImageFieldForRecord(record, value);
+    if (resolved) return resolved;
+  }
+
+  return null;
+}
+
+/** Public site: sanitized URL with safari / official hero fallback (never the brand logo). */
+export function getPublicRecordImage(record: RecordRow | null | undefined): string | null {
+  if (!record || typeof record !== 'object') return null;
+
+  if (isTourLikeRecord(record)) {
+    return resolveTourCardImage(record);
+  }
+
+  for (const key of IMAGE_FIELD_KEYS) {
+    const value = record[key];
+    if (typeof value !== 'string' || !value.trim()) continue;
+    const resolved = resolveImageFieldForRecord(record, value);
+    if (resolved) return resolved;
   }
 
   return fallbackContentImageForRecord(record);
