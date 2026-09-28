@@ -23,7 +23,6 @@ import {
   fetchCollectionRecords,
   formatColumnLabel,
   getDynamicColumns,
-  getRecordImageRaw,
   getRecordTitle,
   pickString,
   pickNumber,
@@ -81,6 +80,7 @@ import {
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import { parseCmsPageExtras, serializeFaqs, faqRowsForStorage, type PageFaq } from '@/lib/cms-page-model';
 import { faqsForEditor } from '@/lib/default-faqs';
+import { resolveAdminPreviewImage, safeAdminRecordRows } from '@/lib/admin-image';
 
 export default function CollectionManager({ config }: { config: CollectionConfig }) {
   return (
@@ -305,21 +305,27 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
       setRemoteTotal(total);
       setRecords(
-        (data ?? [])
-          .slice()
-          .sort((a, b) => {
-            const aDate = String(a?.created_date || a?.created_at || '');
-            const bDate = String(b?.created_date || b?.created_at || '');
-            return bDate.localeCompare(aDate);
-          })
-          .map((row) => {
-            if (!row || typeof row !== 'object') return row;
-            const id = pickRecordId(row);
-            return id != null && (row.id === undefined || row.id === null || row.id === '')
-              ? { ...row, id }
-              : row;
-          })
-          .filter(Boolean) as RecordRow[]
+        safeAdminRecordRows(
+          (data ?? [])
+            .slice()
+            .sort((a, b) => {
+              const aDate = String(a?.created_date || a?.created_at || '');
+              const bDate = String(b?.created_date || b?.created_at || '');
+              return bDate.localeCompare(aDate);
+            })
+            .map((row) => {
+              try {
+                if (!row || typeof row !== 'object') return row;
+                const id = pickRecordId(row);
+                return id != null && (row.id === undefined || row.id === null || row.id === '')
+                  ? { ...row, id }
+                  : row;
+              } catch {
+                return row;
+              }
+            })
+            .filter(Boolean) as RecordRow[]
+        )
       );
       if (data.length === 0 && !usesRemotePaging) {
         console.warn(`[Admin] "${config.table}" returned 0 rows.`);
@@ -510,11 +516,16 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   }, [loading, listTotal, page, totalPages, setPage]);
 
   const paged = useMemo(() => {
-    if (usesRemotePaging && !query) {
-      return filtered;
+    try {
+      if (usesRemotePaging && !query) {
+        return safeAdminRecordRows(filtered);
+      }
+      const start = (page - 1) * PAGE_SIZE;
+      return safeAdminRecordRows(filtered.slice(start, start + PAGE_SIZE));
+    } catch (error) {
+      console.warn('[Admin] Paged list failed:', error);
+      return [];
     }
-    const start = (page - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, page, usesRemotePaging, query]);
 
   const categoryOptions = useMemo(() => {
@@ -1490,7 +1501,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="grid"
                   href={publicHref(record)}
-                  image={getRecordImageRaw(record) || undefined}
+                  image={resolveAdminPreviewImage(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}
@@ -1508,7 +1519,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                   key={String(record.id ?? index)}
                   layout="list"
                   href={publicHref(record)}
-                  image={getRecordImageRaw(record) || undefined}
+                  image={resolveAdminPreviewImage(record) || undefined}
                   badge={cardBadge()}
                   indexBadge={cardIndexBadge(record)}
                   date={cardDate(record)}

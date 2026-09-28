@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, ChevronDown, Circle, Info, X } from 'lucide-react';
 import KeywordTagBox from '@/components/admin/KeywordTagBox';
 import SearchableSelect from '@/components/admin/SearchableSelect';
+import { adminImageSrcFromUrl } from '@/lib/admin-image';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE_LOGO } from '@/lib/collections';
 import { pickString, slugify } from '@/lib/data';
 import { fetchAdminKeywordRows, fetchAdminTablePage } from '@/lib/admin-records-client';
@@ -306,6 +307,7 @@ export default function SeoPanel({
     coverImageUrl && !coverImageUrl.startsWith('blob:') && !coverImageUrl.startsWith('data:')
       ? coverImageUrl
       : values.social_image_url;
+  const socialPreviewSrc = adminImageSrcFromUrl(socialImageUrl);
 
   useEffect(() => {
     if (!socialImageUrl || values.social_image_url === socialImageUrl) return;
@@ -532,9 +534,15 @@ export default function SeoPanel({
                     placeholder="Filled automatically from the cover image above"
                     className={coverImageUrl ? 'bg-[#f9fafb]' : ''}
                   />
-                  {socialImageUrl ? (
+                  {socialPreviewSrc ? (
                     <div className="mt-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#fafafa]">
-                      <img src={socialImageUrl} alt="" className="h-36 w-full object-cover" loading="lazy" decoding="async" />
+                      <img
+                        src={socialPreviewSrc}
+                        alt=""
+                        className="h-36 w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                   ) : null}
                   <p className="mt-1.5 text-xs text-[#6b7280]">

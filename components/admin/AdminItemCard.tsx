@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { adminImageSrcFromUrl } from '@/lib/admin-image';
 import Link from 'next/link';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
@@ -19,7 +20,7 @@ export default function AdminItemCard({
 }: {
   layout: 'grid' | 'list';
   href?: string | null;
-  image?: string;
+  image?: string | null;
   badge: string;
   indexBadge?: React.ReactNode;
   date?: string;
@@ -29,6 +30,11 @@ export default function AdminItemCard({
   extraActions?: React.ReactNode;
 }) {
   const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
+  const [displaySrc, setDisplaySrc] = useState<string | null>(() => adminImageSrcFromUrl(image));
+
+  useEffect(() => {
+    setDisplaySrc(adminImageSrcFromUrl(image));
+  }, [image]);
 
   const actions = (
     <div className="flex flex-wrap items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
@@ -78,8 +84,15 @@ export default function AdminItemCard({
 
   const imageBlock = (
     <div className={`relative overflow-hidden bg-[#e8ece9] ${layout === 'grid' ? 'aspect-[16/10]' : 'h-full min-h-[140px] w-[220px] shrink-0'}`}>
-      {image ? (
-        <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+      {displaySrc ? (
+        <img
+          src={displaySrc}
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={() => setDisplaySrc(null)}
+        />
       ) : (
         <div className="flex h-full items-center justify-center text-xs text-gray-400">No image</div>
       )}

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
+import { adminImageSrcFromUrl } from '@/lib/admin-image';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import { isLiveCmsImage } from '@/lib/public-image';
 
@@ -25,6 +26,7 @@ export default function CoverImageField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [optimizing, setOptimizing] = useState(false);
   const [error, setError] = useState('');
+  const previewSrc = adminImageSrcFromUrl(value);
 
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -55,8 +57,15 @@ export default function CoverImageField({
       <div
         className={`group relative flex ${previewClassName} flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[#00A651] hover:bg-[#f0fdf4] dark:border-white/15 dark:bg-[#0f1419] dark:hover:bg-emerald-500/10`}
       >
-        {value && !value.startsWith('blob:') ? (
-          <img src={value} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
+        {previewSrc ? (
+          <img
+            src={previewSrc}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+            onError={() => setError('Preview failed — URL may be dead. Re-upload or paste a new image URL.')}
+          />
         ) : (
           <>
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#00A651]">

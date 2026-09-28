@@ -57,6 +57,39 @@ function pickHomeCountries(countries: RecordRow[]): RecordRow[] {
   }
 }
 
+function pickHomeCategories(categories: RecordRow[]): RecordRow[] {
+  try {
+    return (categories ?? [])?.filter((row) => row && (row?.id != null || row?.name || row?.title)) ?? [];
+  } catch (error) {
+    console.warn('[Public] Home categories pick failed:', error);
+    return [];
+  }
+}
+
+/** Defensive map for server-prepared lists — never throw into the page error boundary. */
+function safeHomeListMap<T>(
+  items: T[] | null | undefined,
+  mapper: (item: T, index: number) => RecordRow | null
+): RecordRow[] {
+  try {
+    const out: RecordRow[] = [];
+    for (let index = 0; index < (items?.length ?? 0); index += 1) {
+      const item = items?.[index];
+      if (item == null) continue;
+      try {
+        const mapped = mapper(item, index);
+        if (mapped) out.push(mapped);
+      } catch (rowError) {
+        console.warn('[Public] Home list row skipped:', rowError);
+      }
+    }
+    return out;
+  } catch (error) {
+    console.warn('[Public] Home list map failed:', error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   let homeContent = null;
   let destinations = undefined as ReturnType<typeof prepareHomePageRenderState>['destinations'];
@@ -94,8 +127,22 @@ export default async function HomePage() {
   const lcpHero =
     initialHeroSlides?.[0]?.image || officialCountryHeroPath(NAV_COUNTRIES?.[0]?.slug || 'uganda');
 
-  const featuredTours = pickFeaturedTours(tours);
-  const homeCountries = pickHomeCountries(countries);
+  let featuredTours: RecordRow[] = [];
+  let homeCountries: RecordRow[] = [];
+  let homeCategories: RecordRow[] = [];
+
+  try {
+    featuredTours = pickFeaturedTours(tours);
+    homeCountries = pickHomeCountries(countries);
+    homeCategories = pickHomeCategories(categories);
+  } catch (error) {
+    console.warn('[Public] Home featured data pick failed:', error);
+  }
+
+  const tourPayload = safeHomeListMap(featuredTours?.length ? featuredTours : tours, (row) => row ?? null);
+  const countryPayload = safeHomeListMap(homeCountries, (row) => row ?? null);
+  const categoryPayload = safeHomeListMap(homeCategories, (row) => row ?? null);
+  const updatePayload = safeHomeListMap(updates, (row) => row ?? null);
 
   return (
     <>
@@ -103,10 +150,10 @@ export default async function HomePage() {
       <PublicShellServer initialDestinations={destinations}>
         <HomePageClient
           initialHeroSlides={initialHeroSlides ?? []}
-          initialCountries={homeCountries ?? []}
-          initialTours={featuredTours?.length ? featuredTours : tours ?? []}
-          initialUpdates={updates ?? []}
-          initialCategories={categories ?? []}
+          initialCountries={countryPayload ?? []}
+          initialTours={tourPayload?.length ? tourPayload : tours ?? []}
+          initialUpdates={updatePayload ?? []}
+          initialCategories={categoryPayload ?? []}
           initialHomeContent={homeContent}
           needsClientRefresh={needsClientRefresh}
         />

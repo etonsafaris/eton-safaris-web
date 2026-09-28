@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-Replace dead / placeholder image URLs in Aiven PostgreSQL with real Unsplash CDN photos.
+Replace dead / frozen-storage image URLs in Aiven PostgreSQL with real Unsplash CDN photos.
 
 Install (once):
   pip install psycopg2-binary
 
 Usage:
-  python load_real_safari_photos.py              # dry-run report
-  python load_real_safari_photos.py --execute    # apply UPDATEs (broken URLs only)
-  python load_real_safari_photos.py --execute --all-rows
+  python load_real_safari_photos.py              # dry-run (report only)
+  python load_real_safari_photos.py --execute    # UPDATE rows with broken image URLs
+  python load_real_safari_photos.py --execute --all-rows  # refresh every row
 
-Reads DATABASE_URL from .env.local in the project root (or environment).
+Reads DATABASE_URL from `.env.local` at the project root (or from the environment).
+
+After `--execute`, the public site uses sanitized fallbacks in `getPublicRecordImage()` while
+the Admin panel shows raw `/api/media/` and Unsplash URLs via `resolveAdminPreviewImage()`.
 """
 
 from __future__ import annotations
@@ -21,7 +24,6 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 try:
     import psycopg2
@@ -36,7 +38,7 @@ ENV_FILE = ROOT / ".env.local"
 UNSPLASH_QS = "auto=format&fit=crop&w=1200&q=80"
 
 # ---------------------------------------------------------------------------
-# Photo catalog — Unsplash CDN (no watermark)
+# Real travel photo catalog (Unsplash CDN — no watermark)
 # ---------------------------------------------------------------------------
 
 
@@ -47,60 +49,61 @@ def unsplash(photo_id: str) -> str:
     return f"https://images.unsplash.com/{pid}?{UNSPLASH_QS}"
 
 
-DEFAULT_SAFARI = unsplash("photo-1516426122078-c23e9931aeeb")
+DEFAULT_SAFARI = unsplash("1516426122078-c23e9931aeeb")
 
+# Countries — verified landscape assets
 COUNTRY_PHOTOS: dict[str, str] = {
-    "uganda": unsplash("photo-1523805009345-744884127a0"),
-    "kenya": unsplash("photo-1549366021-9f761d450615"),
-    "tanzania": unsplash("photo-1509316785289-025f5b846b8f"),
-    "rwanda": unsplash("photo-1535335524737-94d487809111"),
+    "uganda": unsplash("1523805009345-744884127a0"),
+    "kenya": unsplash("1549366021-9f761d450615"),
+    "tanzania": unsplash("1509316785289-025f5b846b8f"),
+    "rwanda": unsplash("1535335524737-94d487809111"),
 }
 
+# Categories — premium activity assets (longest keys matched first)
 CATEGORY_PHOTOS: dict[str, str] = {
-    "gorilla trekking": unsplash("photo-1523805009345-744884127a0"),
-    "gorilla": unsplash("photo-1523805009345-744884127a0"),
-    "wildlife safaris": unsplash("photo-1516426122078-c23e9931aeeb"),
-    "wildlife": unsplash("photo-1516426122078-c23e9931aeeb"),
-    "safari": unsplash("photo-1516026672272-bc52d61a55d9"),
-    "chimpanzee tracking": unsplash("photo-1551969014-7d9720413452"),
-    "chimpanzee": unsplash("photo-1551969014-7d9720413452"),
-    "birding tours": unsplash("photo-1444464666168-49d633b86797"),
-    "birding": unsplash("photo-1444464666168-49d633b86797"),
-    "mountain climbing": unsplash("photo-1464822759023-fed622ff2c3b"),
-    "kilimanjaro": unsplash("photo-1464822759023-fed622ff2c3b"),
-    "cultural tours": unsplash("photo-1489392191929-878962fa5fcc"),
-    "cultural": unsplash("photo-1489392191929-878962fa5fcc"),
+    "gorilla trekking": unsplash("1523805009345-744884127a0"),
+    "wildlife safaris": unsplash("1516426122078-c23e9931aeeb"),
+    "chimpanzee tracking": unsplash("1551969014-7d9720413452"),
+    "birding tours": unsplash("1444464666168-49d633b86797"),
+    "mountain climbing": unsplash("1464822759023-fed622ff2c3b"),
+    "cultural tours": unsplash("1489392191929-878962fa5fcc"),
+    "gorilla": unsplash("1523805009345-744884127a0"),
+    "wildlife": unsplash("1516426122078-c23e9931aeeb"),
+    "chimpanzee": unsplash("1551969014-7d9720413452"),
+    "birding": unsplash("1444464666168-49d633b86797"),
+    "kilimanjaro": unsplash("1464822759023-fed622ff2c3b"),
+    "cultural": unsplash("1489392191929-878962fa5fcc"),
+    "safari": unsplash("1516026672272-bc52d61a55d9"),
 }
 
+# National parks — habitat assets
 PARK_PHOTOS: dict[str, str] = {
-    "bwindi": unsplash("photo-1523805009345-744884127a0"),
-    "queen elizabeth": unsplash("photo-1516426122078-c23e9931aeeb"),
-    "murchison falls": unsplash("photo-1509316785289-025f5b846b8f"),
-    "kidepo": unsplash("photo-1549366021-9f761d450615"),
-    "masai mara": unsplash("photo-1549366021-9f761d450615"),
-    "maasai mara": unsplash("photo-1549366021-9f761d450615"),
-    "serengeti": unsplash("photo-1516026672272-bc52d61a55d9"),
-    "ngorongoro": unsplash("photo-1509316785289-025f5b846b8f"),
-    "volcanoes": unsplash("photo-1535335524737-94d487809111"),
+    "bwindi": unsplash("1523805009345-744884127a0"),
+    "queen elizabeth": unsplash("1516426122078-c23e9931aeeb"),
+    "murchison falls": unsplash("1509316785289-025f5b846b8f"),
+    "kidepo": unsplash("1549366021-9f761d450615"),
+    "masai mara": unsplash("1549366021-9f761d450615"),
+    "maasai mara": unsplash("1549366021-9f761d450615"),
+    "serengeti": unsplash("1516026672272-bc52d61a55d9"),
+    "ngorongoro": unsplash("1509316785289-025f5b846b8f"),
 }
 
+# Accommodations — lodge / camp textures
 ACCOMMODATION_PHOTOS: dict[str, str] = {
-    "lodge": unsplash("photo-1566073771259-6a8506099945"),
-    "camp": unsplash("photo-1478131143081-80f7f84bdaa2"),
-    "tented camp": unsplash("photo-1478131143081-80f7f84bdaa2"),
-    "hotel": unsplash("photo-1566073771259-6a8506099945"),
-    "resort": unsplash("photo-1571896349842-33c89424de2d"),
+    "tented camp": unsplash("1478131143081-80f7f84bdaa2"),
+    "lodge": unsplash("1566073771259-6a8506099945"),
+    "camp": unsplash("1478131143081-80f7f84bdaa2"),
+    "hotel": unsplash("1566073771259-6a8506099945"),
+    "resort": unsplash("1571896349842-33c89424de2d"),
 }
 
-TABLE_CANDIDATES: list[tuple[str, tuple[str, ...]]] = [
+# Tables to process (logical name → physical candidates in `public` schema)
+TARGET_TABLES: list[tuple[str, tuple[str, ...]]] = [
     ("tours", ("tours",)),
+    ("destinations", ("destinations", "countries")),
     ("categories", ("categories",)),
-    ("national_parks", ("national_parks", "national_park", "parks")),
+    ("national_parks", ("national_parks", "national_park")),
     ("accommodations", ("accommodations",)),
-    ("explore", ("explore",)),
-    ("safari_updates", ("safari_updates",)),
-    ("pages", ("pages",)),
-    ("landing_pages", ("landing_pages",)),
 ]
 
 TABLE_RULES: dict[str, list[tuple[str, str]]] = {
@@ -110,20 +113,14 @@ TABLE_RULES: dict[str, list[tuple[str, str]]] = {
         reverse=True,
     ),
     "destinations": sorted(COUNTRY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
-    "countries": sorted(COUNTRY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
     "categories": sorted(CATEGORY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
     "national_parks": sorted(PARK_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
     "national_park": sorted(PARK_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
-    "parks": sorted(PARK_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
     "accommodations": sorted(
         {**ACCOMMODATION_PHOTOS, **PARK_PHOTOS, **COUNTRY_PHOTOS}.items(),
         key=lambda x: len(x[0]),
         reverse=True,
     ),
-    "explore": sorted({**PARK_PHOTOS, **COUNTRY_PHOTOS}.items(), key=lambda x: len(x[0]), reverse=True),
-    "safari_updates": sorted(CATEGORY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
-    "pages": sorted(CATEGORY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
-    "landing_pages": sorted(COUNTRY_PHOTOS.items(), key=lambda x: len(x[0]), reverse=True),
 }
 
 TITLE_COLUMNS = ("title", "name", "post_title", "label")
@@ -141,6 +138,7 @@ TEXT_COLUMNS = (
     "type",
     "description_title",
 )
+
 IMAGE_COLUMNS = (
     "image_url",
     "image",
@@ -155,16 +153,17 @@ IMAGE_COLUMNS = (
 BROKEN_MARKERS = (
     "eton-safaris-gorilla",
     "media.base44.com",
+    "supabase.co/storage",
+    "/object/authenticated/",
+    "/object/sign/",
     "/media/",
     "/uploads/",
     "localhost",
     "127.0.0.1",
-    "/object/authenticated/",
-    "/object/sign/",
     "placeholder",
     "via.placeholder",
-    "/heroes/community",
-    "/heroes/talk-to-us",
+    "frozen",
+    "expired",
 )
 
 
@@ -188,9 +187,14 @@ def normalize_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value).strip().lower())
 
 
-def haystack_from_row(row: dict[str, Any]) -> str:
-    parts = [str(row[c]) for c in TEXT_COLUMNS if c in row and row[c]]
-    return normalize_text(" ".join(parts))
+def row_title_haystack(row: dict[str, Any]) -> str:
+    """Primary match text from title / name, then supporting fields."""
+    title_bits = [normalize_text(row.get(c)) for c in TITLE_COLUMNS if c in row and row.get(c)]
+    title = " ".join(bit for bit in title_bits if bit)
+    if title:
+        extra = [str(row[c]) for c in TEXT_COLUMNS if c in row and row[c] and c not in TITLE_COLUMNS]
+        return normalize_text(f"{title} {' '.join(extra)}")
+    return normalize_text(" ".join(str(row[c]) for c in TEXT_COLUMNS if c in row and row[c]))
 
 
 def is_broken_image(value: Any) -> bool:
@@ -203,13 +207,19 @@ def is_broken_image(value: Any) -> bool:
     for marker in BROKEN_MARKERS:
         if marker in lower:
             return True
-    if text.startswith("/") and "/api/media/" in lower:
-        return True
+    if text.startswith("/") and not text.startswith("//"):
+        if text.startswith("/heroes/") or text.startswith("/api/media/") or text.startswith("/cms-media/"):
+            return False
+        if not text.startswith("https:"):
+            return True
     return False
 
 
-def match_photo(table_key: str, haystack: str) -> str:
-    rules = TABLE_RULES.get(table_key, [])
+def match_photo(logical_table: str, physical_table: str, haystack: str) -> str:
+    key = logical_table
+    if logical_table == "destinations" and physical_table == "countries":
+        key = "destinations"
+    rules = TABLE_RULES.get(physical_table) or TABLE_RULES.get(key, [])
     for keyword, url in rules:
         if keyword in haystack:
             return url
@@ -265,22 +275,17 @@ def process_table(
     execute: bool,
     force_all: bool,
 ) -> tuple[int, int]:
-    if physical_name == "countries":
-        print("  [skip] countries — run purge_conflicting_countries.py for official /heroes paths")
-        return 0, 0
-
     cols = existing_columns(cur, physical_name)
     img_col = pick_primary_image_column(cols)
     if not img_col:
         print(f"  [skip] {physical_name}: no image column")
         return 0, 0
 
-    extra = [c for c in IMAGE_COLUMNS if c in cols and c != img_col]
-    select_cols = ["id"] + [c for c in TEXT_COLUMNS if c in cols] + [img_col] + [
-        c for c in extra if c not in TEXT_COLUMNS
-    ]
+    image_cols_present = [c for c in IMAGE_COLUMNS if c in cols]
+    select_cols = ["id"] + [c for c in TEXT_COLUMNS if c in cols] + image_cols_present
+    select_sql = ", ".join(f'"{c}"' for c in select_cols)
 
-    cur.execute(f'SELECT {", ".join(select_cols)} FROM "{physical_name}" ORDER BY id')
+    cur.execute(f'SELECT {select_sql} FROM "{physical_name}" ORDER BY id')
     rows = [dict(r) for r in cur.fetchall()]
     planned = 0
     updated = 0
@@ -289,30 +294,24 @@ def process_table(
         row_id = row.get("id")
         if row_id is None:
             continue
-        haystack = haystack_from_row(row)
-        if not haystack:
-            haystack = " ".join(normalize_text(row.get(c)) for c in TITLE_COLUMNS if c in row)
 
-        new_url = match_photo(physical_name if physical_name in TABLE_RULES else logical_name, haystack)
-        if logical_name == "destinations" and physical_name == "countries":
-            new_url = match_photo("countries", haystack)
+        haystack = row_title_haystack(row)
+        new_url = match_photo(logical_name, physical_name, haystack)
 
-        current = row.get(img_col)
         sets: dict[str, str] = {}
-        if force_all or is_broken_image(current):
-            sets[img_col] = new_url
-        if "social_image_url" in extra and (force_all or is_broken_image(row.get("social_image_url"))):
-            sets["social_image_url"] = new_url
-        for col in extra:
-            if col == "social_image_url" or col in sets:
-                continue
-            if force_all or is_broken_image(row.get(col)):
+        for col in image_cols_present:
+            current = row.get(col)
+            if force_all or is_broken_image(current):
+                if str(current or "").strip() == new_url:
+                    continue
                 sets[col] = new_url
+
         if not sets:
             continue
 
         planned += 1
-        print(f"  [{physical_name}] id={row_id} | {(haystack or '')[:72]}")
+        label = (haystack or "")[:80]
+        print(f"  [{physical_name}] id={row_id} | {label}")
         print(f"    -> {new_url}")
 
         if execute:
@@ -326,31 +325,48 @@ def process_table(
     return planned, updated
 
 
+def connect_aiven(database_url: str):
+    """Connect with SSL suitable for Aiven PostgreSQL."""
+    try:
+        return psycopg2.connect(database_url, sslmode="require")
+    except psycopg2.Error:
+        return psycopg2.connect(database_url)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Load real Unsplash photos into Aiven CMS tables.")
-    parser.add_argument("--execute", action="store_true", help="Apply UPDATEs (default: dry-run).")
-    parser.add_argument("--all-rows", action="store_true", help="Update every row, not only broken URLs.")
+    parser = argparse.ArgumentParser(
+        description="Load real Unsplash safari photos into Aiven CMS tables (logo-free)."
+    )
+    parser.add_argument("--execute", action="store_true", help="Apply UPDATE statements.")
+    parser.add_argument(
+        "--all-rows",
+        action="store_true",
+        help="Update every image column on every row (default: broken URLs only).",
+    )
     args = parser.parse_args()
 
     load_env_local()
     database_url = os.environ.get("DATABASE_URL", "").strip()
     if not database_url:
-        print("DATABASE_URL missing. Add it to .env.local.", file=sys.stderr)
+        print("DATABASE_URL missing. Add it to .env.local in the project root.", file=sys.stderr)
         return 1
 
-    print(f"load_real_safari_photos.py — {'EXECUTE' if args.execute else 'DRY-RUN'}\n")
+    mode = "EXECUTE" if args.execute else "DRY-RUN"
+    scope = "all rows" if args.all_rows else "broken URLs only"
+    print(f"load_real_safari_photos.py — {mode} ({scope})\n")
 
-    conn = psycopg2.connect(database_url)
+    conn = connect_aiven(database_url)
     conn.autocommit = False
     total_planned = 0
     total_updated = 0
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            for logical, candidates in TABLE_CANDIDATES:
+            cur.execute("SET statement_timeout = 300000")
+            for logical, candidates in TARGET_TABLES:
                 physical = resolve_physical_table(cur, candidates)
                 if not physical:
-                    print(f"[missing] {logical}: none of {candidates} in public schema")
+                    print(f"[missing] {logical}: none of {candidates} found in public schema")
                     continue
                 print(f"\n=== {logical} → public.{physical} ===")
                 planned, updated = process_table(
@@ -361,7 +377,7 @@ def main() -> int:
 
         if args.execute:
             conn.commit()
-            print(f"\nCommitted {total_updated} update(s) ({total_planned} planned).")
+            print(f"\nCommitted {total_updated} row update(s) ({total_planned} planned).")
         else:
             conn.rollback()
             print(f"\nDry-run: {total_planned} row(s) would update. Re-run with --execute.")
