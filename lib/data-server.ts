@@ -386,7 +386,8 @@ export async function fetchAllRecords(
         }
       }
       console.error(`[Aiven] Error fetching "${tableName}" (rows ${start}–${end}):`, error);
-      throw new Error(error.message);
+      if (allRows.length > 0) return maxRows ? allRows.slice(0, maxRows) : allRows;
+      return [];
     }
 
     const chunk = data || [];
@@ -551,7 +552,10 @@ export async function countCollectionRecords(table: string, aliases: string[] = 
       console.error(`[Aiven] Count "${name}" failed:`, error);
     }
   }
-  if (lastError) throw lastError;
+  if (lastError) {
+    const message = lastError instanceof Error ? lastError.message : String(lastError);
+    console.error(`[Aiven] countCollectionRecords("${table}") failed:`, message);
+  }
   return 0;
 }
 
@@ -667,7 +671,10 @@ export async function fetchCollectionPage(
     }
   }
 
-  if (lastError) throw lastError;
+  if (lastError) {
+    const message = lastError instanceof Error ? lastError.message : String(lastError);
+    console.error(`[Aiven] fetchCollectionPage("${table}") failed; returning empty page:`, message);
+  }
   return { rows: [], total: 0 };
 }
 

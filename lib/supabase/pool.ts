@@ -133,7 +133,9 @@ function releasePgSlot() {
  */
 export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = getAivenPool();
-  if (!pool) throw new Error('Aiven DATABASE_URL is not configured.');
+  if (!pool) {
+    throw new Error('Aiven DATABASE_URL is not configured.');
+  }
   return serialPgWork(async () => {
     let slotHeld = false;
     let client: PoolClient | null = null;

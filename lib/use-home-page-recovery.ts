@@ -35,15 +35,12 @@ export function useHomePageRecovery(options: {
   useEffect(() => {
     const popularToursMissing =
       data.tours.length > 0 && selectHomePopularTours(data.tours, 1).length === 0;
+    // One optional refetch per visit — avoid hammering /api/public/home-bundle (exhausts Aiven pool).
     const sparse =
       needsClientRefresh ||
-      heroSlides.length === 0 ||
-      data.tours.length === 0 ||
-      data.tours.length < 8 ||
-      popularToursMissing ||
-      data.updates.length === 0 ||
-      data.countries.length === 0 ||
-      data.categories.length === 0;
+      (data.tours.length === 0 && data.countries.length === 0) ||
+      (heroSlides.length === 0 && data.countries.length === 0) ||
+      popularToursMissing;
     if (!sparse || attemptedRef.current) return undefined;
     attemptedRef.current = true;
 
@@ -70,14 +67,7 @@ export function useHomePageRecovery(options: {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [
-    needsClientRefresh,
-    heroSlides.length,
-    data.tours.length,
-    data.updates.length,
-    data.countries.length,
-    data.categories.length,
-  ]);
+  }, [needsClientRefresh, heroSlides.length, data.tours.length, data.countries.length]);
 
   return { data, heroSlides };
 }

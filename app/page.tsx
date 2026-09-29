@@ -130,7 +130,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <link rel="preload" as="image" href={lcpHero} fetchPriority="high" />
+      {lcpHero ? <link rel="preload" as="image" href={lcpHero} fetchPriority="high" /> : null}
       <PublicShellServer initialDestinations={destinations}>
         <HomePageClient
           initialHeroSlides={initialHeroSlides ?? []}
