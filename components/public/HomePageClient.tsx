@@ -38,7 +38,7 @@ import { countryHeroImage } from '@/lib/country-heroes';
 import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
 import { countryCardRemoteFallback } from '@/lib/country-hero-fallback';
 import { stripPublicMoney } from '@/lib/public-money';
-import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
+import { selectHomePopularTours } from '@/lib/home-featured-tours';
 import type { RecordRow } from '@/lib/types';
 
 type HomePageClientProps = {
@@ -134,13 +134,7 @@ export default function HomePageClient({
 
   const current = heroSlides?.[slide] ?? heroSlides?.[0];
 
-  const featuredTours = useMemo(() => {
-    const pool = tours ?? [];
-    const preferred = pool.filter(
-      (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
-    );
-    return orderHomeFeaturedTours(preferred.length ? preferred : pool, 12);
-  }, [tours]);
+  const featuredTours = useMemo(() => selectHomePopularTours(tours ?? [], 12), [tours]);
 
   const tourItems = (featuredTours ?? []).map((tour, index) => (
     <TourCard key={String(tour?.id ?? index)} tour={tour} />

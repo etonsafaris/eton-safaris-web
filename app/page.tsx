@@ -2,7 +2,6 @@ import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides, fallbackHomeHeroSlides } from '@/lib/home-hero-slides';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
-import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import { safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { NAV_COUNTRIES } from '@/lib/collections';
@@ -31,20 +30,6 @@ function safeRecordRows(value: unknown): RecordRow[] {
     if (!Array.isArray(value)) return [];
     return value.filter((row) => row != null && typeof row === 'object') as RecordRow[];
   } catch {
-    return [];
-  }
-}
-
-function pickFeaturedTours(tours: RecordRow[]): RecordRow[] {
-  try {
-    const pool = tours ?? [];
-    const preferred = pool?.filter(
-      (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
-    );
-    const list = preferred?.length ? preferred : pool;
-    return orderHomeFeaturedTours(list ?? [], 12);
-  } catch (error) {
-    console.warn('[Public] Home featured tours pick failed:', error);
     return [];
   }
 }
@@ -129,19 +114,16 @@ export default async function HomePage() {
 
   const lcpHero = initialHeroSlides?.[0]?.image || '';
 
-  let featuredTours: RecordRow[] = [];
   let homeCountries: RecordRow[] = [];
   let homeCategories: RecordRow[] = [];
 
   try {
-    featuredTours = pickFeaturedTours(tours);
     homeCountries = pickHomeCountries(countries);
     homeCategories = pickHomeCategories(categories);
   } catch (error) {
     console.warn('[Public] Home featured data pick failed:', error);
   }
 
-  const tourPayload = safeHomeListMap(featuredTours?.length ? featuredTours : tours, (row) => row ?? null);
   const countryPayload = safeHomeListMap(homeCountries, (row) => row ?? null);
   const categoryPayload = safeHomeListMap(homeCategories, (row) => row ?? null);
   const updatePayload = safeHomeListMap(updates, (row) => row ?? null);
@@ -153,7 +135,7 @@ export default async function HomePage() {
         <HomePageClient
           initialHeroSlides={initialHeroSlides ?? []}
           initialCountries={countryPayload ?? []}
-          initialTours={tourPayload?.length ? tourPayload : tours ?? []}
+          initialTours={safeHomeListMap(tours, (row) => row ?? null)}
           initialUpdates={updatePayload ?? []}
           initialCategories={categoryPayload ?? []}
           initialHomeContent={homeContent}
