@@ -68,7 +68,7 @@ export default function SafariUpdatesListingClient({
               <PublicListingCard
                 key={String(post.id ?? index)}
                 href={`/safari-updates/${publicRecordSlug(post)}`}
-                image={resolvePublicImage(getRecordImage(post) || '', SITE_MEDIA.safariUpdatesHero) || undefined}
+                image={resolvePublicImage(getRecordImage(post) || '') || undefined}
                 title={getRecordTitle(post)}
                 date={formatPublishedDate(post)}
                 description={recordCardBlurb(post)}

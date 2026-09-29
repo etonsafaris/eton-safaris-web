@@ -1,20 +1,16 @@
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
-
-/** Generic section heroes when CMS has no cover — never the brand logo on content cards. */
-const GENERIC = countryHeroRemoteFallback('uganda');
-
+/** Public listing heroes: load from CMS pages in route loaders — no stock image URLs here. */
 export const SITE_MEDIA = {
-  communityHero: GENERIC,
-  communityTourism: countryHeroRemoteFallback('kenya'),
-  communityEducation: countryHeroRemoteFallback('rwanda'),
-  communityConservation: countryHeroRemoteFallback('tanzania'),
-  communityEmployment: countryHeroRemoteFallback('kenya'),
-  talkToUsHero: countryHeroRemoteFallback('uganda'),
-  safariUpdatesHero: GENERIC,
-  gorillasForest: countryHeroRemoteFallback('uganda'),
-  wildlifeNationalPark: countryHeroRemoteFallback('kenya'),
-  safariVehicle: countryHeroRemoteFallback('tanzania'),
-  elephantSunset: countryHeroRemoteFallback('botswana'),
+  communityHero: '',
+  communityTourism: '',
+  communityEducation: '',
+  communityConservation: '',
+  communityEmployment: '',
+  talkToUsHero: '',
+  safariUpdatesHero: '',
+  gorillasForest: '',
+  wildlifeNationalPark: '',
+  safariVehicle: '',
+  elephantSunset: '',
   gorillaVideo:
     'https://videos.pexels.com/video-files/31223125/13336255_720_1280_60fps.mp4',
   gorillaVideoFallback:

@@ -1,17 +1,10 @@
-import {
-  DEFAULT_CATEGORY_CARD_IMAGE,
-  isBrokenCategoryImageUrl,
-  isGenericStockUnsplashUrl,
-  stockImageForCountryCategory,
-} from '@/lib/category-display-image';
 import { publicCountrySlug, canonicalCountrySlug } from '@/lib/country-utils';
-import { officialCountryHeroPath } from '@/lib/official-country-assets';
 import {
-  isLiveCmsImage,
+  isAdminPanelImageUrl,
   isStoredCmsMediaPath,
   isSupabaseStorageUrl,
   normalizeStoredMediaPath,
-  resolvePublicImage,
+  resolvePublicCmsImage,
 } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
@@ -33,22 +26,25 @@ function pickNumber(record: RecordRow, keys: string[]): number {
   return 0;
 }
 
-function getRecordTitle(record: RecordRow): string {
-  return pickString(record, ['title', 'name', 'post_title', 'label', 'headline']) || 'Safari';
-}
-
-function pathOnly(src: string) {
-  const trimmed = src.trim();
-  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed.split('?')[0];
-  try {
-    return new URL(trimmed).pathname.split('?')[0];
-  } catch {
-    return trimmed.split('?')[0];
-  }
-}
-
 function recordCountrySlug(record: RecordRow): string {
   return publicCountrySlug(record) || canonicalCountrySlug(pickString(record, ['country', 'slug', 'name']));
+}
+
+function isGenericStockUnsplashUrl(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /images\.unsplash\.com/i.test(String(value));
+}
+
+function isBrokenCategoryImageUrl(value: unknown): boolean {
+  if (value == null) return true;
+  const text = String(value).trim();
+  if (!text || /^(null|undefined|none|-)$/i.test(text)) return true;
+  if (/^\/(?:api\/media|cms-media)\/[a-f0-9]{32}/i.test(text.split('?')[0])) return false;
+  if (/images\.unsplash\.com/i.test(text)) return true;
+  if (/supabase\.co\/storage/i.test(text)) return true;
+  if (text.startsWith('/heroes/')) return true;
+  if (/^\/(media|uploads)\//i.test(text)) return true;
+  return false;
 }
 
 /** Tour packages only — CMS category rows also carry a `category` label and must not be treated as tours. */
@@ -59,51 +55,22 @@ function isTourLikeRecord(record: RecordRow): boolean {
   return false;
 }
 
-function officialHeroForRecord(record: RecordRow): string | null {
-  const slug = recordCountrySlug(record);
-  if (!slug) return null;
-  return officialCountryHeroPath(slug);
-}
-
 /** Strip legacy / dead URLs before they reach public UI. */
 export function sanitizeContentImageUrl(
   src: string | null | undefined,
   record?: RecordRow | null
 ): string | null {
+  void record;
   if (!src || typeof src !== 'string') return null;
   const trimmed = normalizeStoredMediaPath(src.trim());
   if (!trimmed || isBrokenCategoryImageUrl(trimmed)) return null;
-
-  const deployed = resolvePublicImage(trimmed);
-  if (!deployed || isBrokenCategoryImageUrl(deployed)) return null;
-
-  const pathname = pathOnly(deployed);
-  if (pathname.startsWith('/heroes/')) {
-    if (record && isTourLikeRecord(record)) {
-      return null;
-    }
-    const slug = record ? recordCountrySlug(record) : '';
-    if (/\/heroes\/community/i.test(pathname) || /\/heroes\/talk-to-us/i.test(pathname)) {
-      return slug ? officialCountryHeroPath(slug) : null;
-    }
-    if (slug) {
-      const official = pathOnly(officialCountryHeroPath(slug));
-      if (pathname !== official) {
-        return officialCountryHeroPath(slug);
-      }
-    }
-  }
-
-  return deployed;
+  if (isGenericStockUnsplashUrl(trimmed)) return null;
+  return resolvePublicCmsImage(trimmed);
 }
 
-export function fallbackContentImageForRecord(record: RecordRow | null | undefined): string {
-  if (!record) return DEFAULT_CATEGORY_CARD_IMAGE;
-  const hero = officialHeroForRecord(record);
-  if (hero && !isTourLikeRecord(record)) return hero;
-  const country = pickString(record, ['country', 'country_name']);
-  const title = getRecordTitle(record);
-  return stockImageForCountryCategory(country || recordCountrySlug(record), title);
+/** Public site never injects stock — only explicit CMS fields. */
+export function fallbackContentImageForRecord(_record: RecordRow | null | undefined): string | null {
+  return null;
 }
 
 const IMAGE_FIELD_KEYS = [
@@ -126,7 +93,7 @@ export function pickAivenMediaFromRecord(record: RecordRow | null | undefined): 
     const normalized = normalizeStoredMediaPath(value.trim());
     if (isSupabaseStorageUrl(normalized)) continue;
     if (!isStoredCmsMediaPath(normalized)) continue;
-    return resolvePublicImage(normalized) || normalized;
+    return resolvePublicCmsImage(normalized);
   }
   return null;
 }
@@ -151,19 +118,16 @@ function resolveImageFieldForRecord(
   if (isGenericStockUnsplashUrl(normalized) && options?.skipGenericStockUnsplash) {
     return null;
   }
+  if (isGenericStockUnsplashUrl(normalized)) return null;
   const clean = sanitizeContentImageUrl(normalized, record);
   if (clean) return clean;
-  if (isLiveCmsImage(normalized) || isStoredCmsMediaPath(normalized)) {
-    return resolvePublicImage(normalized) || null;
-  }
-  if (!options?.skipGenericStockUnsplash && /images\.unsplash\.com/i.test(normalized)) {
-    const deployed = resolvePublicImage(normalized);
-    if (deployed && !isBrokenCategoryImageUrl(deployed)) return deployed;
+  if (isAdminPanelImageUrl(normalized)) {
+    return resolvePublicCmsImage(normalized);
   }
   return null;
 }
 
-/** Tour listing/detail cards: CMS uploads only — never inject giraffe / category stock art. */
+/** Tour listing/detail cards: CMS uploads only. */
 export function resolveTourCardImage(record: RecordRow | null | undefined): string | null {
   if (!record || typeof record !== 'object') return null;
 
@@ -174,18 +138,10 @@ export function resolveTourCardImage(record: RecordRow | null | undefined): stri
     if (resolved) return resolved;
   }
 
-  for (const key of IMAGE_FIELD_KEYS) {
-    const value = record[key];
-    if (typeof value !== 'string' || !value.trim()) continue;
-    if (isGenericStockUnsplashUrl(normalizeStoredMediaPath(value.trim()))) continue;
-    const resolved = resolveImageFieldForRecord(record, value);
-    if (resolved) return resolved;
-  }
-
   return null;
 }
 
-/** Public site: sanitized URL with safari / official hero fallback (never the brand logo). */
+/** Public site: admin-stored images only (no stock / Unsplash / bundled heroes). */
 export function getPublicRecordImage(record: RecordRow | null | undefined): string | null {
   if (!record || typeof record !== 'object') return null;
 
@@ -203,7 +159,7 @@ export function getPublicRecordImage(record: RecordRow | null | undefined): stri
     if (resolved) return resolved;
   }
 
-  return fallbackContentImageForRecord(record);
+  return null;
 }
 
 /** @deprecated Prefer getPublicRecordImage (public) or getRecordImageRaw (admin). */

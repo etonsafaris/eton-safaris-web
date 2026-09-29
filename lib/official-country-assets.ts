@@ -1,8 +1,6 @@
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
-
 /**
- * Legacy bundled paths under `public/heroes` (optional on disk).
- * Runtime URLs use {@link officialCountryHeroPath} → verified HTTPS fallbacks when files are absent.
+ * Legacy bundled country hero paths under `public/heroes` (optional on disk).
+ * Public site uses admin uploads only — not these paths.
  */
 export const OFFICIAL_COUNTRY_HERO_PATHS: Record<string, string> = {
   uganda: '/heroes/uganda.jpg',
@@ -21,7 +19,6 @@ export const OFFICIAL_COUNTRY_HERO_PATHS: Record<string, string> = {
 
 export const OFFICIAL_COUNTRY_HERO_FILE_SET = new Set(Object.values(OFFICIAL_COUNTRY_HERO_PATHS));
 
-/** Community / marketing heroes (not country covers). */
 export const OFFICIAL_COMMUNITY_HERO_PATHS = [
   '/heroes/community-hero-768.webp',
   '/heroes/community-tourism-1440.webp',
@@ -30,7 +27,6 @@ export const OFFICIAL_COMMUNITY_HERO_PATHS = [
   '/heroes/talk-to-us-480.webp',
 ] as const;
 
-/** Default CLS-friendly dimensions (matches Tailwind aspect utilities). */
 export const COUNTRY_IMAGE_DIMENSIONS = {
   homeDestination: { width: 800, height: 500 },
   countryHero: { width: 1440, height: 900 },
@@ -38,11 +34,10 @@ export const COUNTRY_IMAGE_DIMENSIONS = {
   tourCard: { width: 640, height: 480 },
 } as const;
 
-export function officialCountryHeroPath(slug: string) {
-  return countryHeroRemoteFallback(slug);
+export function officialCountryHeroPath(_slug: string) {
+  return '';
 }
 
-export function isOfficialCountryHeroPath(src: string) {
-  const path = src.startsWith('/') ? src.split('?')[0] : '';
-  return OFFICIAL_COUNTRY_HERO_FILE_SET.has(path);
+export function isOfficialCountryHeroPath(_src: string) {
+  return false;
 }

@@ -2,8 +2,7 @@ import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
-import { resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 export type HomeHeroSlide = {
@@ -37,7 +36,7 @@ const HERO_COPY: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-/** Home carousel uses each country's CMS cover (same as destination pages). */
+/** Home carousel: only country covers uploaded in admin (`/api/media` / Cloudinary on the row). */
 export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[] {
   return NAV_COUNTRIES.map(({ slug, name }) => {
     const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
@@ -45,7 +44,7 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = resolvePublicImage(countryHeroImage(slug, dbCountry)) || countryHeroRemoteFallback(slug);
+    const image = resolvePublicCmsImage(countryHeroImage(slug, dbCountry)) || '';
     return {
       title: copy.title,
       subtitle: copy.subtitle,
@@ -53,22 +52,10 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       href: destinationPublicPath(slug),
       image,
     };
-  }).filter((slide) => Boolean(resolvePublicImage(slide.image)));
+  }).filter((slide) => Boolean(slide.image && resolvePublicCmsImage(slide.image)));
 }
 
-/** Guaranteed slides when CMS rows or filters removed every image. */
+/** No stock slides — public hero requires admin country covers. */
 export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
-  return NAV_COUNTRIES.map(({ slug, name }) => {
-    const copy = HERO_COPY[slug] || {
-      title: `Discover ${name}`,
-      subtitle: `Discover unforgettable safari experiences in ${name}.`,
-    };
-    return {
-      title: copy.title,
-      subtitle: copy.subtitle,
-      cta: `Explore ${name}`,
-      href: destinationPublicPath(slug),
-      image: countryHeroRemoteFallback(slug),
-    };
-  }).filter((slide) => Boolean(resolvePublicImage(slide.image)));
+  return [];
 }

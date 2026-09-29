@@ -53,7 +53,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
                 <PlaceCard
                   key={String(country.id ?? slug ?? index)}
                   href={destinationPublicPath(slug)}
-                  image={countryHeroImage(slug, country)}
+                  image={countryHeroImage(slug, country) || undefined}
                   title={title}
                   location={pickString(country, ['tagline', 'subtitle', 'headline'])}
                   description={recordCardBlurb(country)}

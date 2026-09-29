@@ -1,8 +1,9 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { publicCountrySlug } from '@/lib/country-utils';
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
+import { pickAivenMediaFromRecord } from '@/lib/content-image';
 import { pickString } from '@/lib/data';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { resolveHomePageContent, type HomePagePayload, normalizeHomePagePayload } from '@/lib/home-page-payload';
@@ -16,31 +17,32 @@ function countryRowSlug(row: RecordRow): string {
   );
 }
 
-/** Align CMS country row with official hero path when cover is missing or a conflicting duplicate. */
+/** Keep only admin-uploaded covers on public country cards; strip stock/dead URLs. */
 export function sanitizeCountryRowForDisplay(row: RecordRow): RecordRow {
   const slug = countryRowSlug(row);
-  if (!slug) return row;
-  const fallbackHero = countryHeroRemoteFallback(slug);
-  const current = pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']);
-  const path = current.split('?')[0];
-  const conflict =
-    !current ||
-    /supabase\.co\/storage/i.test(current) ||
-    /\/heroes\/community/i.test(path) ||
-    /eton-safaris-gorilla/i.test(path) ||
-    (path.startsWith('/heroes/') && !current.startsWith('http'));
-  if (!conflict) return row;
-  return { ...row, image_url: fallbackHero, slug: row.slug || slug };
+  const adminImage =
+    pickAivenMediaFromRecord(row) ||
+    resolvePublicCmsImage(pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']));
+  if (adminImage) {
+    return { ...row, image_url: adminImage, slug: row.slug || slug };
+  }
+  return {
+    ...row,
+    image_url: '',
+    cover_image: '',
+    featured_image: '',
+    image: '',
+    slug: row.slug || slug,
+  };
 }
 
-/** Minimal published country rows — official hero path only (no legacy thumbnails). */
+/** Minimal published country rows — text only until admin sets covers. */
 export function fallbackHomeCountryRows(): RecordRow[] {
   return NAV_COUNTRIES.map(({ slug, name }) => ({
     slug,
     name,
     title: name,
     status: 'published',
-    image_url: countryHeroRemoteFallback(slug),
   }));
 }
 

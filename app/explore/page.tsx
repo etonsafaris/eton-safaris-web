@@ -13,7 +13,6 @@ import {
   publicRecordSlug,
   recordCardBlurb,
 } from '@/lib/data';
-import { SITE_MEDIA } from '@/lib/site-media';
 import type { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -57,7 +56,7 @@ export default async function ExploreListingPage({
         variant="default"
         title={countryFilter ? `Explore ${countryFilter.replace(/-/g, ' ')}` : 'Explore'}
         subtitle={total ? `${total.toLocaleString()} places to discover` : 'Destinations and experiences'}
-        image={SITE_MEDIA.gorillasForest}
+        image={places[0] ? getRecordImage(places[0]) || undefined : undefined}
       />
       <ListingSection>
         {places.length === 0 ? (

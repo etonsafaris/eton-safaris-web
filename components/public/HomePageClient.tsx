@@ -35,7 +35,7 @@ import {
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 import { stripPublicMoney } from '@/lib/public-money';
 import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import type { RecordRow } from '@/lib/types';
@@ -88,7 +88,7 @@ export default function HomePageClient({
 
   const heroSlides = useMemo(() => {
     const fromRecovery = (recoveredHeroSlides ?? []).filter((item) =>
-      Boolean(resolvePublicImage(item?.image))
+      Boolean(resolvePublicCmsImage(item?.image))
     );
     if (fromRecovery.length) return fromRecovery;
     const initial = safeHeroSlides(initialHeroSlides ?? []);
@@ -100,7 +100,7 @@ export default function HomePageClient({
     if (!heroSlides.length) return;
     const nextIndex = (slide + 1) % heroSlides.length;
     for (const index of [slide, nextIndex]) {
-      const url = resolvePublicImage(heroSlides[index]?.image);
+      const url = resolvePublicCmsImage(heroSlides[index]?.image);
       if (!url) continue;
       const img = new window.Image();
       img.decoding = 'async';

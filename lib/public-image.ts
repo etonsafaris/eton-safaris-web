@@ -1,5 +1,3 @@
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
-
 export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
@@ -92,30 +90,50 @@ export function isDeployableImageUrl(value: unknown): value is string {
   }
 }
 
-function slugFromBundledHeroPath(pathname: string): string | null {
-  const base = pathname
-    .replace(/^\/heroes\//i, '')
-    .replace(/-\d+\.(webp|avif)$/i, '')
-    .replace(/\.(webp|jpe?g|avif|png)$/i, '');
-  return base || null;
+function isStockOrBundledPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/heroes/') ||
+    /images\.unsplash\.com/i.test(pathname) ||
+    pathname === '/eton-safaris-gorilla.png'
+  );
 }
 
-/** `public/heroes/*` is often missing on Vercel — map to verified remote art by country slug. */
-export function resolveBundledHeroPath(src: string): string {
-  const pathname = imagePathname(src.trim());
-  if (!pathname.startsWith('/heroes/')) return src;
-  const slug = slugFromBundledHeroPath(pathname);
-  return countryHeroRemoteFallback(slug);
+/**
+ * Public site: only admin-module media (Aiven `/api/media/{id}` or Cloudinary URLs saved on CMS rows).
+ * No Unsplash, bundled `/heroes`, or other stock art.
+ */
+export function isAdminPanelImageUrl(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed || isSupabaseStorageUrl(trimmed)) return false;
+  if (/images\.unsplash\.com/i.test(trimmed)) return false;
+
+  const normalized = normalizeStoredMediaPath(trimmed);
+  const pathname = imagePathname(normalized);
+  if (isStockOrBundledPath(pathname)) return false;
+
+  if (isStoredCmsMediaPath(normalized) || pathname.startsWith('/api/media/')) return true;
+  if (/^https?:\/\/res\.cloudinary\.com\//i.test(normalized)) return true;
+
+  try {
+    const url = new URL(normalized);
+    if (isThisSiteHost(url.hostname) && CMS_MEDIA_ID_RE.test(url.pathname)) return true;
+  } catch {
+    /* relative */
+  }
+
+  return false;
+}
+
+/** Resolve a CMS row image for the public site, or null when not admin-uploaded. */
+export function resolvePublicCmsImage(src?: string | null): string | null {
+  if (!isAdminPanelImageUrl(src)) return null;
+  const normalized = normalizeStoredMediaPath(String(src).trim());
+  return normalized.replace(/^http:\/\//i, 'https://');
 }
 
 export function resolvePublicImage(src?: string | null, fallback = '') {
-  if (!isDeployableImageUrl(src)) return fallback;
-  const normalized = normalizeStoredMediaPath(String(src).trim());
-  const https = normalized.replace(/^http:\/\//i, 'https://');
-  if (https.startsWith('/heroes/')) {
-    return resolveBundledHeroPath(https);
-  }
-  return https;
+  return resolvePublicCmsImage(src) || fallback;
 }
 
 function imagePathname(src: string) {
@@ -134,16 +152,9 @@ export function isBundledHeroAsset(value: unknown): value is string {
   return pathname.startsWith('/heroes/');
 }
 
-/** Admin-uploaded / CMS images that can appear on Vercel. Bundled heroes and Unsplash placeholders are not live CMS. */
+/** Same rule as {@link isAdminPanelImageUrl} — used when picking hero/cover fields. */
 export function isLiveCmsImage(value: unknown): value is string {
-  if (!isDeployableImageUrl(value)) return false;
-  const src = value.trim();
-  const pathname = imagePathname(src);
-  if (pathname.startsWith('/heroes/')) return false;
-  if (isSupabaseStorageUrl(src)) return false;
-  if (/images\.unsplash\.com/i.test(src)) return false;
-  if (isStoredCmsMediaPath(pathname) || pathname.startsWith('/api/media/')) return true;
-  return true;
+  return isAdminPanelImageUrl(value);
 }
 
 export function withImageCacheBust(src: string, stamp?: string | null) {

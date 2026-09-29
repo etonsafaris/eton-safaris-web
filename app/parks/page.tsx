@@ -13,7 +13,6 @@ import {
   publicRecordSlug,
   recordCardBlurb,
 } from '@/lib/data';
-import { SITE_MEDIA } from '@/lib/site-media';
 import type { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -58,7 +57,7 @@ export default async function NationalParksPage({
         variant="park"
         title={countryFilter ? `National Parks in ${countryFilter.replace(/-/g, ' ')}` : 'National Parks'}
         subtitle={total ? `${total.toLocaleString()} parks and reserves` : 'Wildlife destinations'}
-        image={SITE_MEDIA.wildlifeNationalPark}
+        image={parks[0] ? getRecordImage(parks[0]) || undefined : undefined}
       />
       <ListingSection>
         {parks.length === 0 ? (

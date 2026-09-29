@@ -7,6 +7,7 @@ import {
 } from '@/lib/embedded-content';
 import { decodeHtmlEntities } from '@/lib/sanitize-html';
 import { rememberKnownColumns } from '@/lib/supabase-payload';
+import { getPublicRecordImage } from '@/lib/content-image';
 import { isDeployableImageUrl, withImageCacheBust } from '@/lib/public-image';
 import {
   clearCollectionCache,
@@ -19,42 +20,9 @@ import {
 import { stayMatchesParkLoose } from '@/lib/park-stay-match';
 import type { RecordRow } from '@/lib/types';
 
-// Additional utility functions needed by client components
+// Server-side record thumbnails — same admin-only rules as the public site.
 export function getRecordImage(record: RecordRow): string | null {
-  const preferred = [
-    'image_url',
-    'cover_image',
-    'featured_image',
-    'thumbnail',
-    'photo',
-    'banner',
-    'picture',
-    'social_image_url',
-  ];
-  let found: string | null = null;
-  for (const key of preferred) {
-    const value = record[key];
-    if (isDeployableImageUrl(value)) {
-      found = value.trim();
-      break;
-    }
-  }
-  if (!found) {
-    for (const key of Object.keys(record)) {
-      if (!/image|photo|thumbnail|cover|banner|picture|avatar|featured/.test(key)) continue;
-      const value = record[key];
-      if (isDeployableImageUrl(value)) {
-        found = value.trim();
-        break;
-      }
-    }
-  }
-  if (!found) {
-    const html = recordBodyHtml(record);
-    const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(html)?.[1]?.trim();
-    found = fromHtml && isDeployableImageUrl(fromHtml) ? fromHtml : null;
-  }
-  return found ? withImageCacheBust(found, recordStamp(record)) : null;
+  return getPublicRecordImage(record);
 }
 
 function recordStamp(record: RecordRow) {

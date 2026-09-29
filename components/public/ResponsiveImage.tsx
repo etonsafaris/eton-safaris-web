@@ -2,12 +2,10 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { DEFAULT_COUNTRY_HERO } from '@/lib/country-heroes';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import { resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
-import { SITE_MEDIA } from '@/lib/site-media';
 
 type ResponsiveImageProps = {
   src: string;
@@ -23,9 +21,6 @@ type ResponsiveImageProps = {
   useErrorFallback?: boolean;
 };
 
-const HERO_FALLBACK = SITE_MEDIA.communityHero || DEFAULT_COUNTRY_HERO;
-const CARD_FALLBACK = DEFAULT_COUNTRY_HERO;
-
 export default function ResponsiveImage({
   src,
   alt = '',
@@ -36,12 +31,12 @@ export default function ResponsiveImage({
   variant = 'card',
   width,
   height,
-  useErrorFallback = true,
+  useErrorFallback = false,
 }: ResponsiveImageProps) {
-  const resolved = resolvePublicImage(src) || src.trim();
-  const [displaySrc, setDisplaySrc] = useState(resolved || '');
+  const resolved = resolvePublicCmsImage(src) || '';
+  const [displaySrc, setDisplaySrc] = useState(resolved);
   useEffect(() => {
-    setDisplaySrc(resolvePublicImage(src) || src.trim());
+    setDisplaySrc(resolvePublicCmsImage(src) || '');
   }, [src]);
   if (!displaySrc) return null;
 
@@ -78,8 +73,7 @@ export default function ResponsiveImage({
     unoptimized,
     onError: () => {
       if (!useErrorFallback) return;
-      const fallback = variant === 'hero' ? HERO_FALLBACK : CARD_FALLBACK;
-      if (displaySrc !== fallback) setDisplaySrc(fallback);
+      setDisplaySrc('');
     },
   };
 

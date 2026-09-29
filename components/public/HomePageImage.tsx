@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
-import { resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 
 type HomePageImageProps = {
   src: string;
@@ -18,7 +17,7 @@ type HomePageImageProps = {
   height?: number;
 };
 
-/** Home sections: CMS (https) and local `/heroes` — one code path, no blank Next/Image 404s. */
+/** Home sections: admin CMS media only. */
 export default function HomePageImage({
   src,
   alt = '',
@@ -30,10 +29,10 @@ export default function HomePageImage({
   width,
   height,
 }: HomePageImageProps) {
-  const normalized = resolvePublicImage(src) || countryHeroRemoteFallback('kenya');
+  const normalized = resolvePublicCmsImage(src);
   const [displaySrc, setDisplaySrc] = useState(normalized);
   useEffect(() => {
-    setDisplaySrc(resolvePublicImage(src) || countryHeroRemoteFallback('kenya'));
+    setDisplaySrc(resolvePublicCmsImage(src));
   }, [src]);
   if (!displaySrc) return null;
   const isHomeDestination = width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
@@ -55,7 +54,7 @@ export default function HomePageImage({
       width={width ?? dims.width}
       height={height ?? dims.height}
       className={className}
-      useErrorFallback={true}
+      useErrorFallback={false}
     />
   );
 }

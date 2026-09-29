@@ -2,9 +2,8 @@ import PageHero from '@/components/public/PageHero';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { loadSafariUpdatesListingResilient } from '@/lib/load-public';
-import { recordPublishedAt } from '@/lib/data';
+import { getRecordImage, recordPublishedAt } from '@/lib/data';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
-import { SITE_MEDIA } from '@/lib/site-media';
 import { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -48,7 +47,7 @@ export default async function SafariUpdatesPage({
         subtitle={
           total ? `${total.toLocaleString()} safari stories and travel notes` : 'Safari news and travel notes'
         }
-        image={SITE_MEDIA.safariUpdatesHero || SITE_MEDIA.wildlifeNationalPark || SITE_MEDIA.elephantSunset}
+        image={posts[0] ? getRecordImage(posts[0]) || undefined : undefined}
         published={latest ? recordPublishedAt(latest) || undefined : undefined}
       />
       <SafariUpdatesListingClient

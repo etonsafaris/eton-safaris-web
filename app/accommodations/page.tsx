@@ -13,7 +13,6 @@ import {
   publicRecordSlug,
   recordCardBlurb,
 } from '@/lib/data';
-import { SITE_MEDIA } from '@/lib/site-media';
 import type { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -58,7 +57,7 @@ export default async function AccommodationsPage({
         variant="default"
         title={countryFilter ? `Accommodations in ${countryFilter.replace(/-/g, ' ')}` : 'Accommodations'}
         subtitle={total ? `${total.toLocaleString()} lodges and safari stays` : 'Places to stay on safari'}
-        image={SITE_MEDIA.safariVehicle}
+        image={rows[0] ? getRecordImage(rows[0]) || undefined : undefined}
       />
       <ListingSection>
         {rows.length === 0 ? (
