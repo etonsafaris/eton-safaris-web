@@ -15,6 +15,10 @@ const TABLES = [
   { table: 'tours', nameKey: 'title' },
   { table: 'countries', nameKey: 'name' },
   { table: 'categories', nameKey: 'name' },
+  { table: 'accommodations', nameKey: 'name' },
+  { table: 'national_park', nameKey: 'name' },
+  { table: 'national_parks', nameKey: 'name' },
+  { table: 'parks', nameKey: 'name' },
 ];
 
 const IMAGE_COLUMNS = [

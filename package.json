@@ -104,6 +104,9 @@
     "images:restore-tours:execute": "node scripts/restore-tour-upload-images.mjs --execute",
     "images:restore-aiven": "node scripts/restore-aiven-primary-images.mjs",
     "images:restore-aiven:execute": "node scripts/restore-aiven-primary-images.mjs --execute",
+    "images:restore-stays-parks": "node scripts/restore-accommodation-park-images.mjs",
+    "images:restore-stays-parks:execute": "node scripts/restore-accommodation-park-images.mjs --execute",
+    "images:restore-stays-parks:og": "node scripts/restore-accommodation-park-images.mjs --execute --property-og",
     "images:purge-supabase": "node scripts/purge-supabase-image-urls.mjs",
     "images:purge-supabase:execute": "node scripts/purge-supabase-image-urls.mjs --execute",
     "images:purge-supabase:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate"
