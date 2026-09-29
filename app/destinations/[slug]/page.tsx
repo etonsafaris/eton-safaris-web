@@ -4,7 +4,8 @@ import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { loadCountryPageDataSynced, loadStaticDestinationParams } from '@/lib/load-public';
+import { isDedicatedLandingCountry } from '@/lib/cms-routes';
+import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 /** Admin-synced destination detail — Aiven visibility guard + 60s ISR. */
@@ -39,9 +40,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
-  if (!slug) notFound();
+  if (!slug || !isDedicatedLandingCountry(slug)) notFound();
 
-  const data = await loadCountryPageDataSynced(slug);
+  const data = await loadCountryPageDataResilient(slug);
   if (!data?.country) notFound();
 
   const country = data.country;

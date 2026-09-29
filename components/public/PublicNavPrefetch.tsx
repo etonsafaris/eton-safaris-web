@@ -23,13 +23,13 @@ export default function PublicNavPrefetch() {
 
   useEffect(() => {
     const run = () => {
-      WARM_ROUTES.forEach((path) => {
+      for (const path of WARM_ROUTES) {
         try {
           router.prefetch(path);
         } catch {
           // ignore
         }
-      });
+      }
     };
     const idle = window.requestIdleCallback?.(run, { timeout: 2500 });
     if (idle == null) {

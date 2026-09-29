@@ -1,5 +1,6 @@
 import JsonLd from '@/components/public/JsonLd';
 import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
+import { countryLabelFromSlug } from '@/lib/country-utils';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 type LayoutProps = {
@@ -9,7 +10,12 @@ type LayoutProps = {
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);
-  return publicRecordMetadata('countries', slug, destinationPublicPath(slug));
+  try {
+    return await publicRecordMetadata('countries', slug, destinationPublicPath(slug));
+  } catch {
+    const label = countryLabelFromSlug(slug) || slug;
+    return { title: `${label} Safaris | Eton Safaris` };
+  }
 }
 
 export default function DestinationSeoLayout({ children, params }: LayoutProps) {

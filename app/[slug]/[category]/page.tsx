@@ -1,15 +1,11 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
 import JsonLd from '@/components/public/JsonLd';
 import PlacePageContent from '@/components/public/PlacePageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, landingSlugForCountry, resolvePublicSlug } from '@/lib/cms-routes';
-import {
-  countryLabelFromSlug,
-  findCategoryBySlug,
-  findPlaceBySlug,
-  matchesCountry,
-} from '@/lib/country-utils';
+import { findCategoryBySlug, findPlaceBySlug, matchesCountry } from '@/lib/country-utils';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString, publicRecordSlug } from '@/lib/data';
 import { loadCategoryPageData, loadCountryPageData, loadStaticCategoryParams } from '@/lib/load-public';
 import { seoValuesFromRecord } from '@/lib/seo';
@@ -130,34 +126,5 @@ export default async function CountryCategoryPage({ params }: PageProps) {
     );
   }
 
-  const fallbackName = countryLabelFromSlug(countrySlug);
-  const mergedCountry: RecordRow =
-    country ||
-    ({
-      name: fallbackName,
-      title: fallbackName,
-      slug: countrySlug,
-    } as RecordRow);
-
-  return (
-    <>
-      <JsonLd
-        table="categories"
-        slug={params.category}
-        path={`/${landingSlug}/${params.category}`}
-        schemaHint="TouristTrip"
-      />
-      <PublicShellServer>
-        <CategoryPageContent
-          slug={countrySlug}
-          country={mergedCountry}
-          categorySlug={params.category}
-          initialCategories={categories}
-          initialTours={tours}
-          initialCategory={null}
-          serverPreloaded
-        />
-      </PublicShellServer>
-    </>
-  );
+  notFound();
 }

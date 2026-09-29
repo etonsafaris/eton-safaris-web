@@ -1,10 +1,5 @@
-import {
-  categoryMatchesCountry,
-  categoryPublicSlug,
-  matchesCategory,
-  normalizeSlug,
-} from '@/lib/country-utils';
-import { getRecordTitle, pickString } from '@/lib/data';
+import { categoryMatchesCountry, categoryPublicSlug, normalizeSlug } from '@/lib/country-utils';
+import { getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 function categorySortKey(row: RecordRow): string {
@@ -32,55 +27,21 @@ function dedupeCategories(rows: RecordRow[]): RecordRow[] {
   return out;
 }
 
-function tourCoveredByPool(tour: RecordRow, pool: RecordRow[]): boolean {
-  return pool.some((category) => matchesCategory(tour, category));
-}
-
 /**
- * Categories on a country page: published CMS rows for this country that have ≥1 tour,
- * plus synthetic rows only when no CMS category matches a tour's activity label.
+ * Country destination page: only published categories assigned to this country in admin.
+ * No synthetic categories from tour labels — if it is not in the Categories module, it is not shown.
  */
 export function resolveCountryPageCategories(
   countrySlug: string,
   cmsCategories: RecordRow[] | null | undefined,
-  tours: RecordRow[] | null | undefined
+  _tours?: RecordRow[] | null | undefined
 ): RecordRow[] {
   try {
-    const pool = dedupeCategories(
-      (cmsCategories ?? []).filter((row) => row && categoryMatchesCountry(row, countrySlug))
-    );
-    const tourList = (tours ?? []).filter(Boolean);
-    if (!tourList.length) {
-      return pool;
-    }
-
-    const withTours = pool.filter((category) => tourList.some((tour) => matchesCategory(tour, category)));
-    const seen = new Set(withTours.map((row) => categorySortKey(row)).filter(Boolean));
-    const synthetics: RecordRow[] = [];
-
-    for (const tour of tourList) {
-      if (tourCoveredByPool(tour, pool)) continue;
-
-      const label = pickString(tour, ['category', 'category_name', 'safari_category']);
-      if (!label?.trim()) continue;
-      const slug = normalizeSlug(label);
-      if (!slug || seen.has(slug)) continue;
-
-      seen.add(slug);
-      synthetics.push({
-        name: label.trim(),
-        title: label.trim(),
-        slug,
-        country: countrySlug,
-        status: 'published',
-      } as RecordRow);
-    }
-
-    return dedupeCategories([...withTours, ...synthetics]);
-  } catch (error) {
-    console.warn('[Public] resolveCountryPageCategories failed:', countrySlug, error);
     return dedupeCategories(
       (cmsCategories ?? []).filter((row) => row && categoryMatchesCountry(row, countrySlug))
     );
+  } catch (error) {
+    console.warn('[Public] resolveCountryPageCategories failed:', countrySlug, error);
+    return [];
   }
 }

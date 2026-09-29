@@ -280,17 +280,23 @@ export function filterToursByCategory(
   return tours;
 }
 
+/** Categories module: must match the country set on the row in admin (no guessing from category title). */
 export function categoryMatchesCountry(category: RecordRow, countrySlug: string): boolean {
   const target = canonicalCountrySlug(countrySlug);
   if (!target) return false;
 
   const assigned = recordCountryValues(category);
-  if (assigned.length) return assigned.includes(target);
+  if (assigned.includes(target)) return true;
 
-  const named = [pickString(category, ['name', 'title']), pickString(category, ['slug'])]
-    .filter(Boolean)
-    .flatMap(knownCountriesNamedIn);
-  return named.includes(target);
+  const rawCountry = pickString(category, ['country', 'country_name', 'country_slug', 'destination']).trim();
+  if (!rawCountry) return false;
+
+  if (canonicalCountrySlug(rawCountry) === target) return true;
+
+  const label = countryLabelFromSlug(target);
+  if (label && rawCountry.toLowerCase() === label.toLowerCase()) return true;
+
+  return false;
 }
 
 export function getCategoryKey(record: RecordRow): string {

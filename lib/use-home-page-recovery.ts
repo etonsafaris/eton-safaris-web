@@ -7,6 +7,7 @@ import { buildHomeHeroSlides, fallbackHomeHeroSlides } from '@/lib/home-hero-sli
 import { mergeHomePagePayload } from '@/lib/home-page-fallback';
 import { normalizeHomePagePayload, safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import type { PublicDestination } from '@/lib/public-destinations';
+import { selectHomePopularTours } from '@/lib/home-featured-tours';
 import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 
 type HomeBundleResponse = {
@@ -32,10 +33,14 @@ export function useHomePageRecovery(options: {
   }, [initialData, initialHeroSlides]);
 
   useEffect(() => {
+    const popularToursMissing =
+      data.tours.length > 0 && selectHomePopularTours(data.tours, 1).length === 0;
     const sparse =
       needsClientRefresh ||
       heroSlides.length === 0 ||
       data.tours.length === 0 ||
+      data.tours.length < 8 ||
+      popularToursMissing ||
       data.updates.length === 0 ||
       data.countries.length === 0 ||
       data.categories.length === 0;

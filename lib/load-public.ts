@@ -26,6 +26,7 @@ import {
   fetchCollectionRecords,
   fetchCollectionPage,
   fetchPublicSafariUpdatesPage,
+  fetchEastAfricaHomeTours,
   fetchFeaturedTours,
   fetchParksForCountry,
   fetchRecordByPublicSlug,
@@ -267,19 +268,26 @@ async function loadHomePageCategoriesSlice() {
 }
 
 async function loadHomePageToursSlice() {
-  let tours = await withTimeout(fetchFeaturedTours(12), 6000, [] as RecordRow[]);
-  if (!tours.length) {
-    tours = await withTimeout(fetchFeaturedTours(12), 10000, [] as RecordRow[]);
+  let tours = await withTimeout(fetchEastAfricaHomeTours(48), 8000, [] as RecordRow[]);
+  if (tours.length < 6) {
+    const featured = await withTimeout(fetchFeaturedTours(24), 5000, [] as RecordRow[]);
+    const seen = new Set(tours.map((row) => String(row.id ?? '')));
+    for (const row of featured) {
+      const id = String(row.id ?? '');
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      tours.push(row);
+    }
   }
   if (!tours.length) {
     try {
       const listing = await loadToursPageData();
-      tours = listing.tours.slice(0, 12);
+      tours = listing.tours.slice(0, 24);
     } catch {
       tours = [];
     }
   }
-  return tours.slice(0, 12);
+  return tours.slice(0, 48);
 }
 
 async function loadHomePageUpdatesSlice() {
@@ -350,13 +358,13 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v12-hero-carousel'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v13-popular-tours-east-africa'], {
     revalidate: PUBLIC_DETAIL_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
 }
 
-const HOME_BUNDLE_WAIT_MS = 8000;
+const HOME_BUNDLE_WAIT_MS = 12000;
 
 function instantHomeFallbackBundle() {
   const countries = fallbackHomeCountryRows();
@@ -481,7 +489,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v8-aiven-priority', normalized],
+      ['country-page-data-v9-resilient-destinations', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA
     );
@@ -520,13 +528,29 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
         5000,
         [] as RecordRow[]
       ).catch(() => [] as RecordRow[]);
+      const categoriesRaw = await withTimeout(
+        fetchCollectionRecords('categories', [], {
+          columns: listColumns('categories'),
+          maxRows: 80,
+        })
+          .then((rows) => rows.filter(isPublishedRecord))
+          .catch(() => [] as RecordRow[]),
+        5000,
+        [] as RecordRow[]
+      );
+      const cmsCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, normalized));
       if (tours.length) {
         const matched = tours.filter((row) => matchesCountry(row, normalized));
         const tourPool = matched.length ? matched : tours;
         data = {
           ...data,
           tours: tourPool,
-          categories: resolveCountryPageCategories(normalized, data.categories, tourPool),
+          categories: resolveCountryPageCategories(normalized, cmsCategories, tourPool),
+        };
+      } else if (cmsCategories.length) {
+        data = {
+          ...data,
+          categories: resolveCountryPageCategories(normalized, cmsCategories, []),
         };
       }
       return data;
@@ -535,6 +559,25 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
     if (isCountryPageDataSparse(data)) {
       const retry = await withTimeout(loadCountryPageDataInner(normalized), 6000, null).catch(() => null);
       if (retry && !isCountryPageDataSparse(retry)) data = retry;
+    }
+    if (!data.categories.length) {
+      const categoriesRaw = await withTimeout(
+        fetchCollectionRecords('categories', [], {
+          columns: listColumns('categories'),
+          maxRows: 80,
+        })
+          .then((rows) => rows.filter(isPublishedRecord))
+          .catch(() => [] as RecordRow[]),
+        5000,
+        [] as RecordRow[]
+      );
+      const cmsCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, normalized));
+      if (cmsCategories.length) {
+        data = {
+          ...data,
+          categories: resolveCountryPageCategories(normalized, cmsCategories, data.tours),
+        };
+      }
     }
     if (!data.tours.length) {
       const label =
@@ -550,7 +593,9 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
         data = {
           ...data,
           tours: tourPool,
-          categories: resolveCountryPageCategories(normalized, data.categories, tourPool),
+          categories: data.categories.length
+            ? data.categories
+            : resolveCountryPageCategories(normalized, [], tourPool),
         };
       }
     }
@@ -648,16 +693,24 @@ async function loadCountryPageDataInner(
   };
 }
 
-/** Admin-synced destination detail — no synthetic country shell; null when unpublished/deleted. */
+/** Admin-synced destination detail — published CMS row only; null when hidden/deleted. */
 export async function loadCountryPageDataSynced(slug: string): Promise<CountryPageData | null> {
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v1', normalized],
+    ['country-page-sync-v2', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
   );
+}
+
+/**
+ * Public `/destinations/[slug]` — resilient load (never 404 for known destinations when DB is slow).
+ * Uses published CMS data when available; falls back to shell + tours/categories like `/uganda-safaris`.
+ */
+export async function loadDestinationCountryPage(slug: string): Promise<CountryPageData> {
+  return loadCountryPageDataResilient(slug);
 }
 
 async function loadTourDetailLive(slug: string, synced = false) {

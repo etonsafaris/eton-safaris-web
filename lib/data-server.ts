@@ -732,6 +732,52 @@ function publishedTourRows(rows: RecordRow[], limit: number) {
   return rows.filter(isPublishedRecord).slice(0, limit);
 }
 
+const EAST_AFRICA_HOME_TOUR_LABELS = ['Uganda', 'Kenya', 'Tanzania', 'Rwanda'];
+
+/** Homepage Popular Tours: East Africa rows without scanning the full tours table. */
+export async function fetchEastAfricaHomeTours(limit = 48): Promise<RecordRow[]> {
+  const capped = Math.max(1, Math.min(limit, 64));
+  const columns = resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS;
+  const likePatterns = EAST_AFRICA_HOME_TOUR_LABELS.map((name) => `%${name}%`);
+
+  try {
+    const rows = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours WHERE (
+          country ILIKE ANY($1::text[])
+          OR category ILIKE ANY($1::text[])
+          OR title ILIKE ANY($1::text[])
+          OR slug ILIKE ANY($1::text[])
+        ) ORDER BY
+          (CASE WHEN is_featured = true OR is_popular = true OR show_on_landing = true THEN 0 ELSE 1 END),
+          created_date DESC NULLS LAST
+        LIMIT ${capped}`,
+        values: [likePatterns],
+      }),
+      columns,
+      TOUR_SELECT_CACHE_KEY
+    );
+    const published = publishedTourRows(rows, capped);
+    if (published.length) return published;
+  } catch (error: any) {
+    console.error('[Aiven] East Africa home tours query failed:', error.message);
+  }
+
+  const merged: RecordRow[] = [];
+  const seen = new Set<string>();
+  for (const label of EAST_AFRICA_HOME_TOUR_LABELS) {
+    const batch = await fetchToursForCountryLabel(label, Math.max(4, Math.ceil(capped / 4)));
+    for (const row of batch) {
+      const id = String(row.id ?? '');
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      merged.push(row);
+    }
+    if (merged.length >= capped) break;
+  }
+  return merged.slice(0, capped);
+}
+
 /** Homepage / carousels: featured tours only — never page through all ~2900 rows. */
 export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   const capped = Math.max(1, Math.min(limit, 48));

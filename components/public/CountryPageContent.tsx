@@ -92,7 +92,7 @@ export default function CountryPageContent({
       }>(`/api/public/country-page?slug=${encodeURIComponent(slug)}`);
       if (!body) return;
       if (body.country) setCountry(body.country);
-      if (body.categories?.length) setCategories(body.categories);
+      if (Array.isArray(body.categories)) setCategories(body.categories);
       if (body.tours?.length) setTours(body.tours);
       if (body.parks?.length) setParks(body.parks);
       if (body.places?.length) setPlaces(body.places);

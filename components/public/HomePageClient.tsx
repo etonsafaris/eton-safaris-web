@@ -4,11 +4,16 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
-import PaymentsSection from '@/components/public/PaymentsSection';
+import dynamic from 'next/dynamic';
 import HomePageImage from '@/components/public/HomePageImage';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
-import TestimonialsSection from '@/components/public/TestimonialsSection';
+const TestimonialsSection = dynamic(() => import('@/components/public/TestimonialsSection'), {
+  loading: () => null,
+});
+const PaymentsSection = dynamic(() => import('@/components/public/PaymentsSection'), {
+  loading: () => null,
+});
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
 import { fallbackHomeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
@@ -136,9 +141,13 @@ export default function HomePageClient({
 
   const featuredTours = useMemo(() => selectHomePopularTours(tours ?? [], 12), [tours]);
 
-  const tourItems = (featuredTours ?? []).map((tour, index) => (
-    <TourCard key={String(tour?.id ?? index)} tour={tour} />
-  ));
+  const tourItems = useMemo(
+    () =>
+      (featuredTours ?? []).map((tour, index) => (
+        <TourCard key={String(tour?.id ?? index)} tour={tour} />
+      )),
+    [featuredTours]
+  );
 
   const destinationRows = useMemo(() => destinationListingRows(countries ?? []), [countries]);
 
@@ -304,7 +313,12 @@ export default function HomePageClient({
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Popular Tours" title="Explore Our Most Popular Tours" />
           <div className="mt-10">
-            <Carousel instant items={tourItems} itemsPerView={{ sm: 1, md: 2, lg: 4 }} emptyMessage="No records found in this collection." />
+            <Carousel
+              instant
+              items={tourItems}
+              itemsPerView={{ sm: 1, md: 2, lg: 4 }}
+              emptyMessage="Popular East Africa tours are loading. Refresh in a moment or browse all tours."
+            />
           </div>
         </div>
       </section>
