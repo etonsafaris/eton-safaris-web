@@ -92,11 +92,15 @@ export function pickAivenMediaFromRecord(record: RecordRow | null | undefined): 
     const value = record[key];
     if (typeof value !== 'string' || !value.trim()) continue;
     const normalized = normalizeStoredMediaPath(value.trim());
-    if (isSupabaseStorageUrl(normalized)) continue;
     const resolved = resolvePublicRecordImageSrc(normalized);
     if (resolved) return resolved;
   }
   return null;
+}
+
+/** True when any CMS image column resolves to a public `src`. */
+export function hasPublicTourImage(record: RecordRow | null | undefined): boolean {
+  return Boolean(getPublicRecordImage(record));
 }
 
 /** Raw CMS value — use in Admin so uploads and `/api/media/` URLs display as stored. */
@@ -115,7 +119,9 @@ function resolveImageFieldForRecord(
   options?: { skipGenericStockUnsplash?: boolean }
 ): string | null {
   const normalized = normalizeStoredMediaPath(value.trim());
-  if (isSupabaseStorageUrl(normalized)) return null;
+  if (isSupabaseStorageUrl(normalized)) {
+    return resolvePublicRecordImageSrc(normalized);
+  }
   if (isGenericStockUnsplashUrl(normalized) && options?.skipGenericStockUnsplash) {
     return null;
   }

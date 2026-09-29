@@ -1,4 +1,5 @@
 import { canonicalCountrySlug, matchesCountry } from '@/lib/country-utils';
+import { hasPublicTourImage } from '@/lib/content-image';
 import { getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
@@ -49,6 +50,7 @@ function primaryEastAfricaSlug(tour: RecordRow): HomePopularTourCountry | '' {
 
 function featuredScore(tour: RecordRow): number {
   let score = 0;
+  if (hasPublicTourImage(tour)) score += 250;
   if (tour.is_featured === true || tour.featured === true) score += 100;
   if (tour.is_popular === true) score += 40;
   if (tour.show_on_landing === true) score += 30;
@@ -119,7 +121,11 @@ export function selectHomePopularTours(tours: RecordRow[], limit = 12): RecordRo
       (tour) => tour?.is_featured || tour?.is_popular || tour?.show_on_landing
     );
     const pool = flagged.length ? flagged : eastPool;
-    return orderHomeFeaturedTours(pool, limit);
+    const withImages = pool.filter((tour) => hasPublicTourImage(tour));
+    const withoutImages = pool.filter((tour) => !hasPublicTourImage(tour));
+    const prioritized =
+      withImages.length >= Math.min(4, limit) ? withImages : [...withImages, ...withoutImages];
+    return orderHomeFeaturedTours(prioritized, limit);
   } catch (error) {
     console.warn('[Public] selectHomePopularTours failed:', error);
     return [];

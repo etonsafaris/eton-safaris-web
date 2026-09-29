@@ -3,6 +3,7 @@ export {
   getPublicRecordImage,
   getRecordImage,
   getRecordImageRaw,
+  hasPublicTourImage,
   pickAivenMediaFromRecord,
   resolveTourCardImage,
   sanitizeContentImageUrl,

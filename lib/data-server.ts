@@ -18,6 +18,7 @@ import {
   setInflightCollection,
 } from '@/lib/collection-cache';
 import { stayMatchesParkLoose } from '@/lib/park-stay-match';
+import { enrichTourListForCards, sortToursWithImagesFirst } from '@/lib/tour-list-images';
 import type { RecordRow } from '@/lib/types';
 
 // Server-side record thumbnails — same admin-only rules as the public site.
@@ -406,7 +407,7 @@ export async function fetchAllRecords(
 const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
 
 export const TOUR_LIST_COLUMNS =
-  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
+  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image,image_url,cover_image,featured_image,thumbnail,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
 
 /** Shared list columns for admin grids and public listings (no description HTML). */
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
@@ -732,6 +733,10 @@ function publishedTourRows(rows: RecordRow[], limit: number) {
   return rows.filter(isPublishedRecord).slice(0, limit);
 }
 
+function prepareHomeTourList(rows: RecordRow[], limit: number) {
+  return enrichTourListForCards(sortToursWithImagesFirst(rows)).slice(0, limit);
+}
+
 const EAST_AFRICA_HOME_TOUR_LABELS = ['Uganda', 'Kenya', 'Tanzania', 'Rwanda'];
 
 /** Homepage Popular Tours: East Africa rows without scanning the full tours table. */
@@ -758,7 +763,7 @@ export async function fetchEastAfricaHomeTours(limit = 48): Promise<RecordRow[]>
       TOUR_SELECT_CACHE_KEY
     );
     const published = publishedTourRows(rows, capped);
-    if (published.length) return published;
+    if (published.length) return prepareHomeTourList(published, capped);
   } catch (error: any) {
     console.error('[Aiven] East Africa home tours query failed:', error.message);
   }
@@ -775,7 +780,7 @@ export async function fetchEastAfricaHomeTours(limit = 48): Promise<RecordRow[]>
     }
     if (merged.length >= capped) break;
   }
-  return merged.slice(0, capped);
+  return prepareHomeTourList(merged, capped);
 }
 
 /** Homepage / carousels: featured tours only — never page through all ~2900 rows. */
@@ -792,7 +797,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
       TOUR_SELECT_CACHE_KEY
     );
     const published = publishedTourRows(featured, capped);
-    if (published.length) return published;
+    if (published.length) return prepareHomeTourList(published, capped);
   } catch (error: any) {
     console.error('[Aiven] Featured tours query failed:', error.message);
   }
@@ -805,7 +810,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
       resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
       TOUR_SELECT_CACHE_KEY
     );
-    return publishedTourRows(recent, capped);
+    return prepareHomeTourList(publishedTourRows(recent, capped), capped);
   } catch (error: any) {
     console.error('[Aiven] Recent tours query failed:', error.message);
     return [];

@@ -196,7 +196,7 @@ export function resolvePublicHeroCarouselImage(src?: string | null): string | nu
     const path = imagePathname(trimmed);
     return path.startsWith('/') ? path : trimmed;
   }
-  const https = trimmed.replace(/^http:\/\//i, 'https://');
+  const https = String(trimmed).replace(/^http:\/\//i, 'https://');
   if (isVerifiedUnsplashHeroUrl(https)) return https;
   return null;
 }

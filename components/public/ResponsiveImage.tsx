@@ -74,6 +74,10 @@ export default function ResponsiveImage({
     sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
     unoptimized,
     onError: () => {
+      if (!useErrorFallback) {
+        setDisplaySrc('');
+        return;
+      }
       if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
         setDisplaySrc('');
         return;
