@@ -863,15 +863,6 @@ function isBlankPublishToken(value: string): boolean {
   return !value || value === 'null' || value === 'undefined' || value === 'none' || value === '-';
 }
 
-/** Admin-hidden or removed rows must never render on the public site. */
-export function isPubliclyVisibleRecord(record: RecordRow | null | undefined): boolean {
-  if (!record || typeof record !== 'object') return false;
-  if (record.deleted_at || record.deletedAt) return false;
-  if (record.is_deleted === true || record.isDeleted === true) return false;
-  if (record.is_active === false || record.isActive === false) return false;
-  return isPublishedRecord(record);
-}
-
 /** Empty / missing status counts as published. Prefer status over visibility so Base44 visibility defaults do not hide CMS countries. */
 export function isPublishedRecord(record: RecordRow): boolean {
   for (const key of ['published', 'is_published', 'isPublished'] as const) {
@@ -892,6 +883,15 @@ export function isPublishedRecord(record: RecordRow): boolean {
   }
 
   return true;
+}
+
+/** Admin-hidden or removed rows must never render on the public site. */
+export function isPubliclyVisibleRecord(record: RecordRow | null | undefined): boolean {
+  if (!record || typeof record !== 'object') return false;
+  if (record.deleted_at || record.deletedAt) return false;
+  if (record.is_deleted === true || record.isDeleted === true) return false;
+  if (record.is_active === false || record.isActive === false) return false;
+  return isPublishedRecord(record);
 }
 
 /** Resolve one public record by slug/seo_slug/id without downloading the whole table. */
@@ -947,6 +947,17 @@ export async function fetchRecordByPublicSlug(
     }
   }
   return null;
+}
+
+/** Detail routes: Aiven slug lookup — null when missing or admin-hidden. */
+export async function fetchSyncedPublicRecord(
+  table: string,
+  slug: string,
+  aliases: string[] = []
+): Promise<RecordRow | null> {
+  const row = await fetchRecordByPublicSlug(table, slug, aliases);
+  if (!row || !isPubliclyVisibleRecord(row)) return null;
+  return row;
 }
 
 /** Country-scoped tour cards — filter in Aiven database instead of downloading all tours. */

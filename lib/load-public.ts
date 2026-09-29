@@ -3,11 +3,7 @@ import {
   CMS_PUBLIC_REVALIDATE_SECONDS,
   PUBLIC_DETAIL_REVALIDATE_SECONDS,
 } from '@/lib/cms-public-cache';
-/**
- * All loaders delegate to `@/lib/data-server` → `getAivenPool()` (same pool as admin).
- * Detail routes use `fetchSyncedPublicRecord` + `isPubliclyVisibleRecord` from `@/lib/public-db-sync`.
- */
-import { fetchSyncedPublicRecord, isPubliclyVisibleRecord } from '@/lib/public-db-sync';
+/** All loaders delegate to `@/lib/data-server` → `getAivenPool()` (same pool as admin). */
 import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import { unstable_cache } from 'next/cache';
@@ -33,11 +29,13 @@ import {
   fetchFeaturedTours,
   fetchParksForCountry,
   fetchRecordByPublicSlug,
+  fetchSyncedPublicRecord,
   fetchStaysForPark,
   resolvePublicTours,
   findRecordBySlug,
   getRecordTitle,
   isLanguagePost,
+  isPubliclyVisibleRecord,
   isPublishedRecord,
   pickStoredString,
   pickString,

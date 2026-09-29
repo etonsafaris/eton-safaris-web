@@ -1,4 +1,28 @@
-import { canonicalCountrySlug } from '@/lib/country-utils';
+/** Local slug normalize — must not import `@/lib/country-utils` (pulls in `@/lib/data` → circular with `data-server`). */
+const HERO_COUNTRY_ALIASES: Record<string, string> = {
+  'republic-of-uganda': 'uganda',
+  'republic-of-kenya': 'kenya',
+  'united-republic-of-tanzania': 'tanzania',
+  'republic-of-tanzania': 'tanzania',
+  'republic-of-rwanda': 'rwanda',
+  'democratic-republic-of-the-congo': 'dr-congo',
+  'democratic-republic-of-congo': 'dr-congo',
+  drc: 'dr-congo',
+  congo: 'dr-congo',
+  southafrica: 'south-africa',
+  'republic-of-south-africa': 'south-africa',
+};
+
+function heroCountrySlug(value: string): string {
+  const slug = value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-safaris$/, '');
+  if (!slug) return '';
+  return HERO_COUNTRY_ALIASES[slug] || slug;
+}
 
 const HERO_UNSPLASH_PARAMS = 'auto=format&fit=crop&w=1920&q=85';
 const CARD_UNSPLASH_PARAMS = 'auto=format&fit=crop&w=600&q=80';
@@ -50,13 +74,13 @@ const COUNTRY_HERO_REMOTE: Record<string, string> = {
 const DEFAULT_COUNTRY_KEY = 'kenya';
 
 export function countryHeroRemoteFallback(slug: string | null | undefined): string {
-  const key = canonicalCountrySlug(String(slug || '')) || DEFAULT_COUNTRY_KEY;
+  const key = heroCountrySlug(String(slug || '')) || DEFAULT_COUNTRY_KEY;
   return COUNTRY_HERO_REMOTE[key] || COUNTRY_HERO_REMOTE[DEFAULT_COUNTRY_KEY];
 }
 
 /** Smaller stock URLs for cards and category thumbnails. */
 export function countryCardRemoteFallback(slug: string | null | undefined): string {
-  const key = canonicalCountrySlug(String(slug || '')) || DEFAULT_COUNTRY_KEY;
+  const key = heroCountrySlug(String(slug || '')) || DEFAULT_COUNTRY_KEY;
   const hero = COUNTRY_HERO_REMOTE[key] || COUNTRY_HERO_REMOTE[DEFAULT_COUNTRY_KEY];
   return hero.replace(HERO_UNSPLASH_PARAMS, CARD_UNSPLASH_PARAMS);
 }
