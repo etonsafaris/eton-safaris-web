@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
 import { allowAdminRequest } from '@/lib/admin-request-auth';
 import { saveMediaFile } from '@/lib/media-store';
+import { formatUploadErrorMessage } from '@/lib/upload-error-message';
 
 export async function POST(request: Request) {
   if (!(await allowAdminRequest(request))) {
@@ -22,8 +25,9 @@ export async function POST(request: Request) {
     const url = await saveMediaFile(file);
     return NextResponse.json({ url });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Image upload failed.';
-    const status = /too many clients/i.test(message) ? 503 : 500;
+    const message = formatUploadErrorMessage(error);
+    const status = /busy|too many clients|timeout/i.test(message) ? 503 : 500;
+    console.error('[Upload] Failed:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: message }, { status });
   }
 }

@@ -8,11 +8,19 @@ export function isAllowedImageFile(file: File) {
 }
 
 export async function optimizeImageFile(file: File, maxWidth = MAX_WIDTH): Promise<File> {
-  if (!isAllowedImageFile(file)) {
-    throw new Error('Only PNG, JPEG, and WebP images are allowed.');
+  if (!file.type.startsWith('image/') && !isAllowedImageFile(file)) {
+    throw new Error('Only PNG, JPEG, WebP, and GIF images are allowed.');
   }
 
-  const bitmap = await createImageBitmap(file);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    if (!isAllowedImageFile(file)) {
+      throw new Error('This image format is not supported in your browser. Save as JPG or PNG and try again.');
+    }
+    return file;
+  }
   const scale = Math.min(1, maxWidth / bitmap.width);
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));

@@ -24,6 +24,7 @@ import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
+import { formatUploadErrorMessage } from '@/lib/upload-error-message';
 import type { RecordRow } from '@/lib/types';
 
 type ParkBlock = {
@@ -239,7 +240,7 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
       const publicUrl = await uploadParkImage(file);
       setFeaturedImage(publicUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Image upload failed. Check storage permissions.');
+      setError(formatUploadErrorMessage(err));
     } finally {
       setUploading(false);
       event.target.value = '';

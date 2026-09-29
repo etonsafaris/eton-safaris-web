@@ -3,9 +3,13 @@ import { optimizeImageFile } from '@/lib/image-optimize';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { supabase } from '@/lib/supabase/client';
 import { readStoredAccessToken } from '@/lib/supabase/jwt-payload';
+import { formatUploadErrorMessage } from '@/lib/upload-error-message';
 
 async function uploadViaApi(file: File, folder: string) {
-  await syncAdminSessionCookie().catch(() => false);
+  const sessionOk = await syncAdminSessionCookie().catch(() => false);
+  if (!sessionOk) {
+    await syncAdminSessionCookie().catch(() => false);
+  }
 
   const token =
     (await supabase.auth.getSession()).data.session?.access_token || readStoredAccessToken();
@@ -28,12 +32,19 @@ async function uploadViaApi(file: File, folder: string) {
     response = await postOnce();
   }
 
-  const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+  const rawText = await response.text().catch(() => '');
+  let payload: { url?: string; error?: string } = {};
+  try {
+    payload = rawText ? (JSON.parse(rawText) as { url?: string; error?: string }) : {};
+  } catch {
+    payload = {};
+  }
   if (!response.ok || !payload.url) {
-    const message = payload.error || 'Image upload failed. Check storage permissions.';
-    if (/too many clients/i.test(message)) {
-      throw new Error('Database is busy (connection limit). Wait a few seconds and try again.');
-    }
+    const message = formatUploadErrorMessage(
+      payload.error ||
+        (rawText && !rawText.startsWith('{') ? rawText.slice(0, 200) : '') ||
+        `Upload failed (${response.status})`
+    );
     throw new Error(message);
   }
   return payload.url;

@@ -5,6 +5,8 @@ import { Image as ImageIcon } from 'lucide-react';
 import { ADMIN_DEFAULT_CARD_IMAGE, adminImageSrcFromUrl } from '@/lib/admin-image';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import { isLiveCmsImage } from '@/lib/public-image';
+import { formatUploadErrorMessage, isLegacySupabaseStorageUrl } from '@/lib/upload-error-message';
+import { syncAdminSessionCookie } from '@/lib/admin-session-sync';
 
 type CoverImageFieldProps = {
   value: string;
@@ -27,14 +29,20 @@ export default function CoverImageField({
   const [optimizing, setOptimizing] = useState(false);
   const [error, setError] = useState('');
   const [brokenPreview, setBrokenPreview] = useState(false);
-  const previewSrc = brokenPreview ? ADMIN_DEFAULT_CARD_IMAGE : adminImageSrcFromUrl(value);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const previewSrc =
+    localPreview || (brokenPreview ? ADMIN_DEFAULT_CARD_IMAGE : adminImageSrcFromUrl(value));
+  const legacyStorage = isLegacySupabaseStorageUrl(value);
 
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     setOptimizing(true);
     setError('');
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
     try {
+      await syncAdminSessionCookie();
       const url: string = await uploadOptimizedImage(file, folder);
       const href = String(url);
       const isMediaPath = href.startsWith('/api/media/') || href.startsWith('/cms-media/');
@@ -49,10 +57,13 @@ export default function CoverImageField({
         );
       }
       setBrokenPreview(false);
+      setLocalPreview(null);
       onChange(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Image could not be added. Check storage permissions.');
+      setError(formatUploadErrorMessage(err));
     } finally {
+      URL.revokeObjectURL(objectUrl);
+      setLocalPreview((current) => (current === objectUrl ? null : current));
       setOptimizing(false);
       event.target.value = '';
     }
@@ -113,6 +124,12 @@ export default function CoverImageField({
         placeholder="Image URL"
         className="mt-3 w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20"
       />
+      {legacyStorage && !optimizing ? (
+        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+          This record still uses old Supabase storage. Upload a new image — it will be saved to Aiven as{' '}
+          <span className="font-mono">/api/media/…</span> and will show on the live site.
+        </p>
+      ) : null}
       {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
     </div>
   );

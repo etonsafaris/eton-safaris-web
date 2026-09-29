@@ -25,6 +25,7 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
+import { formatUploadErrorMessage } from '@/lib/upload-error-message';
 import type { RecordRow } from '@/lib/types';
 
 type AccommodationBlock = {
@@ -266,7 +267,7 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
       const publicUrl = await uploadAccommodationImage(file);
       setFeaturedImage(publicUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Image upload failed. Check storage permissions.');
+      setError(formatUploadErrorMessage(err));
     } finally {
       setUploading(false);
       event.target.value = '';
