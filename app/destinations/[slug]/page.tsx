@@ -8,8 +8,8 @@ import { isDedicatedLandingCountry } from '@/lib/cms-routes';
 import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-/** Admin-synced destination detail — Aiven visibility guard + 60s ISR. */
-export const revalidate = 60;
+/** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
+export const revalidate = 900;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

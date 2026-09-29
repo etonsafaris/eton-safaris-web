@@ -9,14 +9,17 @@ const normalizedConnectionString = connectionString
 
 const isServer = typeof window === 'undefined';
 
+/** Aiven free tier ≈ 20 connections — never exceed this per Node process. */
+export const AIVEN_POOL_HARD_CAP = 15;
+
 /**
- * Aiven free tier ≈ 20 connections shared by every deploy + dev machine.
- * On Vercel each lambda is its own process — default to 1 connection per instance.
+ * One shared pool per process (`global._aivenPool`) — survives Next.js hot reload without leaking connections.
+ * Keep per-instance pool small on Vercel (many lambdas); cap at 15 via env for dedicated servers.
  */
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 1 : 3;
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
 const POOL_MAX = Math.max(
   1,
-  Math.min(10, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
+  Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
 );
 
 declare global {
@@ -65,7 +68,10 @@ export function getAivenPool(): PgPool | null {
 export const getPool = getAivenPool;
 
 /** Caps parallel checkout so ISR + admin + uploads do not exhaust Aiven (20 conn). */
-const PG_SLOT_MAX = Math.max(1, Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || 1));
+const PG_SLOT_MAX = Math.max(
+  1,
+  Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
+);
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 

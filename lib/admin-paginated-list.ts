@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
-import { withPgClient } from '@/lib/supabase/pool';
+import { withAdminPgRoute } from '@/lib/admin-pg-route';
 import type { RecordRow } from '@/lib/types';
 
 export class AdminListQueryError extends Error {
@@ -208,7 +208,7 @@ async function runListQuery(
 }
 
 /**
- * One pool client, always released in `withPgClient` — server-side LIMIT/OFFSET for admin grids.
+ * One pool client, always released in `withAdminPgRoute` — server-side LIMIT/OFFSET for admin grids.
  */
 export async function queryAdminTablePage(
   table: string,
@@ -230,7 +230,7 @@ export async function queryAdminTablePage(
 
   return withPgRetry(async () => {
     try {
-      return await withPgClient(async (client) => {
+      return await withAdminPgRoute(async (client) => {
         for (let attempt = 0; attempt < 10; attempt += 1) {
           let droppedColumn = false;
           for (const orderColumn of orderColumns) {
@@ -305,7 +305,7 @@ export async function queryAdminRecordById(
 
   try {
     return await withPgRetry(async () =>
-      withPgClient(async (client) => {
+      withAdminPgRoute(async (client) => {
         const quoted = quoteTable(table);
         const res = await client.query(
           `SELECT * FROM ${quoted} WHERE CAST(id AS text) = $1 LIMIT 1`,

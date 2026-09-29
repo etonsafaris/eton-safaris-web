@@ -151,7 +151,7 @@ export default function HomePageClient({
 
   const destinationRows = useMemo(() => destinationListingRows(countries ?? []), [countries]);
 
-  const blogItems = (updates ?? []).map((post, index) => {
+  const blogItems = (updates ?? [])?.map((post, index) => {
     const image = post ? getRecordImage(post) : '';
     const slug = post ? publicRecordSlug(post) || String(post?.id ?? '') : '';
     return (
@@ -189,7 +189,7 @@ export default function HomePageClient({
     );
   });
 
-  const destinationItems = (destinationRows ?? []).map((country, index) => {
+  const destinationItems = (destinationRows ?? [])?.map((country, index) => {
     const slug =
       publicCountrySlug(country) ||
       canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||

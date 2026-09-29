@@ -9,7 +9,7 @@ import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { peekAdminCountsCache, writeAdminCountsCache } from '@/lib/admin-counts-server-cache';
 import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
-import { withPgClient } from '@/lib/supabase/pool';
+import { withAdminPgRoute } from '@/lib/admin-pg-route';
 
 const TABLE_ALIASES: Record<string, string[]> = {
   quotations_inquiries: ['quotations_inquiries', 'quotations'],
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   try {
     const counts = await withPgRetry(
       () =>
-        withPgClient(async (client) => {
+        withAdminPgRoute(async (client) => {
           const result: Record<string, number> = {};
           for (const item of items) {
             if (!item?.id || !item?.table) continue;

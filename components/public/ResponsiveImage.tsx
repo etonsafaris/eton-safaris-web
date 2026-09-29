@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import { resolvePublicRecordImageSrc } from '@/lib/public-image';
+import { DEFAULT_PUBLIC_IMAGE, resolvePublicRecordImageSrc } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -74,8 +74,11 @@ export default function ResponsiveImage({
     sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
     unoptimized,
     onError: () => {
-      if (!useErrorFallback) return;
-      setDisplaySrc('');
+      if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
+        setDisplaySrc('');
+        return;
+      }
+      setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
     },
   };
 

@@ -5,8 +5,8 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadAccommodationDetailSynced, loadStaticAccommodationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-/** Admin-synced stay detail — Aiven visibility guard + 60s ISR. */
-export const revalidate = 60;
+/** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
+export const revalidate = 900;
 export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };

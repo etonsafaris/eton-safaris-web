@@ -15,7 +15,7 @@ import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import type { RecordRow } from '@/lib/types';
-import { withPgClient } from '@/lib/supabase/pool';
+import { withAdminPgRoute } from '@/lib/admin-pg-route';
 
 function quoteIdentifier(value: string) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) throw new Error('Invalid collection table');
@@ -25,7 +25,7 @@ function quoteIdentifier(value: string) {
 async function findRecord(table: string, aliases: string[], id: string | number) {
   for (const name of [table, ...aliases]) {
     try {
-      const rows = await withPgClient((client) =>
+      const rows = await withAdminPgRoute((client) =>
         client.query<RecordRow>(
           `SELECT * FROM ${quoteIdentifier(name)} WHERE CAST(id AS text) = $1 LIMIT 1`,
           [String(id)]

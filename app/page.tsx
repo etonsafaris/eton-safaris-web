@@ -10,8 +10,8 @@ import type { PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 import { Metadata } from 'next';
 
-/** ISR: re-check Aiven home bundle every minute (aligned with admin edits). */
-export const revalidate = 60;
+/** Edge ISR: pre-rendered HTML snapshot, refresh every 15 minutes (CDN-friendly). */
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: {
