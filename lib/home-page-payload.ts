@@ -1,7 +1,7 @@
 import type { HomePageContent } from '@/lib/home-page-content';
 import { DEFAULT_HOME_PAGE_CONTENT } from '@/lib/home-page-content';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
-import { resolvePublicImage } from '@/lib/public-image';
+import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 export type HomePagePayload = {
@@ -46,6 +46,6 @@ export function safeHeroSlides(slides: unknown): HomeHeroSlide[] {
   return slides.filter((slide) => {
     if (!slide || typeof slide !== 'object') return false;
     const item = slide as HomeHeroSlide;
-    return Boolean(item.href && resolvePublicImage(item.image));
+    return Boolean(item.href && resolvePublicHeroCarouselImage(item.image));
   }) as HomeHeroSlide[];
 }

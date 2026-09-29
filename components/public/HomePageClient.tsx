@@ -35,7 +35,8 @@ import {
 } from '@/lib/data';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
+import { countryCardRemoteFallback } from '@/lib/country-hero-fallback';
 import { stripPublicMoney } from '@/lib/public-money';
 import { orderHomeFeaturedTours } from '@/lib/home-featured-tours';
 import type { RecordRow } from '@/lib/types';
@@ -88,7 +89,7 @@ export default function HomePageClient({
 
   const heroSlides = useMemo(() => {
     const fromRecovery = (recoveredHeroSlides ?? []).filter((item) =>
-      Boolean(resolvePublicCmsImage(item?.image))
+      Boolean(resolvePublicHeroCarouselImage(item?.image))
     );
     if (fromRecovery.length) return fromRecovery;
     const initial = safeHeroSlides(initialHeroSlides ?? []);
@@ -100,7 +101,7 @@ export default function HomePageClient({
     if (!heroSlides.length) return;
     const nextIndex = (slide + 1) % heroSlides.length;
     for (const index of [slide, nextIndex]) {
-      const url = resolvePublicCmsImage(heroSlides[index]?.image);
+      const url = resolvePublicHeroCarouselImage(heroSlides[index]?.image);
       if (!url) continue;
       const img = new window.Image();
       img.decoding = 'async';
@@ -190,7 +191,8 @@ export default function HomePageClient({
       publicCountrySlug(country) ||
       canonicalCountrySlug(publicCountryLabel(country as RecordRow)) ||
       '';
-    const countryImage = countryHeroImage(slug, country as RecordRow);
+    const countryImage =
+      countryHeroImage(slug, country as RecordRow) || countryCardRemoteFallback(slug);
     const countryLabel = publicCountryLabel(country as RecordRow, slug);
     return (
       <Link key={slug || String(country.id ?? index)} href={destinationPublicPath(slug)} className="group block h-full">
@@ -200,6 +202,7 @@ export default function HomePageClient({
               src={countryImage}
               alt={countryLabel ? `Safari tours in ${countryLabel}` : ''}
               variant="card"
+              allowCarouselFallback
               sizes="(max-width: 768px) 100vw, 33vw"
               width={800}
               height={500}

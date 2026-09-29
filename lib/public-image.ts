@@ -136,6 +136,35 @@ export function resolvePublicImage(src?: string | null, fallback = '') {
   return resolvePublicCmsImage(src) || fallback;
 }
 
+function isVerifiedUnsplashHeroUrl(value: string): boolean {
+  if (!/images\.unsplash\.com/i.test(value)) return false;
+  try {
+    const pathname = new URL(value).pathname;
+    return /\/photo-\d+-[a-f0-9]+/i.test(pathname);
+  } catch {
+    return /photo-\d+-[a-f0-9]+/i.test(value);
+  }
+}
+
+/**
+ * Home hero carousel only: admin CMS media, bundled `/heroes/*`, or verified Unsplash IDs.
+ * Tour/category cards should keep using {@link resolvePublicCmsImage}.
+ */
+export function resolvePublicHeroCarouselImage(src?: string | null): string | null {
+  const cms = resolvePublicCmsImage(src);
+  if (cms) return cms;
+  if (typeof src !== 'string') return null;
+  const trimmed = src.trim();
+  if (!trimmed) return null;
+  if (isBundledHeroAsset(trimmed)) {
+    const path = imagePathname(trimmed);
+    return path.startsWith('/') ? path : trimmed;
+  }
+  const https = trimmed.replace(/^http:\/\//i, 'https://');
+  if (isVerifiedUnsplashHeroUrl(https)) return https;
+  return null;
+}
+
 function imagePathname(src: string) {
   if (src.startsWith('/') && !src.startsWith('//')) return src.split('?')[0];
   try {

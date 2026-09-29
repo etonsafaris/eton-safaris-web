@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { AdminCountsProvider, useAdminCounts } from '@/components/admin/AdminCountsProvider';
 import { AdminGlassCard } from '@/components/admin/AdminGlassCard';
-import AdminLogoLoader from '@/components/admin/AdminLogoLoader';
 import BookingPerformanceChart from '@/components/admin/BookingPerformanceChart';
 import TopDestinationsChart from '@/components/admin/TopDestinationsChart';
 import { MAIN_COLLECTIONS, SITE, SYSTEM_COLLECTIONS } from '@/lib/collections';
@@ -108,7 +107,7 @@ function AdminDavDashboardInner() {
       {
         title: 'Total Bookings',
         value: counts.bookings ?? bookings.length,
-        loading: countsLoading || bookingsLoading,
+        loading: countsLoading,
         icon: ClipboardList,
         color: 'emerald',
         href: '/admin/bookings',
@@ -144,8 +143,6 @@ function AdminDavDashboardInner() {
 
   const activeCountries = counts.countries ?? 0;
   const bookedCountries = bookedCountriesCount(bookings);
-  const initialLoading = countsLoading && bookingsLoading;
-
   const quickAccessModules = useMemo(
     () =>
       [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter(
@@ -153,14 +150,6 @@ function AdminDavDashboardInner() {
       ),
     []
   );
-
-  if (initialLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <AdminLogoLoader label="Loading dashboard" />
-      </div>
-    );
-  }
 
   return (
     <div className="admin-dav-dashboard space-y-8">

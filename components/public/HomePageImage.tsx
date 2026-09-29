@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { resolvePublicCmsImage, resolvePublicHeroCarouselImage } from '@/lib/public-image';
 
 type HomePageImageProps = {
   src: string;
@@ -15,6 +15,8 @@ type HomePageImageProps = {
   sizes?: string;
   width?: number;
   height?: number;
+  /** Home destination grid: show verified stock when CMS cover is missing. */
+  allowCarouselFallback?: boolean;
 };
 
 /** Home sections: admin CMS media only. */
@@ -28,12 +30,15 @@ export default function HomePageImage({
   sizes,
   width,
   height,
+  allowCarouselFallback = false,
 }: HomePageImageProps) {
-  const normalized = resolvePublicCmsImage(src);
+  const resolve =
+    variant === 'hero' || allowCarouselFallback ? resolvePublicHeroCarouselImage : resolvePublicCmsImage;
+  const normalized = resolve(src);
   const [displaySrc, setDisplaySrc] = useState(normalized);
   useEffect(() => {
-    setDisplaySrc(resolvePublicCmsImage(src));
-  }, [src]);
+    setDisplaySrc(resolve(src));
+  }, [src, variant, allowCarouselFallback]);
   if (!displaySrc) return null;
   const isHomeDestination = width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const dims =

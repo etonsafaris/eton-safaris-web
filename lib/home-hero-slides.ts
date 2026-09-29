@@ -1,8 +1,9 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 export type HomeHeroSlide = {
@@ -36,7 +37,7 @@ const HERO_COPY: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-/** Home carousel: only country covers uploaded in admin (`/api/media` / Cloudinary on the row). */
+/** Home carousel: admin country covers first, then verified hero art when a cover is missing. */
 export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[] {
   return NAV_COUNTRIES.map(({ slug, name }) => {
     const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
@@ -44,7 +45,11 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = resolvePublicCmsImage(countryHeroImage(slug, dbCountry)) || '';
+    const fromCms = countryHeroImage(slug, dbCountry);
+    const image =
+      resolvePublicHeroCarouselImage(fromCms) ||
+      resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) ||
+      '';
     return {
       title: copy.title,
       subtitle: copy.subtitle,
@@ -52,10 +57,23 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       href: destinationPublicPath(slug),
       image,
     };
-  }).filter((slide) => Boolean(slide.image && resolvePublicCmsImage(slide.image)));
+  }).filter((slide) => Boolean(slide.image && resolvePublicHeroCarouselImage(slide.image)));
 }
 
-/** No stock slides — public hero requires admin country covers. */
+/** Dav-style default carousel when CMS covers are not set yet. */
 export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
-  return [];
+  return NAV_COUNTRIES.map(({ slug, name }) => {
+    const copy = HERO_COPY[slug] || {
+      title: `Discover ${name}`,
+      subtitle: `Discover unforgettable safari experiences in ${name}.`,
+    };
+    const image = resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) || '';
+    return {
+      title: copy.title,
+      subtitle: copy.subtitle,
+      cta: `Explore ${name}`,
+      href: destinationPublicPath(slug),
+      image,
+    };
+  }).filter((slide) => Boolean(slide.image));
 }
