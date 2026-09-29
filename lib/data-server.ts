@@ -406,7 +406,7 @@ export async function fetchAllRecords(
 const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
 
 export const TOUR_LIST_COLUMNS =
-  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
+  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,published_at,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
 
 /** Shared list columns for admin grids and public listings (no description HTML). */
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {

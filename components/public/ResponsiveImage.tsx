@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { resolvePublicRecordImageSrc } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -33,10 +33,10 @@ export default function ResponsiveImage({
   height,
   useErrorFallback = false,
 }: ResponsiveImageProps) {
-  const resolved = resolvePublicCmsImage(src) || '';
+  const resolved = resolvePublicRecordImageSrc(src) || '';
   const [displaySrc, setDisplaySrc] = useState(resolved);
   useEffect(() => {
-    setDisplaySrc(resolvePublicCmsImage(src) || '');
+    setDisplaySrc(resolvePublicRecordImageSrc(src) || '');
   }, [src]);
   if (!displaySrc) return null;
 
@@ -61,7 +61,9 @@ export default function ResponsiveImage({
   const motionClass = variant === 'hero' ? 'hero-motion' : '';
   const useFill = variant === 'hero' || className?.includes('absolute');
   const unoptimized =
-    displaySrc.startsWith('/api/media/') || displaySrc.includes('images.unsplash.com');
+    displaySrc.startsWith('/api/media/') ||
+    displaySrc.includes('images.unsplash.com') ||
+    displaySrc.includes('supabase.co/storage');
 
   const shared = {
     alt,

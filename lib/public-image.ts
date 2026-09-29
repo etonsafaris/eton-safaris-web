@@ -132,6 +132,42 @@ export function resolvePublicCmsImage(src?: string | null): string | null {
   return normalized.replace(/^http:\/\//i, 'https://');
 }
 
+/**
+ * Tour/card images assigned in admin: `/api/media`, Cloudinary, same-site media URLs,
+ * or legacy Supabase Storage URLs still stored on CMS rows.
+ */
+export function resolvePublicRecordImageSrc(src?: string | null): string | null {
+  const cms = resolvePublicCmsImage(src);
+  if (cms) return cms;
+  if (typeof src !== 'string') return null;
+  const raw = src.trim();
+  if (!raw || raw.startsWith('{') || raw.startsWith('[')) return null;
+  if (/images\.unsplash\.com/i.test(raw) || raw.startsWith('/heroes/')) return null;
+
+  const normalized = normalizeStoredMediaPath(raw);
+  const https = normalized.replace(/^http:\/\//i, 'https://');
+
+  if (/^https:\/\/res\.cloudinary\.com\//i.test(https)) return https;
+
+  if (isSupabaseStorageUrl(https) && /^https?:\/\//i.test(https)) return https;
+
+  if (isStoredCmsMediaPath(normalized)) {
+    return resolvePublicCmsImage(normalized);
+  }
+
+  try {
+    const url = new URL(https);
+    if (isThisSiteHost(url.hostname) && CMS_MEDIA_ID_RE.test(url.pathname)) {
+      const id = url.pathname.match(CMS_MEDIA_ID_RE)?.[1];
+      if (id) return `/api/media/${id}`;
+    }
+  } catch {
+    /* relative */
+  }
+
+  return null;
+}
+
 export function resolvePublicImage(src?: string | null, fallback = '') {
   return resolvePublicCmsImage(src) || fallback;
 }

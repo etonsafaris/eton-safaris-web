@@ -5,6 +5,7 @@ import {
   isSupabaseStorageUrl,
   normalizeStoredMediaPath,
   resolvePublicCmsImage,
+  resolvePublicRecordImageSrc,
 } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
@@ -41,7 +42,6 @@ function isBrokenCategoryImageUrl(value: unknown): boolean {
   if (!text || /^(null|undefined|none|-)$/i.test(text)) return true;
   if (/^\/(?:api\/media|cms-media)\/[a-f0-9]{32}/i.test(text.split('?')[0])) return false;
   if (/images\.unsplash\.com/i.test(text)) return true;
-  if (/supabase\.co\/storage/i.test(text)) return true;
   if (text.startsWith('/heroes/')) return true;
   if (/^\/(media|uploads)\//i.test(text)) return true;
   return false;
@@ -65,7 +65,7 @@ export function sanitizeContentImageUrl(
   const trimmed = normalizeStoredMediaPath(src.trim());
   if (!trimmed || isBrokenCategoryImageUrl(trimmed)) return null;
   if (isGenericStockUnsplashUrl(trimmed)) return null;
-  return resolvePublicCmsImage(trimmed);
+  return resolvePublicRecordImageSrc(trimmed) || resolvePublicCmsImage(trimmed);
 }
 
 /** Public site never injects stock — only explicit CMS fields. */
@@ -75,6 +75,7 @@ export function fallbackContentImageForRecord(_record: RecordRow | null | undefi
 
 const IMAGE_FIELD_KEYS = [
   'image_url',
+  'image',
   'cover_image',
   'featured_image',
   'thumbnail',
@@ -92,8 +93,8 @@ export function pickAivenMediaFromRecord(record: RecordRow | null | undefined): 
     if (typeof value !== 'string' || !value.trim()) continue;
     const normalized = normalizeStoredMediaPath(value.trim());
     if (isSupabaseStorageUrl(normalized)) continue;
-    if (!isStoredCmsMediaPath(normalized)) continue;
-    return resolvePublicCmsImage(normalized);
+    const resolved = resolvePublicRecordImageSrc(normalized);
+    if (resolved) return resolved;
   }
   return null;
 }

@@ -358,7 +358,7 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v13-popular-tours-east-africa'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v14-tour-card-images'], {
     revalidate: PUBLIC_DETAIL_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
