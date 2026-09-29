@@ -863,6 +863,15 @@ function isBlankPublishToken(value: string): boolean {
   return !value || value === 'null' || value === 'undefined' || value === 'none' || value === '-';
 }
 
+/** Admin-hidden or removed rows must never render on the public site. */
+export function isPubliclyVisibleRecord(record: RecordRow | null | undefined): boolean {
+  if (!record || typeof record !== 'object') return false;
+  if (record.deleted_at || record.deletedAt) return false;
+  if (record.is_deleted === true || record.isDeleted === true) return false;
+  if (record.is_active === false || record.isActive === false) return false;
+  return isPublishedRecord(record);
+}
+
 /** Empty / missing status counts as published. Prefer status over visibility so Base44 visibility defaults do not hide CMS countries. */
 export function isPublishedRecord(record: RecordRow): boolean {
   for (const key of ['published', 'is_published', 'isPublished'] as const) {

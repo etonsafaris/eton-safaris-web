@@ -1,4 +1,13 @@
-import { CMS_PUBLIC_CACHE_TAG, CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
+import {
+  CMS_PUBLIC_CACHE_TAG,
+  CMS_PUBLIC_REVALIDATE_SECONDS,
+  PUBLIC_DETAIL_REVALIDATE_SECONDS,
+} from '@/lib/cms-public-cache';
+/**
+ * All loaders delegate to `@/lib/data-server` → `getAivenPool()` (same pool as admin).
+ * Detail routes use `fetchSyncedPublicRecord` + `isPubliclyVisibleRecord` from `@/lib/public-db-sync`.
+ */
+import { fetchSyncedPublicRecord, isPubliclyVisibleRecord } from '@/lib/public-db-sync';
 import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import { unstable_cache } from 'next/cache';
@@ -142,10 +151,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   });
 }
 
-/** Shared Next.js data cache for public CMS reads (15 min, bust via cms-public tag). */
-function cachedPublic<T>(keyParts: string[], tags: string[], loader: () => Promise<T>): Promise<T> {
+/** Shared Next.js data cache for public CMS reads (bust via cms-public tag). */
+function cachedPublic<T>(
+  keyParts: string[],
+  tags: string[],
+  loader: () => Promise<T>,
+  revalidateSeconds = CMS_PUBLIC_REVALIDATE_SECONDS
+): Promise<T> {
   return unstable_cache(loader, keyParts, {
-    revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+    revalidate: revalidateSeconds,
     tags: [CMS_PUBLIC_CACHE_TAG, ...tags],
   })();
 }
@@ -338,8 +352,8 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v9-verified-stock'], {
-    revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v10-admin-sync'], {
+    revalidate: PUBLIC_DETAIL_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
 }
@@ -471,10 +485,10 @@ export async function loadCountryPageData(slug: string) {
     const cached = await cachedPublic(
       ['country-page-data-v8-aiven-priority', normalized],
       ['collection:countries', `country:${normalized}`],
-      () => loadCountryPageDataInner(normalized)
+      async () => (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA
     );
     if (!isCountryPageDataSparse(cached)) return cached;
-    const retry = await loadCountryPageDataInner(normalized);
+    const retry = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
     return isCountryPageDataSparse(retry) ? cached : retry;
   } catch (error) {
     console.warn('[Public] loadCountryPageData failed:', slug, error);
@@ -521,10 +535,8 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
     }
     let data = raced;
     if (isCountryPageDataSparse(data)) {
-      const retry = await withTimeout(loadCountryPageDataInner(normalized), 6000, EMPTY_COUNTRY_PAGE_DATA).catch(
-        () => EMPTY_COUNTRY_PAGE_DATA
-      );
-      if (!isCountryPageDataSparse(retry)) data = retry;
+      const retry = await withTimeout(loadCountryPageDataInner(normalized), 6000, null).catch(() => null);
+      if (retry && !isCountryPageDataSparse(retry)) data = retry;
     }
     if (!data.tours.length) {
       const label =
@@ -551,7 +563,12 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
   }
 }
 
-async function loadCountryPageDataInner(slug: string) {
+type CountryPageLoadOptions = { requirePublishedCountry?: boolean };
+
+async function loadCountryPageDataInner(
+  slug: string,
+  options?: CountryPageLoadOptions
+): Promise<CountryPageData | null> {
   const [countryMeta, categoriesRaw] = await Promise.all([
     withTimeout(fetchRecordByPublicSlug('countries', slug), 6000, null),
     withTimeout(
@@ -565,6 +582,10 @@ async function loadCountryPageDataInner(slug: string) {
       [] as RecordRow[]
     ),
   ]);
+  if (options?.requirePublishedCountry) {
+    if (!countryMeta || !isPubliclyVisibleRecord(countryMeta)) return null;
+  }
+
   let country: RecordRow | null = countryMeta;
   if (countryMeta?.id != null) {
     country = await withTimeout(
@@ -572,6 +593,10 @@ async function loadCountryPageDataInner(slug: string) {
       6000,
       countryMeta
     );
+  }
+
+  if (options?.requirePublishedCountry && (!country || !isPubliclyVisibleRecord(country))) {
+    return null;
   }
   const countryCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
@@ -606,25 +631,43 @@ async function loadCountryPageDataInner(slug: string) {
     slug,
   };
   const displayCountry =
-    country && isPublishedRecord(country)
+    country && isPubliclyVisibleRecord(country)
       ? sanitizeCountryRowForDisplay(country)
-      : countryName
-        ? sanitizeCountryRowForDisplay(fallbackCountry)
-        : null;
+      : options?.requirePublishedCountry
+        ? null
+        : countryName
+          ? sanitizeCountryRowForDisplay(fallbackCountry)
+          : null;
+
+  if (options?.requirePublishedCountry && !displayCountry) return null;
 
   return {
     country: displayCountry,
     categories,
-    tours: toursForPage,
-    parks: parks.filter(isPublishedRecord),
-    places,
+    tours: toursForPage.filter(isPubliclyVisibleRecord),
+    parks: parks.filter(isPubliclyVisibleRecord),
+    places: places.filter(isPubliclyVisibleRecord),
   };
 }
 
-async function loadTourDetailLive(slug: string) {
+/** Admin-synced destination detail — no synthetic country shell; null when unpublished/deleted. */
+export async function loadCountryPageDataSynced(slug: string): Promise<CountryPageData | null> {
+  const normalized = normalizeSlug(slug);
+  if (!normalized) return null;
+  return cachedPublic(
+    ['country-page-sync-v1', normalized],
+    ['collection:countries', `country:${normalized}`],
+    () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
+    PUBLIC_DETAIL_REVALIDATE_SECONDS
+  );
+}
+
+async function loadTourDetailLive(slug: string, synced = false) {
   try {
-    const tour = await fetchPublicRecordResilient('tours', slug);
-    if (tour && !isPublishedRecord(tour)) {
+    const tour = synced
+      ? await withTimeout(fetchSyncedPublicRecord('tours', slug), 10000, null)
+      : await fetchPublicRecordResilient('tours', slug);
+    if (!tour || !isPubliclyVisibleRecord(tour)) {
       return { tour: null, related: [] as RecordRow[] };
     }
     const country = tour ? pickString(tour, ['country']) : '';
@@ -650,6 +693,18 @@ export async function loadTourDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   return cachedPublic(['tour-detail-v1', normalized], ['collection:tours', `tour:${normalized}`], () =>
     loadTourDetailLive(normalized)
+  );
+}
+
+/** Tour detail route — same Aiven row as admin; 60s ISR; null tour when hidden/deleted. */
+export async function loadTourDetailSynced(slug: string) {
+  const normalized = normalizeSlug(slug);
+  if (!normalized) return { tour: null, related: [] as RecordRow[] };
+  return cachedPublic(
+    ['tour-detail-sync-v1', normalized],
+    ['collection:tours', `tour:${normalized}`],
+    () => loadTourDetailLive(normalized, true),
+    PUBLIC_DETAIL_REVALIDATE_SECONDS
   );
 }
 
@@ -873,17 +928,19 @@ export async function loadSafariUpdatesListingResilient(options?: { limit?: numb
   }
 }
 
-export async function loadAccommodationDetail(slug: string) {
+async function loadAccommodationDetailLive(slug: string, synced = false) {
   try {
     const [item, stayPage] = await Promise.all([
-      fetchPublicRecordResilient('accommodations', slug),
+      synced
+        ? withTimeout(fetchSyncedPublicRecord('accommodations', slug), 10000, null)
+        : fetchPublicRecordResilient('accommodations', slug),
       withTimeout(
         fetchCollectionPage('accommodations', [], { limit: 20, offset: 0 }),
         6000,
         { rows: [] as RecordRow[], total: 0 }
       ),
     ]);
-    const published = item && isPublishedRecord(item) ? item : null;
+    const published = item && isPubliclyVisibleRecord(item) ? item : null;
     const others = published
       ? (stayPage?.rows ?? [])
           .filter(isPublishedRecord)
@@ -911,6 +968,23 @@ export async function loadAccommodationDetail(slug: string) {
     console.warn('[Public] loadAccommodationDetail failed:', slug, error);
     return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   }
+}
+
+export async function loadAccommodationDetail(slug: string) {
+  const normalized = normalizeSlug(slug);
+  return loadAccommodationDetailLive(normalized);
+}
+
+/** Stay detail route — admin-synced visibility; 60s ISR. */
+export async function loadAccommodationDetailSynced(slug: string) {
+  const normalized = normalizeSlug(slug);
+  if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
+  return cachedPublic(
+    ['accommodation-detail-sync-v1', normalized],
+    ['collection:accommodations', `accommodation:${normalized}`],
+    () => loadAccommodationDetailLive(normalized, true),
+    PUBLIC_DETAIL_REVALIDATE_SECONDS
+  );
 }
 
 export async function loadExploreDetail(slug: string) {

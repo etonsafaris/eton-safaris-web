@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
-import { EMPTY_TOUR_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
+import { loadStaticTourParams, loadTourDetailSynced } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
-export const revalidate = 900;
+/** Admin-synced tour detail — Aiven visibility guard + 60s ISR. */
+export const revalidate = 60;
 export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };
@@ -29,12 +30,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function TourDetailPage({ params }: PageProps) {
-  const { tour, related } = await safePublicLoad(
-    'tour detail page',
-    () => loadTourDetail(params.slug),
-    EMPTY_TOUR_DETAIL,
-    params.slug
-  );
+  const { tour, related } = await loadTourDetailSynced(params.slug);
+  if (!tour) notFound();
+
   return (
     <PublicShellServer>
       <TourDetailClient

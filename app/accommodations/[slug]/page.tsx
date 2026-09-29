@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
+import { loadAccommodationDetailSynced, loadStaticAccommodationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
-import type { RecordRow } from '@/lib/types';
 
-export const revalidate = 900;
+/** Admin-synced stay detail — Aiven visibility guard + 60s ISR. */
+export const revalidate = 60;
 export const dynamicParams = true;
 
 type PageProps = { params: { slug: string } };
@@ -33,27 +34,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
-  let item: RecordRow | null = null;
-  let others: RecordRow[] = [];
-  let tours: RecordRow[] = [];
+  if (!slug) notFound();
 
-  try {
-    const data = await loadAccommodationDetail(slug);
-    item = data?.item ?? null;
-    others = data?.others ?? [];
-    tours = data?.tours ?? [];
-  } catch (error) {
-    console.error('[Accommodation detail] Failed to load stay:', slug, error);
-  }
+  const data = await loadAccommodationDetailSynced(slug);
+  if (!data?.item) notFound();
 
   return (
     <PublicShellServer>
       <AccommodationDetailClient
         key={slug}
         embedded
-        initialItem={item}
-        initialOthers={others}
-        initialTours={tours}
+        initialItem={data.item}
+        initialOthers={data.others ?? []}
+        initialTours={data.tours ?? []}
       />
     </PublicShellServer>
   );

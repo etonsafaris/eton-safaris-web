@@ -12,8 +12,8 @@ import type { PublicDestination } from '@/lib/public-destinations';
 import type { RecordRow } from '@/lib/types';
 import { Metadata } from 'next';
 
-/** ISR: serve cached HTML at the edge; refresh from Aiven every 15 minutes. */
-export const revalidate = 900;
+/** ISR: re-check Aiven home bundle every minute (aligned with admin edits). */
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: {
