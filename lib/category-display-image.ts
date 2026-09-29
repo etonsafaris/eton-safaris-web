@@ -1,59 +1,55 @@
 import { canonicalCountrySlug, filterToursByCategory } from '@/lib/country-utils';
+import { countryCardRemoteFallback, defaultSafariStockImage } from '@/lib/country-hero-fallback';
 import { getRecordTitle } from '@/lib/data';
 import { getRecordImage } from '@/lib/record-image';
 import type { RecordRow } from '@/lib/types';
 
 const CARD_UNSPLASH_PARAMS = 'auto=format&fit=crop&w=600&q=80';
 
-function cardPhoto(photoId: string): string {
-  const id = photoId.startsWith('photo-') ? photoId : `photo-${photoId}`;
-  return `https://images.unsplash.com/${id}?${CARD_UNSPLASH_PARAMS}`;
-}
-
 /** Curated tourism art for safari activity categories (logo-free, CDN-sized for cards). */
 export const CATEGORY_STOCK_IMAGES: { pattern: RegExp; url: string }[] = [
   {
     pattern: /gorilla(\s+trekking)?/i,
-    url: cardPhoto('1523805009345-744884127a0'),
+    url: countryCardRemoteFallback('uganda'),
   },
   {
     pattern: /wildlife(\s+safaris?)?/i,
-    url: cardPhoto('1516426122078-c23e9931aeeb'),
+    url: countryCardRemoteFallback('kenya'),
   },
   {
     pattern: /chimp(anzee)?(\s+tracking)?/i,
-    url: cardPhoto('1551969014-7d9720413452'),
+    url: countryCardRemoteFallback('rwanda'),
   },
   {
     pattern: /bird(ing)?(\s+tours?)?/i,
-    url: cardPhoto('1444464666168-49d633b86797'),
+    url: countryCardRemoteFallback('malawi'),
   },
   {
     pattern: /mountain(\s+climbing)?|kilimanjaro|rwenzori/i,
-    url: cardPhoto('1464822759023-fed622ff2c3b'),
+    url: countryCardRemoteFallback('ethiopia'),
   },
   {
     pattern: /cultural(\s+tours?)?/i,
-    url: cardPhoto('1489392191929-878962fa5fcc'),
+    url: countryCardRemoteFallback('morocco'),
   },
   {
     pattern: /safari/i,
-    url: cardPhoto('1516026672272-bc52d61a55d9'),
+    url: countryCardRemoteFallback('tanzania'),
   },
 ];
 
-export const DEFAULT_CATEGORY_CARD_IMAGE = cardPhoto('1516426122078-c23e9931aeeb');
+export const DEFAULT_CATEGORY_CARD_IMAGE = defaultSafariStockImage();
 
 /** When category keywords do not match, prefer a country-appropriate safari scene. */
 const COUNTRY_ECOSYSTEM_CARD_IMAGES: Record<string, string> = {
-  uganda: cardPhoto('1523805009345-744884127a0'),
-  kenya: cardPhoto('1516426122078-c23e9931aeeb'),
-  tanzania: cardPhoto('1516026672272-bc52d61a55d9'),
-  rwanda: cardPhoto('1551969014-7d9720413452'),
-  'dr-congo': cardPhoto('1547471080-7cc2caa45a84'),
-  'south-africa': cardPhoto('1516426122078-c23e9931aeeb'),
-  botswana: cardPhoto('1509316975850-ff9c5deb6cd8'),
-  zambia: cardPhoto('1549363331-4fa7cdb8f802'),
+  uganda: countryCardRemoteFallback('uganda'),
+  kenya: countryCardRemoteFallback('kenya'),
+  tanzania: countryCardRemoteFallback('tanzania'),
+  rwanda: countryCardRemoteFallback('rwanda'),
+  'dr-congo': countryCardRemoteFallback('dr-congo'),
+  'south-africa': countryCardRemoteFallback('south-africa'),
+  botswana: countryCardRemoteFallback('botswana'),
+  zambia: countryCardRemoteFallback('zambia'),
 };
 
 /** Unsplash IDs we inject as category/country stock — skip for tour cards when hunting for real uploads. */
@@ -113,7 +109,8 @@ export function isBrokenCategoryImageUrl(value: unknown): boolean {
     if (lower.includes(marker)) return true;
   }
   if (/^\/(media|uploads)\//i.test(text)) return true;
-  if (text.startsWith('/') && !text.startsWith('/heroes/') && !text.startsWith('//')) {
+  if (text.startsWith('/heroes/')) return true;
+  if (text.startsWith('/') && !text.startsWith('//')) {
     if (!/^\/(?:api\/media|cms-media)\//i.test(text)) return true;
   }
   return false;

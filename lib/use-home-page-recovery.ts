@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HomePageContent } from '@/lib/home-page-content';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
-import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
+import { buildHomeHeroSlides, fallbackHomeHeroSlides } from '@/lib/home-hero-slides';
 import { mergeHomePagePayload } from '@/lib/home-page-fallback';
 import { normalizeHomePagePayload, safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import type { PublicDestination } from '@/lib/public-destinations';
@@ -53,6 +53,8 @@ export function useHomePageRecovery(options: {
           if (slides.length) setHeroSlides(slides);
           else if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
             setHeroSlides(body.heroSlides);
+          } else {
+            setHeroSlides(safeHeroSlides(fallbackHomeHeroSlides()));
           }
           return merged;
         });

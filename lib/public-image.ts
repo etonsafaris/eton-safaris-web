@@ -1,3 +1,5 @@
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
+
 export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
@@ -90,10 +92,30 @@ export function isDeployableImageUrl(value: unknown): value is string {
   }
 }
 
+function slugFromBundledHeroPath(pathname: string): string | null {
+  const base = pathname
+    .replace(/^\/heroes\//i, '')
+    .replace(/-\d+\.(webp|avif)$/i, '')
+    .replace(/\.(webp|jpe?g|avif|png)$/i, '');
+  return base || null;
+}
+
+/** `public/heroes/*` is often missing on Vercel — map to verified remote art by country slug. */
+export function resolveBundledHeroPath(src: string): string {
+  const pathname = imagePathname(src.trim());
+  if (!pathname.startsWith('/heroes/')) return src;
+  const slug = slugFromBundledHeroPath(pathname);
+  return countryHeroRemoteFallback(slug);
+}
+
 export function resolvePublicImage(src?: string | null, fallback = '') {
   if (!isDeployableImageUrl(src)) return fallback;
   const normalized = normalizeStoredMediaPath(String(src).trim());
-  return normalized.replace(/^http:\/\//i, 'https://');
+  const https = normalized.replace(/^http:\/\//i, 'https://');
+  if (https.startsWith('/heroes/')) {
+    return resolveBundledHeroPath(https);
+  }
+  return https;
 }
 
 function imagePathname(src: string) {

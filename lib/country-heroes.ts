@@ -6,7 +6,12 @@ import {
   officialCountryHeroPath,
 } from '@/lib/official-country-assets';
 import { getPublicRecordImage } from '@/lib/record-image';
-import { isBundledHeroAsset, isDeployableImageUrl, isLiveCmsImage } from '@/lib/public-image';
+import {
+  isBundledHeroAsset,
+  isDeployableImageUrl,
+  isLiveCmsImage,
+  resolvePublicImage,
+} from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function imagePathname(src: string) {
@@ -66,9 +71,11 @@ export function countryHeroImage(slug?: string | null, record?: RecordRow | null
   const slugKey = resolveCountrySlug(slug, record);
   const fromCms = record ? getPublicRecordImage(record) : null;
   if (isDeployableImageUrl(fromCms)) {
-    if (isLiveCmsImage(fromCms) && !fromCms.includes('/heroes/community')) return fromCms;
+    if (isLiveCmsImage(fromCms) && !fromCms.includes('/heroes/community')) {
+      return resolvePublicImage(fromCms) || bundledCountryHero(slugKey || slug);
+    }
     if (isBundledHeroAsset(fromCms) && slugKey && isBundledHeroForSlug(slugKey, fromCms)) {
-      return canonicalizeBundledCountryHero(slugKey, fromCms);
+      return resolvePublicImage(canonicalizeBundledCountryHero(slugKey, fromCms)) || bundledCountryHero(slugKey);
     }
   }
   return bundledCountryHero(slugKey || slug);

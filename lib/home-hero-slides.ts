@@ -45,7 +45,7 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = countryHeroImage(slug, dbCountry);
+    const image = resolvePublicImage(countryHeroImage(slug, dbCountry)) || countryHeroRemoteFallback(slug);
     return {
       title: copy.title,
       subtitle: copy.subtitle,

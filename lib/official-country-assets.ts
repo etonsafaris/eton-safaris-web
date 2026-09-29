@@ -1,6 +1,8 @@
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
+
 /**
- * Canonical bundled country hero files (single source — home, destinations, country pages).
- * Do not reference alternate paths (e.g. kenya.webp when kenya.jpg is official).
+ * Legacy bundled paths under `public/heroes` (optional on disk).
+ * Runtime URLs use {@link officialCountryHeroPath} → verified HTTPS fallbacks when files are absent.
  */
 export const OFFICIAL_COUNTRY_HERO_PATHS: Record<string, string> = {
   uganda: '/heroes/uganda.jpg',
@@ -37,7 +39,7 @@ export const COUNTRY_IMAGE_DIMENSIONS = {
 } as const;
 
 export function officialCountryHeroPath(slug: string) {
-  return OFFICIAL_COUNTRY_HERO_PATHS[slug] || OFFICIAL_COUNTRY_HERO_PATHS.kenya;
+  return countryHeroRemoteFallback(slug);
 }
 
 export function isOfficialCountryHeroPath(src: string) {
