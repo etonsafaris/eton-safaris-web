@@ -153,12 +153,14 @@ export default function SafariUpdateDetailClient({
         showLocation={false}
         hideMeta
         sidebarTitle="Recent Updates"
-        sidebarItems={related.map((item) => ({
-          href: `/safari-updates/${pickString(item, ['slug']) || item.id}`,
-          image: getRecordImage(item),
-          title: getRecordTitle(item),
-          date: formatPublishedDate(recordPublishedAt(item)),
-        }))}
+        sidebarItems={(related ?? [])
+          .filter(Boolean)
+          .map((item) => ({
+            href: `/safari-updates/${pickString(item, ['slug']) || item?.id || ''}`,
+            image: getRecordImage(item) || undefined,
+            title: getRecordTitle(item) || 'Safari update',
+            date: formatPublishedDate(recordPublishedAt(item)),
+          }))}
         below={
           <section id="tour-packages" className="bg-[#f3f6f5]">
             <AmazingSafaris

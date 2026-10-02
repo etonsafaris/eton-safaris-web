@@ -50,6 +50,7 @@ export default function Carousel({
   itemWidth = 200,
   gap = 20,
 }: CarouselProps) {
+  const safeItems = items ?? [];
   const viewportRef = useRef<HTMLDivElement>(null);
   const percentPerView = useItemsPerView(itemsPerView);
   const [index, setIndex] = useState(0);
@@ -70,8 +71,8 @@ export default function Carousel({
   const slot = itemWidth + gap;
   const centeredPerView = Math.max(1, Math.floor((containerWidth + gap) / slot) || 1);
   const perView = centered ? centeredPerView : percentPerView;
-  const overflows = items.length > perView;
-  const maxIndex = Math.max(0, items.length - perView);
+  const overflows = safeItems.length > perView;
+  const maxIndex = Math.max(0, safeItems.length - perView);
   const autoplayActive = overflows && !paused && !(pauseOnHover && hovering);
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function Carousel({
 
   const slideWidth = useMemo(() => `${100 / perView}%`, [perView]);
 
-  if (items.length === 0) {
+  if (safeItems.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white py-12 text-center text-gray-500">
         {emptyMessage}
@@ -140,7 +141,7 @@ export default function Carousel({
               transform: overflows ? `translateX(-${index * slot}px)` : undefined,
             }}
           >
-            {items.map((item, itemIndex) => (
+            {safeItems.map((item, itemIndex) => (
               <div key={itemIndex} className="shrink-0" style={{ width: itemWidth }}>
                 {item}
               </div>
@@ -151,7 +152,7 @@ export default function Carousel({
             className={`flex ease-out ${instant ? '' : 'transition-transform duration-500'}`}
             style={{ transform: `translateX(-${index * (100 / perView)}%)` }}
           >
-            {items.map((item, itemIndex) => (
+            {safeItems.map((item, itemIndex) => (
               <div key={itemIndex} className="flex shrink-0 px-2" style={{ width: slideWidth }}>
                 {item}
               </div>

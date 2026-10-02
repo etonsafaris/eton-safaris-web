@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import RelatedSidebar, { type RelatedSidebarItem } from '@/components/public/RelatedSidebar';
 
 /**
@@ -19,21 +19,22 @@ export default function FitRelatedSidebar({
   articleSelector?: string;
 }) {
   const measureRef = useRef<HTMLDivElement>(null);
-  const [visibleItems, setVisibleItems] = useState<RelatedSidebarItem[]>(items.slice(0, 3));
+  const safeItems = useMemo(() => items ?? [], [items]);
+  const [visibleItems, setVisibleItems] = useState<RelatedSidebarItem[]>(() => (items ?? []).slice(0, 3));
 
   useLayoutEffect(() => {
     function measure() {
       if (typeof window === 'undefined') return;
       // Mobile: stack layout — show a modest list
       if (window.matchMedia('(max-width: 1023px)').matches) {
-        setVisibleItems(items.slice(0, 6));
+        setVisibleItems(safeItems.slice(0, 6));
         return;
       }
 
       const article = document.querySelector(articleSelector) as HTMLElement | null;
       const probe = measureRef.current;
-      if (!article || !probe || items.length === 0) {
-        setVisibleItems(items.slice(0, 4));
+      if (!article || !probe || safeItems.length === 0) {
+        setVisibleItems(safeItems.slice(0, 4));
         return;
       }
 
@@ -56,7 +57,7 @@ export default function FitRelatedSidebar({
         count += 1;
       }
 
-      setVisibleItems(items.slice(0, Math.max(1, Math.min(count || 1, items.length))));
+      setVisibleItems(safeItems.slice(0, Math.max(1, Math.min(count || 1, safeItems.length))));
     }
 
     measure();
@@ -68,7 +69,7 @@ export default function FitRelatedSidebar({
       ro?.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [items, articleSelector]);
+  }, [safeItems, articleSelector]);
 
   return (
     <>
@@ -83,8 +84,8 @@ export default function FitRelatedSidebar({
             <h2 className="mb-0 text-[28px] font-normal italic leading-[1.2] text-[#6aa441]">{title}</h2>
           </div>
           <ul className="list-none px-5">
-            {items.map((item) => (
-              <li key={`probe-${item.href}`} data-fit-row className="border-b border-[#d7e0e0] py-3">
+            {safeItems.map((item) => (
+              <li key={`probe-${item?.href}`} data-fit-row className="border-b border-[#d7e0e0] py-3">
                 <div className="flex items-start gap-3">
                   <div className="h-14 w-[72px] shrink-0 rounded bg-[#d7e0e0]" />
                   <span className="min-w-0 flex-1">

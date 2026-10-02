@@ -124,12 +124,14 @@ export default function AccommodationDetailClient({
         hideMeta
         country={pickString(item, ['country'])}
         sidebarTitle="Other Accommodations"
-        sidebarItems={others.map((row) => ({
-          href: `/accommodations/${publicRecordSlug(row)}`,
-          image: getRecordImage(row),
-          title: getRecordTitle(row),
-          date: formatPublishedDate(recordPublishedAt(row)),
-        }))}
+        sidebarItems={(others ?? [])
+          .filter(Boolean)
+          .map((row) => ({
+            href: `/accommodations/${publicRecordSlug(row) || ''}`,
+            image: getRecordImage(row) || undefined,
+            title: getRecordTitle(row) || 'Accommodation',
+            date: formatPublishedDate(recordPublishedAt(row)),
+          }))}
         below={
           <AmazingSafaris
             tours={tours}

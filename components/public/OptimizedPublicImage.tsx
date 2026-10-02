@@ -1,8 +1,14 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import { resolvePublicImage } from '@/lib/public-image';
+import {
+  DEFAULT_PUBLIC_IMAGE,
+  DEFAULT_SAFARI_FALLBACK_IMAGE,
+  publicImageSrcOrFallback,
+  resolvePublicImage,
+} from '@/lib/public-image';
 
 type OptimizedPublicImageProps = {
   src: string;
@@ -28,18 +34,35 @@ export default function OptimizedPublicImage({
   quality = 85,
   fill = false,
 }: OptimizedPublicImageProps) {
-  const resolved = resolvePublicImage(src);
-  if (!resolved) return null;
+  const initial = publicImageSrcOrFallback(resolvePublicImage(src) || src);
+  const [displaySrc, setDisplaySrc] = useState(initial);
+
+  useEffect(() => {
+    setDisplaySrc(publicImageSrcOrFallback(resolvePublicImage(src) || src));
+  }, [src]);
+
+  if (!displaySrc) return null;
 
   const shared = {
-    src: resolved,
-    alt,
+    src: displaySrc,
+    alt: alt || '',
     className,
     priority,
     quality,
     sizes,
     placeholder: 'blur' as const,
     blurDataURL: IMAGE_BLUR_DATA_URL,
+    onError: () => {
+      if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
+        setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
+        return;
+      }
+      if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
+        setDisplaySrc('');
+        return;
+      }
+      setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
+    },
   };
 
   if (fill) {

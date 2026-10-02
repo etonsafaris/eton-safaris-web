@@ -25,7 +25,15 @@ export default function LandingHero({
     <section className="relative min-h-[560px] overflow-hidden md:min-h-[680px]">
       <PageFavicon title={title} />
       {image ? (
-        <ResponsiveImage src={image} alt="" variant="hero" priority className="absolute inset-0 h-full w-full object-cover" />
+        <ResponsiveImage
+          src={image}
+          alt=""
+          variant="hero"
+          priority={true}
+          quality={85}
+          useErrorFallback={true}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       ) : (
         <div className="absolute inset-0 bg-forest" />
       )}
@@ -58,8 +66,8 @@ export default function LandingHero({
       {badges.length ? (
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-[#072615]/95 py-3">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 text-white">
-            {badges.map((badge) => (
-              <TrustBadge key={badge.id} badge={badge} />
+            {badges?.map((badge) => (
+              <TrustBadge key={badge?.id} badge={badge} />
             ))}
           </div>
         </div>

@@ -107,19 +107,22 @@ export default function ParkDetailClient({
 
   const stayItems = useMemo(
     () =>
-      stays.map((stay, index) => (
-        <PlaceCard
-          key={String(stay.id ?? index)}
-          href={`/accommodations/${publicRecordSlug(stay)}`}
-          image={getRecordImage(stay) || undefined}
-          title={getRecordTitle(stay)}
-          location={pickStoredString(stay, ['type', 'location'])}
-          description={recordCardBlurb(stay)}
-          record={stay}
-          date={formatPublishedDate(recordPublishedAt(stay))}
-          cta="View Stay"
-        />
-      )),
+      (stays ?? []).map((stay, index) => {
+        if (!stay) return null;
+        return (
+          <PlaceCard
+            key={String(stay?.id ?? index)}
+            href={`/accommodations/${publicRecordSlug(stay) || ''}`}
+            image={getRecordImage(stay) || undefined}
+            title={getRecordTitle(stay)}
+            location={pickStoredString(stay, ['type', 'location'])}
+            description={recordCardBlurb(stay)}
+            record={stay}
+            date={formatPublishedDate(recordPublishedAt(stay))}
+            cta="View Stay"
+          />
+        );
+      }),
     [stays]
   );
 
@@ -162,7 +165,7 @@ export default function ParkDetailClient({
             date: formatPublishedDate(recordPublishedAt(item)),
           }))}
         below={
-          stays.length > 0 ? (
+          (stays?.length ?? 0) > 0 ? (
             <section className="bg-white pb-12">
               <div className="px-5">
                 <div className="dav-amazing-title">
