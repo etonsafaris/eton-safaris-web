@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cloudflare": "opennextjs-cloudflare build",
+    "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "images:optimize": "node scripts/optimize-static-images.mjs",
     "start": "next start",
@@ -127,6 +130,7 @@
     "resend": "^6.20.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.8",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -137,6 +141,7 @@
     "sharp": "^0.35.4",
     "tailwindcss": "^3.4.17",
     "to-ico": "^1.1.5",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.30.0"
   }
 }

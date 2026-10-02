@@ -6,8 +6,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Standalone output for reliable Vercel/Docker builds (avoids bundling the full node_modules tree).
-  output: 'standalone',
+  // Cloudflare OpenNext builds use the default Next output (not Vercel standalone).
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
@@ -181,3 +180,10 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+try {
+  const { initOpenNextCloudflareForDev } = require('@opennextjs/cloudflare');
+  initOpenNextCloudflareForDev();
+} catch {
+  /* @opennextjs/cloudflare optional until devDependencies are installed */
+}

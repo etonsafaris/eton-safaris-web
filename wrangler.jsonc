@@ -1,13 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "eton-safaris-web",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-02",
-  "pages_build_output_dir": ".open-next/.cloudflare",
-  "build": {
-    "command": "npx @cloudflare/next-on-pages"
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
   },
-  "route": {
-    "pattern": "://etonsafaris.com*",
-    "zone_name": "etonsafaris.com"
-  }
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "eton-safaris-web"
+    }
+  ]
 }
