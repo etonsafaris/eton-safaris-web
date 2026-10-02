@@ -1,3 +1,5 @@
+import { isPgDnsOrHostError } from '@/lib/database-error-message';
+
 export function isPgTooManyClientsError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   return (
@@ -21,6 +23,9 @@ export async function withPgRetry<T>(fn: () => Promise<T>, attempts = 6): Promis
       return await fn();
     } catch (error) {
       lastError = error;
+      if (isPgDnsOrHostError(error)) {
+        throw error;
+      }
       if (!isPgTooManyClientsError(error) || attempt >= attempts - 1) {
         throw error;
       }

@@ -35,6 +35,7 @@ import {
   clearCollectionCache,
 } from '@/lib/data';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
+import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { notifyWorkspace } from '@/lib/notify';
 import NotificationDetailModal from '@/components/admin/NotificationDetailModal';
 import {
@@ -349,7 +350,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       }
       const message = retryable
         ? 'The database was briefly busy. Please wait a moment and click Retry.'
-        : raw;
+        : formatDatabaseErrorMessage(raw);
       console.error(err);
       setError(message);
       setRecords((prev) => (prev.length > 0 ? prev : []));

@@ -13,6 +13,7 @@ import {
   queryAdminTablePage,
 } from '@/lib/admin-paginated-list';
 import { bustAdminCountsCache } from '@/lib/admin-counts-server-cache';
+import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -175,12 +176,13 @@ export async function GET(request: Request) {
         ? error.message
         : 'Could not load records';
     console.error(`[Admin] records GET error for ${table}:`, error);
-    const status = isPgTooManyClientsError(error) ? 503 : 500;
-    const message = status === 503
+    const busy = isPgTooManyClientsError(error);
+    const status = busy ? 503 : 500;
+    const message = busy
       ? 'Database is busy. Your browser will retry automatically — or click Refresh in a few seconds.'
-      : raw;
+      : formatDatabaseErrorMessage(raw);
     return NextResponse.json(
-      { rows: [], total: 0, error: message, retryable: status === 503 },
+      { rows: [], total: 0, error: message, retryable: busy },
       { status }
     );
   }

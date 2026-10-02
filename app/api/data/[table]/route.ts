@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { publicListColumnsFor } from '@/lib/data-server';
+import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { withPgClient } from '@/lib/supabase/pool';
 
 export const dynamic = 'force-dynamic';
@@ -172,8 +173,8 @@ export async function GET(
     });
   } catch (error) {
     console.error(`[Aiven] Public data request failed for ${table}:`, error);
-    const message = error instanceof Error ? error.message : 'Could not load data';
-    const status = /too many clients/i.test(message) ? 503 : 503;
+    const message = formatDatabaseErrorMessage(error);
+    const status = 503;
     return NextResponse.json(
       { data: [], error: true, message },
       { status }

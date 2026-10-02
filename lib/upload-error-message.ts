@@ -1,3 +1,5 @@
+import { formatDatabaseErrorMessage, isPgDnsOrHostError } from '@/lib/database-error-message';
+
 /** User-facing copy for failed admin uploads (Aiven `media_files`, not Supabase Storage). */
 export function formatUploadErrorMessage(raw: unknown): string {
   const message =
@@ -12,17 +14,11 @@ export function formatUploadErrorMessage(raw: unknown): string {
   if (/sign in|unauthorized|missing access token|invalid session/i.test(lower)) {
     return 'Your admin session expired. Sign out, sign in again, then upload the image.';
   }
+  if (isPgDnsOrHostError(message) || /database_url|password authentication|too many clients|getaddrinfo/i.test(lower)) {
+    return formatDatabaseErrorMessage(message);
+  }
   if (!message || /image upload failed\. check storage permissions/i.test(lower)) {
     return 'Image could not be saved. Sign in again, then retry. If it still fails, check DATABASE_URL on the server.';
-  }
-  if (/database_url is not configured|aiven database_url/i.test(lower)) {
-    return 'Server database is not configured. Set DATABASE_URL in Vercel (Aiven PostgreSQL).';
-  }
-  if (/password authentication failed|authentication failed/i.test(lower)) {
-    return 'Database login failed. Update DATABASE_URL in Vercel with the current Aiven password, then redeploy.';
-  }
-  if (/too many clients|connection slots|database is busy/i.test(lower)) {
-    return 'Database is busy. Wait a few seconds and try the upload again.';
   }
   if (/timeout|timed out|abort/i.test(lower)) {
     return 'Upload timed out. Try a smaller image (under 4 MB) or retry in a moment.';
@@ -34,7 +30,7 @@ export function formatUploadErrorMessage(raw: unknown): string {
     return message;
   }
 
-  return message;
+  return formatDatabaseErrorMessage(message);
 }
 
 export function isLegacySupabaseStorageUrl(value: string | null | undefined): boolean {

@@ -8,6 +8,7 @@ import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { requireAdminUser } from '@/lib/require-admin';
 import { peekAdminCountsCache, writeAdminCountsCache } from '@/lib/admin-counts-server-cache';
+import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
 import { withAdminPgRoute } from '@/lib/admin-pg-route';
 
@@ -114,9 +115,7 @@ export async function POST(request: Request) {
     console.error('[Admin] Counts batch failed:', error);
     const message = isPgTooManyClientsError(error)
       ? 'Database is busy. Counts will refresh shortly.'
-      : error instanceof Error
-        ? error.message
-        : 'Could not load counts';
+      : formatDatabaseErrorMessage(error);
     return NextResponse.json({ error: message, counts: {} }, { status: 503 });
   }
 }
