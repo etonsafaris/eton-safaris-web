@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "eton-safaris-web",
+  "compatibility_date": "2026-10-02",
+  "pages_build_output_dir": ".open-next/.cloudflare",
+  "build": {
+    "command": "npx @cloudflare/next-on-pages"
+  }
+}
