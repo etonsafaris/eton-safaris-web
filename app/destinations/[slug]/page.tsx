@@ -42,7 +42,13 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
   if (!slug || !isDedicatedLandingCountry(slug)) notFound();
 
-  const data = await loadCountryPageDataResilient(slug);
+  let data;
+  try {
+    data = await loadCountryPageDataResilient(slug);
+  } catch (error) {
+    console.warn('[Public] Destination page load failed:', slug, error);
+    notFound();
+  }
   if (!data?.country) notFound();
 
   const country = data.country;

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
@@ -32,12 +33,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ParkDetailPage({ params }: PageProps) {
-  const { park, others, stays } = await safePublicLoad(
+  const slug = params?.slug?.trim() ?? '';
+  if (!slug) notFound();
+
+  const loaded = await safePublicLoad(
     'park detail page',
-    () => loadParkDetail(params.slug),
+    () => loadParkDetail(slug),
     EMPTY_PARK_DETAIL,
-    params.slug
+    slug
   );
+  if (!loaded?.park) notFound();
+
+  const { park, others, stays } = loaded;
   return (
     <PublicShellServer>
       <ParkDetailClient

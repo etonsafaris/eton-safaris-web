@@ -169,7 +169,7 @@ export default function PlacePageContent({
               <RelatedSidebar
                 title="Other Places"
                 countryName={countryTitle}
-                items={others.map((row) => ({
+                items={(others ?? []).map((row) => ({
                   href: countrySlugProp ? countryPlacePath(countrySlugProp, row) : explorePlacePath(row),
                   image: getRecordImage(row),
                   title: getRecordTitle(row),

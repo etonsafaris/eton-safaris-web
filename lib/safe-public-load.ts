@@ -19,6 +19,20 @@ export async function safePublicLoad<T>(
   }
 }
 
+/** Detail routes: return `null` on timeout/DB errors so pages can call `notFound()`. */
+export async function safePublicDetailLoad<T>(
+  scope: string,
+  loader: () => Promise<T>,
+  detail?: string
+): Promise<T | null> {
+  try {
+    return await loader();
+  } catch (error) {
+    logPublicLoadWarning(scope, error, detail);
+    return null;
+  }
+}
+
 export const EMPTY_COUNTRY_PAGE = {
   country: null as RecordRow | null,
   categories: [] as RecordRow[],

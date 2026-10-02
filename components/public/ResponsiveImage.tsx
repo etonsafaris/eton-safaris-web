@@ -4,7 +4,12 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import { DEFAULT_PUBLIC_IMAGE, resolvePublicRecordImageSrc } from '@/lib/public-image';
+import {
+  DEFAULT_PUBLIC_IMAGE,
+  DEFAULT_SAFARI_FALLBACK_IMAGE,
+  publicImageSrcOrFallback,
+  resolvePublicRecordImageSrc,
+} from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -17,7 +22,7 @@ type ResponsiveImageProps = {
   variant?: 'hero' | 'card';
   width?: number;
   height?: number;
-  /** When false, do not swap to Kenya hero / stock on load errors (tour CMS covers). */
+  /** When true, broken URLs show bundled safari art instead of an empty box. */
   useErrorFallback?: boolean;
 };
 
@@ -31,21 +36,27 @@ export default function ResponsiveImage({
   variant = 'card',
   width,
   height,
-  useErrorFallback = false,
+  useErrorFallback = true,
 }: ResponsiveImageProps) {
-  const resolved = resolvePublicRecordImageSrc(src) || '';
-  const [displaySrc, setDisplaySrc] = useState(resolved);
+  const initial =
+    resolvePublicRecordImageSrc(src) || (useErrorFallback ? publicImageSrcOrFallback(src) : '');
+  const [displaySrc, setDisplaySrc] = useState(initial);
+
   useEffect(() => {
-    setDisplaySrc(resolvePublicRecordImageSrc(src) || '');
-  }, [src]);
+    const resolved = resolvePublicRecordImageSrc(src);
+    if (resolved) setDisplaySrc(resolved);
+    else if (useErrorFallback) setDisplaySrc(publicImageSrcOrFallback(src));
+    else setDisplaySrc('');
+  }, [src, useErrorFallback]);
+
   if (!displaySrc) return null;
 
-  const heroQuality = quality ?? 85;
+  const resolvedQuality = variant === 'hero' ? (quality ?? 85) : quality;
   const isHomeDestination =
     variant === 'card' && width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const optimizedSrc =
     variant === 'hero'
-      ? heroImageSrc(displaySrc, heroQuality)
+      ? heroImageSrc(displaySrc, resolvedQuality ?? 85)
       : isHomeDestination
         ? countryDestinationCardSrc(displaySrc)
         : cardImageSrc(displaySrc);
@@ -66,9 +77,9 @@ export default function ResponsiveImage({
     displaySrc.includes('supabase.co/storage');
 
   const shared = {
-    alt,
+    alt: alt || '',
     priority,
-    quality: heroQuality,
+    ...(resolvedQuality != null ? { quality: resolvedQuality } : {}),
     placeholder: 'blur' as const,
     blurDataURL: IMAGE_BLUR_DATA_URL,
     sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
@@ -78,11 +89,15 @@ export default function ResponsiveImage({
         setDisplaySrc('');
         return;
       }
+      if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
+        setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
+        return;
+      }
       if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
         setDisplaySrc('');
         return;
       }
-      setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
+      setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
     },
   };
 

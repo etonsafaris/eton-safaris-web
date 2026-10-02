@@ -190,17 +190,18 @@ export default function CountryPageContent({
         </div>
       </section>
 
-      {parks.length > 0 ? (
+      {(parks?.length ?? 0) > 0 ? (
         <section className="bg-[#f3f3f3] px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
             <CountrySectionHeading>National Parks in {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
-                items={parks.map((park, index) => {
+                items={(parks ?? []).map((park, index) => {
+                  if (!park) return null;
                   const parkSlug = publicRecordSlug(park);
                   return (
                     <PlaceCard
-                      key={String(park.id ?? index)}
+                      key={String(park?.id ?? index)}
                       href={parkSlug ? `/parks/${parkSlug}` : '/parks'}
                       image={getRecordImage(park) || undefined}
                       title={getRecordTitle(park)}
@@ -228,18 +229,19 @@ export default function CountryPageContent({
         </section>
       ) : null}
 
-      {places.length > 0 ? (
+      {(places?.length ?? 0) > 0 ? (
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
             <CountrySectionHeading>Explore {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
-                items={places.map((place, index) => {
+                items={(places ?? []).map((place, index) => {
+                  if (!place) return null;
                   const placeSlug = publicRecordSlug(place);
                   const href = placeSlug ? countryPlacePath(slug, place) : '/explore';
                   return (
                     <PlaceCard
-                      key={String(place.id ?? index)}
+                      key={String(place?.id ?? index)}
                       href={href}
                       image={getRecordImage(place) || undefined}
                       title={getRecordTitle(place)}

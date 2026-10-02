@@ -1,8 +1,8 @@
-/** National parks — same ISR bundle as /parks/[slug]. */
+/** National parks — same ISR bundle as /parks/[slug] (15-minute ISR). */
+export const revalidate = 900;
 export {
   default,
   generateMetadata,
   generateStaticParams,
   dynamicParams,
-  revalidate,
 } from '../../parks/[slug]/page';

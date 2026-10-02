@@ -54,12 +54,12 @@ export default function HomePageImage({
       alt={alt}
       variant={variant}
       priority={priority}
-      quality={quality}
+      quality={quality ?? 85}
       sizes={sizes}
       width={width ?? dims.width}
       height={height ?? dims.height}
       className={className}
-      useErrorFallback={false}
+      useErrorFallback={true}
     />
   );
 }

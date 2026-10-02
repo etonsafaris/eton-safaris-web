@@ -4,6 +4,7 @@ import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadAccommodationDetailSynced, loadStaticAccommodationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
+import { safePublicDetailLoad } from '@/lib/safe-public-load';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -36,7 +37,11 @@ export default async function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) notFound();
 
-  const data = await loadAccommodationDetailSynced(slug);
+  const data = await safePublicDetailLoad(
+    'accommodation detail page',
+    () => loadAccommodationDetailSynced(slug),
+    slug
+  );
   if (!data?.item) notFound();
 
   return (

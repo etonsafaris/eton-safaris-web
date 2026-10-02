@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { formatPublishedDateValue, formatPublishedStamp } from '@/lib/public-date';
 import { stripPublicMoney } from '@/lib/public-money';
+import { DEFAULT_SAFARI_FALLBACK_IMAGE, publicImageSrcOrFallback } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function cardStamp(date?: string, record?: RecordRow) {
@@ -43,6 +47,13 @@ export default function PlaceCard({
   record?: RecordRow;
   cta?: string;
 }) {
+  const initialSrc = image ? publicImageSrcOrFallback(image) : '';
+  const [displaySrc, setDisplaySrc] = useState(initialSrc);
+
+  useEffect(() => {
+    setDisplaySrc(image ? publicImageSrcOrFallback(image) : '');
+  }, [image]);
+
   const stamp = cardStamp(date, record);
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
   const to = typeof href === 'string' && href.trim() ? href : '/';
@@ -50,9 +61,9 @@ export default function PlaceCard({
   return (
     <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        {image ? (
+        {displaySrc ? (
           <img
-            src={image}
+            src={displaySrc}
             alt={title || ''}
             width={640}
             height={480}
@@ -60,6 +71,13 @@ export default function PlaceCard({
             loading="lazy"
             decoding="async"
             fetchPriority="low"
+            onError={() => {
+              if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
+                setDisplaySrc('');
+                return;
+              }
+              setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
+            }}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>

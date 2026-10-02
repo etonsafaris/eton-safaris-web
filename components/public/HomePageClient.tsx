@@ -248,7 +248,7 @@ export default function HomePageClient({
             alt={current?.title ? String(current.title) : 'Eton Safaris destination'}
             variant="hero"
             priority={true}
-            quality={90}
+            quality={85}
             sizes="100vw"
             width={1440}
             height={900}

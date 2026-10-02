@@ -1,4 +1,6 @@
 export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
+/** Bundled safari placeholder (`public/images/default-safari.jpg`). */
+export const DEFAULT_SAFARI_FALLBACK_IMAGE = '/images/default-safari.jpg';
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
 
@@ -248,4 +250,8 @@ export function isLocalOnlyImage(value: unknown): boolean {
   } catch {
     return false;
   }
+}
+
+export function publicImageSrcOrFallback(src?: string | null): string {
+  return resolvePublicRecordImageSrc(src) || DEFAULT_SAFARI_FALLBACK_IMAGE;
 }

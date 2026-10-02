@@ -100,12 +100,14 @@ export default function PageHero({
       {src ? (
         <ResponsiveImage
           src={src}
-          alt={title}
+          alt={title ?? ''}
           variant="hero"
-          priority
+          priority={true}
+          quality={85}
           width={1440}
           height={900}
           className="h-full w-full object-cover"
+          useErrorFallback={true}
         />
       ) : (
         <div className="h-full bg-[#1f3d2b]" />
