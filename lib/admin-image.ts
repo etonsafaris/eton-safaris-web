@@ -7,7 +7,9 @@ export const ADMIN_DEFAULT_CARD_IMAGE = '/images/official-default-safari.jpg';
 
 const BROKEN_ADMIN_PREVIEW_MARKERS = [
   'eton-safaris-gorilla',
+  'base44.com',
   'media.base44.com',
+  'supabase.co',
   'supabase.co/storage',
   '/object/authenticated/',
   '/object/sign/',

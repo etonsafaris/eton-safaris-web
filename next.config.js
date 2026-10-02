@@ -52,7 +52,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'flagcdn.com', pathname: '/**' },
       { protocol: 'https', hostname: 'etonsafaris.com', pathname: '/**' },
       { protocol: 'https', hostname: 'www.etonsafaris.com', pathname: '/**' },
-      { protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: '*.aiven.co', pathname: '/**' },
       { protocol: 'https', hostname: '*.aivencloud.com', pathname: '/**' },
     ],

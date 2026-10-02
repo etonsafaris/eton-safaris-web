@@ -24,7 +24,9 @@ export function stockImageForCategoryLabel(_label: string): string {
 
 const BROKEN_MARKERS = [
   'eton-safaris-gorilla',
+  'base44.com',
   'media.base44.com',
+  'supabase.co',
   'supabase.co/storage',
   '/object/authenticated/',
   '/object/sign/',

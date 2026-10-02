@@ -1,14 +1,12 @@
+import { isBase44MediaUrl, isLegacyExternalMediaUrl, isSupabaseStorageUrl } from '@/lib/legacy-media-url';
+
+export { isSupabaseStorageUrl } from '@/lib/legacy-media-url';
+
 export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
 /** Bundled safari placeholder (`public/images/default-safari.jpg`). */
 export const DEFAULT_SAFARI_FALLBACK_IMAGE = '/images/default-safari.jpg';
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
-
-/** Legacy Supabase Storage — images must be served from Aiven `media_files` via `/api/media/`. */
-export function isSupabaseStorageUrl(value: unknown): boolean {
-  if (typeof value !== 'string') return false;
-  return /supabase\.co\/storage/i.test(value.trim());
-}
 
 /** Uploaded files saved as `/api/media/{id}` or the `/cms-media/{id}` rewrite alias. */
 export function isStoredCmsMediaPath(value: unknown): boolean {
@@ -68,8 +66,7 @@ export function isDeployableImageUrl(value: unknown): value is string {
   if (!src || src === 'null' || src === 'undefined') return false;
   if (src.startsWith('{') || src.startsWith('[')) return false;
   if (/^(blob:|data:)/i.test(src)) return false;
-  if (/media\.base44\.com/i.test(src)) return false;
-  if (isSupabaseStorageUrl(src)) return false;
+  if (isLegacyExternalMediaUrl(src)) return false;
   if (/\/object\/authenticated\//i.test(src) || /\/object\/sign\//i.test(src)) return false;
 
   const normalized = normalizeStoredMediaPath(src);
@@ -136,7 +133,7 @@ export function resolvePublicCmsImage(src?: string | null): string | null {
 
 /**
  * Tour/card images assigned in admin: `/api/media`, Cloudinary, same-site media URLs,
- * or legacy Supabase Storage URLs still stored on CMS rows.
+ * or Cloudinary URLs saved on CMS rows (never Base44 / Supabase Storage).
  */
 export function resolvePublicRecordImageSrc(src?: string | null): string | null {
   const cms = resolvePublicCmsImage(src);
@@ -144,14 +141,13 @@ export function resolvePublicRecordImageSrc(src?: string | null): string | null 
   if (typeof src !== 'string') return null;
   const raw = src.trim();
   if (!raw || raw.startsWith('{') || raw.startsWith('[')) return null;
+  if (isLegacyExternalMediaUrl(raw) || isBase44MediaUrl(raw)) return null;
   if (/images\.unsplash\.com/i.test(raw) || raw.startsWith('/heroes/')) return null;
 
   const normalized = normalizeStoredMediaPath(raw);
   const https = normalized.replace(/^http:\/\//i, 'https://');
 
   if (/^https:\/\/res\.cloudinary\.com\//i.test(https)) return https;
-
-  if (isSupabaseStorageUrl(https) && /^https?:\/\//i.test(https)) return https;
 
   if (isStoredCmsMediaPath(normalized)) {
     return resolvePublicCmsImage(normalized);

@@ -109,7 +109,10 @@
     "images:restore-stays-parks:og": "node scripts/restore-accommodation-park-images.mjs --execute --property-og",
     "images:purge-supabase": "node scripts/purge-supabase-image-urls.mjs",
     "images:purge-supabase:execute": "node scripts/purge-supabase-image-urls.mjs --execute",
-    "images:purge-supabase:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate"
+    "images:purge-supabase:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate",
+    "images:purge-legacy-cdn": "node scripts/purge-supabase-image-urls.mjs",
+    "images:purge-legacy-cdn:execute": "node scripts/purge-supabase-image-urls.mjs --execute",
+    "images:purge-legacy-cdn:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

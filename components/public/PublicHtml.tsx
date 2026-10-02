@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef } from 'react';
 import { internalPathFromHref } from '@/lib/internal-link';
+import { isBlockedExternalHost, scrubLegacyMediaFromHtml } from '@/lib/legacy-media-url';
 import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-path-utils';
 
 type PublicHtmlProps = {
@@ -60,6 +61,16 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
       const href = anchor.getAttribute('href');
       if (!href) return;
 
+      try {
+        const parsed = new URL(href, window.location.origin);
+        if (isBlockedExternalHost(parsed.hostname)) {
+          event.preventDefault();
+          return;
+        }
+      } catch {
+        /* relative */
+      }
+
       const pageOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
       const internal = internalPathFromHref(href, { pageOrigin });
       if (!internal) return;
@@ -93,11 +104,12 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
     };
   }, [html, onClick, router]);
 
-  if (!html.trim()) return null;
+  const safeHtml = scrubLegacyMediaFromHtml(html);
+  if (!safeHtml.trim()) return null;
 
   return (
     <div ref={ref} className={className} style={style}>
-      <div className="public-html-surface" dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="public-html-surface" dangerouslySetInnerHTML={{ __html: safeHtml }} />
     </div>
   );
 }
@@ -111,6 +123,15 @@ export function PublicContentLink({
   className?: string;
   children: React.ReactNode;
 }) {
+  try {
+    const host = new URL(href, 'https://etonsafaris.com').hostname;
+    if (isBlockedExternalHost(host)) {
+      return <span className={className}>{children}</span>;
+    }
+  } catch {
+    /* relative */
+  }
+
   const internal = internalPathFromHref(href);
   if (!internal) {
     return (

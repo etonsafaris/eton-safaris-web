@@ -1,8 +1,8 @@
 import { publicCountrySlug, canonicalCountrySlug } from '@/lib/country-utils';
+import { isLegacyExternalMediaUrl } from '@/lib/legacy-media-url';
 import {
   isAdminPanelImageUrl,
   isStoredCmsMediaPath,
-  isSupabaseStorageUrl,
   normalizeStoredMediaPath,
   resolvePublicCmsImage,
   resolvePublicRecordImageSrc,
@@ -119,9 +119,7 @@ function resolveImageFieldForRecord(
   options?: { skipGenericStockUnsplash?: boolean }
 ): string | null {
   const normalized = normalizeStoredMediaPath(value.trim());
-  if (isSupabaseStorageUrl(normalized)) {
-    return resolvePublicRecordImageSrc(normalized);
-  }
+  if (isLegacyExternalMediaUrl(normalized)) return null;
   if (isGenericStockUnsplashUrl(normalized) && options?.skipGenericStockUnsplash) {
     return null;
   }

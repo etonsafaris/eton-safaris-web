@@ -1,10 +1,11 @@
 /**
- * Remove Supabase Storage image URLs from Aiven PostgreSQL.
- * With --migrate, downloads each file into `media_files` and rewrites to `/api/media/{id}`.
+ * Remove Base44 + Supabase Storage URLs from Aiven PostgreSQL.
+ * With --migrate, downloads Supabase files into `media_files` and rewrites to `/api/media/{id}`.
+ * Base44 URLs are always cleared (never re-hosted).
  *
  *   node scripts/purge-supabase-image-urls.mjs                    # dry-run
- *   node scripts/purge-supabase-image-urls.mjs --execute          # clear / replace without download
- *   node scripts/purge-supabase-image-urls.mjs --execute --migrate # copy bytes into Aiven first
+ *   node scripts/purge-supabase-image-urls.mjs --execute          # clear / replace
+ *   node scripts/purge-supabase-image-urls.mjs --execute --migrate # Supabase → Aiven bytes
  */
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'fs';
@@ -15,7 +16,11 @@ const EXECUTE = process.argv.includes('--execute');
 const MIGRATE = process.argv.includes('--migrate');
 
 const SUPABASE_RE = /supabase\.co\/storage/i;
-const SUPABASE_URL_RE = /https?:\/\/[^\s"'<>]*supabase\.co\/storage[^\s"'<>]*/gi;
+const BASE44_RE = /media\.base44\.com|\.base44\.com/i;
+const LEGACY_RE = /supabase\.co\/storage|media\.base44\.com|\.base44\.com/i;
+
+const LEGACY_URL_RE =
+  /https?:\/\/[^\s"'<>]*(?:supabase\.co\/storage|media\.base44\.com|[^\s"'<>]*\.base44\.com)[^\s"'<>]*/gi;
 
 const IMAGE_COLUMNS = [
   'image_url',
@@ -43,6 +48,10 @@ const CONTENT_TABLES = [
   'countries',
   'pages',
   'landing_pages',
+  'bookings',
+  'quotations_inquiries',
+  'reviews',
+  'keywords',
 ];
 
 const MEDIA_CREATE_SQL = `
@@ -79,6 +88,14 @@ function isSupabaseUrl(value) {
   return value != null && SUPABASE_RE.test(String(value));
 }
 
+function isBase44Url(value) {
+  return value != null && BASE44_RE.test(String(value));
+}
+
+function isLegacyUrl(value) {
+  return value != null && LEGACY_RE.test(String(value));
+}
+
 function isAivenMediaPath(value) {
   const text = String(value || '').trim().split('?')[0];
   return /^\/(?:api\/media|cms-media)\/[a-f0-9]{32}$/i.test(text);
@@ -106,7 +123,7 @@ async function importToAiven(client, url, cache) {
   const key = String(url).trim();
   if (cache.has(key)) return cache.get(key);
 
-  if (!MIGRATE) {
+  if (!MIGRATE || isBase44Url(key)) {
     cache.set(key, null);
     return null;
   }
@@ -141,8 +158,10 @@ async function importToAiven(client, url, cache) {
 }
 
 async function resolveReplacement(client, row, column, value, cache) {
-  const migrated = await importToAiven(client, value, cache);
-  if (migrated) return migrated;
+  if (isSupabaseUrl(value)) {
+    const migrated = await importToAiven(client, value, cache);
+    if (migrated) return migrated;
+  }
   const fallback = pickAivenFallback(row, column);
   if (fallback) return fallback;
   return null;
@@ -162,6 +181,20 @@ async function existingColumns(client, table) {
     [table]
   );
   return new Set(rows.map((r) => r.column_name));
+}
+
+async function scrubMediaFilenames(client) {
+  if (!(await tableExists(client, 'media_files'))) return 0;
+  const { rows } = await client.query(
+    `SELECT id, filename FROM media_files WHERE filename IS NOT NULL AND (filename ILIKE '%supabase%' OR filename ILIKE '%base44%')`
+  );
+  for (const row of rows) {
+    console.log(`[media_files] id=${row.id} filename cleared (was legacy URL)`);
+    if (EXECUTE) {
+      await client.query(`UPDATE media_files SET filename = $1 WHERE id = $2`, [`${row.id}.jpg`, row.id]);
+    }
+  }
+  return rows.length;
 }
 
 async function main() {
@@ -200,20 +233,21 @@ async function main() {
 
         for (const col of imageCols) {
           const value = row[col];
-          if (!isSupabaseUrl(value)) continue;
+          if (!isLegacyUrl(value)) continue;
           totalFields += 1;
           const replacement = await resolveReplacement(client, row, col, value, cache);
           patch[col] = replacement;
+          const label = isBase44Url(value) ? 'Base44' : 'Supabase';
           console.log(
-            `[${table}] id=${row.id} ${col}: ${String(value).slice(0, 72)}… → ${replacement || '(cleared)'}`
+            `[${table}] id=${row.id} ${col} (${label}): ${String(value).slice(0, 72)}… → ${replacement || '(cleared)'}`
           );
         }
 
         for (const col of htmlCols) {
           const raw = row[col];
-          if (raw == null || !SUPABASE_RE.test(String(raw))) continue;
+          if (raw == null || !LEGACY_RE.test(String(raw))) continue;
           let rebuilt = String(raw);
-          const urls = [...new Set(rebuilt.match(SUPABASE_URL_RE) || [])];
+          const urls = [...new Set(rebuilt.match(LEGACY_URL_RE) || [])];
           if (!urls.length) continue;
           totalHtml += urls.length;
           if (MIGRATE) {
@@ -222,10 +256,10 @@ async function main() {
               rebuilt = rebuilt.split(match).join(replacement || '');
             }
           } else {
-            rebuilt = rebuilt.replace(SUPABASE_URL_RE, '');
+            rebuilt = rebuilt.replace(LEGACY_URL_RE, '');
           }
           patch[col] = rebuilt;
-          console.log(`[${table}] id=${row.id} ${col}: scrubbed ${urls.length} Supabase URL(s)`);
+          console.log(`[${table}] id=${row.id} ${col}: scrubbed ${urls.length} legacy CDN URL(s)`);
         }
 
         if (!Object.keys(patch).length) continue;
@@ -239,11 +273,15 @@ async function main() {
       }
     }
 
+    const mediaFilenameRows = await scrubMediaFilenames(client);
+
     console.log(
-      `\npurge-supabase-image-urls — ${EXECUTE ? 'EXECUTE' : 'DRY-RUN'}${MIGRATE ? ' + MIGRATE' : ''}: ` +
-        `${totalFields} image field(s), ${totalHtml} HTML embed(s) affected.`
+      `\npurge-legacy-media-urls — ${EXECUTE ? 'EXECUTE' : 'DRY-RUN'}${MIGRATE ? ' + MIGRATE (Supabase only)' : ''}: ` +
+        `${totalFields} image field(s), ${totalHtml} HTML embed(s), ${mediaFilenameRows} media_files filename(s).`
     );
-    if (!EXECUTE) console.log('Re-run with --execute (add --migrate to copy files into Aiven media_files).');
+    if (!EXECUTE) {
+      console.log('Re-run with --execute (add --migrate to copy Supabase files into Aiven media_files).');
+    }
   } finally {
     client.release();
     await pool.end();
