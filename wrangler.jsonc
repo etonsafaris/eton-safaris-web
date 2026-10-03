@@ -8,10 +8,14 @@
     "PG_POOL_MAX": "2",
     "PG_SLOT_MAX": "2"
   },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "d19fed34c701401baf5822e40dcbf4f8"
+    }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   }
-  // Optional: create Hyperdrive in Cloudflare → link your Aiven URI, then add:
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<your-hyperdrive-config-id>" }]
 }
