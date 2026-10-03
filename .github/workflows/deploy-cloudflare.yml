@@ -28,16 +28,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: OpenNext build
-        run: npm run build:worker
-        env:
-          NODE_OPTIONS: --max-old-space-size=6144
-          SKIP_BUILD_STAYS: '1'
-          SKIP_BUILD_STATIC_PARAMS: '1'
-
-      - name: Deploy Worker
+      - name: Build and deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          SKIP_BUILD_STAYS: '1'
+          SKIP_BUILD_STATIC_PARAMS: '1'
+        command: npm run deploy

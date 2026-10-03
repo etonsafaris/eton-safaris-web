@@ -94,6 +94,7 @@ export function findCountryRecord(rows: RecordRow[], slug: string) {
 export { findRecordBySlug };
 
 export async function loadCmsPage(slug: string) {
+  if (skipStaticGenerationDuringBuild()) return null;
   try {
     const columns = listColumns('pages');
     const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);

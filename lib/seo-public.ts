@@ -115,6 +115,8 @@ export function metadataFromSeo(
 }
 
 export async function findPublicRecord(table: string, slug: string, aliases: string[] = []) {
+  const { skipStaticGenerationDuringBuild } = await import('@/lib/build-phase');
+  if (skipStaticGenerationDuringBuild()) return null;
   const direct = await fetchRecordByPublicSlug(table, slug, aliases).catch(() => null);
   if (direct) return direct;
   const rows = await fetchCollectionRecords(table, aliases);
