@@ -17,7 +17,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    await withPgClient((client) => client.query('SELECT 1 AS ok'));
+    const probe = withPgClient((client) => client.query('SELECT 1 AS ok'));
+    await Promise.race([
+      probe,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Database probe timed out after 12s')), 12000)
+      ),
+    ]);
     return NextResponse.json({ ok: true, database: 'connected' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Database unreachable';

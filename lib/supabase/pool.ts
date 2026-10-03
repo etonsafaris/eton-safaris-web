@@ -8,13 +8,8 @@ function normalizePgUrl(raw: string): string {
   return raw.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '');
 }
 
-/** Aiven URI from Worker secret (`DATABASE_URL`) or Cloudflare Hyperdrive binding (required for TCP on Workers). */
-export function resolveAivenConnectionString(): string | undefined {
-  const fromEnv = process.env.DATABASE_URL?.trim();
-  if (fromEnv) return normalizePgUrl(fromEnv);
-
+function readHyperdriveConnectionString(): string | undefined {
   if (!isServer) return undefined;
-
   try {
     const { getCloudflareContext } = require('@opennextjs/cloudflare') as {
       getCloudflareContext: () => { env?: Record<string, { connectionString?: string }> };
@@ -25,6 +20,16 @@ export function resolveAivenConnectionString(): string | undefined {
   } catch {
     /* not running on @opennextjs/cloudflare */
   }
+  return undefined;
+}
+
+/** Aiven via Hyperdrive (Workers) or `DATABASE_URL` secret / local `.env.local`. */
+export function resolveAivenConnectionString(): string | undefined {
+  const fromHyperdrive = readHyperdriveConnectionString();
+  if (fromHyperdrive) return fromHyperdrive;
+
+  const fromEnv = process.env.DATABASE_URL?.trim();
+  if (fromEnv) return normalizePgUrl(fromEnv);
 
   return undefined;
 }
@@ -97,7 +102,11 @@ export const getPool = getAivenPool;
 /** Caps parallel checkout so ISR + admin + uploads do not exhaust Aiven (20 conn). */
 const PG_SLOT_MAX = Math.max(
   1,
-  Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
+  Math.min(
+    POOL_MAX,
+    Number(process.env.PG_SLOT_MAX) ||
+      (process.env.VERCEL || process.env.CLOUDFLARE === '1' ? 2 : 4)
+  )
 );
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
