@@ -5,6 +5,6 @@
   "compatibility_flags": ["nodejs_compat"],
   "pages_build_output_dir": ".open-next/.cloudflare",
   "build": {
-    "command": "npm run pages:build"
+    "command": "npx @cloudflare/next-on-pages"
   }
 }
