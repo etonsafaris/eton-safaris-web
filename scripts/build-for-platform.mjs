@@ -4,11 +4,12 @@
  */
 import { spawnSync } from 'node:child_process';
 
+// Cloudflare Pages sets CF_PAGES=1. Workers CI often sets CLOUDFLARE_ACCOUNT_ID during build.
 const onCloudflare =
   process.env.CF_PAGES === '1' ||
   process.env.CLOUDFLARE_PAGES === '1' ||
-  process.env.CLOUDFLARE_ACCOUNT_ID ||
-  process.env.WRANGLER_SEND_METRICS !== undefined;
+  Boolean(process.env.CLOUDFLARE_ACCOUNT_ID?.trim()) ||
+  process.env.DEPLOY_TARGET === 'cloudflare';
 
 const args = onCloudflare
   ? ['run', 'build:cloudflare']
