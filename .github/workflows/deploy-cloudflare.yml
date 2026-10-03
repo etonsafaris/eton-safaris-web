@@ -1,4 +1,4 @@
-# Deploy to Cloudflare Workers (OpenNext) — works even when Pages Git auto-deploy is paused.
+# Deploy to Cloudflare Workers (OpenNext)
 # Required GitHub repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # Worker env vars (DATABASE_URL, NEXTAUTH_SECRET, …): Cloudflare dashboard → Workers → eton-safaris-web → Settings → Variables
 
@@ -26,17 +26,16 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
-      - name: Pages build (next-on-pages → .open-next/.cloudflare)
-        run: npm run build:cloudflare
+      - name: OpenNext build
+        run: npm run build
         env:
-          CF_PAGES: '1'
           NODE_OPTIONS: --max-old-space-size=6144
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .open-next/.cloudflare --project-name=eton-safaris-web
+          command: deploy
