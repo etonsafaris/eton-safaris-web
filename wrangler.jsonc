@@ -1,9 +1,17 @@
 {
   "name": "eton-safaris-web",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-03",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "CLOUDFLARE": "1",
+    "PG_POOL_MAX": "2",
+    "PG_SLOT_MAX": "2"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   }
+  // Optional: create Hyperdrive in Cloudflare → link your Aiven URI, then add:
+  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<your-hyperdrive-config-id>" }]
 }

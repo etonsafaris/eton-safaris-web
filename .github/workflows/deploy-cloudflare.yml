@@ -32,6 +32,8 @@ jobs:
         run: npm run build
         env:
           NODE_OPTIONS: --max-old-space-size=6144
+          SKIP_BUILD_STAYS: '1'
+          SKIP_BUILD_STATIC_PARAMS: '1'
 
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3

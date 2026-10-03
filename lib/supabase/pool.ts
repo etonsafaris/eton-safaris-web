@@ -29,6 +29,11 @@ export function resolveAivenConnectionString(): string | undefined {
   return undefined;
 }
 
+/** True when Aiven is reachable via `DATABASE_URL` or a Hyperdrive binding. */
+export function isDatabaseConfigured(): boolean {
+  return Boolean(resolveAivenConnectionString());
+}
+
 /** Aiven free tier ≈ 20 connections — never exceed this per Node process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
@@ -36,7 +41,8 @@ export const AIVEN_POOL_HARD_CAP = 15;
  * One shared pool per process (`global._aivenPool`) — survives Next.js hot reload without leaking connections.
  * Keep per-instance pool small on Vercel (many lambdas); cap at 15 via env for dedicated servers.
  */
-const DEFAULT_POOL_MAX = process.env.VERCEL || process.env.CF_PAGES ? 2 : 5;
+const DEFAULT_POOL_MAX =
+  process.env.VERCEL || process.env.CF_PAGES || process.env.CLOUDFLARE === '1' ? 2 : 5;
 const POOL_MAX = Math.max(
   1,
   Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)

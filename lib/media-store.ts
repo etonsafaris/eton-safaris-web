@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { withPgRetry } from '@/lib/pg-retry';
-import { withPgClient } from '@/lib/supabase/pool';
+import { isDatabaseConfigured, withPgClient } from '@/lib/supabase/pool';
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS media_files (
@@ -36,7 +36,7 @@ function wrapMediaStoreError(error: unknown): Error {
 }
 
 export async function saveMediaFile(file: File): Promise<string> {
-  if (!process.env.DATABASE_URL?.trim()) {
+  if (!isDatabaseConfigured()) {
     throw new Error('Aiven DATABASE_URL is not configured.');
   }
 

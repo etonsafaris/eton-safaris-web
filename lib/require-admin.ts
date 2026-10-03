@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { agentIsActive, isStaffRole } from '@/lib/find-agent';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
-import { withPgClient } from '@/lib/supabase/pool';
+import { isDatabaseConfigured, withPgClient } from '@/lib/supabase/pool';
 
 const AGENT_TABLES = ['registered_agents', 'Agent'] as const;
 
@@ -46,19 +46,19 @@ export async function requireAdminUser(request: Request): Promise<
     };
   }
 
-  if (!process.env.DATABASE_URL) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Server is not configured' }, { status: 500 }),
-    };
-  }
-
   const payload = decodeJwtPayload(token);
   const email = emailFromJwtPayload(payload);
   const sub = String(payload?.sub || '').trim();
 
   if (email && isOwnerAdminEmail(email)) {
     return { ok: true, user: { email, id: sub || email } };
+  }
+
+  if (!isDatabaseConfigured()) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Server is not configured' }, { status: 500 }),
+    };
   }
 
   try {

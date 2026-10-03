@@ -88,6 +88,7 @@ export const supabase = {
     signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
       const response = await fetch('/api/auth/sign-in', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });

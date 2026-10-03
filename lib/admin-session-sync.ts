@@ -11,11 +11,12 @@ export async function syncAdminSessionCookie(accessToken?: string) {
 
   const response = await fetch('/api/admin/session', {
     method: 'POST',
+    credentials: 'include',
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.ok;
 }
 
 export async function clearAdminSessionCookieServer() {
-  await fetch('/api/admin/session', { method: 'DELETE' }).catch(() => undefined);
+  await fetch('/api/admin/session', { method: 'DELETE', credentials: 'include' }).catch(() => undefined);
 }

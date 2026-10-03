@@ -1,10 +1,9 @@
 // Aiven PostgreSQL request client for API routes
-import { db } from '@/lib/supabase/pool';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isDatabaseConfigured } from '@/lib/supabase/pool';
 
 export function hasServiceRoleKey() {
-  // Aiven uses DATABASE_URL with full permissions
-  return Boolean(process.env.DATABASE_URL);
+  return isDatabaseConfigured();
 }
 
 export function bearerTokenFromRequest(request: Request) {
