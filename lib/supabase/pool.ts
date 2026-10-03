@@ -2,12 +2,32 @@ import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { serialPgWork } from '@/lib/pg-serial';
 
-const connectionString = process.env.DATABASE_URL;
-const normalizedConnectionString = connectionString
-  ? connectionString.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '')
-  : undefined;
-
 const isServer = typeof window === 'undefined';
+
+function normalizePgUrl(raw: string): string {
+  return raw.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '');
+}
+
+/** Aiven URI from Worker secret (`DATABASE_URL`) or Cloudflare Hyperdrive binding (required for TCP on Workers). */
+export function resolveAivenConnectionString(): string | undefined {
+  const fromEnv = process.env.DATABASE_URL?.trim();
+  if (fromEnv) return normalizePgUrl(fromEnv);
+
+  if (!isServer) return undefined;
+
+  try {
+    const { getCloudflareContext } = require('@opennextjs/cloudflare') as {
+      getCloudflareContext: () => { env?: Record<string, { connectionString?: string }> };
+    };
+    const hyper = getCloudflareContext()?.env?.HYPERDRIVE;
+    const fromHyperdrive = hyper?.connectionString?.trim();
+    if (fromHyperdrive) return normalizePgUrl(fromHyperdrive);
+  } catch {
+    /* not running on @opennextjs/cloudflare */
+  }
+
+  return undefined;
+}
 
 /** Aiven free tier ≈ 20 connections — never exceed this per Node process. */
 export const AIVEN_POOL_HARD_CAP = 15;
@@ -16,7 +36,7 @@ export const AIVEN_POOL_HARD_CAP = 15;
  * One shared pool per process (`global._aivenPool`) — survives Next.js hot reload without leaking connections.
  * Keep per-instance pool small on Vercel (many lambdas); cap at 15 via env for dedicated servers.
  */
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
+const DEFAULT_POOL_MAX = process.env.VERCEL || process.env.CF_PAGES ? 2 : 5;
 const POOL_MAX = Math.max(
   1,
   Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
@@ -30,12 +50,13 @@ declare global {
 }
 
 function createAivenPool(): PgPool {
-  if (!normalizedConnectionString) {
+  const connectionString = resolveAivenConnectionString();
+  if (!connectionString) {
     throw new Error('Aiven DATABASE_URL is not configured.');
   }
   const { Pool } = require('pg') as typeof import('pg');
   const pool = new Pool({
-    connectionString: normalizedConnectionString,
+    connectionString,
     ssl: { rejectUnauthorized: false },
     max: POOL_MAX,
     idleTimeoutMillis: 10000,
@@ -54,7 +75,7 @@ function createAivenPool(): PgPool {
  * One shared pool per Node process — survives Next.js hot reload via `global._aivenPool`.
  */
 export function getAivenPool(): PgPool | null {
-  if (!isServer || !normalizedConnectionString) return null;
+  if (!isServer || !resolveAivenConnectionString()) return null;
 
   if (!global._aivenPool) {
     global._aivenPool = global.aivenPool ?? createAivenPool();

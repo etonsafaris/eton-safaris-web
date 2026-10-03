@@ -6,6 +6,9 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  // Required for Aiven PostgreSQL on Workers (Dashboard → Hyperdrive → Create → paste Aiven Service URI).
+  // Replace HYPERDRIVE_CONFIG_ID after creation, then uncomment:
+  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "HYPERDRIVE_CONFIG_ID" }],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
