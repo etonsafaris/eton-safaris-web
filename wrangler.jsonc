@@ -1,22 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "eton-safaris-web",
-  "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-02",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  // Required for Aiven PostgreSQL on Workers (Dashboard → Hyperdrive → Create → paste Aiven Service URI).
-  // Replace HYPERDRIVE_CONFIG_ID after creation, then uncomment:
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "HYPERDRIVE_CONFIG_ID" }],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "eton-safaris-web"
-    }
-  ]
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": ".open-next/.cloudflare",
+  "build": {
+    "command": "npm run pages:build"
+  }
 }
