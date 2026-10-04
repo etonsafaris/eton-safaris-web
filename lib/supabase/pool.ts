@@ -60,20 +60,21 @@ declare global {
   var aivenPool: PgPool | undefined;
 }
 
-function isCloudflareWorkerRuntime(): boolean {
-  return process.env.CLOUDFLARE === '1' || Boolean(readHyperdriveConnectionString());
+/**
+ * Optional `postgres.js` driver — opt-in via AIVEN_USE_POSTGRES_DRIVER=1.
+ * Default on Cloudflare Workers: `pg` + Hyperdrive (nodejs_compat), which is what Hyperdrive documents.
+ */
+function useEdgeDriver(): boolean {
+  return process.env.AIVEN_USE_POSTGRES_DRIVER === '1';
 }
 
-/**
- * Edge-safe `postgres` driver (serverless TCP via Hyperdrive / nodejs_compat on Workers).
- * Falls back to `pg` only for local Node tooling when not on Cloudflare.
- */
 function getEdgeSql(): Sql {
   if (!global._aivenSql) {
     const connectionString = resolveAivenConnectionString();
     if (!connectionString) {
       throw new Error('Aiven DATABASE_URL is not configured.');
     }
+    const viaHyperdrive = Boolean(readHyperdriveConnectionString());
     const postgresImport = require('postgres') as typeof import('postgres');
     const postgres = postgresImport.default ?? postgresImport;
     global._aivenSql = postgres(connectionString, {
@@ -82,7 +83,7 @@ function getEdgeSql(): Sql {
       connect_timeout: 8,
       max_lifetime: 60 * 5,
       prepare: false,
-      ssl: 'require',
+      ssl: viaHyperdrive ? false : 'require',
       fetch_types: false,
       connection: {
         application_name: 'eton-safaris-web',
@@ -112,12 +113,6 @@ function createNodePgPool(): PgPool {
     console.error('[Aiven] Unexpected idle pool client error:', err.message);
   });
   return pool;
-}
-
-function useEdgeDriver(): boolean {
-  if (!isServer) return false;
-  if (isCloudflareWorkerRuntime()) return true;
-  return process.env.AIVEN_USE_POSTGRES_DRIVER === '1';
 }
 
 function rowsFromSqlResult<T extends QueryResultRow>(rows: readonly T[]): QueryResult<T> {

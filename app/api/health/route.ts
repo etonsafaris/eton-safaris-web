@@ -9,7 +9,11 @@ export async function GET(request: Request) {
   const configured = isDatabaseConfigured();
 
   if (!deep) {
-    return NextResponse.json({ ok: true, database: configured ? 'configured' : 'missing' });
+    return NextResponse.json({
+      ok: true,
+      database: configured ? 'configured' : 'missing',
+      runtime: process.env.CLOUDFLARE === '1' ? 'cloudflare-worker' : 'node',
+    });
   }
 
   if (!configured) {

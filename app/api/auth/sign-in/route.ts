@@ -21,14 +21,20 @@ export async function POST(request: Request) {
     const configuredPassword = process.env.ADMIN_PASSWORD || '';
     let row: Record<string, unknown> | undefined;
 
-    // Keep the owner login available during an Aiven outage. Store this only in
-    // Vercel encrypted environment variables, never in the repository.
-    if (
-      isOwnerAdminEmail(email) &&
-      email === configuredEmail &&
-      configuredPassword.length >= 8 &&
-      password === configuredPassword
-    ) {
+    if (isOwnerAdminEmail(email) && email === configuredEmail) {
+      if (configuredPassword.length < 8) {
+        console.error('[Auth] ADMIN_PASSWORD is missing or too short on the Worker (min 8 chars).');
+        return NextResponse.json(
+          {
+            error:
+              'Admin login is not configured on the server. Set ADMIN_PASSWORD on the Worker and run npm run secrets:cloudflare.',
+          },
+          { status: 503 }
+        );
+      }
+      if (password !== configuredPassword) {
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      }
       row = { id: `owner-${email}`, email, role: 'Admin', is_active: true };
     } else {
       const client = createAdminClient();
