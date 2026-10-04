@@ -65,7 +65,7 @@ function createPostgresPool(connectionString: string): Sql {
     idle_timeout: 20,
     connect_timeout: 10,
     max_lifetime: 60 * 10,
-    prepare: false,
+    prepare: viaHyperdrive,
     fetch_types: false,
     connection: {
       application_name: 'eton-safaris-web',

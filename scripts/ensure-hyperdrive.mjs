@@ -10,7 +10,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const ENV_FILE = process.env.CLOUDFLARE_ENV_FILE || resolve(ROOT, '.env.local');
 const STATE_PATH = resolve(ROOT, 'cloudflare.deploy.json');
 const WRANGLER_PATH = resolve(ROOT, 'wrangler.jsonc');
-const CONFIG_NAME = process.env.HYPERDRIVE_CONFIG_NAME || 'eton-safaris-aiven';
+const CONFIG_NAME = process.env.HYPERDRIVE_CONFIG_NAME || 'aiven';
 
 function runJson(command, args) {
   const result = spawnSync(command, args, {

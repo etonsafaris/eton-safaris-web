@@ -16,7 +16,7 @@ import { parseEnvFile } from './lib/parse-env-file.mjs';
 const ROOT = resolve(import.meta.dirname, '..');
 const ENV_FILE = process.env.CLOUDFLARE_ENV_FILE || resolve(ROOT, '.env.local');
 const HYPERDRIVE_ID =
-  process.env.HYPERDRIVE_ID || 'd19fed34c701401baf5822e40dcbf4f8';
+  process.env.HYPERDRIVE_ID || 'a4a877ce803d49dc8c12a55e4c84c438';
 const WORKER_NAME = process.env.CLOUDFLARE_WORKER_NAME || 'eton-safaris-web';
 const deployAfter = process.argv.includes('--deploy');
 
@@ -44,17 +44,14 @@ if (!connectionString) {
   process.exit(1);
 }
 
-console.log('[DB fix] Step 1/4 — update Hyperdrive origin (from .env.local DATABASE_URL)');
+console.log('[DB fix] Step 1/3 — update Hyperdrive origin (from .env.local DATABASE_URL)');
 run('npx', ['wrangler', 'hyperdrive', 'update', HYPERDRIVE_ID, '--connection-string', connectionString]);
 
-console.log('[DB fix] Step 2/4 — restart Hyperdrive connection pool');
-run('npx', ['wrangler', 'hyperdrive', 'update', HYPERDRIVE_ID, '--restart-connection-pool']);
-
-console.log('[DB fix] Step 3/4 — push Worker secrets (DATABASE_URL + admin/email keys)');
+console.log('[DB fix] Step 2/3 — push Worker secrets (DATABASE_URL + admin/email keys)');
 run('node', ['scripts/push-worker-secrets.mjs']);
 
 if (deployAfter) {
-  console.log('[DB fix] Step 4/4 — redeploy Worker');
+  console.log('[DB fix] Step 3/3 — redeploy Worker');
   const hyperdriveLocal = connectionString;
   run('npm', ['run', 'deploy:cloudflare'], {
     CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: hyperdriveLocal,
@@ -62,7 +59,7 @@ if (deployAfter) {
     SKIP_BUILD_STATIC_PARAMS: '1',
   });
 } else {
-  console.log('[DB fix] Step 4/4 — skipped (run with --deploy to rebuild + wrangler deploy)');
+  console.log('[DB fix] Step 3/3 — skipped (run with --deploy to rebuild + wrangler deploy)');
   console.log('[DB fix] Quick redeploy: npm run deploy:cloudflare');
 }
 

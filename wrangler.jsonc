@@ -8,10 +8,10 @@
     "PG_POOL_MAX": "2",
     "PG_SLOT_MAX": "2"
   },
-      "hyperdrive": [
+  "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "d19fed34c701401baf5822e40dcbf4f8",
+      "id": "a4a877ce803d49dc8c12a55e4c84c438",
       "localConnectionString": "postgresql://hyperdrive:hyperdrive@127.0.0.1:5432/hyperdrive"
     }
   ],
