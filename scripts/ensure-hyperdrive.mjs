@@ -51,7 +51,8 @@ function patchWranglerHyperdrive(id) {
   const block = `  "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "${id}"
+      "id": "${id}",
+      "localConnectionString": "postgresql://hyperdrive:hyperdrive@127.0.0.1:5432/hyperdrive"
     }
   ],`;
 
