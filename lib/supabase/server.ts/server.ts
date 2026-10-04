@@ -6,6 +6,7 @@ export {
   db,
   getAivenPool,
   getPool,
+  getSql,
   isDatabaseConfigured,
   queryRows,
   resolveAivenConnectionString,

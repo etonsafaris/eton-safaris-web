@@ -45,7 +45,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    serverComponentsExternalPackages: ['pg', 'postgres', 'resend', '@react-email/render'],
+    serverComponentsExternalPackages: ['postgres', 'resend', '@react-email/render'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
