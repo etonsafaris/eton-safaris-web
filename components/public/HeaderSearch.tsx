@@ -90,11 +90,15 @@ export default function HeaderSearch() {
                       onClick={() => setOpen(false)}
                       className="flex gap-3 border-b px-3 py-2 hover:bg-cream"
                     >
-                      {card.image ? (
-                        <img src={card.image} alt="" width={56} height={48} loading="lazy" decoding="async" className="h-12 w-14 shrink-0 rounded-md object-cover" />
-                      ) : (
-                        <div className="h-12 w-14 shrink-0 rounded-md bg-gray-100" />
-                      )}
+                      <img
+                        src={card.image}
+                        alt=""
+                        width={56}
+                        height={48}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-12 w-14 shrink-0 rounded-md object-cover"
+                      />
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-forest">{card.title}</span>
                         <span className="block text-[11px] text-moss">

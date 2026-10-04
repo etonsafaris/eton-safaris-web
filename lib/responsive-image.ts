@@ -1,3 +1,5 @@
+import { OFFICIAL_DEFAULT_CARD_IMAGE } from '@/lib/public-image';
+
 const DEFAULT_WIDTHS = [480, 768, 1080, 1440];
 
 function withSearchParams(src: string, params: Record<string, string>) {
@@ -16,7 +18,7 @@ function isLocalHeroAsset(src: string) {
 }
 
 export function sizedImageUrl(src: string, width: number, quality = 70): string {
-  if (!src) return src;
+  if (!src || src === 'null' || src === 'undefined') return OFFICIAL_DEFAULT_CARD_IMAGE;
   if (isLocalHeroAsset(src)) {
     return src;
   }

@@ -1,5 +1,5 @@
 import { getPublicRecordImage, getRecordImageRaw } from '@/lib/content-image';
-import { resolvePublicRecordImageSrc } from '@/lib/public-image';
+import { OFFICIAL_DEFAULT_CARD_IMAGE, resolvePublicRecordImageSrc } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 /** Normalize list rows so cards always read a single resolved `image_url`. */
@@ -11,9 +11,8 @@ export function enrichTourRowForCards(row: RecordRow): RecordRow {
   }
   const raw = getRecordImageRaw(row);
   if (!raw) return row;
-  const fallback = resolvePublicRecordImageSrc(raw);
-  if (fallback) return { ...row, image_url: fallback };
-  return row;
+  const fallback = resolvePublicRecordImageSrc(raw) || OFFICIAL_DEFAULT_CARD_IMAGE;
+  return { ...row, image_url: fallback };
 }
 
 export function enrichTourListForCards(rows: RecordRow[]): RecordRow[] {

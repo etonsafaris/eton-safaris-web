@@ -3,8 +3,10 @@ import { isBase44MediaUrl, isLegacyExternalMediaUrl, isSupabaseStorageUrl } from
 export { isSupabaseStorageUrl } from '@/lib/legacy-media-url';
 
 export const DEFAULT_PUBLIC_IMAGE = '/eton-safaris-gorilla.png';
-/** Bundled safari placeholder (`public/images/default-safari.jpg`). */
-export const DEFAULT_SAFARI_FALLBACK_IMAGE = '/images/default-safari.jpg';
+/** Official bundled card placeholder (`public/images/official-default-safari.jpg`). */
+export const OFFICIAL_DEFAULT_CARD_IMAGE = '/images/official-default-safari.jpg';
+/** Bundled safari placeholder for public cards and search matrices. */
+export const DEFAULT_SAFARI_FALLBACK_IMAGE = OFFICIAL_DEFAULT_CARD_IMAGE;
 
 const CMS_MEDIA_ID_RE = /^\/(?:api\/media|cms-media)\/([a-f0-9]{32})(?:\?.*)?$/i;
 
@@ -249,5 +251,14 @@ export function isLocalOnlyImage(value: unknown): boolean {
 }
 
 export function publicImageSrcOrFallback(src?: string | null): string {
-  return resolvePublicRecordImageSrc(src) || DEFAULT_SAFARI_FALLBACK_IMAGE;
+  const trimmed = typeof src === 'string' ? src.trim() : '';
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
+    return OFFICIAL_DEFAULT_CARD_IMAGE;
+  }
+  return resolvePublicRecordImageSrc(trimmed) || OFFICIAL_DEFAULT_CARD_IMAGE;
+}
+
+/** Card/search matrix image — never returns empty (prevents hidden card drops). */
+export function publicCardImageSrc(src?: string | null): string {
+  return publicImageSrcOrFallback(src);
 }

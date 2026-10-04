@@ -6,7 +6,7 @@ import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
 import {
   DEFAULT_PUBLIC_IMAGE,
-  DEFAULT_SAFARI_FALLBACK_IMAGE,
+  OFFICIAL_DEFAULT_CARD_IMAGE,
   publicImageSrcOrFallback,
   resolvePublicRecordImageSrc,
 } from '@/lib/public-image';
@@ -89,15 +89,15 @@ export default function ResponsiveImage({
         setDisplaySrc('');
         return;
       }
-      if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
+      if (displaySrc === OFFICIAL_DEFAULT_CARD_IMAGE) {
         setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
         return;
       }
       if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
-        setDisplaySrc('');
+        setDisplaySrc(OFFICIAL_DEFAULT_CARD_IMAGE);
         return;
       }
-      setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
+      setDisplaySrc(OFFICIAL_DEFAULT_CARD_IMAGE);
     },
   };
 

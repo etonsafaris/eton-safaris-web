@@ -267,15 +267,15 @@ export default function TourSearchBar({
 
                         >
 
-                          {card.image ? (
-
-                            <img src={card.image} alt="" width={64} height={56} loading="lazy" decoding="async" className="h-14 w-16 shrink-0 object-cover" />
-
-                          ) : (
-
-                            <div className="h-14 w-16 shrink-0 bg-gray-100" />
-
-                          )}
+                          <img
+                            src={card.image}
+                            alt=""
+                            width={64}
+                            height={56}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-14 w-16 shrink-0 object-cover"
+                          />
 
                           <span className="min-w-0 text-left font-normal normal-case">
 

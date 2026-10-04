@@ -9,6 +9,7 @@ import {
   slugify,
 } from '@/lib/data';
 import { matchesCategoryValue } from '@/lib/country-utils';
+import { publicCardImageSrc } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function tokens(value: string): string[] {
@@ -130,7 +131,7 @@ export function tourSearchCard(tour: RecordRow) {
   return {
     href: tourPublicPath(tour),
     title: getRecordTitle(tour),
-    image: getRecordImage(tour) || '',
+    image: publicCardImageSrc(getRecordImage(tour)),
     destination: pickString(tour, ['country', 'destination']),
     description: pickPlainText(tour, ['description', 'excerpt']),
     duration: days > 0 ? `${days} days` : '',

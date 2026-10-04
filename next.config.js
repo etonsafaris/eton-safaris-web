@@ -12,6 +12,13 @@ const nextConfig = {
   compress: true,
   swcMinify: true,
   webpack(config, { isServer }) {
+    if (isServer) {
+      config.externals = config.externals || [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push('cloudflare:sockets');
+      }
+      config.externalsType = 'commonjs';
+    }
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -25,18 +32,20 @@ const nextConfig = {
         pg: false,
         'pg-native': false,
         'pg-cloudflare': false,
+        postgres: false,
       };
       config.resolve.alias = {
         ...config.resolve.alias,
         pg: false,
         'pg-native': false,
+        postgres: false,
       };
     }
     return config;
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    serverComponentsExternalPackages: ['pg', 'resend', '@react-email/render'],
+    serverComponentsExternalPackages: ['pg', 'postgres', 'resend', '@react-email/render'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
