@@ -45,4 +45,4 @@ console.log('=== After DNS propagates ===\n');
 console.log('  https://www.etonsafaris.com/');
 console.log('  https://etonsafaris.com/ (redirects to www)');
 console.log('  https://admin.etonsafaris.com/login');
-console.log('  https://<project>.vercel.app/api/health?deep=1 → database connected\n');
+console.log('  https://<project>.vercel.app/api/health?deep=1 (rewrites to /api/system/health) → database connected\n');

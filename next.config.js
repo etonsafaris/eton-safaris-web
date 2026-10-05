@@ -181,6 +181,8 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // /api/health must not be handled by app/[slug]/[category] on Vercel.
+      { source: '/api/health', destination: '/api/system/health' },
       { source: '/cms-media/:id', destination: '/api/media/:id' },
       { source: '/contact-us', destination: '/contact' },
       { source: '/community-support', destination: '/community' },
