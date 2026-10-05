@@ -6,6 +6,15 @@
   "regions": ["fra1"],
   "env": {
     "SKIP_BUILD_STAYS": "1",
-    "SKIP_BUILD_STATIC_PARAMS": "1"
-  }
+    "SKIP_BUILD_STATIC_PARAMS": "1",
+    "NEXT_PUBLIC_SITE_URL": "https://etonsafaris.com"
+  },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.etonsafaris.com" }],
+      "destination": "https://etonsafaris.com/:path*",
+      "permanent": true
+    }
+  ]
 }

@@ -32,6 +32,7 @@ function isMainPublicHost(hostname: string): boolean {
   return (
     /^(www\.)?etonsafaris\.com$/i.test(host) ||
     /\.vercel\.app$/i.test(host) ||
+    /\.netlify\.app$/i.test(host) ||
     /\.pages\.dev$/i.test(host) ||
     /\.workers\.dev$/i.test(host)
   );

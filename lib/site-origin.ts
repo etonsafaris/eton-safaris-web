@@ -53,6 +53,11 @@ export function resolvePublicSiteOrigin(): string {
     }
   }
 
+  const vercelProduction = sanitizePublicSiteOrigin(
+    typeof process !== 'undefined' ? process.env.VERCEL_PROJECT_PRODUCTION_URL : undefined
+  );
+  if (vercelProduction) return vercelProduction;
+
   const vercel =
     typeof process !== 'undefined' && process.env.VERCEL_URL
       ? sanitizePublicSiteOrigin(`https://${process.env.VERCEL_URL}`)
