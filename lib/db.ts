@@ -1,5 +1,5 @@
 /**
- * Primary database entry — edge-safe Aiven pool (Cloudflare Hyperdrive + `postgres.js`).
+ * Primary database entry — Aiven via Hyperdrive (`pg` on Workers) or direct `DATABASE_URL`.
  */
 export {
   aivenFetch,
