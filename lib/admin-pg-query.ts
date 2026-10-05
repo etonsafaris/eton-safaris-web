@@ -1,4 +1,4 @@
-import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
+import type { PoolClient, QueryResult, QueryResultRow } from '@/lib/supabase/pool';
 import { NextResponse } from 'next/server';
 import { withPgClient } from '@/lib/supabase/pool';
 

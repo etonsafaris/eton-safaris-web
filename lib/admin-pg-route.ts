@@ -1,4 +1,4 @@
-import type { PoolClient } from 'pg';
+import type { PoolClient } from '@/lib/supabase/pool';
 import { withPgClient } from '@/lib/supabase/pool';
 
 /**

@@ -57,7 +57,7 @@ function ListingBlock({ loading, items }: { loading: boolean; items: DiscoverySe
           <p className="mt-6 text-sm text-gray-500">Searching…</p>
         ) : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
+            {(items ?? [])?.map((item) => (
               <li key={`${item.kind}-${item.href}`}>
                 <Link
                   href={item.href}

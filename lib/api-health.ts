@@ -16,14 +16,7 @@ export async function healthGetResponse(request: Request) {
       ok: true,
       database: configured ? 'configured' : 'missing',
       dbSource: source,
-      runtime:
-        process.env.CLOUDFLARE === '1'
-          ? 'cloudflare-worker'
-          : process.env.VERCEL === '1'
-            ? 'vercel'
-            : process.env.NETLIFY === 'true' || process.env.NETLIFY === '1'
-              ? 'netlify'
-              : 'node',
+      runtime: process.env.VERCEL === '1' ? 'vercel' : 'node',
     });
   }
 

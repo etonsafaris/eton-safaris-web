@@ -18,7 +18,7 @@ export function publicMediaPath(id: string) {
   return `/api/media/${id}`;
 }
 
-export async function ensureMediaFilesTable(client: import('pg').PoolClient) {
+export async function ensureMediaFilesTable(client: import('@/lib/supabase/pool').PoolClient) {
   if (tableReady) return;
   await client.query(CREATE_SQL);
   tableReady = true;

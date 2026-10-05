@@ -46,7 +46,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
           <p className="text-center text-gray-500">No records found in this collection.</p>
         ) : (
           <ListingGrid>
-            {items.map((country, index) => {
+            {(items ?? [])?.map((country, index) => {
               const slug = publicCountrySlug(country) || '';
               const title = publicCountryLabel(country, slug);
               return (

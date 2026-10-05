@@ -52,7 +52,7 @@ export function QuoteContactFooter() {
         aria-hidden
       />
       <div className="grid gap-2.5 pl-3 sm:grid-cols-2 sm:gap-x-6">
-        {items.map((item) => {
+        {(items ?? [])?.map((item) => {
           const Icon = item.icon;
           const content = (
             <span className="inline-flex items-start gap-2 leading-snug">

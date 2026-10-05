@@ -35,7 +35,7 @@ console.log('  Project → Settings → Domains — add all three, wait for Vali
 console.log('    • etonsafaris.com          (apex — use the A / ALIAS records Vercel shows for this domain)');
 console.log('    • www.etonsafaris.com      (CNAME → cname.vercel-dns.com or value from UI)');
 console.log('    • admin.etonsafaris.com    (CNAME → cname.vercel-dns.com or value from UI)\n');
-console.log('  Remove Netlify / Cloudflare Pages DNS on these names.');
+console.log('  Remove legacy Netlify / Cloudflare DNS on these names (host only on Vercel).');
 console.log('  GoDaddy example (use exact values from Vercel → Domains):');
 console.log('    @ A → 216.150.1.1');
 console.log('    www CNAME → <project>.vercel-dns-*.com');

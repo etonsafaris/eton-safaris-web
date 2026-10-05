@@ -29,7 +29,7 @@ export default function SafariPlanningStrip({
           before they request a quote.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map((item) => (
+          {(items ?? [])?.map((item) => (
             <div key={item.label} className="rounded-2xl border border-[#dce6e0] bg-white px-4 py-4">
               <div className="mb-2 flex items-center gap-2 text-moss">
                 <item.icon className="h-4 w-4" />

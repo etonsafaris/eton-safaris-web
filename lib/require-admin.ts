@@ -9,7 +9,7 @@ const AGENT_TABLES = ['registered_agents', 'Agent'] as const;
 
 async function findStaffAgentByEmail(
   email: string,
-  client: import('pg').PoolClient
+  client: import('@/lib/supabase/pool').PoolClient
 ) {
   const normalized = email.trim().toLowerCase();
   if (!normalized.includes('@')) return null;

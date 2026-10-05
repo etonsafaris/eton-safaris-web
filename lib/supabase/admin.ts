@@ -1,5 +1,5 @@
 // Aiven PostgreSQL admin client for elevated operations
-import type { PoolClient } from 'pg';
+import type { PoolClient } from '@/lib/supabase/pool';
 import { withPgClient } from '@/lib/supabase/pool';
 
 function missingSelectColumn(message?: string) {

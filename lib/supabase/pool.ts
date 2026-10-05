@@ -1,4 +1,3 @@
-import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { serialPgWork } from '@/lib/pg-serial';
 
@@ -6,71 +5,65 @@ const isServer = typeof window === 'undefined';
 
 type Sql = import('postgres').Sql;
 
+/** Minimal client shape used across admin + public data loaders. */
+export type QueryResultRow = Record<string, unknown>;
+
+export type QueryResult<T extends QueryResultRow = QueryResultRow> = {
+  rows: T[];
+  rowCount: number | null;
+  command: string;
+  oid: number;
+  fields: [];
+};
+
+export type PoolClient = {
+  query: <T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: unknown[]
+  ) => Promise<QueryResult<T>>;
+  release: (err?: boolean | Error) => void;
+};
+
+export type PgPool = {
+  connect: () => Promise<PoolClient>;
+  query: <T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: unknown[]
+  ) => Promise<QueryResult<T>>;
+  end: () => Promise<void>;
+  on: (event: string, listener: (...args: unknown[]) => void) => PgPool;
+};
+
 function normalizePgUrl(raw: string): string {
   return raw.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '');
 }
 
-function readHyperdriveConnectionString(): string | undefined {
-  if (!isServer) return undefined;
-  try {
-    const { getCloudflareContext } = require('@opennextjs/cloudflare') as {
-      getCloudflareContext: () => { env?: Record<string, { connectionString?: string }> };
-    };
-    const hyper = getCloudflareContext()?.env?.HYPERDRIVE;
-    const fromHyperdrive = hyper?.connectionString?.trim();
-    if (fromHyperdrive) return normalizePgUrl(fromHyperdrive);
-  } catch {
-    /* not running on @opennextjs/cloudflare */
-  }
-  return undefined;
-}
-
-function isCloudflareWorkerRuntime(): boolean {
-  return process.env.CLOUDFLARE === '1';
-}
-
-/** Aiven via Hyperdrive (Workers) or `DATABASE_URL` (local Node / build only). */
+/** Aiven PostgreSQL via `DATABASE_URL` (Vercel / local Node). */
 export function resolveAivenConnectionString(): string | undefined {
-  const fromHyperdrive = readHyperdriveConnectionString();
-  if (fromHyperdrive) return fromHyperdrive;
-
-  // Workers must use the Hyperdrive binding — direct Aiven URLs from edge are blocked/unreliable.
-  if (isCloudflareWorkerRuntime()) return undefined;
-
   const fromEnv = process.env.DATABASE_URL?.trim();
   if (fromEnv) return normalizePgUrl(fromEnv);
-
   return undefined;
 }
 
-/** How the app will connect when a query runs (for health / ops). */
-export function getDatabaseConnectionSource(): 'hyperdrive' | 'direct' | 'none' {
-  if (readHyperdriveConnectionString()) return 'hyperdrive';
-  if (isCloudflareWorkerRuntime()) return 'none';
-  if (process.env.DATABASE_URL?.trim()) return 'direct';
-  return 'none';
+export function getDatabaseConnectionSource(): 'direct' | 'none' {
+  return process.env.DATABASE_URL?.trim() ? 'direct' : 'none';
 }
 
-/** True when a connection string is available for the current runtime. */
 export function isDatabaseConfigured(): boolean {
   return getDatabaseConnectionSource() !== 'none';
 }
 
-/** Aiven free tier ≈ 20 connections — never exceed this per Node process. */
+/** Aiven free tier ≈ 20 connections — cap per isolate/process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
-function isNetlifyRuntime(): boolean {
-  return process.env.NETLIFY === 'true' || process.env.NETLIFY === '1';
-}
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
 
-const DEFAULT_POOL_MAX =
-  process.env.VERCEL || process.env.CF_PAGES || process.env.CLOUDFLARE === '1' || isNetlifyRuntime()
-    ? 2
-    : 5;
 const POOL_MAX = Math.max(
   1,
   Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
 );
+
+const POSTGRES_MAX = Math.min(10, POOL_MAX);
 
 declare global {
   // eslint-disable-next-line no-var
@@ -81,30 +74,21 @@ declare global {
   var aivenPool: PgPool | undefined;
 }
 
-/**
- * Optional `postgres.js` driver — opt-in via AIVEN_USE_POSTGRES_DRIVER=1.
- * Default on Cloudflare Workers: `pg` + Hyperdrive (nodejs_compat), which is what Hyperdrive documents.
- */
-function useEdgeDriver(): boolean {
-  return process.env.AIVEN_USE_POSTGRES_DRIVER === '1';
-}
-
 function getEdgeSql(): Sql {
   if (!global._aivenSql) {
     const connectionString = resolveAivenConnectionString();
     if (!connectionString) {
       throw new Error('Aiven DATABASE_URL is not configured.');
     }
-    const viaHyperdrive = Boolean(readHyperdriveConnectionString());
     const postgresImport = require('postgres') as typeof import('postgres');
     const postgres = postgresImport.default ?? postgresImport;
     global._aivenSql = postgres(connectionString, {
-      max: POOL_MAX,
-      idle_timeout: 10,
-      connect_timeout: 8,
+      ssl: 'require',
+      max: POSTGRES_MAX,
+      idle_timeout: 20,
+      connect_timeout: 10,
       max_lifetime: 60 * 5,
       prepare: false,
-      ssl: viaHyperdrive ? false : 'require',
       fetch_types: false,
       connection: {
         application_name: 'eton-safaris-web',
@@ -112,29 +96,6 @@ function getEdgeSql(): Sql {
     });
   }
   return global._aivenSql;
-}
-
-function createNodePgPool(): PgPool {
-  const connectionString = resolveAivenConnectionString();
-  if (!connectionString) {
-    throw new Error('Aiven DATABASE_URL is not configured.');
-  }
-  const viaHyperdrive = Boolean(readHyperdriveConnectionString());
-  const { Pool } = require('pg') as typeof import('pg');
-  const pool = new Pool({
-    connectionString,
-    ssl: viaHyperdrive ? false : { rejectUnauthorized: false },
-    max: POOL_MAX,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 8000,
-    maxUses: 750,
-    statement_timeout: 12000,
-    allowExitOnIdle: true,
-  });
-  pool.on('error', (err: Error) => {
-    console.error('[Aiven] Unexpected idle pool client error:', err.message);
-  });
-  return pool;
 }
 
 function rowsFromSqlResult<T extends QueryResultRow>(rows: readonly T[]): QueryResult<T> {
@@ -153,63 +114,48 @@ function edgeClientFromSql(sql: Sql): PoolClient {
       text: string,
       values?: unknown[]
     ): Promise<QueryResult<T>> => {
-      const rows = values?.length ? await sql.unsafe<T[]>(text, values as never[]) : await sql.unsafe<T[]>(text);
+      const rows = values?.length
+        ? await sql.unsafe<T[]>(text, values as never[])
+        : await sql.unsafe<T[]>(text);
       return rowsFromSqlResult(rows);
     },
     release: () => undefined,
   };
-  return client as PoolClient;
+  return client;
 }
 
 export function getAivenPool(): PgPool | null {
   if (!isServer || !resolveAivenConnectionString()) return null;
 
-  if (useEdgeDriver()) {
-    if (!global._aivenPool) {
-      const sql = getEdgeSql();
-      const poolLike = {
-        connect: async () => edgeClientFromSql(sql),
-        query: async <T extends QueryResultRow = QueryResultRow>(
-          text: string,
-          values?: unknown[]
-        ) => edgeClientFromSql(sql).query<T>(text, values),
-        end: async () => {
-          await sql.end({ timeout: 5 });
-          global._aivenSql = undefined;
-          global._aivenPool = undefined;
-        },
-        on: () => poolLike,
-      };
-      global._aivenPool = poolLike as PgPool;
-      global.aivenPool = global._aivenPool;
-    }
-    return global._aivenPool;
-  }
-
   if (!global._aivenPool) {
-    global._aivenPool = global.aivenPool ?? createNodePgPool();
-    global.aivenPool = global._aivenPool;
+    const sql = getEdgeSql();
+    const poolLike: PgPool = {
+      connect: async () => edgeClientFromSql(sql),
+      query: async <T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]) =>
+        edgeClientFromSql(sql).query<T>(text, values),
+      end: async () => {
+        await sql.end({ timeout: 5 });
+        global._aivenSql = undefined;
+        global._aivenPool = undefined;
+        global.aivenPool = undefined;
+      },
+      on: () => poolLike,
+    };
+    global._aivenPool = poolLike;
+    global.aivenPool = poolLike;
   }
   return global._aivenPool;
 }
 
 export const getPool = getAivenPool;
 
-/** Raw `postgres.js` pool — only when `AIVEN_USE_POSTGRES_DRIVER=1`. */
 export function getSql(): Sql {
-  if (!useEdgeDriver()) {
-    throw new Error('getSql() requires AIVEN_USE_POSTGRES_DRIVER=1 on this runtime.');
-  }
   return getEdgeSql();
 }
 
 const PG_SLOT_MAX = Math.max(
   1,
-  Math.min(
-    POOL_MAX,
-    Number(process.env.PG_SLOT_MAX) ||
-      (process.env.VERCEL || process.env.CLOUDFLARE === '1' || isNetlifyRuntime() ? 2 : 4)
-  )
+  Math.min(POSTGRES_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
 );
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
@@ -225,9 +171,6 @@ function connectRetryDelayMs(attempt: number) {
 }
 
 async function connectWithRetry(pool: PgPool): Promise<PoolClient> {
-  if (useEdgeDriver()) {
-    return edgeClientFromSql(getEdgeSql());
-  }
   let lastError: unknown;
   const maxAttempts = process.env.VERCEL ? 4 : 8;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {

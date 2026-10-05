@@ -33,10 +33,7 @@ function isMainPublicHost(hostname: string): boolean {
   const host = hostname.toLowerCase().split(':')[0];
   return (
     /^(www\.)?etonsafaris\.com$/i.test(host) ||
-    /\.vercel\.app$/i.test(host) ||
-    /\.netlify\.app$/i.test(host) ||
-    /\.pages\.dev$/i.test(host) ||
-    /\.workers\.dev$/i.test(host)
+    /\.vercel\.app$/i.test(host)
   );
 }
 

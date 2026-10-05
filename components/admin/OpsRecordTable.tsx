@@ -71,7 +71,7 @@ export default function OpsRecordTable({
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => (
+            {(records ?? [])?.map((record, index) => (
               <tr
                 key={String(record.id ?? index)}
                 className={`border-t border-[#eef0f3] hover:bg-[#f9fafb] dark:border-white/5 dark:hover:bg-white/5 ${

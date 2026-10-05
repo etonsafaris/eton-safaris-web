@@ -1,4 +1,4 @@
-import type { PoolClient } from 'pg';
+import type { PoolClient } from '@/lib/supabase/pool';
 import { adminListColumnsFor } from '@/lib/data-server';
 import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
 import { withAdminPgRoute } from '@/lib/admin-pg-route';

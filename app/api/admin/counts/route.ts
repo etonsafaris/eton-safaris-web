@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
-import type { PoolClient } from 'pg';
+import type { PoolClient } from '@/lib/supabase/pool';
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, isMissingTable } from '@/lib/agent-tables';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';

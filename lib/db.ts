@@ -1,5 +1,5 @@
 /**
- * Primary database entry — Aiven via Hyperdrive (`pg` on Workers) or direct `DATABASE_URL`.
+ * Primary database entry — Aiven via `postgres` + DATABASE_URL (Vercel / local).
  */
 export {
   aivenFetch,
@@ -13,3 +13,5 @@ export {
   resolveAivenConnectionString,
   withPgClient,
 } from '@/lib/supabase/pool';
+
+export type { PoolClient, PgPool, QueryResult, QueryResultRow } from '@/lib/supabase/pool';

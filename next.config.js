@@ -6,19 +6,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Default Next output — Netlify uses @netlify/plugin-nextjs; Cloudflare uses OpenNext separately.
+  // Standard Next.js output for Vercel (`vercel.json`).
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
   swcMinify: true,
   webpack(config, { isServer }) {
-    if (isServer) {
-      config.externals = config.externals || [];
-      if (Array.isArray(config.externals)) {
-        config.externals.push('cloudflare:sockets');
-      }
-      config.externalsType = 'commonjs';
-    }
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -31,7 +24,6 @@ const nextConfig = {
         'util/types': false,
         pg: false,
         'pg-native': false,
-        'pg-cloudflare': false,
         postgres: false,
       };
       config.resolve.alias = {
@@ -191,12 +183,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
-if (process.env.USE_CLOUDFLARE_DEV === '1') {
-  try {
-    const { initOpenNextCloudflareForDev } = require('@opennextjs/cloudflare');
-    initOpenNextCloudflareForDev();
-  } catch {
-    /* optional Cloudflare local dev */
-  }
-}

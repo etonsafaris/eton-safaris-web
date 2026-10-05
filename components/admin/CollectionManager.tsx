@@ -1501,7 +1501,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           ) : null}
           {view === 'grid' ? (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {paged.map((record, index) => (
+              {(paged ?? [])?.map((record, index) => (
                 <AdminItemCard
                   key={String(record.id ?? index)}
                   layout="grid"
@@ -1519,7 +1519,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             </div>
           ) : (
             <div className="space-y-4">
-              {paged.map((record, index) => (
+              {(paged ?? [])?.map((record, index) => (
                 <AdminItemCard
                   key={String(record.id ?? index)}
                   layout="list"
@@ -1742,7 +1742,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
               <p className="text-sm text-gray-500">No guests recorded by this agent yet.</p>
             ) : (
               <div className="space-y-3">
-                {guestLogs.map((guest, index) => (
+                {(guestLogs ?? [])?.map((guest, index) => (
                   <article key={String(guest.id ?? index)} className="rounded-lg border border-gray-200 px-4 py-3 text-sm">
                     <p className="font-semibold">{pickString(guest, ['guest_name', 'name']) || pickString(guest, ['email'])}</p>
                     <p className="text-gray-500">{pickString(guest, ['email'])}</p>
@@ -1792,7 +1792,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
               <p className="mt-4 text-sm text-gray-500">No Pesapal payments linked to this booking yet.</p>
             ) : (
               <div className="mt-4 space-y-3">
-                {paymentHistory.map((payment, index) => (
+                {(paymentHistory ?? [])?.map((payment, index) => (
                   <article key={String(payment.id ?? index)} className="rounded-lg border px-4 py-3 text-sm">
                     <p className="font-semibold">{pickString(payment, ['reference'])}</p>
                     <p className="text-gray-500">
