@@ -143,7 +143,7 @@ export default function SiteFooter() {
         <div>
           <h4 className="site-footer-title">Popular Destinations</h4>
           <div className="mt-1 grid grid-cols-2 text-base text-white">
-            {destinations.map((destination) => (
+            {(destinations ?? [])?.map((destination) => (
               <Link
                 key={destination.slug}
                 href={destinationPublicPath(destination.slug)}

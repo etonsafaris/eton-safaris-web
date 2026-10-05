@@ -9,6 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "vercel:env": "node scripts/vercel-env-checklist.mjs",
+    "db:test": "node scripts/test-aiven-connection.mjs",
+    "vercel:db": "node scripts/push-vercel-database-url.mjs",
     "verify:dns": "node scripts/verify-global-dns.mjs",
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "images:optimize": "node scripts/optimize-static-images.mjs",

@@ -6,7 +6,7 @@
   "regions": ["fra1"],
   "env": {
     "SKIP_BUILD_STAYS": "1",
-    "SKIP_BUILD_STATIC_PARAMS": "1",
+    "BUILD_STATIC_PARAMS_LIMIT": "64",
     "NEXT_PUBLIC_SITE_URL": "https://www.etonsafaris.com"
   },
   "rewrites": [

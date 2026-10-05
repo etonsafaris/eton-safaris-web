@@ -50,7 +50,7 @@ export default function TestimonialsSection() {
       .catch((error) => console.error('[Supabase] Failed to load testimonials:', error));
   }, [live]);
 
-  const items = reviews.map((review, index) => {
+  const items = (reviews ?? [])?.map((review, index) => {
     const rating = pickNumber(review, ['rating'], 5);
     const author = reviewAuthor(review);
     const country = reviewCountry(review);

@@ -54,3 +54,6 @@ cloudflare.deploy.json
 git-watch.log
 scripts/_tmp-*.mjs
 scripts/backups/
+
+.vercel
+.env*

@@ -1,9 +1,8 @@
+import { Pool, type PoolClient as PgNativeClient, type QueryResult as PgQueryResult } from 'pg';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { serialPgWork } from '@/lib/pg-serial';
 
 const isServer = typeof window === 'undefined';
-
-type Sql = import('postgres').Sql;
 
 /** Minimal client shape used across admin + public data loaders. */
 export type QueryResultRow = Record<string, unknown>;
@@ -34,6 +33,11 @@ export type PgPool = {
   on: (event: string, listener: (...args: unknown[]) => void) => PgPool;
 };
 
+const globalForDb = globalThis as typeof globalThis & {
+  _aivenPool?: Pool;
+  aivenPool?: Pool;
+};
+
 function normalizePgUrl(raw: string): string {
   return raw.replace(/[?&]sslmode=require\b/, '').replace(/[?&]sslmode=verify-full\b/, '');
 }
@@ -53,121 +57,118 @@ export function isDatabaseConfigured(): boolean {
   return getDatabaseConnectionSource() !== 'none';
 }
 
-/** Aiven free tier ≈ 20 connections — cap per isolate/process. */
+/** Aiven tier ≈ 20 connections — cap per serverless isolate. */
 export const AIVEN_POOL_HARD_CAP = 15;
-
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
 
 const POOL_MAX = Math.max(
   1,
-  Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
+  Math.min(
+    AIVEN_POOL_HARD_CAP,
+    Number(process.env.PG_POOL_MAX) || (process.env.VERCEL ? 3 : AIVEN_POOL_HARD_CAP)
+  )
 );
 
-const POSTGRES_MAX = Math.min(10, POOL_MAX);
-
-declare global {
-  // eslint-disable-next-line no-var
-  var _aivenSql: Sql | undefined;
-  // eslint-disable-next-line no-var
-  var _aivenPool: PgPool | undefined;
-  // eslint-disable-next-line no-var
-  var aivenPool: PgPool | undefined;
-}
-
-function getEdgeSql(): Sql {
-  if (!global._aivenSql) {
-    const connectionString = resolveAivenConnectionString();
-    if (!connectionString) {
-      throw new Error('Aiven DATABASE_URL is not configured.');
-    }
-    const postgresImport = require('postgres') as typeof import('postgres');
-    const postgres = postgresImport.default ?? postgresImport;
-    global._aivenSql = postgres(connectionString, {
-      ssl: 'require',
-      max: POSTGRES_MAX,
-      idle_timeout: 20,
-      connect_timeout: 10,
-      max_lifetime: 60 * 5,
-      prepare: false,
-      fetch_types: false,
-      connection: {
-        application_name: 'eton-safaris-web',
-      },
-    });
-  }
-  return global._aivenSql;
-}
-
-function rowsFromSqlResult<T extends QueryResultRow>(rows: readonly T[]): QueryResult<T> {
+function mapPgResult<T extends QueryResultRow>(result: PgQueryResult<T>): QueryResult<T> {
   return {
-    rows: [...rows],
-    rowCount: rows.length,
-    command: '',
-    oid: 0,
+    rows: result.rows,
+    rowCount: result.rowCount,
+    command: result.command,
+    oid: result.oid ?? 0,
     fields: [],
   };
 }
 
-function edgeClientFromSql(sql: Sql): PoolClient {
-  const client = {
-    query: async <T extends QueryResultRow = QueryResultRow>(
-      text: string,
-      values?: unknown[]
-    ): Promise<QueryResult<T>> => {
-      const rows = values?.length
-        ? await sql.unsafe<T[]>(text, values as never[])
-        : await sql.unsafe<T[]>(text);
-      return rowsFromSqlResult(rows);
+function createPgPool(): Pool {
+  const connectionString = resolveAivenConnectionString();
+  if (!connectionString) {
+    throw new Error('Aiven DATABASE_URL is not configured.');
+  }
+  return new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+    max: POOL_MAX,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    application_name: 'eton-safaris-web',
+  });
+}
+
+/** One cached `pg` Pool per isolate — prevents connection leaks under serverless traffic. */
+function getNativePool(): Pool {
+  if (!isServer) {
+    throw new Error('Database pool is server-only.');
+  }
+  if (!globalForDb._aivenPool) {
+    globalForDb._aivenPool = createPgPool();
+    globalForDb.aivenPool = globalForDb._aivenPool;
+  }
+  return globalForDb._aivenPool;
+}
+
+function clientFromNative(native: PgNativeClient): PoolClient {
+  return {
+    query: async <T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]) => {
+      const result = values?.length
+        ? await native.query<T>(text, values)
+        : await native.query<T>(text);
+      return mapPgResult(result);
     },
-    release: () => undefined,
+    release: (err?: boolean | Error) => {
+      native.release(err);
+    },
   };
-  return client;
 }
 
 export function getAivenPool(): PgPool | null {
   if (!isServer || !resolveAivenConnectionString()) return null;
 
-  if (!global._aivenPool) {
-    const sql = getEdgeSql();
-    const poolLike: PgPool = {
-      connect: async () => edgeClientFromSql(sql),
-      query: async <T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]) =>
-        edgeClientFromSql(sql).query<T>(text, values),
-      end: async () => {
-        await sql.end({ timeout: 5 });
-        global._aivenSql = undefined;
-        global._aivenPool = undefined;
-        global.aivenPool = undefined;
-      },
-      on: () => poolLike,
-    };
-    global._aivenPool = poolLike;
-    global.aivenPool = poolLike;
-  }
-  return global._aivenPool;
+  const native = getNativePool();
+  const poolLike: PgPool = {
+    connect: async () => {
+      const client = await native.connect();
+      return clientFromNative(client);
+    },
+    query: async <T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]) => {
+      const result = values?.length
+        ? await native.query<T>(text, values)
+        : await native.query<T>(text);
+      return mapPgResult(result);
+    },
+    end: async () => {
+      await native.end();
+      globalForDb._aivenPool = undefined;
+      globalForDb.aivenPool = undefined;
+    },
+    on: (event, listener) => {
+      native.on(event, listener);
+      return poolLike;
+    },
+  };
+  return poolLike;
 }
 
 export const getPool = getAivenPool;
 
-export function getSql(): Sql {
-  return getEdgeSql();
+/** @deprecated Use `db.query` / `withPgClient` — kept for legacy imports. */
+export function getSql(): never {
+  throw new Error('getSql() was removed; use db.query() or withPgClient() with the pg pool.');
 }
 
 const PG_SLOT_MAX = Math.max(
   1,
-  Math.min(POSTGRES_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
+  Math.min(POOL_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
 );
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
 const PG_SLOT_WAIT_MS = Math.max(
   5000,
-  Number(process.env.PG_SLOT_WAIT_MS) || (process.env.VERCEL ? 12000 : 45000)
+  Number(process.env.PG_SLOT_WAIT_MS) || (process.env.VERCEL ? 12_000 : 45_000)
 );
 
 function connectRetryDelayMs(attempt: number) {
   const base = 350 * Math.pow(2, attempt);
-  return Math.min(12000, base + Math.floor(Math.random() * 300));
+  return Math.min(12_000, base + Math.floor(Math.random() * 300));
 }
 
 async function connectWithRetry(pool: PgPool): Promise<PoolClient> {

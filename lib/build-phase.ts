@@ -7,7 +7,12 @@ export function skipParkStaysDuringBuild() {
   return isNextProductionBuild() || process.env.SKIP_BUILD_STAYS === '1';
 }
 
-/** Skip pre-rendering hundreds of detail URLs during `next build` (saves Aiven connections). */
+/**
+ * Skip `generateStaticParams` slug fan-out (set SKIP_BUILD_STATIC_PARAMS=1 on CI if build DB is unavailable).
+ * On Vercel Pro, builds with DATABASE_URL should pre-render top slugs for sub-50ms navigations.
+ */
 export function skipStaticGenerationDuringBuild() {
-  return isNextProductionBuild() || process.env.SKIP_BUILD_STATIC_PARAMS === '1';
+  if (process.env.SKIP_BUILD_STATIC_PARAMS === '1') return true;
+  if (!process.env.DATABASE_URL?.trim()) return true;
+  return false;
 }

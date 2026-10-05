@@ -124,12 +124,12 @@ export default function ToursPageClient({
         <Link href="/tours/compare" className="inline-flex text-sm font-semibold text-[#00A651] hover:underline">
           Compare packages →
         </Link>
-        {filtered.length === 0 ? (
+        {(filtered?.length ?? 0) === 0 ? (
           <p className="mt-16 text-center text-gray-500">No tour package found. Try another search.</p>
         ) : (
           <div className="mt-8">
             <ListingGrid>
-              {filtered.map((tour, index) => (
+              {(filtered ?? [])?.map((tour, index) => (
                 <TourCard key={String(tour.id ?? index)} tour={tour} showPublishedDate={false} />
               ))}
             </ListingGrid>

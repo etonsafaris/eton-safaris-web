@@ -81,7 +81,7 @@ export default function HeaderSearch() {
               <p className="px-4 py-3 text-sm text-gray-500">No matching tours or guides. Try another search.</p>
             ) : (
               <>
-                {suggestions.map((tour, index) => {
+                {(suggestions ?? [])?.map((tour, index) => {
                   const card = tourSearchCard(tour);
                   return (
                     <Link
@@ -108,7 +108,7 @@ export default function HeaderSearch() {
                     </Link>
                   );
                 })}
-                {guides.map((post, index) => {
+                {(guides ?? [])?.map((post, index) => {
                   const card = languagePostSearchCard(post);
                   return (
                     <Link
