@@ -25,10 +25,17 @@ function readHyperdriveConnectionString(): string | undefined {
   return undefined;
 }
 
-/** Aiven via Hyperdrive (Workers) or `DATABASE_URL` secret / local `.env.local`. */
+function isCloudflareWorkerRuntime(): boolean {
+  return process.env.CLOUDFLARE === '1';
+}
+
+/** Aiven via Hyperdrive (Workers) or `DATABASE_URL` (local Node / build only). */
 export function resolveAivenConnectionString(): string | undefined {
   const fromHyperdrive = readHyperdriveConnectionString();
   if (fromHyperdrive) return fromHyperdrive;
+
+  // Workers must use the Hyperdrive binding — direct Aiven URLs from edge are blocked/unreliable.
+  if (isCloudflareWorkerRuntime()) return undefined;
 
   const fromEnv = process.env.DATABASE_URL?.trim();
   if (fromEnv) return normalizePgUrl(fromEnv);
@@ -36,9 +43,17 @@ export function resolveAivenConnectionString(): string | undefined {
   return undefined;
 }
 
-/** True when Aiven is reachable via `DATABASE_URL` or a Hyperdrive binding. */
+/** How the app will connect when a query runs (for health / ops). */
+export function getDatabaseConnectionSource(): 'hyperdrive' | 'direct' | 'none' {
+  if (readHyperdriveConnectionString()) return 'hyperdrive';
+  if (isCloudflareWorkerRuntime()) return 'none';
+  if (process.env.DATABASE_URL?.trim()) return 'direct';
+  return 'none';
+}
+
+/** True when a connection string is available for the current runtime. */
 export function isDatabaseConfigured(): boolean {
-  return Boolean(resolveAivenConnectionString());
+  return getDatabaseConnectionSource() !== 'none';
 }
 
 /** Aiven free tier ≈ 20 connections — never exceed this per Node process. */

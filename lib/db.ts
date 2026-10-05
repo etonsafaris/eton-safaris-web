@@ -8,6 +8,7 @@ export {
   getPool,
   getSql,
   isDatabaseConfigured,
+  getDatabaseConnectionSource,
   queryRows,
   resolveAivenConnectionString,
   withPgClient,

@@ -1,5 +1,11 @@
 /**
  * Upload app secrets from `.env.local` to the Cloudflare Worker (like Vercel env sync).
+ *
+ * Production DB: use the Worker `HYPERDRIVE` binding (wrangler.jsonc). Keep the real Aiven
+ * Service URI in `.env.local` for `npm run db:fix-cloudflare` / Hyperdrive origin updates only.
+ * By default DATABASE_URL is NOT uploaded to the Worker (avoids direct Aiven from edge).
+ * Set WORKER_PUSH_DATABASE_URL=1 only if you intentionally need that secret on the Worker.
+ *
  * Usage: node scripts/push-worker-secrets.mjs
  */
 import { spawnSync } from 'node:child_process';
@@ -12,7 +18,6 @@ const WORKER_NAME = process.env.CLOUDFLARE_WORKER_NAME || 'eton-safaris-web';
 const ENV_FILE = process.env.CLOUDFLARE_ENV_FILE || resolve(ROOT, '.env.local');
 
 const SECRET_KEYS = [
-  'DATABASE_URL',
   'ADMIN_EMAIL',
   'ADMIN_PASSWORD',
   'NEXTAUTH_SECRET',
@@ -49,9 +54,16 @@ for (const key of SECRET_KEYS) {
   if (value) secrets[key] = value;
 }
 
-if (!secrets.DATABASE_URL) {
-  console.error('[CF] DATABASE_URL is required in', ENV_FILE);
+const databaseUrl = String(env.DATABASE_URL || '').trim();
+if (!databaseUrl) {
+  console.error('[CF] DATABASE_URL is required in', ENV_FILE, '(for Hyperdrive origin sync / local dev).');
   process.exit(1);
+}
+if (process.env.WORKER_PUSH_DATABASE_URL === '1') {
+  secrets.DATABASE_URL = databaseUrl;
+  console.log('[CF] Including DATABASE_URL on Worker (WORKER_PUSH_DATABASE_URL=1).');
+} else {
+  console.log('[CF] Skipping DATABASE_URL on Worker — use Hyperdrive binding for production queries.');
 }
 
 const bulkPath = resolve(ROOT, '.wrangler-secrets.bulk.json');

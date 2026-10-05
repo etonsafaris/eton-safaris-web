@@ -1,7 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { isDatabaseConfigured, withPgClient } from '@/lib/supabase/pool';
+import {
+  getDatabaseConnectionSource,
+  isDatabaseConfigured,
+  withPgClient,
+} from '@/lib/supabase/pool';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -9,9 +13,11 @@ export async function GET(request: Request) {
   const configured = isDatabaseConfigured();
 
   if (!deep) {
+    const source = getDatabaseConnectionSource();
     return NextResponse.json({
       ok: true,
       database: configured ? 'configured' : 'missing',
+      dbSource: source,
       runtime: process.env.CLOUDFLARE === '1' ? 'cloudflare-worker' : 'node',
     });
   }
