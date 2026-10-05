@@ -23,7 +23,9 @@ function isPublicGuestPath(pathname: string, search: string): boolean {
 }
 
 function mainSiteOrigin(adminHostname: string): string {
-  const bare = adminHostname.replace(/^admin\./i, '');
+  const bare = adminHostname.replace(/^admin\./i, '').toLowerCase();
+  // Vercel production redirects apex → www; use www for guest links from admin host.
+  if (bare === 'etonsafaris.com') return 'https://www.etonsafaris.com';
   return `https://${bare}`;
 }
 

@@ -391,7 +391,7 @@ export const SITE = {
   phoneDisplay: '+256 751 180 436',
   whatsapp: '256751180436',
   address: 'Wakiso District, Central Region, Uganda',
-  url: 'https://etonsafaris.com',
+  url: 'https://www.etonsafaris.com',
   about:
     'A premier expedition company rooted in Uganda, curating immersive gorilla trekking, wildlife safaris, and birding adventures across the African continent. Our portfolio spans mountaineering, white water rafting, and cultural community journeys — each crafted with precision to suit every travel budget and aspiration. We take pride in delivering seamless expeditions tailored to your schedule, preferences, and sense of wonder. Track mountain gorillas in the misty forests of Uganda and Rwanda, witness the great wildebeest migration across Tanzania and Kenya, summit the Rwenzori and Kilimanjaro, or raft the mighty Nile. Our expert guides and impeccably maintained fleet ensure every journey becomes an unforgettable chapter in your story. Available year-round, with prime conditions from December through January and June through August.',
 };

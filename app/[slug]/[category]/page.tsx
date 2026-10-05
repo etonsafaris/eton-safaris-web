@@ -23,7 +23,12 @@ export async function generateStaticParams() {
   return loadStaticCategoryParams();
 }
 
+function isReservedPublicSlug(slug: string): boolean {
+  return slug.toLowerCase() === 'api';
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  if (isReservedPublicSlug(params.slug)) notFound();
   const path = `/${params.slug}/${params.category}`;
   const resolved = resolvePublicSlug(params.slug);
   const countryKey = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
@@ -55,6 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CountryCategoryPage({ params }: PageProps) {
+  if (isReservedPublicSlug(params.slug)) notFound();
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
   const landingSlug = params.slug.includes('-safaris') ? params.slug : landingSlugForCountry(countrySlug);
