@@ -9,6 +9,9 @@
     "SKIP_BUILD_STATIC_PARAMS": "1",
     "NEXT_PUBLIC_SITE_URL": "https://www.etonsafaris.com"
   },
+  "rewrites": [
+    { "source": "/api/health", "destination": "/api/system/health" }
+  ],
   "headers": [
     {
       "source": "/api/health",
