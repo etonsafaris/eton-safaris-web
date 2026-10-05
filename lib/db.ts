@@ -1,5 +1,5 @@
 /**
- * Primary database entry — Aiven via cached `pg` Pool + DATABASE_URL (Vercel / local).
+ * Primary database entry — Aiven via cached `postgres` pool + DATABASE_URL (Vercel / local).
  */
 export {
   aivenFetch,
