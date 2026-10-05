@@ -365,7 +365,7 @@ export async function loadHomePageBundle() {
   })();
 }
 
-const HOME_BUNDLE_WAIT_MS = 12000;
+const HOME_BUNDLE_WAIT_MS = 8_000;
 
 function instantHomeFallbackBundle() {
   const countries = fallbackHomeCountryRows();

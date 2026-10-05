@@ -751,20 +751,21 @@ export async function fetchEastAfricaHomeTours(limit = 48): Promise<RecordRow[]>
   const capped = Math.max(1, Math.min(limit, 64));
   const columns = resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS;
   const likePatterns = EAST_AFRICA_HOME_TOUR_LABELS.map((name) => `%${name}%`);
+  const eastAfricaOr = likePatterns
+    .map((pattern, index) => {
+      const n = index + 1;
+      return `(country ILIKE $${n} OR category ILIKE $${n} OR title ILIKE $${n} OR slug ILIKE $${n})`;
+    })
+    .join(' OR ');
 
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
-        text: `SELECT ${cols} FROM tours WHERE (
-          country ILIKE ANY($1::text[])
-          OR category ILIKE ANY($1::text[])
-          OR title ILIKE ANY($1::text[])
-          OR slug ILIKE ANY($1::text[])
-        ) ORDER BY
+        text: `SELECT ${cols} FROM tours WHERE (${eastAfricaOr}) ORDER BY
           (CASE WHEN is_featured = true OR is_popular = true OR show_on_landing = true THEN 0 ELSE 1 END),
           created_date DESC NULLS LAST
         LIMIT ${capped}`,
-        values: [likePatterns],
+        values: likePatterns,
       }),
       columns,
       TOUR_SELECT_CACHE_KEY

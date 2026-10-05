@@ -130,6 +130,9 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/404', destination: '/', permanent: false },
+      { source: '/community-support', destination: '/community', permanent: true },
+      { source: '/home', destination: '/', permanent: false },
+      { source: '/index', destination: '/', permanent: false },
       { source: '/pages/terms', destination: '/terms-of-services', permanent: true },
       { source: '/pages/privacy', destination: '/privacy-policies', permanent: true },
       { source: '/pages/about', destination: '/about-us', permanent: true },
