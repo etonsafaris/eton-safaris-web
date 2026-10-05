@@ -6,7 +6,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Cloudflare OpenNext builds use the default Next output (not Vercel standalone).
+  // Default Next output — Netlify uses @netlify/plugin-nextjs; Cloudflare uses OpenNext separately.
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
@@ -190,9 +190,11 @@ const nextConfig = {
 
 module.exports = nextConfig;
 
-try {
-  const { initOpenNextCloudflareForDev } = require('@opennextjs/cloudflare');
-  initOpenNextCloudflareForDev();
-} catch {
-  /* @opennextjs/cloudflare optional until devDependencies are installed */
+if (process.env.USE_CLOUDFLARE_DEV === '1') {
+  try {
+    const { initOpenNextCloudflareForDev } = require('@opennextjs/cloudflare');
+    initOpenNextCloudflareForDev();
+  } catch {
+    /* optional Cloudflare local dev */
+  }
 }

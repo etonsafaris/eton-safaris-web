@@ -10,11 +10,11 @@
     "build": "next build",
     "build:worker": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion",
     "deploy": "npm run build:worker && opennextjs-cloudflare deploy",
+    "build:netlify": "npm run build",
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
     "secrets:cloudflare": "node scripts/push-worker-secrets.mjs",
     "db:fix-cloudflare": "node scripts/fix-aiven-cloudflare.mjs",
     "db:fix-cloudflare:deploy": "node scripts/fix-aiven-cloudflare.mjs --deploy",
-    "db:fix-cloudflare": "node scripts/fix-aiven-cloudflare.mjs",
     "preview": "npm run build:worker && opennextjs-cloudflare preview",
     "icons:generate": "node scripts/generate-site-icons.mjs",
     "images:optimize": "node scripts/optimize-static-images.mjs",
@@ -136,6 +136,7 @@
     "resend": "^6.20.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.16.1",
     "@opennextjs/cloudflare": "^1.20.8",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",

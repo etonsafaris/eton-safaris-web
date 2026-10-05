@@ -1,0 +1,17 @@
+# Eton Safaris — Netlify (Next.js App Router)
+# Connect repo in Netlify: Site settings → Build & deploy → Link repository
+# Set env vars in Site settings → Environment variables (use "Secret" for keys).
+
+[build]
+  command = "npm run build"
+  # @netlify/plugin-nextjs sets publish/output; do not point publish at .next manually.
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+  # Skip heavy DB work during static generation when Aiven is unreachable from build agents.
+  SKIP_BUILD_STAYS = "1"
+  SKIP_BUILD_STATIC_PARAMS = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

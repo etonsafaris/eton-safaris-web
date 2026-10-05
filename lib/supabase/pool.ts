@@ -59,8 +59,14 @@ export function isDatabaseConfigured(): boolean {
 /** Aiven free tier ≈ 20 connections — never exceed this per Node process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
+function isNetlifyRuntime(): boolean {
+  return process.env.NETLIFY === 'true' || process.env.NETLIFY === '1';
+}
+
 const DEFAULT_POOL_MAX =
-  process.env.VERCEL || process.env.CF_PAGES || process.env.CLOUDFLARE === '1' ? 2 : 5;
+  process.env.VERCEL || process.env.CF_PAGES || process.env.CLOUDFLARE === '1' || isNetlifyRuntime()
+    ? 2
+    : 5;
 const POOL_MAX = Math.max(
   1,
   Math.min(AIVEN_POOL_HARD_CAP, Number(process.env.PG_POOL_MAX) || DEFAULT_POOL_MAX)
@@ -202,7 +208,7 @@ const PG_SLOT_MAX = Math.max(
   Math.min(
     POOL_MAX,
     Number(process.env.PG_SLOT_MAX) ||
-      (process.env.VERCEL || process.env.CLOUDFLARE === '1' ? 2 : 4)
+      (process.env.VERCEL || process.env.CLOUDFLARE === '1' || isNetlifyRuntime() ? 2 : 4)
   )
 );
 let pgSlotsInUse = 0;

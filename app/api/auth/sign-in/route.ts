@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              'Admin login is not configured on the server. Set ADMIN_PASSWORD on the Worker and run npm run secrets:cloudflare.',
+              'Admin login is not configured on the server. Set ADMIN_EMAIL and ADMIN_PASSWORD in your host environment (e.g. Netlify site variables).',
           },
           { status: 503 }
         );

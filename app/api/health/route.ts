@@ -18,7 +18,12 @@ export async function GET(request: Request) {
       ok: true,
       database: configured ? 'configured' : 'missing',
       dbSource: source,
-      runtime: process.env.CLOUDFLARE === '1' ? 'cloudflare-worker' : 'node',
+      runtime:
+        process.env.CLOUDFLARE === '1'
+          ? 'cloudflare-worker'
+          : process.env.NETLIFY === 'true' || process.env.NETLIFY === '1'
+            ? 'netlify'
+            : 'node',
     });
   }
 
