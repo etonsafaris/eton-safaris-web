@@ -11,6 +11,7 @@
     "build:worker": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion",
     "deploy": "npm run build:worker && opennextjs-cloudflare deploy",
     "build:netlify": "npm run build",
+    "vercel:env": "node scripts/vercel-env-checklist.mjs",
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
     "secrets:cloudflare": "node scripts/push-worker-secrets.mjs",
     "db:fix-cloudflare": "node scripts/fix-aiven-cloudflare.mjs",

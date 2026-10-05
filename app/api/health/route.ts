@@ -21,9 +21,11 @@ export async function GET(request: Request) {
       runtime:
         process.env.CLOUDFLARE === '1'
           ? 'cloudflare-worker'
-          : process.env.NETLIFY === 'true' || process.env.NETLIFY === '1'
-            ? 'netlify'
-            : 'node',
+          : process.env.VERCEL === '1'
+            ? 'vercel'
+            : process.env.NETLIFY === 'true' || process.env.NETLIFY === '1'
+              ? 'netlify'
+              : 'node',
     });
   }
 

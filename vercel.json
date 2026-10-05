@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "regions": ["fra1"],
+  "env": {
+    "SKIP_BUILD_STAYS": "1",
+    "SKIP_BUILD_STATIC_PARAMS": "1"
+  }
+}
