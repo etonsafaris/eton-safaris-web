@@ -14,5 +14,6 @@ export function skipParkStaysDuringBuild() {
 export function skipStaticGenerationDuringBuild() {
   if (process.env.SKIP_BUILD_STATIC_PARAMS === '1') return true;
   if (!process.env.DATABASE_URL?.trim()) return true;
+  if (isNextProductionBuild()) return true;
   return false;
 }
