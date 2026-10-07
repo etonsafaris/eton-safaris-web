@@ -2,16 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { stripPublicMoney } from '@/lib/public-money';
-import {
-  DEFAULT_PUBLIC_IMAGE,
-  DEFAULT_SAFARI_FALLBACK_IMAGE,
-  publicImageSrcOrFallback,
-  resolvePublicImage,
-} from '@/lib/public-image';
-import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
+import { publicImagePlaceholderArt, publicImageSrcOrFallback, resolvePublicImage } from '@/lib/public-image';
 
 export default function PublicListingCard({
   href,
@@ -32,12 +26,12 @@ export default function PublicListingCard({
   cta?: string;
   onNavigate?: () => void;
 }) {
-  const resolved = image ? publicImageSrcOrFallback(resolvePublicImage(image) || image) : '';
-  const [cardImage, setCardImage] = useState(resolved);
-
-  useEffect(() => {
-    setCardImage(image ? publicImageSrcOrFallback(resolvePublicImage(image) || image) : '');
-  }, [image]);
+  const resolved = useMemo(
+    () => (image ? publicImageSrcOrFallback(resolvePublicImage(image) || image) : ''),
+    [image]
+  );
+  const [failed, setFailed] = useState(false);
+  const cardImage = failed ? publicImagePlaceholderArt() : resolved;
 
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
   const to = typeof href === 'string' && href.trim() ? href : '/';
@@ -58,22 +52,12 @@ export default function PublicListingCard({
             width={width}
             height={height}
             quality={85}
-            placeholder="blur"
-            blurDataURL={IMAGE_BLUR_DATA_URL}
             unoptimized={unoptimized}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            onError={() => {
-              if (cardImage === DEFAULT_SAFARI_FALLBACK_IMAGE) {
-                setCardImage(DEFAULT_PUBLIC_IMAGE);
-                return;
-              }
-              if (cardImage === DEFAULT_PUBLIC_IMAGE) {
-                setCardImage('');
-                return;
-              }
-              setCardImage(DEFAULT_SAFARI_FALLBACK_IMAGE);
-            }}
+            loading="eager"
+            fetchPriority="auto"
+            onError={() => setFailed(true)}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>

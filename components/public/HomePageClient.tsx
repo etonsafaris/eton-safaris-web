@@ -16,7 +16,7 @@ const PaymentsSection = dynamic(() => import('@/components/public/PaymentsSectio
 });
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
-import { fallbackHomeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
+import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
 import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
@@ -98,8 +98,7 @@ export default function HomePageClient({
     );
     if (fromRecovery.length) return fromRecovery;
     const initial = safeHeroSlides(initialHeroSlides ?? []);
-    if (initial.length) return initial;
-    return safeHeroSlides(fallbackHomeHeroSlides());
+    return initial;
   }, [recoveredHeroSlides, initialHeroSlides]);
 
   useEffect(() => {

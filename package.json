@@ -123,7 +123,11 @@
     "images:purge-supabase:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate",
     "images:purge-legacy-cdn": "node scripts/purge-supabase-image-urls.mjs",
     "images:purge-legacy-cdn:execute": "node scripts/purge-supabase-image-urls.mjs --execute",
-    "images:purge-legacy-cdn:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate"
+    "images:purge-legacy-cdn:migrate": "node scripts/purge-supabase-image-urls.mjs --execute --migrate",
+    "images:verify-no-supabase": "node scripts/verify-no-supabase-urls.mjs",
+    "images:clean-supabase-cache": "node scripts/clean-supabase-cache-files.mjs",
+    "media:purge-orphans": "node scripts/purge-orphan-media-files.mjs",
+    "media:purge-orphans-dry": "node scripts/purge-orphan-media-files.mjs --dry-run"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

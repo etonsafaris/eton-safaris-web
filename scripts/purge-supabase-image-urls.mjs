@@ -15,12 +15,12 @@ import { Pool } from 'pg';
 const EXECUTE = process.argv.includes('--execute');
 const MIGRATE = process.argv.includes('--migrate');
 
-const SUPABASE_RE = /supabase\.co\/storage/i;
+const SUPABASE_RE = /supabase\.co/i;
 const BASE44_RE = /media\.base44\.com|\.base44\.com/i;
-const LEGACY_RE = /supabase\.co\/storage|media\.base44\.com|\.base44\.com/i;
+const LEGACY_RE = /supabase\.co|media\.base44\.com|\.base44\.com/i;
 
 const LEGACY_URL_RE =
-  /https?:\/\/[^\s"'<>]*(?:supabase\.co\/storage|media\.base44\.com|[^\s"'<>]*\.base44\.com)[^\s"'<>]*/gi;
+  /https?:\/\/[^\s"'<>]*(?:supabase\.co|media\.base44\.com|[^\s"'<>]*\.base44\.com)[^\s"'<>]*/gi;
 
 const IMAGE_COLUMNS = [
   'image_url',
@@ -34,7 +34,30 @@ const IMAGE_COLUMNS = [
   'picture',
 ];
 
-const HTML_COLUMNS = ['description', 'content', 'body', 'excerpt', 'summary', 'blocks', 'itinerary'];
+const HTML_COLUMNS = [
+  'description',
+  'content',
+  'body',
+  'excerpt',
+  'summary',
+  'blocks',
+  'itinerary',
+  'itineraries',
+  'highlights',
+  'journey_details',
+  'price_includes',
+  'price_excludes',
+  'accommodation_blocks',
+  'park_blocks',
+  'post_blocks',
+  'page_blocks',
+  'place_blocks',
+  'seo_schema',
+  'seo_settings',
+  'faqs',
+  'website',
+  'website_url',
+];
 
 const CONTENT_TABLES = [
   'tours',
@@ -183,6 +206,76 @@ async function existingColumns(client, table) {
   return new Set(rows.map((r) => r.column_name));
 }
 
+/** Any remaining text/json column in public schema (catches columns not in the lists above). */
+async function deepScrubAllTextColumns(client, cache) {
+  const { rows: tables } = await client.query(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`
+  );
+  let touched = 0;
+  for (const { table_name: table } of tables) {
+    const { rows: colRows } = await client.query(
+      `SELECT column_name, data_type FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = $1
+         AND data_type IN ('text', 'character varying', 'json', 'jsonb')`,
+      [table]
+    );
+    if (!colRows.length) continue;
+    const cols = colRows.map((r) => r.column_name);
+    const selectList = ['id', ...cols.filter((c) => c !== 'id')];
+    if (!selectList.includes('id')) continue;
+    const { rows } = await client.query(
+      `SELECT ${selectList.map((c) => `"${c}"`).join(', ')} FROM "${table}"`
+    );
+    for (const row of rows) {
+      const patch = {};
+      for (const col of cols) {
+        if (col === 'id') continue;
+        const raw = row[col];
+        if (raw == null) continue;
+        const text = typeof raw === 'object' ? JSON.stringify(raw) : String(raw);
+        if (!LEGACY_RE.test(text)) continue;
+        if (IMAGE_COLUMNS.includes(col) && isLegacyUrl(raw)) {
+          const replacement = await resolveReplacement(client, row, col, raw, cache);
+          patch[col] = replacement;
+        } else if (LEGACY_URL_RE.test(text)) {
+          let rebuilt = text;
+          const urls = [...new Set(text.match(LEGACY_URL_RE) || [])];
+          for (const match of urls) {
+            let replacement = '';
+            if (MIGRATE && isSupabaseUrl(match)) {
+              replacement = (await importToAiven(client, match, cache)) || '';
+            }
+            rebuilt = rebuilt.split(match).join(replacement);
+          }
+          if (colRows.find((r) => r.column_name === col)?.data_type === 'jsonb') {
+            try {
+              patch[col] = JSON.parse(rebuilt);
+            } catch {
+              patch[col] = rebuilt;
+            }
+          } else if (colRows.find((r) => r.column_name === col)?.data_type === 'json') {
+            try {
+              patch[col] = JSON.parse(rebuilt);
+            } catch {
+              patch[col] = rebuilt;
+            }
+          } else {
+            patch[col] = rebuilt;
+          }
+        }
+        if (patch[col] !== undefined) touched += 1;
+      }
+      if (!Object.keys(patch).length || !EXECUTE) continue;
+      const sets = Object.keys(patch).map((c, i) => `"${c}" = $${i + 1}`);
+      await client.query(`UPDATE "${table}" SET ${sets.join(', ')} WHERE id = $${sets.length + 1}`, [
+        ...Object.values(patch),
+        row.id,
+      ]);
+    }
+  }
+  return touched;
+}
+
 async function scrubMediaFilenames(client) {
   if (!(await tableExists(client, 'media_files'))) return 0;
   const { rows } = await client.query(
@@ -274,10 +367,11 @@ async function main() {
     }
 
     const mediaFilenameRows = await scrubMediaFilenames(client);
+    const deepScrubbed = await deepScrubAllTextColumns(client, cache);
 
     console.log(
       `\npurge-legacy-media-urls — ${EXECUTE ? 'EXECUTE' : 'DRY-RUN'}${MIGRATE ? ' + MIGRATE (Supabase only)' : ''}: ` +
-        `${totalFields} image field(s), ${totalHtml} HTML embed(s), ${mediaFilenameRows} media_files filename(s).`
+        `${totalFields} image field(s), ${totalHtml} HTML embed(s), ${mediaFilenameRows} media_files filename(s), ${deepScrubbed} deep-scrub field(s).`
     );
     if (!EXECUTE) {
       console.log('Re-run with --execute (add --migrate to copy Supabase files into Aiven media_files).');

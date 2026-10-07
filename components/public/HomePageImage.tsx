@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import ResponsiveImage from '@/components/public/ResponsiveImage';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import { resolvePublicCmsImage, resolvePublicHeroCarouselImage } from '@/lib/public-image';
@@ -34,11 +33,7 @@ export default function HomePageImage({
 }: HomePageImageProps) {
   const resolve =
     variant === 'hero' || allowCarouselFallback ? resolvePublicHeroCarouselImage : resolvePublicCmsImage;
-  const normalized = resolve(src);
-  const [displaySrc, setDisplaySrc] = useState(normalized);
-  useEffect(() => {
-    setDisplaySrc(resolve(src));
-  }, [src, variant, allowCarouselFallback]);
+  const displaySrc = resolve(src);
   if (!displaySrc) return null;
   const isHomeDestination = width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const dims =

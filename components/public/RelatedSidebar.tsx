@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
-import { DEFAULT_SAFARI_FALLBACK_IMAGE, publicImageSrcOrFallback } from '@/lib/public-image';
+import { publicImagePlaceholderArt, publicImageSrcOrFallback } from '@/lib/public-image';
 
 export type RelatedSidebarItem = {
   href: string;
@@ -13,12 +13,9 @@ export type RelatedSidebarItem = {
 };
 
 function SidebarThumb({ src, title }: { src?: string | null; title: string }) {
-  const initial = src ? publicImageSrcOrFallback(src) : '';
-  const [displaySrc, setDisplaySrc] = useState(initial);
-
-  useEffect(() => {
-    setDisplaySrc(src ? publicImageSrcOrFallback(src) : '');
-  }, [src]);
+  const resolved = useMemo(() => (src ? publicImageSrcOrFallback(src) : ''), [src]);
+  const [failed, setFailed] = useState(false);
+  const displaySrc = failed ? publicImagePlaceholderArt() : resolved;
 
   if (!displaySrc) {
     return <div className="h-14 w-[72px] shrink-0 rounded bg-[#d7e0e0]" />;
@@ -30,16 +27,10 @@ function SidebarThumb({ src, title }: { src?: string | null; title: string }) {
       alt={title || ''}
       width={72}
       height={56}
-      loading="lazy"
+      loading="eager"
       decoding="async"
       className="h-14 w-[72px] shrink-0 rounded object-cover"
-      onError={() => {
-        if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
-          setDisplaySrc('');
-          return;
-        }
-        setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
-      }}
+      onError={() => setFailed(true)}
     />
   );
 }

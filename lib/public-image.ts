@@ -250,15 +250,19 @@ export function isLocalOnlyImage(value: unknown): boolean {
   }
 }
 
+/** Public cards: only admin/CMS image URLs — no bundled placeholder before the real src loads. */
 export function publicImageSrcOrFallback(src?: string | null): string {
   const trimmed = typeof src === 'string' ? src.trim() : '';
-  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
-    return OFFICIAL_DEFAULT_CARD_IMAGE;
-  }
-  return resolvePublicRecordImageSrc(trimmed) || OFFICIAL_DEFAULT_CARD_IMAGE;
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return '';
+  return resolvePublicRecordImageSrc(trimmed) || '';
 }
 
-/** Card/search matrix image — never returns empty (prevents hidden card drops). */
+/** Card/search matrix image — same as {@link publicImageSrcOrFallback} (strict). */
 export function publicCardImageSrc(src?: string | null): string {
   return publicImageSrcOrFallback(src);
+}
+
+/** Optional bundled art only after a failed load (see ResponsiveImage onError). */
+export function publicImagePlaceholderArt(): string {
+  return OFFICIAL_DEFAULT_CARD_IMAGE;
 }

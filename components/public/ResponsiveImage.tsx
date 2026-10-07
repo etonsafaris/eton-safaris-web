@@ -1,15 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
-import { IMAGE_BLUR_DATA_URL } from '@/lib/static-build';
-import {
-  DEFAULT_PUBLIC_IMAGE,
-  OFFICIAL_DEFAULT_CARD_IMAGE,
-  publicImageSrcOrFallback,
-  resolvePublicRecordImageSrc,
-} from '@/lib/public-image';
+import { publicImagePlaceholderArt, resolvePublicRecordImageSrc } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -38,16 +32,12 @@ export default function ResponsiveImage({
   height,
   useErrorFallback = true,
 }: ResponsiveImageProps) {
-  const initial =
-    resolvePublicRecordImageSrc(src) || (useErrorFallback ? publicImageSrcOrFallback(src) : '');
-  const [displaySrc, setDisplaySrc] = useState(initial);
-
+  const resolvedSrc = useMemo(() => resolvePublicRecordImageSrc(src) || '', [src]);
+  const [errorArt, setErrorArt] = useState(false);
   useEffect(() => {
-    const resolved = resolvePublicRecordImageSrc(src);
-    if (resolved) setDisplaySrc(resolved);
-    else if (useErrorFallback) setDisplaySrc(publicImageSrcOrFallback(src));
-    else setDisplaySrc('');
-  }, [src, useErrorFallback]);
+    setErrorArt(false);
+  }, [resolvedSrc]);
+  const displaySrc = errorArt && useErrorFallback ? publicImagePlaceholderArt() : resolvedSrc;
 
   if (!displaySrc) return null;
 
@@ -73,31 +63,16 @@ export default function ResponsiveImage({
   const useFill = variant === 'hero' || className?.includes('absolute');
   const unoptimized =
     displaySrc.startsWith('/api/media/') ||
-    displaySrc.includes('images.unsplash.com') ||
-    displaySrc.includes('supabase.co/storage');
+    displaySrc.includes('images.unsplash.com');
 
   const shared = {
     alt: alt || '',
     priority,
     ...(resolvedQuality != null ? { quality: resolvedQuality } : {}),
-    placeholder: 'blur' as const,
-    blurDataURL: IMAGE_BLUR_DATA_URL,
     sizes: sizes || (variant === 'hero' ? '100vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'),
     unoptimized,
     onError: () => {
-      if (!useErrorFallback) {
-        setDisplaySrc('');
-        return;
-      }
-      if (displaySrc === OFFICIAL_DEFAULT_CARD_IMAGE) {
-        setDisplaySrc(DEFAULT_PUBLIC_IMAGE);
-        return;
-      }
-      if (displaySrc === DEFAULT_PUBLIC_IMAGE) {
-        setDisplaySrc(OFFICIAL_DEFAULT_CARD_IMAGE);
-        return;
-      }
-      setDisplaySrc(OFFICIAL_DEFAULT_CARD_IMAGE);
+      if (useErrorFallback) setErrorArt(true);
     },
   };
 

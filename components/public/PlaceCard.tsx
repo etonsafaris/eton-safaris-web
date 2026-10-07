@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { formatPublishedDateValue, formatPublishedStamp } from '@/lib/public-date';
 import { stripPublicMoney } from '@/lib/public-money';
-import { DEFAULT_SAFARI_FALLBACK_IMAGE, publicImageSrcOrFallback } from '@/lib/public-image';
+import { publicImagePlaceholderArt, publicImageSrcOrFallback } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 function cardStamp(date?: string, record?: RecordRow) {
@@ -47,12 +47,9 @@ export default function PlaceCard({
   record?: RecordRow;
   cta?: string;
 }) {
-  const initialSrc = image ? publicImageSrcOrFallback(image) : '';
-  const [displaySrc, setDisplaySrc] = useState(initialSrc);
-
-  useEffect(() => {
-    setDisplaySrc(image ? publicImageSrcOrFallback(image) : '');
-  }, [image]);
+  const resolved = useMemo(() => (image ? publicImageSrcOrFallback(image) : ''), [image]);
+  const [failed, setFailed] = useState(false);
+  const displaySrc = failed ? publicImagePlaceholderArt() : resolved;
 
   const stamp = cardStamp(date, record);
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
@@ -68,16 +65,10 @@ export default function PlaceCard({
             width={640}
             height={480}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
+            loading={resolved ? 'eager' : 'lazy'}
             decoding="async"
-            fetchPriority="low"
-            onError={() => {
-              if (displaySrc === DEFAULT_SAFARI_FALLBACK_IMAGE) {
-                setDisplaySrc('');
-                return;
-              }
-              setDisplaySrc(DEFAULT_SAFARI_FALLBACK_IMAGE);
-            }}
+            fetchPriority="auto"
+            onError={() => setFailed(true)}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>
