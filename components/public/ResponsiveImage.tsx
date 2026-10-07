@@ -3,7 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
-import { publicImagePlaceholderArt, resolvePublicRecordImageSrc } from '@/lib/public-image';
+import {
+  publicImagePlaceholderArt,
+  resolvePublicHeroCarouselImage,
+  resolvePublicRecordImageSrc,
+} from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
 
 type ResponsiveImageProps = {
@@ -32,7 +36,12 @@ export default function ResponsiveImage({
   height,
   useErrorFallback = true,
 }: ResponsiveImageProps) {
-  const resolvedSrc = useMemo(() => resolvePublicRecordImageSrc(src) || '', [src]);
+  const resolvedSrc = useMemo(() => {
+    if (variant === 'hero') {
+      return resolvePublicHeroCarouselImage(src) || resolvePublicRecordImageSrc(src) || String(src || '').trim();
+    }
+    return resolvePublicRecordImageSrc(src) || '';
+  }, [src, variant]);
   const [errorArt, setErrorArt] = useState(false);
   useEffect(() => {
     setErrorArt(false);
@@ -63,7 +72,8 @@ export default function ResponsiveImage({
   const useFill = variant === 'hero' || className?.includes('absolute');
   const unoptimized =
     displaySrc.startsWith('/api/media/') ||
-    displaySrc.includes('images.unsplash.com');
+    displaySrc.includes('images.unsplash.com') ||
+    displaySrc.startsWith('/heroes/');
 
   const shared = {
     alt: alt || '',

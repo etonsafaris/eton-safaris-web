@@ -1,8 +1,9 @@
 import { countrySlugFromLanding } from '@/lib/cms-routes';
+import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { normalizeSlug } from '@/lib/country-utils';
 import { OFFICIAL_COUNTRY_HERO_PATHS } from '@/lib/official-country-assets';
 import { getPublicRecordImage } from '@/lib/record-image';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { resolvePublicCmsImage, resolvePublicHeroCarouselImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
 
 export function resolveCountrySlug(slug?: string | null, record?: RecordRow | null) {
@@ -16,11 +17,26 @@ export const COUNTRY_HERO_IMAGES = OFFICIAL_COUNTRY_HERO_PATHS;
 export const DEFAULT_COUNTRY_HERO = '';
 
 /**
- * Country hero + cards: same URL as stored in admin (Aiven media / Cloudinary on the row).
+ * Country hero: admin upload first, then bundled `/heroes/*`, then verified Unsplash fallback.
+ * Use {@link resolvePublicHeroCarouselImage} in hero components (see ResponsiveImage).
  */
 export function countryHeroImage(slug?: string | null, record?: RecordRow | null): string | null {
-  void slug;
-  if (!record) return null;
-  const fromCms = getPublicRecordImage(record);
-  return fromCms ? resolvePublicCmsImage(fromCms) : null;
+  const resolvedSlug = resolveCountrySlug(slug, record);
+
+  if (record) {
+    const fromCms = getPublicRecordImage(record);
+    if (fromCms) {
+      const cmsUrl = resolvePublicCmsImage(fromCms);
+      if (cmsUrl) return cmsUrl;
+    }
+  }
+
+  const bundled = resolvedSlug ? OFFICIAL_COUNTRY_HERO_PATHS[resolvedSlug] : '';
+  if (bundled) {
+    const hero = resolvePublicHeroCarouselImage(bundled);
+    if (hero) return hero;
+  }
+
+  const remote = countryHeroRemoteFallback(resolvedSlug || slug);
+  return resolvePublicHeroCarouselImage(remote) || remote;
 }
