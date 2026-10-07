@@ -1,0 +1,3992 @@
+[
+  {
+    "id": "8f65c8eb-7dd8-473f-a4cb-abee49b1a347",
+    "name": "Central Kalahari Baobab Safari Hotel",
+    "country": "Botswana"
+  },
+  {
+    "id": "a443d589-02ea-4f0a-87dc-c558aa5b5d87",
+    "name": "Central Kalahari Lagoon Safari Camp",
+    "country": "Botswana"
+  },
+  {
+    "id": "10c4e515-926c-4d49-ad3c-8e9d89ebb186",
+    "name": "Central Kalahari Mist Luxury Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "3586c750-4320-417e-8ec0-69b7ec84aa03",
+    "name": "Central Kalahari Sunset Safari Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "da4af14d-6a04-4bd6-b52b-ac5d28afa214",
+    "name": "Chobe Baobab Safari Hotel",
+    "country": "Botswana"
+  },
+  {
+    "id": "73ec9366-030e-4790-aeac-29859fd9b20a",
+    "name": "Chobe Mist Luxury Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "96b8e2bd-3de8-43c4-926c-1e0688418761",
+    "name": "Chobe Sunset Safari Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "884e8bd5-995d-45af-937d-6bfa4c7bf0b5",
+    "name": "Makgadikgadi Pans Baobab Safari Hotel",
+    "country": "Botswana"
+  },
+  {
+    "id": "608b6d01-4874-448b-b3b6-3e3c30389214",
+    "name": "Makgadikgadi Pans Lagoon Safari Camp",
+    "country": "Botswana"
+  },
+  {
+    "id": "15cdc51e-76f2-4e5b-8007-c8d3b0008fd6",
+    "name": "Makgadikgadi Pans Mist Luxury Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "46df84ec-d7e3-4ef5-a39b-870b423d1361",
+    "name": "Makgadikgadi Pans Sunset Safari Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "6b831c71-f133-4a59-bdfc-d092702688bf",
+    "name": "Moremi Baobab Safari Hotel",
+    "country": "Botswana"
+  },
+  {
+    "id": "7c4cf64d-c2ef-4c3a-83da-fa3622c421ef",
+    "name": "Moremi Mist Luxury Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "65b08124-2eca-4052-837d-b7b111e6b0c9",
+    "name": "Moremi Sunset Safari Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "6480e11a-a76c-490e-aa8c-05c61582ab15",
+    "name": "Nxai Pan Lagoon Safari Camp",
+    "country": "Botswana"
+  },
+  {
+    "id": "5aa2e160-58ba-4996-ba80-f908618e610c",
+    "name": "Nxai Pan Mist Luxury Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "13160d19-30ff-489e-b737-cc8c21adce83",
+    "name": "Nxai Pan Sunset Safari Bandas",
+    "country": "Botswana"
+  },
+  {
+    "id": "fc0e48ca-2b8b-47d9-9db2-89a2d224baa6",
+    "name": "Garamba Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "bffab02c-d8e8-427d-9e8a-ea82437d31f5",
+    "name": "Garamba Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "3da12b79-0c27-4cef-8739-250f05950cf6",
+    "name": "Garamba Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "5214c064-e251-47ba-babe-618a34f7aae8",
+    "name": "Garamba Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "326c551b-74d6-4472-935b-8976b4ce7f2c",
+    "name": "Kahuzi Biega Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "f6a8cd45-8c32-4b78-88c7-ec3128ffdffe",
+    "name": "Kahuzi Biega Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "2b7a2507-6b68-46cd-9501-d41ea2d388ba",
+    "name": "Kahuzi Biega Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "6fb2f4a5-f659-4e18-a265-dc6402c00d02",
+    "name": "Kahuzi Biega Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "a393ae03-9cfb-4c4b-96e5-62beaa9ff3c5",
+    "name": "Kundelungu Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "eea40d3c-ad0d-41fb-859e-1c2c9084ff57",
+    "name": "Kundelungu Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "9029c501-b53f-4852-9dc9-31080c5630d1",
+    "name": "Kundelungu Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "68cc76db-b1ff-4af2-b61d-a4f52ced2a5c",
+    "name": "Kundelungu Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "50ec922b-f756-46ed-8a30-fdbf84058fa2",
+    "name": "Lomami Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "ec656c09-a288-433c-8e0f-06993c289415",
+    "name": "Lomami Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "8579864b-c1cc-44c8-ba5c-31e0da3c301e",
+    "name": "Lomami Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "3e10792c-4272-4311-8afe-f699534aadde",
+    "name": "Maiko Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "b82d2af7-e899-46d1-b8e4-9c036c7078f0",
+    "name": "Maiko Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "373a84a8-8251-4494-a853-0097ed4130e7",
+    "name": "Maiko Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "f681aa74-03bd-4034-b016-433d66faa8ea",
+    "name": "Maiko Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "fc12fbd9-3775-45ad-855b-88749376ac76",
+    "name": "Mangroves Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "24f03e3a-6d86-4b4e-91dd-e932984f4a22",
+    "name": "Mangroves Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "abfb6d30-25a0-4da9-bdd2-cccf019cace3",
+    "name": "Mangroves Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "a074a4e9-e76e-47ce-b487-aba84304dd89",
+    "name": "Salonga Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "e53051ad-1534-4590-b653-aeb1479e2369",
+    "name": "Salonga Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "6ca190de-ad17-42ae-b9de-6457eddb527d",
+    "name": "Salonga Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "bba8733d-8f26-440d-a315-8decbd4c59d4",
+    "name": "Salonga Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "f8692786-9c73-405d-b089-16961fb384ef",
+    "name": "Upemba Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "9c06e25a-6e57-445a-a2fa-30331966e753",
+    "name": "Upemba Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "435b2294-16f6-4537-abec-bfaca32db2d2",
+    "name": "Upemba Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "0b76bb94-a156-43bc-b166-886ea9390c63",
+    "name": "Upemba Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "9b2f4ae2-d131-498d-8e23-45360a2debbc",
+    "name": "Virunga Baobab Safari Hotel",
+    "country": "DR Congo"
+  },
+  {
+    "id": "55451df5-0210-4a6e-b2bc-d3baa3933309",
+    "name": "Virunga Lagoon Safari Camp",
+    "country": "DR Congo"
+  },
+  {
+    "id": "d56e6d66-e9b3-4e1c-ad6f-78792123e0b3",
+    "name": "Virunga Mist Luxury Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "bd21db68-297b-4c45-93b1-ac9b24269244",
+    "name": "Virunga Sunset Safari Bandas",
+    "country": "DR Congo"
+  },
+  {
+    "id": "ee6130c5-19e8-452b-b521-113d5e82634d",
+    "name": "Gilf Kebir Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "7b24e41e-8eb2-4854-a9f4-f24c4013f82f",
+    "name": "Gilf Kebir Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "d6c287de-f902-4570-b637-29bac1f15781",
+    "name": "Gilf Kebir Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "caec27ab-6650-4663-ae03-07b5b3621d15",
+    "name": "Lake Qarun Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "95e8eb90-3932-42bd-99b3-6491ee58838d",
+    "name": "Lake Qarun Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "bd5f2807-3780-46e1-a802-980e06453c22",
+    "name": "Lake Qarun Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "67b838e0-197d-4a71-bb20-32775183dd0b",
+    "name": "Lake Qarun Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "ff60ebfc-50da-4777-aaab-af576cbf027c",
+    "name": "Nabq Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "613251df-3e2d-41c0-9aad-c4ab8ac6ce09",
+    "name": "Nabq Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "48c330b1-33da-4a66-b6f8-d8b4694cfea0",
+    "name": "Nabq Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "90edca73-aaa5-4c83-9f21-b92f09923dfb",
+    "name": "Nabq Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "7e90dd1b-0271-4bb1-be8f-38588cc61410",
+    "name": "Ras Mohammed Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "81fdcc93-e2b9-4489-b783-489c72f7e37c",
+    "name": "Ras Mohammed Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "fee17c2e-63bd-48c9-8772-1844c1f096e8",
+    "name": "Ras Mohammed Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "e027a8e1-3ef7-496f-ae80-b9f21437149d",
+    "name": "Ras Mohammed Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "dde8caf9-e1bd-453f-a17b-dabd0d2d314e",
+    "name": "Red Sea Islands Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "d80aa082-ee0d-4238-b27c-3ef05a8fd03d",
+    "name": "Red Sea Islands Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "439a30bd-3e0f-4d98-8ebc-46bdd3b141a3",
+    "name": "Red Sea Islands Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "a8ec5314-97c6-46ad-9c64-a4b6f1bf9a0b",
+    "name": "Red Sea Islands Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "f0f33876-cbcb-41ae-a1e2-9e332592eaef",
+    "name": "Siwa Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "311e7400-f817-408f-a09b-17ee2756fb36",
+    "name": "Siwa Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "6f34353a-03bc-46d2-8a9d-d4b7c717cc59",
+    "name": "Siwa Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "6ccba062-f5a9-44f7-88dd-e63bcda6de6d",
+    "name": "Siwa Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "dd2a2aed-1adb-4bf7-9303-d3dbfa9e101f",
+    "name": "St Katherine Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "9848233f-8451-4082-893a-15f71b4fcdf4",
+    "name": "St Katherine Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "6a45c7ab-84fa-4b86-9652-816fe8359514",
+    "name": "St Katherine Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "566c0f89-7603-419c-9c37-e889e2602dfd",
+    "name": "Wadi Al Hitan Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "4aab53b0-ea9e-4349-81aa-3961a9ea0935",
+    "name": "Wadi Al Hitan Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "e54e2e11-cdc4-468f-85e1-73026e72ff9e",
+    "name": "Wadi Al Hitan Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "88c8e87b-a5e4-4adb-a760-7b70e74cd847",
+    "name": "Wadi Al Hitan Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "1d59290f-51bc-4e0a-8a07-a31e1610533d",
+    "name": "Wadi El Rayan Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "80f2767c-6785-4f66-a367-7fbf8abb18e8",
+    "name": "Wadi El Rayan Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "25d5833f-c48b-4985-b9d5-83af6f25d824",
+    "name": "Wadi El Rayan Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "bce8877a-3e7b-42d0-a290-cb1f92654bdd",
+    "name": "White Desert Baobab Safari Hotel",
+    "country": "Egypt"
+  },
+  {
+    "id": "427684a4-0471-4bb3-a30c-445b5d1e46d1",
+    "name": "White Desert Lagoon Safari Camp",
+    "country": "Egypt"
+  },
+  {
+    "id": "eb370e81-d269-48fe-a2d6-6cb04f30f192",
+    "name": "White Desert Mist Luxury Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "4b16c2ee-bc10-4804-b593-98c77c4a1201",
+    "name": "White Desert Sunset Safari Bandas",
+    "country": "Egypt"
+  },
+  {
+    "id": "0adff2bf-f30b-41a9-81b0-9a4a85ba2c6b",
+    "name": "Abijatta-Shalla Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "dcec0f20-0dfa-4a9b-b1a6-cfcd2caa8e1a",
+    "name": "Abijatta-Shalla Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "8ebdca6a-7611-4f37-bc92-05e6f6624b75",
+    "name": "Abijatta-Shalla Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "d06e61ec-69a0-4200-94e4-f8cbe862a369",
+    "name": "Abijatta-Shalla Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "97d76582-0308-4678-bb4c-7e45437391ed",
+    "name": "Alatish Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "c48df236-3fb5-4461-940e-4b4da294f797",
+    "name": "Alatish Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "35f75b36-d091-49e6-84b7-524cfba7cf1f",
+    "name": "Alatish Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "1de2055b-a243-4b6c-88bd-806aebe78299",
+    "name": "Alatish Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "f8ca7597-2f5e-4c1f-aba7-e1691a6d5343",
+    "name": "Arsi Mountains Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "8ede356d-5194-4691-b2b5-82097feec524",
+    "name": "Arsi Mountains Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "9fa4c938-6ff1-4582-abab-5a55530b7ab3",
+    "name": "Arsi Mountains Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "0da77698-de42-405b-bb45-2bdc02767eb7",
+    "name": "Arsi Mountains Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "ba563f25-9285-4cee-a4b1-7c8c5d667a96",
+    "name": "Awash Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "23c8b022-7210-4479-960e-ceaf31b6d963",
+    "name": "Awash Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "fc3b6096-e6ba-4655-a5b3-e90fd3cf2b0d",
+    "name": "Awash Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "54c477a0-d75d-4a62-be85-ac9c23af3d97",
+    "name": "Awash Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "caa9af03-9e2f-4376-a911-07c2ea752d42",
+    "name": "Bale Mountains Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "c08c693f-3762-4d28-b6e4-51ed70fe7dcf",
+    "name": "Bale Mountains Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "cecc040d-887b-4959-9a90-810b89602f61",
+    "name": "Bale Mountains Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "67a8fceb-d92a-4794-9f7f-effbf9fc95a4",
+    "name": "Bejimiz Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "2148220e-b5b9-47cf-bc45-641e727e890e",
+    "name": "Bejimiz Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "47f4e13e-d396-47a3-9dc9-66770fd041f4",
+    "name": "Bejimiz Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "d3e26c7a-e671-4854-af50-813f55cf2aee",
+    "name": "Bejimiz Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "b3562e6c-5cb8-4651-b204-110561ed38aa",
+    "name": "Borana Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "3070fcfa-7d8a-42ba-b99e-19bf3e0d8583",
+    "name": "Borana Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "265d724b-277c-4839-824c-d986944b9224",
+    "name": "Borana Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "e2777b68-a810-4f77-9d6f-21fa2ca40eaa",
+    "name": "Borana Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "35d8d75c-1f63-4dfc-996c-d547f7ca1b7b",
+    "name": "Chebera Churchura Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "5e8b99d2-baac-48c1-b71a-930828d43b03",
+    "name": "Chebera Churchura Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "6498c51f-6897-4caa-aca1-04cdf00b6c42",
+    "name": "Chebera Churchura Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "ffbceb9f-8b6a-48c7-a18b-2feb3d6992a7",
+    "name": "Chebera Churchura Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "34bc0f34-969a-48b8-b684-d50aeb6177f7",
+    "name": "Dati Wolel Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "048b2c33-a3da-44ca-b794-2bad57835428",
+    "name": "Dati Wolel Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "f1993cfb-6993-4cb9-92cd-7e34a308f7e6",
+    "name": "Dati Wolel Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "a1db877a-51e6-4ced-9c58-55a9a8d5c8f9",
+    "name": "Dati Wolel Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "ae061278-6b0f-40d1-af60-d78984deda9e",
+    "name": "Didessa Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "7499177e-c02c-4a33-b503-2b3999f873f5",
+    "name": "Didessa Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "cba67cac-f5ad-4ee0-8457-5291a2938736",
+    "name": "Didessa Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "29c0da47-0ed8-486b-bd3f-031a025ecec9",
+    "name": "Didessa Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "76e99590-2f81-4fbe-8526-88c6e1a6b4c1",
+    "name": "Gambela Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "d9b03c2e-01a2-40f8-a740-45cfc2ecf360",
+    "name": "Gambela Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "02499062-1653-464f-9822-58e1bca8d1ac",
+    "name": "Gambela Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "bcd1e8b9-7ab2-4ef0-87f0-ab49ccfcb971",
+    "name": "Gambela Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "cb19d6b5-dc6e-46b3-b425-b4cfe2188d03",
+    "name": "Geralle Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "9c0ed5ce-a83d-40dd-9195-0050b99bed7b",
+    "name": "Geralle Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "db8612ff-ae69-43a8-a7c8-c34fba138f9b",
+    "name": "Geralle Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "66e0ff09-7a5a-4156-aad2-6065f23e6c8a",
+    "name": "Geralle Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "f157c7ef-648c-45bf-a45d-4ca04ec9ad9e",
+    "name": "Gibe Sheleko Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "66ff3ba0-77ed-447d-bbae-c2d53cccf361",
+    "name": "Gibe Sheleko Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "e385b4a5-602e-47ad-afa9-711a79d40405",
+    "name": "Gibe Sheleko Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "2d5415e4-81b9-4197-9887-2d7adb6eed46",
+    "name": "Gibe Sheleko Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "b79fdab5-954c-400b-b99f-8010f20d401f",
+    "name": "Kafta Sheraro Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "09676e84-9351-49c8-8a82-3bf81683c2fa",
+    "name": "Kafta Sheraro Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "856ca684-54dd-4523-805b-0c7d0e3351cc",
+    "name": "Kafta Sheraro Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "bf2f4927-60a7-4037-923d-9599fe4c5a3c",
+    "name": "Kafta Sheraro Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "f03dada2-1a00-4255-8096-b871593f5b2d",
+    "name": "Loka-Abaya Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "54e9a153-d451-45e6-8b82-cc2a846adbc2",
+    "name": "Loka-Abaya Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "0b3c5840-7668-4e9e-ab31-2b94aab70b32",
+    "name": "Loka-Abaya Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "0d69f712-afcc-4c68-911b-b132aca661f9",
+    "name": "Loka-Abaya Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "b1f8d3cb-fab1-449d-a531-41253b3a86ab",
+    "name": "Mago Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "673831d6-b3fd-4371-beb4-bbadcb9fea30",
+    "name": "Mago Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "1f9a4e22-560d-4717-bffd-8b5c80b1461a",
+    "name": "Mago Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "46f49a6c-2eff-45ff-8778-9f3a059c1d2b",
+    "name": "Mago Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "dd7caedb-310c-4428-98f6-0ef7c23e1d4e",
+    "name": "Mao-Komo Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "d08cd181-9505-474e-b6ea-0604150d5c9f",
+    "name": "Mao-Komo Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "81977e60-5a72-4245-81cf-09e345bd015e",
+    "name": "Mao-Komo Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "2fc308fa-0a07-4491-9c33-66bdc330f677",
+    "name": "Mao-Komo Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "ee30eaee-c2ac-47b3-b02f-460832dc4359",
+    "name": "Maze Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "1cf34b91-6e6d-4d7b-b362-ffa8365f1cc6",
+    "name": "Maze Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "6b9464f5-ae48-438c-84b5-d1957c4d5918",
+    "name": "Maze Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "3ab06b7e-b28e-45d9-9077-4bfd07be54c0",
+    "name": "Nechisar Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "badc9351-7cff-4acd-855e-e18a282f6aa9",
+    "name": "Nechisar Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "5e34ddaa-f12f-4893-94aa-e4a85f224d6f",
+    "name": "Nechisar Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "e5df0418-bb29-4e60-a9c4-f0340b57105c",
+    "name": "Omo Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "b15f04e6-fb4a-4698-888a-d715bde445cd",
+    "name": "Omo Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "8d2c19ce-eb2c-4120-a2c7-9fb39dd02a2b",
+    "name": "Omo Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "fd30290e-69f5-4c41-b658-54db634cabf3",
+    "name": "Omo Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "e393afe7-7fbc-4fbb-8c68-4de129686d13",
+    "name": "Simien Mountains Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "72c790d7-31a0-4b3a-a1e5-3016e29c0532",
+    "name": "Simien Mountains Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "b2e97059-2cdf-4e06-8990-bef53edce52b",
+    "name": "Simien Mountains Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "723eda94-43f3-42cd-8e8e-131449024b92",
+    "name": "Simien Mountains Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "cdece370-7b6a-4bc9-8305-728ab2dcf40c",
+    "name": "Yangudi Rassa Baobab Safari Hotel",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "4df1459e-f81c-48c2-92ba-5332f8b86b5b",
+    "name": "Yangudi Rassa Lagoon Safari Camp",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "fd5f3c4d-d03e-4eb1-adb0-79865543b2fe",
+    "name": "Yangudi Rassa Mist Luxury Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "e6ba5a98-44f4-4074-a1ba-dc0d0a92ca29",
+    "name": "Yangudi Rassa Sunset Safari Bandas",
+    "country": "Ethiopia"
+  },
+  {
+    "id": "c0011e3e-16be-46d6-ab30-62fc81686335",
+    "name": "Aberdare Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "0144414a-c80a-4c06-b1cd-c84325861bef",
+    "name": "Aberdare Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "3ac41998-2124-4d09-9991-d9a782759621",
+    "name": "Aberdare Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "5714842b-881f-4caa-92b1-e0a40c8dcbba",
+    "name": "Amboseli Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "273787ad-936c-4a1b-ba57-e0386566ff4e",
+    "name": "Amboseli Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "da8558fc-cbbe-487b-85cd-2325252b5005",
+    "name": "Arabuko Sokoke Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "7e50cce2-838b-40bf-9c44-2726ac3ee7a3",
+    "name": "Arabuko Sokoke Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "4b5251de-9d81-4b4d-8b50-d9108bae3879",
+    "name": "Arabuko Sokoke Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "a7778457-bb4f-49a4-9cea-b8b90dc2b6ec",
+    "name": "Arabuko Sokoke Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "6122a368-730f-4030-b16e-ff44e55c77c5",
+    "name": "Central Island Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "33546f7d-0b8a-49ef-a399-2a3a62960da0",
+    "name": "Central Island Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "1b7611a8-b77a-4faa-b753-07918adf52d3",
+    "name": "Central Island Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "9437658e-31f4-4912-a185-2976744e17dc",
+    "name": "Central Island Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "9bda3cdf-6fd3-490d-911f-c43bb7480a98",
+    "name": "Chyulu Hills Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "4b31567d-156c-42b8-92e0-4a50f96c982d",
+    "name": "Chyulu Hills Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "c15f415e-51fc-4523-8e0a-540899d8ccdc",
+    "name": "Chyulu Hills Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "fec14e78-0d26-4706-a0bc-ecf9ea8a16f4",
+    "name": "Hell's Gate Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "b97ac48c-1dd7-421f-8a30-11715eed3949",
+    "name": "Hell's Gate Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "3e1dbf7b-0918-45df-8a0c-7ca970955355",
+    "name": "Hell's Gate Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "317f4182-899d-48a4-a746-536804862563",
+    "name": "Hell's Gate Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "46c46c2d-ec27-4c08-bc82-e3eb4e895ae6",
+    "name": "Kisite-Mpunguti Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "d35a8e99-2316-417c-bd5c-09673fe35d83",
+    "name": "Kisite-Mpunguti Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "8a9fe898-2ca2-4881-83b4-2d78deae4392",
+    "name": "Kisite-Mpunguti Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "337511c0-0407-4fb5-a717-f35ffe3a0ef4",
+    "name": "Kisite-Mpunguti Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "b605a3d8-9088-431a-b419-1c892b212186",
+    "name": "Kora Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "a896f069-e530-45ee-8a13-c69f441dc2ca",
+    "name": "Kora Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "5d92d499-bf83-4e7a-bfc6-f790ed40075b",
+    "name": "Kora Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "017e9b2a-6869-4048-8ec0-1f49c765ddc9",
+    "name": "Kora Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "f0514d55-d6c8-4f6f-bd4b-418d66922611",
+    "name": "Lake Nakuru Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "b8c22426-3af8-495a-98de-fcf91c081897",
+    "name": "Lake Nakuru Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "d1018a56-dab2-4146-81cb-afef322af460",
+    "name": "Lake Nakuru Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "89dbb47a-d3e2-4d7b-8816-b5acd4a81c9c",
+    "name": "Malindi Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "2415f940-dfe6-4c24-812c-f68c03a5d3e4",
+    "name": "Malindi Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "181a9da4-aabd-4b1e-9630-52ca6deb6c6d",
+    "name": "Malindi Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "393504df-9cb6-42e7-8c26-fac3d65a7de2",
+    "name": "Malindi Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "da8a5a40-18f6-43b3-b349-42cd49707174",
+    "name": "Malka Mari Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "d0dbf6c4-1068-4ffc-9a59-ff2e8344a2a9",
+    "name": "Malka Mari Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "24071039-c6a8-436a-9dbd-59c5aba8712a",
+    "name": "Malka Mari Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "960a881b-6d82-454c-98d2-b92a32e7a599",
+    "name": "Marsabit Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "b93f9775-a9a9-4331-914f-a2f44f51ceca",
+    "name": "Marsabit Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "6027f808-0da2-4c1d-9c20-5072add40a35",
+    "name": "Marsabit Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "0d699b07-8326-41c6-97a9-9d8ac0f9d1fb",
+    "name": "Masai Mara Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "c7dee415-bdcc-47a8-91ce-e92e6067799f",
+    "name": "Masai Mara Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "3e2f6e96-b406-4219-b234-677d4468e0f6",
+    "name": "Masai Mara Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "23cdb295-45fb-4e8e-8c9e-b45cedd7d5f1",
+    "name": "Meru Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "21587749-93c2-484b-b161-5b4864c000b0",
+    "name": "Meru Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "dbc63925-a7ad-43e9-8bf6-b0b105cb9078",
+    "name": "Meru Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "aadc5854-fa0f-410f-bd64-17c7a6d93a64",
+    "name": "Meru Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "c82e7143-23fd-46e4-a8ed-da8e3cbbc99d",
+    "name": "Mombasa Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "37a8dfbb-05e6-4a65-86f9-2135f3cbda19",
+    "name": "Mombasa Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "d5d4f817-359a-40a3-a423-962930063b0c",
+    "name": "Mombasa Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "e67bf68b-dcf6-47ce-915a-7d30e66298bf",
+    "name": "Mombasa Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "da04f155-e5a4-4fa9-9d29-4fba03084196",
+    "name": "Mount Elgon Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "b3b38bef-aa9c-4031-8462-a5c8afda1f03",
+    "name": "Mount Elgon Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "23adadc8-cbec-4656-938c-425e4e8f3bdf",
+    "name": "Mount Elgon Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "0949da74-a227-4e4a-9fc8-302f03dc2e23",
+    "name": "Mount Kenya Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "2408b450-b730-4344-9d40-166699fbb9e6",
+    "name": "Mount Kenya Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "f5c28945-009c-4519-8c70-1aa28bfe8e4f",
+    "name": "Mount Kenya Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "2e037866-3a8e-434b-be3f-995aafbac0e9",
+    "name": "Mount Kenya Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "a69d1920-85f1-45d3-8163-dba77a9894e0",
+    "name": "Mount Longonot Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "b8f2cd41-2e5c-4edf-b09c-d3fcbe3b3d38",
+    "name": "Mount Longonot Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "eb80ee6e-29b3-4084-8136-d7ea2e466357",
+    "name": "Mount Longonot Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "f8803e40-4afe-4bad-a16a-38a5c03b2c44",
+    "name": "Nairobi Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "0cc2c6a3-9eaa-42e9-91de-ad8f6094e406",
+    "name": "Nairobi Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "38f695ae-cf3d-45f2-b795-905a0f42b01e",
+    "name": "Nairobi Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "db5c7957-08e7-4598-bbd5-d4cc8c8f596e",
+    "name": "Ndere Island Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "6ac026d8-80a5-4555-b946-009699f27859",
+    "name": "Ndere Island Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "d00b54a9-0b1e-4f72-9164-b064a7b2e97b",
+    "name": "Ndere Island Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "423b1f3a-5181-4a8f-b4c8-3350ef65d0d2",
+    "name": "Ol Donyo Sabuk Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "7a1d0ca9-e117-4870-9c1b-4cf4db522fe2",
+    "name": "Ol Donyo Sabuk Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "2745627f-ecbe-427d-842a-c2b4733c3260",
+    "name": "Ol Donyo Sabuk Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "e46ff72a-b7ba-4c93-9558-396009d21869",
+    "name": "Ol Donyo Sabuk Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "ed8d1b66-013a-477d-8d68-8ba9b9af07d1",
+    "name": "Ruma Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "53ae4234-258e-4c3e-910a-aa7e92dbeb18",
+    "name": "Ruma Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "601fc72c-f795-44c1-8219-1a9592dcb871",
+    "name": "Ruma Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "f6a7eaac-9887-46fc-b8e4-113dcd7b7b60",
+    "name": "Ruma Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "ede5ed32-c4e6-4c9f-b507-f6a53fd4d910",
+    "name": "Saiwa Swamp Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "b3f5f7ae-05ad-41cf-b5c7-cefbc4c981a6",
+    "name": "Saiwa Swamp Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "f5d725a2-f2e9-4c4d-a278-08f8b1afd2b1",
+    "name": "Saiwa Swamp Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "9b06f696-e12c-49f7-836c-37b6ffa866db",
+    "name": "Samburu Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "70ed53f3-3ee3-46bc-8472-4db1f27f164b",
+    "name": "Samburu Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "ae5940e0-f08b-4232-8e90-d3b9f380d633",
+    "name": "Sibiloi Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "3628f260-c1a5-460a-af59-5c30c62dfd21",
+    "name": "Sibiloi Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "7d4b66ce-0f90-4742-b2b0-d69520e29bf1",
+    "name": "Sibiloi Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "6106b59d-3144-4db8-a345-066251c63559",
+    "name": "Sibiloi Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "cbca73ba-1451-4e13-a5a4-da60682d2baa",
+    "name": "South Island Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "ca7320e9-6f09-402e-99ba-f0ca67240d1d",
+    "name": "South Island Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "a62fefec-e472-4b4f-96d2-b0f652466120",
+    "name": "South Island Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "85dcb93b-727b-4f7d-b25b-bacf431dfc51",
+    "name": "South Island Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "f5f4b89b-b4ee-4e30-bc9a-e9ad6fa5d82a",
+    "name": "Tsavo East Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "a3bbfd91-469d-44b3-a2ce-644c68147383",
+    "name": "Tsavo East Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "a187d94a-174a-47b5-b2ca-645358c1f43a",
+    "name": "Tsavo East Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "a8e49ed5-cbdc-47f4-8535-97192fbb8d0a",
+    "name": "Tsavo East Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "77c91e1b-04be-4a01-979b-9742970bc5b8",
+    "name": "Tsavo West Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "14aa4abe-14fb-4c1d-b6da-6bbac900ac10",
+    "name": "Tsavo West Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "1acbd688-7edc-4de9-a86c-beb35b9188da",
+    "name": "Tsavo West Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "721c7381-3486-45c4-ab18-9d60a3f1923a",
+    "name": "Watamu Baobab Safari Hotel",
+    "country": "Kenya"
+  },
+  {
+    "id": "8c323f24-ac38-4fc7-9488-c863aa6bb9e1",
+    "name": "Watamu Lagoon Safari Camp",
+    "country": "Kenya"
+  },
+  {
+    "id": "f9251d6d-7645-4a20-975e-cf6afe77fbec",
+    "name": "Watamu Mist Luxury Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "d54cef1b-d721-429c-aa0a-67ecefa00b68",
+    "name": "Watamu Sunset Safari Bandas",
+    "country": "Kenya"
+  },
+  {
+    "id": "62a97e39-ec02-429a-a1dc-1bd98aa6c0b4",
+    "name": "Andasibe Mantadia Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "51468b57-6d53-47c9-9d4b-47783b39a0d9",
+    "name": "Andasibe Mantadia Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b08a5892-3dc6-4e97-94ab-03900b703ee0",
+    "name": "Andasibe Mantadia Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "7d430cdf-e453-4a5a-8f66-fae62f693141",
+    "name": "Andasibe Mantadia Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "1e98b4e7-68c1-4c38-aa67-f24926df4f30",
+    "name": "Andohahela Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "e3249743-4720-4925-a554-241619da93ed",
+    "name": "Andohahela Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "c8fbd130-b122-471f-9085-88d1291f578c",
+    "name": "Andohahela Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "0d1ea74d-a7de-4f7f-b953-9dcfe7a1c104",
+    "name": "Andohahela Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "21f40b8b-8451-45de-874c-8b44aadf9c9b",
+    "name": "Andringitra Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "bf215efe-5be4-4a77-9c45-04703e93dde5",
+    "name": "Andringitra Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "a0dd9fdd-3739-4436-b56b-598a8618b8ae",
+    "name": "Andringitra Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "e04d98e2-6da6-437d-8e16-b6a56b55f588",
+    "name": "Andringitra Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "a386e73f-c3b0-4433-9d55-cf7c6cff5299",
+    "name": "Ankarafantsika Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "bb1fea31-354b-4c27-a86c-45b7e34cadf3",
+    "name": "Ankarafantsika Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "7f66645d-6b55-4021-9bec-277281039a7f",
+    "name": "Ankarafantsika Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "0d93fbab-9693-4b88-a7a4-b435345e0a71",
+    "name": "Ankarana Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "08e51907-f644-4f8a-a37a-ef430a9f7a9a",
+    "name": "Ankarana Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "72a2d9ab-5470-44b5-b18d-ec11368d6fb6",
+    "name": "Ankarana Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "164cb0e2-84ba-4c18-82b4-4536df04e04d",
+    "name": "Ankarana Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "6cd4c048-6ede-4569-bdd4-c571a5921652",
+    "name": "Baie de Baly Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "f35034fa-d01c-4526-a15a-c6184d1a38ae",
+    "name": "Baie de Baly Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "c94910ec-c777-44e9-a7c8-fe1bc4256b80",
+    "name": "Baie de Baly Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "91fa0769-9f3b-4cda-9ffd-1c3712bb3f2d",
+    "name": "Baie de Baly Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "ac613750-64f5-4eca-9a33-4dd1a4dd6d81",
+    "name": "Cap Sainte Marie Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "2f27a044-a584-43b4-9a18-997faa9c7cb3",
+    "name": "Cap Sainte Marie Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "1eb59eaa-25cd-4814-98f9-da42424712a0",
+    "name": "Cap Sainte Marie Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "ff3d69eb-a6b0-42af-b154-efac7c2c9342",
+    "name": "Isalo Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "d8f73a18-05d9-4a67-a5a9-f31f9fe8be90",
+    "name": "Isalo Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "bf73fee4-2bc5-4ead-b3aa-aa2c5d6efc5b",
+    "name": "Isalo Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "f3987f83-f585-49c0-9805-a391e18a670f",
+    "name": "Isalo Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "882d6fb5-05f7-4f3f-ae94-b9b3a6759c51",
+    "name": "Kirindy Mitea Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "efdf00d3-1679-4c0c-a863-c3c6eb962acd",
+    "name": "Kirindy Mitea Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "43cf89b0-38ee-4bb6-baa5-fcddd1eff6d8",
+    "name": "Kirindy Mitea Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "dbff496c-e3f5-447b-ac23-3803dade17f0",
+    "name": "Kirindy Mitea Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "7be13753-e0bd-4d6b-85a8-b4f57b2d5671",
+    "name": "Lokobe Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b7a97dc4-78aa-454d-9581-31d5ae90e44c",
+    "name": "Lokobe Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "c932d525-0449-4d72-b65f-82891178b3b6",
+    "name": "Lokobe Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "54495c3e-83dd-4450-8d34-70a2aa6f0fbf",
+    "name": "Marojejy Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "147436a2-7d8c-49fa-8019-0ef4579bd11b",
+    "name": "Marojejy Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "1f890e29-9664-417b-9804-201ac97c40b8",
+    "name": "Marojejy Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "59bd8b05-c132-4627-a60c-d31f4572e785",
+    "name": "Marojejy Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "e2da3d5e-6c00-4775-82aa-9d2bd8d78e4f",
+    "name": "Masoala Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "64b2dbfd-c1ce-4a32-a419-9205a1abc294",
+    "name": "Masoala Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "e58cc1d7-2465-4c4b-9b49-0e633578ac65",
+    "name": "Masoala Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "d8c62a94-c722-49a7-88a9-033fdb097303",
+    "name": "Midongy du Sud Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b053d024-63c0-4240-b3f2-aa87dc3a1934",
+    "name": "Midongy du Sud Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "253d2fa7-41f0-4c31-8f75-40e8998e70c6",
+    "name": "Midongy du Sud Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "08afe704-6b05-4616-aa15-8665944c9a95",
+    "name": "Midongy du Sud Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "3973fbad-0075-4c49-814b-dbd361c47e53",
+    "name": "Montagne d'Ambre Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b9bbbd7d-9582-40c6-a4d0-eca150b05ef1",
+    "name": "Montagne d'Ambre Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "dd13dd39-effb-4955-93a7-6a359ff7849a",
+    "name": "Montagne d'Ambre Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "33724e36-d56a-41d4-ba2b-a5a363b5ff36",
+    "name": "Montagne d'Ambre Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "2a927e2f-e7f2-4ab7-9781-7035b37b7d8e",
+    "name": "Nosy Hara Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "eec7f2e2-98e4-4841-8e67-cde9f49efb00",
+    "name": "Nosy Hara Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "73dfe76e-a1a2-4ce5-aa16-785cb4f2a6d8",
+    "name": "Nosy Hara Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "2e33161b-7c0b-4c65-a701-7f52fa3c3d0a",
+    "name": "Nosy Hara Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "455c7fa4-b616-49c3-9e16-3b510dfcf81f",
+    "name": "Ranomafana Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b2d631d3-9f06-4d83-9940-12696f99fb19",
+    "name": "Ranomafana Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "3da6d3e0-6f29-4e68-8e26-5ee7637cdf0e",
+    "name": "Ranomafana Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "e13e38f1-4b0e-4465-8e21-d9ee5bfacd35",
+    "name": "Tsimanampetsotsa Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "0386b592-8ca7-4ff6-b677-15d981c5e547",
+    "name": "Tsimanampetsotsa Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "ebef79a1-3aaf-469d-a4f8-0c3674524c99",
+    "name": "Tsimanampetsotsa Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "ecdb3938-7dd2-4a72-8c82-cfc62c88dd14",
+    "name": "Tsimanampetsotsa Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "f178450e-2d1f-4fda-9671-5cc6911a06b8",
+    "name": "Tsingy de Bemaraha Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "49e16626-bf21-4ad4-98b2-8e27158cedb4",
+    "name": "Tsingy de Bemaraha Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "1e105e4e-d49d-4e2c-bd3c-d51113960599",
+    "name": "Tsingy de Bemaraha Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "b0130dcd-e113-40ae-8452-54a159b485a7",
+    "name": "Zahamena Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "970bf664-cdcb-46c3-996d-7ba09355f68c",
+    "name": "Zahamena Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "48587842-3c45-469c-b64d-d9611a44ad3b",
+    "name": "Zahamena Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "8c3e73c4-6dbe-4e4d-8749-7621fb4ba3ce",
+    "name": "Zahamena Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "12c8e52a-f831-4c68-95a7-ed4843988c62",
+    "name": "Zombitse Vohibasia Baobab Safari Hotel",
+    "country": "Madagascar"
+  },
+  {
+    "id": "5c4a8a8f-1989-4fc9-8ac1-d041664f61ac",
+    "name": "Zombitse Vohibasia Lagoon Safari Camp",
+    "country": "Madagascar"
+  },
+  {
+    "id": "521f35c9-d08d-45e7-8588-95bbd27368cf",
+    "name": "Zombitse Vohibasia Mist Luxury Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "edf07f41-5a98-4170-9201-0e6c48ca415f",
+    "name": "Zombitse Vohibasia Sunset Safari Bandas",
+    "country": "Madagascar"
+  },
+  {
+    "id": "2d25e6d4-250f-4ed1-9553-9533bb83a042",
+    "name": "Kasungu Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "cd269f31-c3bd-4d46-9b2c-5d0e5ee736f9",
+    "name": "Kasungu Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "160d7556-5134-43ff-a79a-13c17e71886f",
+    "name": "Kasungu Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "686fb76e-fe0e-4e77-9707-183baf39903f",
+    "name": "Kasungu Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "d6f476b5-39c8-4f5d-80d4-066ed2c89e8e",
+    "name": "Lake Malawi Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "afe366fc-0157-4131-853a-3535d4be9851",
+    "name": "Lake Malawi Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "21873196-5960-4f50-b202-ca55831b612f",
+    "name": "Lake Malawi Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "7a111234-8825-402d-90a5-26105222041f",
+    "name": "Lengwe Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "a4084257-3db7-4db2-ab6d-a59e47518923",
+    "name": "Lengwe Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "4a15fd48-ea33-47ad-8eb2-7ee1f034dc44",
+    "name": "Lengwe Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "c430a2ed-51ff-4b15-b1a0-23b2d4eceb43",
+    "name": "Lengwe Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "2ceb11ef-d1f0-4932-bc21-4be1a58e53d5",
+    "name": "Liwonde Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "b4f54514-97ad-41a9-9a8b-04ddbe292b5d",
+    "name": "Liwonde Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "8b178679-c338-4e4e-a1b8-25ba14876ac6",
+    "name": "Liwonde Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "c6797b6e-4a69-41ae-8dbf-2e211eb47849",
+    "name": "Liwonde Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "a8892647-8df1-4ea8-9445-8562a3c5d5e2",
+    "name": "Majete Wildlife Reserve Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "8786a469-36e3-4324-af32-19a1c78b9899",
+    "name": "Majete Wildlife Reserve Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "45a03371-5ef8-4820-846a-4d3c3bd0aa14",
+    "name": "Majete Wildlife Reserve Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "ac58730e-9183-4a04-8b3d-59bfb90da01d",
+    "name": "Majete Wildlife Reserve Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "0543d5ad-f1f7-461a-a0a5-c739ef874cbd",
+    "name": "Mwabvi Wildlife Reserve Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "63ab32ec-8fbb-49db-bfab-4fcfae52fcc0",
+    "name": "Mwabvi Wildlife Reserve Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "b814f775-7e73-4208-b061-67adaa5f4fdf",
+    "name": "Mwabvi Wildlife Reserve Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "096a5fbd-2add-4116-8425-238c2224ad36",
+    "name": "Mwabvi Wildlife Reserve Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "28acb97c-c706-4384-9095-525236059bf3",
+    "name": "Nkhotakota Wildlife Reserve Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "79439c60-f774-4312-bdc4-10a144d186c4",
+    "name": "Nkhotakota Wildlife Reserve Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "e96a02f6-8bb9-4260-825a-7eabff10aa02",
+    "name": "Nkhotakota Wildlife Reserve Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "62477269-e206-4b1e-9c46-cc3ae3a5496e",
+    "name": "Nkhotakota Wildlife Reserve Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "f9c2a06f-862f-454d-a73c-b7bc75668485",
+    "name": "Nyika Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "ecd0adb0-bc77-4b4b-bbfb-8590d9d87e14",
+    "name": "Nyika Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "dad7dcbe-ae33-42ad-88b1-53e7236bf9fa",
+    "name": "Nyika Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "ec6d87b0-b54c-4825-aad9-7864f6736c07",
+    "name": "Vwaza Marsh Wildlife Reserve Baobab Safari Hotel",
+    "country": "Malawi"
+  },
+  {
+    "id": "ad1d8ff4-9395-4f98-a4f2-144809f54e18",
+    "name": "Vwaza Marsh Wildlife Reserve Lagoon Safari Camp",
+    "country": "Malawi"
+  },
+  {
+    "id": "5f9689c2-23b0-4abb-a8cc-53a97a26178b",
+    "name": "Vwaza Marsh Wildlife Reserve Mist Luxury Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "8d102cb4-ab22-41c6-90d7-40725544e84f",
+    "name": "Vwaza Marsh Wildlife Reserve Sunset Safari Bandas",
+    "country": "Malawi"
+  },
+  {
+    "id": "64d68a5b-21e3-4c9c-838a-455479d9b37f",
+    "name": "Al Hoceima Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "96b56532-5095-4ae7-a1fd-bdf0227084b7",
+    "name": "Al Hoceima Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "dab00a6e-bbeb-42b8-9869-562961cfd923",
+    "name": "Al Hoceima Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "62d2d158-d675-435c-9508-c7640b226154",
+    "name": "Al Hoceima Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "daa024ed-c89d-4da5-be21-fb341d6e4530",
+    "name": "Dakhla Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "585d4aa3-a374-43db-99f6-5d20de9816d0",
+    "name": "Dakhla Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "2e3c465d-9d37-48a8-9f56-cb0192a35ffa",
+    "name": "Dakhla Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "221f23bc-9475-477d-9898-e8670b429e49",
+    "name": "Dakhla Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "55fa9391-55f9-46b0-b3e9-1ef146705f09",
+    "name": "Haut Atlas Oriental Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "02a4e7be-d2aa-4e9a-978a-611ee15a5358",
+    "name": "Haut Atlas Oriental Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "cbc38681-2bbd-442b-9ac2-421e5d5fe593",
+    "name": "Haut Atlas Oriental Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "3f40ede5-de39-4cd1-8f9c-082d4a1e0edd",
+    "name": "Haut Atlas Oriental Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "ae572460-7e60-453f-aa6b-12de96eced75",
+    "name": "Ifrane Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "6bdb62a2-0f9d-406f-8178-5fd87e288c67",
+    "name": "Ifrane Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "5dc313c6-1b39-410b-a177-01bb54616193",
+    "name": "Ifrane Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "80596786-49a1-4f4c-848a-60404b7a57bd",
+    "name": "Ifrane Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "2ee67c51-42b1-42d0-8fa2-a6b8272c49b3",
+    "name": "Iriqui Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "02324613-e7cf-4199-8d78-02a295a39905",
+    "name": "Iriqui Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "c0c6f979-e872-44ba-ba07-2a77003b4476",
+    "name": "Iriqui Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "db226212-aa80-44dd-bc6f-0ce76b017060",
+    "name": "Iriqui Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "132e7b55-af40-43a0-99d6-1f34c718a356",
+    "name": "Khenifiss Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "f6aab6e1-1062-4073-a581-42569997fbf3",
+    "name": "Khenifiss Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "b106bccd-8614-4806-a9ad-7f31238571d4",
+    "name": "Khenifiss Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "26b4828e-3e24-4f2d-b62e-5025d3eb60c7",
+    "name": "Khenifiss Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "d151b148-f301-42a2-813d-fa511a17e0ba",
+    "name": "Khenifra Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "14345732-76cc-4d3e-908e-0409654ec04c",
+    "name": "Khenifra Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "4447da0d-f567-4924-897a-431a27d5ded2",
+    "name": "Khenifra Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "c5c9f54c-aae4-4126-9bdb-39914480121c",
+    "name": "Khenifra Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "840b27e7-1a25-44f8-8dee-81d9077c14a9",
+    "name": "Souss Massa Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "63541f92-e5db-4dd8-8b8b-90dfe26e44c6",
+    "name": "Souss Massa Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "34ae978e-26bc-4f25-a9f5-dd7d90842d81",
+    "name": "Souss Massa Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "c5c83f46-ffa0-422e-94b2-bf655b5ecce7",
+    "name": "Talassemtane Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "77e6e836-8449-4014-8bdf-6ef033b63550",
+    "name": "Talassemtane Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "5e71950b-2b74-439a-8bee-260ed449ff9e",
+    "name": "Talassemtane Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "06de9b53-5f29-47c8-90ab-daa51b70f4de",
+    "name": "Tazekka Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "c71eef8c-f10d-4784-92c6-93e633224099",
+    "name": "Tazekka Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "09daf0aa-4e15-4add-8f9d-a216be3c98b4",
+    "name": "Tazekka Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "28594e21-0c66-42d1-948c-4d207fd4195e",
+    "name": "Tazekka Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "f04b4626-ae47-43e2-a6bf-ad90c2fd16d5",
+    "name": "Toubkal Baobab Safari Hotel",
+    "country": "Morocco"
+  },
+  {
+    "id": "891694d4-8bc5-40c3-aade-93af398ad636",
+    "name": "Toubkal Lagoon Safari Camp",
+    "country": "Morocco"
+  },
+  {
+    "id": "13656730-147e-4931-bbd1-09a28cbb173a",
+    "name": "Toubkal Mist Luxury Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "b94fcd5c-441c-44cc-abf5-9d6f58acf85a",
+    "name": "Toubkal Sunset Safari Bandas",
+    "country": "Morocco"
+  },
+  {
+    "id": "e2be2851-b7eb-4e6f-a6b0-315fe95605cb",
+    "name": "Banhine Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "fb90676a-c4ea-463d-a229-34118a3ff5ea",
+    "name": "Banhine Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "de597794-aca9-454d-a12a-c6925153f0a6",
+    "name": "Banhine Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "c1c631be-32cb-4eb3-8440-3f20ba19c193",
+    "name": "Banhine Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "f5c9e877-748a-44df-babf-5d0213568e05",
+    "name": "Bazaruto Archipelago Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "00b61afd-48b8-4e36-98a3-23ef90039a3c",
+    "name": "Bazaruto Archipelago Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "133e0e51-d3ab-4a41-a176-711307333858",
+    "name": "Bazaruto Archipelago Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "664c80c9-ed8b-46f6-addd-32048ac6593b",
+    "name": "Chimanimani Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "c4b5bea9-97fe-4c94-8f64-13598ec9403e",
+    "name": "Chimanimani Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "06872bf2-3b91-4251-9800-f358a05940a1",
+    "name": "Chimanimani Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "1a0fa225-152f-472a-a352-c3dd5a5e5ca0",
+    "name": "Gorongosa Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "6e92e7e6-0543-4163-a9df-af4ba2361ba2",
+    "name": "Gorongosa Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "3b95567e-8802-4588-a689-edd916ea6e45",
+    "name": "Gorongosa Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "d2942bef-99eb-4f97-a26b-4b58042f9ed8",
+    "name": "Gorongosa Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "7e91ae92-13f4-4688-964a-4350c76186b4",
+    "name": "Limpopo Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "5b7cd8a3-57e2-471e-8248-a23a4b39ccaf",
+    "name": "Limpopo Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "6808f992-0dec-48df-a2cb-6fef5ad4e3d7",
+    "name": "Limpopo Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "9571a83a-3502-4616-8887-cbfa47afd712",
+    "name": "Limpopo Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "57f6a721-74c2-46ae-80d4-201f4888a98d",
+    "name": "Magoe Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "5d9ea6f6-8ad2-49e3-b6b5-09f704952236",
+    "name": "Magoe Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "374d2519-fc21-4ec8-96e2-d3f22351c08b",
+    "name": "Magoe Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "832f57a9-1ae9-4eb4-8ce5-4b064eec6bb0",
+    "name": "Magoe Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "daca9379-f848-427f-83a8-0cf89b86f148",
+    "name": "Maputo Special Reserve Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "83680ce6-3343-47c2-8534-e9d3ceebd36d",
+    "name": "Maputo Special Reserve Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "c46b7239-1e83-426e-b546-37ad6026959c",
+    "name": "Maputo Special Reserve Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "0d6fa76c-a0e8-476f-850b-c6dcc021c84a",
+    "name": "Maputo Special Reserve Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "cccc0cfc-97ab-4e38-a145-b31bf1d853f6",
+    "name": "Quirimbas Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "eafba2cb-b23c-4998-830b-49e0bdc146fa",
+    "name": "Quirimbas Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "046341a8-57d2-49e3-abe4-40b2d3ea6f1d",
+    "name": "Quirimbas Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "8cfdb306-bc2a-4f3e-a781-6be3e2998b80",
+    "name": "Zinave Baobab Safari Hotel",
+    "country": "Mozambique"
+  },
+  {
+    "id": "a3fe2e5a-f165-4d9b-9773-a35afa1933e0",
+    "name": "Zinave Lagoon Safari Camp",
+    "country": "Mozambique"
+  },
+  {
+    "id": "f3bde922-e37d-4123-8afe-98f999043c27",
+    "name": "Zinave Mist Luxury Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "311cb166-3a02-4a1f-992f-c53ffb49bd1e",
+    "name": "Zinave Sunset Safari Bandas",
+    "country": "Mozambique"
+  },
+  {
+    "id": "b8602a4f-a638-4951-8a03-ada85176fa7a",
+    "name": "Ai-Ais Richtersveld Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "5804e02f-8d27-4980-acef-0400093f5a91",
+    "name": "Ai-Ais Richtersveld Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "6ccced7d-65d9-43b5-bccf-8ed604cf6a61",
+    "name": "Ai-Ais Richtersveld Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "89a0fec7-d511-481b-83fd-e2bac0730319",
+    "name": "Ai-Ais Richtersveld Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "df8bf669-fef1-4645-8ca2-a448cb774d49",
+    "name": "Bwabwata Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "b4b83c1b-e1ec-45f4-8f53-a7822f2ee71f",
+    "name": "Bwabwata Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "920043b0-2636-439c-bf3c-e33d348f6041",
+    "name": "Bwabwata Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "3b8b4dab-306c-481e-8d11-ce2ac1d3a07e",
+    "name": "Bwabwata Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "df99cd9d-8644-4d32-a178-cdee62724ce2",
+    "name": "Dorob Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "a56babf4-d76b-4066-979e-9a6945c76c7f",
+    "name": "Dorob Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "ce8facb3-f0bc-4e36-a1b8-a2d0f7d00f3b",
+    "name": "Dorob Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "e30be395-3fbb-479c-9327-3317406878f5",
+    "name": "Etosha Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "2b26b77f-af3f-4d86-8818-29e9dc5b9d93",
+    "name": "Etosha Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "8e4eaa7c-5e1b-4242-9f83-d9eae95deae3",
+    "name": "Khaudum Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "01359aa1-26ef-4482-a039-be26eb03b8dc",
+    "name": "Khaudum Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "056ab6ff-3f62-44db-b379-57e3ae562a7a",
+    "name": "Khaudum Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "829d88ed-92ba-4e0f-8c91-80fc770814b0",
+    "name": "Khaudum Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "957e46ac-1c03-44ba-9db4-b74999fed0f1",
+    "name": "Mudumu Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "af42e0ee-e402-4c67-a4aa-3cd1807b1800",
+    "name": "Mudumu Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "3ca8623e-1282-4e10-9394-3fffd75dcb2e",
+    "name": "Mudumu Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "8accab0b-de06-49b0-8d81-a7626c75a6b0",
+    "name": "Mudumu Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "5baef766-67d5-40bd-be1f-8e84f09dd664",
+    "name": "Namib Naukluft Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "924ee0f7-7967-4047-a5ff-ee12ed35810e",
+    "name": "Namib Naukluft Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "29ccbae1-5965-4a97-8969-da39bb1a3f98",
+    "name": "Namib Naukluft Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "2b8e3a11-32a6-4640-944f-e7aae5284334",
+    "name": "Nkasa Rupara Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "f79f5858-04e1-46db-abc8-a676e87bb7c6",
+    "name": "Nkasa Rupara Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "0474584e-7bcf-49ea-b426-361beb98989b",
+    "name": "Nkasa Rupara Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "27da323e-2e19-4826-9c01-3c2b5e216f48",
+    "name": "Skeleton Coast Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "5ae61b03-8620-42b3-b749-46392081010d",
+    "name": "Skeleton Coast Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "f3cfd522-a206-4964-8759-b9c04b3524ee",
+    "name": "Skeleton Coast Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "d2bca331-9725-494c-8e08-44cbe485487b",
+    "name": "Skeleton Coast Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "b329f1a3-d069-44fb-b29f-185c6a7ac2e3",
+    "name": "Tsau Khaeb Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "eca955c3-717c-4e05-b1f9-ccdb3ff1ab7d",
+    "name": "Tsau Khaeb Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "079f02da-6abf-4c24-b5c0-58bc43d27909",
+    "name": "Tsau Khaeb Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "972a9778-1fb9-44c4-9929-22ea08f2e3ba",
+    "name": "Waterberg Plateau Baobab Safari Hotel",
+    "country": "Namibia"
+  },
+  {
+    "id": "96935a68-7446-4cfd-9965-105c5fc8982f",
+    "name": "Waterberg Plateau Lagoon Safari Camp",
+    "country": "Namibia"
+  },
+  {
+    "id": "9a1b45e0-d519-4fff-9a43-2ab3969782ec",
+    "name": "Waterberg Plateau Mist Luxury Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "46663428-b8ca-4a42-a9e7-29fadebd4ff3",
+    "name": "Waterberg Plateau Sunset Safari Bandas",
+    "country": "Namibia"
+  },
+  {
+    "id": "d1cab59e-0f25-4b57-ae3a-57899b61d8f5",
+    "name": "Akagera Baobab Safari Hotel",
+    "country": "Rwanda"
+  },
+  {
+    "id": "63866c1e-01c2-48d1-bcb3-fd1041567aa8",
+    "name": "Akagera Lagoon Safari Camp",
+    "country": "Rwanda"
+  },
+  {
+    "id": "b69561e6-1f7d-483d-8509-1e6740bda482",
+    "name": "Akagera Mist Luxury Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "43f9a333-440c-4def-ae45-17ea80ffb8fb",
+    "name": "Akagera Sunset Safari Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "7d95437e-29b4-4cce-808c-5941b1c1917c",
+    "name": "Gishwati-Mukura Baobab Safari Hotel",
+    "country": "Rwanda"
+  },
+  {
+    "id": "119595ed-446b-4553-b7a4-2e57e275a520",
+    "name": "Gishwati-Mukura Lagoon Safari Camp",
+    "country": "Rwanda"
+  },
+  {
+    "id": "320940d7-8534-4282-905e-c3bd2d93acf7",
+    "name": "Gishwati-Mukura Mist Luxury Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "219372f0-2e3f-4091-85e7-03eac0d6dcfa",
+    "name": "Gishwati-Mukura Sunset Safari Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "4c497a8f-fd16-46cb-9e1b-87d44d12577a",
+    "name": "Nyungwe Baobab Safari Hotel",
+    "country": "Rwanda"
+  },
+  {
+    "id": "3591b757-76c7-430b-8f42-ea442980831e",
+    "name": "Nyungwe Lagoon Safari Camp",
+    "country": "Rwanda"
+  },
+  {
+    "id": "f6f4f3a5-9f57-4d05-8ace-ae5e64b762d5",
+    "name": "Nyungwe Sunset Safari Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "fce5957a-6e8d-4096-8b52-db3c8a29faf0",
+    "name": "Volcanoes Lagoon Safari Camp",
+    "country": "Rwanda"
+  },
+  {
+    "id": "8b7aa5c1-2467-46d7-a259-1fc2f1d96001",
+    "name": "Volcanoes Mist Luxury Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "3b43da02-719c-4890-afbc-e526bab5d2f4",
+    "name": "Volcanoes Sunset Safari Bandas",
+    "country": "Rwanda"
+  },
+  {
+    "id": "49c55d7a-1a30-4d47-9c0c-da7df2bab70d",
+    "name": "Curieuse Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "6b7b7865-8038-4d3f-b522-cecc557fc40b",
+    "name": "Curieuse Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "c3a9a9e6-3bba-4163-a6e8-fdcba6cb9e14",
+    "name": "Curieuse Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "b3113d2c-0072-46c7-bd30-959e4a6055ca",
+    "name": "Morne Seychellois Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "89e55fd0-4afa-41fd-90ab-c4390c4e2bac",
+    "name": "Morne Seychellois Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "509eea4b-443f-456b-bfe6-ddf4b35339bb",
+    "name": "Morne Seychellois Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "70a1b161-b417-4033-8135-c8cabd3411de",
+    "name": "Morne Seychellois Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "fe17f73f-16fd-4032-93f1-b009ee0a6da3",
+    "name": "Moyenne Island Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "7b745926-92e7-4d30-bfeb-756271d2ba91",
+    "name": "Moyenne Island Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "7613c89c-74de-46a3-8039-1f186ff7ce9d",
+    "name": "Moyenne Island Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "d1187c8d-387d-4b37-b7ff-b79710112586",
+    "name": "Moyenne Island Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "66dd72b6-2656-431e-abb8-c4ff7f0a2cca",
+    "name": "Praslin Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "b9f68ec3-6a66-4289-a43d-6478d72a4b51",
+    "name": "Praslin Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "aab5c2e7-2f27-4175-8c2c-2663ca87be35",
+    "name": "Praslin Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "12a1e7a8-7e67-413d-9679-f0659f8c9911",
+    "name": "Praslin Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "7407cbf3-bdf2-49fc-a612-e0575af70bfd",
+    "name": "Silhouette Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "69b74fa4-1471-41df-909d-a97d87f5a7b7",
+    "name": "Silhouette Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "e9b4271f-578f-4aeb-905e-da170a9be489",
+    "name": "Silhouette Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "ea6b3269-6bd2-4d3c-8d5e-e2f0bcdd009c",
+    "name": "Silhouette Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "8ff80aa9-b5a1-4eea-85d8-9a0bf9fcbd87",
+    "name": "Ste Anne Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "2d782b03-c512-4fad-80d5-11d2e371c895",
+    "name": "Ste Anne Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "cc39b7cf-d85a-4d2c-8cbf-251f656507f3",
+    "name": "Ste Anne Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "75897a89-c65a-4298-b543-a9f54f4790be",
+    "name": "Ste Anne Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "a48d75de-57f7-4c8d-93d0-0ff90f91560f",
+    "name": "Vallee de Mai Baobab Safari Hotel",
+    "country": "Seychelles"
+  },
+  {
+    "id": "f9e859b2-54b3-41dd-8ed5-a27a2b29c039",
+    "name": "Vallee de Mai Lagoon Safari Camp",
+    "country": "Seychelles"
+  },
+  {
+    "id": "676e9080-8066-4f69-9006-28a71ad02996",
+    "name": "Vallee de Mai Mist Luxury Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "89ef752b-b66a-45cd-9738-ee8f7b17455d",
+    "name": "Vallee de Mai Sunset Safari Bandas",
+    "country": "Seychelles"
+  },
+  {
+    "id": "7bc3defa-5c87-4cf5-adfe-79efe09e19dd",
+    "name": "Addo Elephant Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "ca8a80b2-3d53-417a-a10d-1c2111096e7b",
+    "name": "Addo Elephant Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "ff0aa238-1326-45eb-9b72-e4132f372f21",
+    "name": "Addo Elephant Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "6099aae5-c585-42e2-a1f5-ae700878e1ad",
+    "name": "Agulhas Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "ec90746b-5d8d-4d4d-bb05-8c8562665d51",
+    "name": "Agulhas Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "3a807eed-2786-4faa-bb81-c41e542eeccf",
+    "name": "Agulhas Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "20debbfb-f876-4c74-88f1-f9b769ddeda1",
+    "name": "Agulhas Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "c21d08f8-03b0-4838-83bd-c86f6676912d",
+    "name": "Augrabies Falls Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "a69d1a23-b6e8-42a4-beba-17c812e61674",
+    "name": "Augrabies Falls Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "819aa150-5dea-4162-95bf-bc308f7d273e",
+    "name": "Augrabies Falls Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "7b59c471-cb19-4849-98f9-8b1da83d4dad",
+    "name": "Bontebok Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "86d0e1ec-ae1c-42c0-b04c-58aa86b11485",
+    "name": "Bontebok Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "e70f52c7-a0ff-4184-99ba-33dde101319b",
+    "name": "Bontebok Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "5417ed98-868c-4718-840f-2f3fec39be85",
+    "name": "Bontebok Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "d22bbffe-a463-40be-8294-2433b74d813a",
+    "name": "Camdeboo Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "f582fe61-0331-4f43-a4f0-e4787d190843",
+    "name": "Camdeboo Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "7bafeefc-e1eb-4b15-a4d3-3b34bb2ad9f9",
+    "name": "Camdeboo Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "235b642e-7381-49db-9875-1c47bcdd72ca",
+    "name": "Camdeboo Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "c40c851c-0b28-410a-a35c-0892f6575d0a",
+    "name": "Garden Route Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "cbd9b0b1-4a9f-4b7a-b91a-25bdf3942cfd",
+    "name": "Garden Route Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "c6d6307f-f856-430b-8620-32a0ee3e1643",
+    "name": "Garden Route Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "467cd50a-d3d8-4b01-bc10-94d45170433b",
+    "name": "Golden Gate Highlands Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "26aeccd3-dde9-4c9f-b558-47444fd36e91",
+    "name": "Golden Gate Highlands Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "7e570fcd-2a38-4003-9db4-953cdbc8cc7b",
+    "name": "Golden Gate Highlands Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "c6d968e4-b052-4503-a7e1-53f1cd8ee335",
+    "name": "Karoo Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "ddc4d61c-08c4-4a74-a080-bf219d6ba092",
+    "name": "Karoo Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "945484c3-232b-4ce9-b1c2-4a428d1d9408",
+    "name": "Karoo Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "622b0df3-63fe-476e-b4a4-5d9c721c0ba7",
+    "name": "Karoo Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "b862e914-1449-4151-85a2-34237cd4ac2c",
+    "name": "Kgalagadi Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "b26038dd-ea21-4c0e-b7ff-44faea2ab88d",
+    "name": "Kgalagadi Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "4a478160-f326-46cb-ac6f-33510e7bfa12",
+    "name": "Kgalagadi Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "f4f47cd5-2b5e-419f-a686-47c764a78766",
+    "name": "Kruger Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "ad7f183f-44fe-4af6-8498-2ff343dec484",
+    "name": "Kruger Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "ff31692f-6474-4102-85d0-7eaf9732d4bc",
+    "name": "Kruger Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "95ef9d71-e644-41b9-9a57-08bfbad17948",
+    "name": "Mapungubwe Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "258f115e-b827-4acd-a75f-53816cecb0bf",
+    "name": "Mapungubwe Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "a7c4ab20-2be0-4057-8098-869f41344c83",
+    "name": "Mapungubwe Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "d6d71221-ff9b-4b86-9dbd-3bc505ada325",
+    "name": "Mapungubwe Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "4d6c6cf4-fe54-460c-9131-ba6db3776b38",
+    "name": "Marakele Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "215123e5-420a-4a07-8829-a9479edac4e2",
+    "name": "Marakele Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "73059ffd-ef73-4f7a-92dc-cee82f5da588",
+    "name": "Marakele Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "273cf70a-e7c1-485b-88b8-379acedd2811",
+    "name": "Marakele Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "8d48b934-aec6-4f7f-9b43-33bcf48ae2c1",
+    "name": "Meerkat Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "37508a50-ce3d-46f0-aec5-253b11bbf322",
+    "name": "Meerkat Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "9d50200b-ec7e-4b0a-bbda-d56e690bf343",
+    "name": "Meerkat Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "34501f31-4c2a-43a2-b3cc-19cfc3791cd5",
+    "name": "Meerkat Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "c84c6d66-07d3-40d7-b770-c2143e353ba7",
+    "name": "Mokala Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "dcb48e99-40f8-48d1-8249-6a4f3d9463a9",
+    "name": "Mokala Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "fbc3c721-c0a5-47e0-9eb0-800ebe8ff3de",
+    "name": "Mokala Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "decd42cb-b574-4623-987e-6d492f4b69fb",
+    "name": "Mokala Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "f0e2abcc-3602-41ac-a1a7-d22600a2dba9",
+    "name": "Mountain Zebra Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "6f1bc4b4-737c-4002-968d-681276b36b1d",
+    "name": "Mountain Zebra Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "550b60eb-97c7-4f3d-9c78-18cd10529fa7",
+    "name": "Mountain Zebra Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "8558a09f-bb5d-4a34-aac9-9549912a4637",
+    "name": "Mountain Zebra Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "f99a5242-c795-4882-a22f-de96a6f2a720",
+    "name": "Namaqua Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "b542fbcf-251b-45e7-84fd-e4a3d5a0446e",
+    "name": "Namaqua Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "9277e190-ed03-4371-ad16-855763798c55",
+    "name": "Namaqua Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "3436a501-1efe-4229-b251-9e2b0eeb52e1",
+    "name": "Namaqua Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "873a80b8-4308-4a8c-bce7-e2012a9fca41",
+    "name": "Pilanesberg Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "1d68cfcd-9285-4647-98ac-0da8f3fa5dcd",
+    "name": "Pilanesberg Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "2673ca8f-f721-45b2-8761-a50eee8abd0b",
+    "name": "Pilanesberg Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "027b406a-9a51-4696-b4ce-5349b59d7caf",
+    "name": "Richtersveld Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "7e80d935-263b-4cc9-a9e2-df3502bdf6d0",
+    "name": "Richtersveld Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "7d9f61c8-d025-4ab4-9cc9-28d6739c6f7a",
+    "name": "Richtersveld Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "72acbbd8-b2a3-40eb-a7ec-c7d177fb7108",
+    "name": "Table Mountain Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "dfdf2ee1-73b1-45e8-8a67-ac181137817e",
+    "name": "Table Mountain Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "9638d1a8-fbd8-477b-9383-04e4683fb8f7",
+    "name": "Table Mountain Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "ec68937c-6d6a-40d8-911b-54e720775d0d",
+    "name": "Table Mountain Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "4049da2e-1db8-41d3-9909-84ae184e848f",
+    "name": "Tankwa Karoo Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "a580c60d-7917-47c0-ac69-af7be84a051f",
+    "name": "Tankwa Karoo Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "6588e185-d667-44c5-9d61-bfd3e0319206",
+    "name": "Tankwa Karoo Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "fce06388-a95b-4024-80cc-a8eb77d97d74",
+    "name": "Tankwa Karoo Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "b9ddf1f6-ae54-4168-9443-53eb45382114",
+    "name": "West Coast Baobab Safari Hotel",
+    "country": "South Africa"
+  },
+  {
+    "id": "b7681d9c-201e-4304-82a6-500a0e787041",
+    "name": "West Coast Lagoon Safari Camp",
+    "country": "South Africa"
+  },
+  {
+    "id": "0511cb40-87dd-48e8-8501-35e21817cdb0",
+    "name": "West Coast Mist Luxury Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "52494592-a20a-4e38-a187-20d3a4d36b03",
+    "name": "West Coast Sunset Safari Bandas",
+    "country": "South Africa"
+  },
+  {
+    "id": "980aacd2-7ae5-4727-9b75-dbf6df538457",
+    "name": "Arusha Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e2a5c657-a35a-4c83-9488-60a82522322c",
+    "name": "Arusha Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a6e450d3-ee56-4458-861c-599a655c87d0",
+    "name": "Arusha Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "bf316cba-4f83-48c1-a75b-8dccbbf94057",
+    "name": "Arusha Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "87082a21-c1e3-4a15-9f70-d112491df6c4",
+    "name": "Burigi-Chato Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "7b471d90-fb25-400a-9fee-281e970df509",
+    "name": "Burigi-Chato Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "3bbd4313-ac4d-4780-9a32-23e138308509",
+    "name": "Burigi-Chato Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "08e00f97-5ecd-4fc7-bbb3-43c8208241ba",
+    "name": "Burigi-Chato Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e174c0ce-1990-425a-818e-0b0fd75a5dd1",
+    "name": "Gombe Stream Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "11f292e1-e1fd-4942-98cb-c2745472492d",
+    "name": "Gombe Stream Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "ee712a7a-7e08-41b2-b0ea-cc8753e4eefb",
+    "name": "Gombe Stream Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "57ad6c0d-efb1-43ee-a8f6-c9732961b534",
+    "name": "Gombe Stream Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "8f0a0548-6310-444f-9323-0c8fff7328cb",
+    "name": "Ibanda-Kyerwa Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e753938d-8e99-448c-8c0e-94fdd94b3bbc",
+    "name": "Ibanda-Kyerwa Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "f7ac7462-c113-451f-83d3-ce11ea27c6f5",
+    "name": "Ibanda-Kyerwa Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "353071d2-e786-48c4-9523-c44c4aec65b1",
+    "name": "Katavi Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "58b9c958-6203-4c99-8102-5ef1872fb178",
+    "name": "Katavi Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "30d10e55-8879-440f-b756-d68a99ba51d8",
+    "name": "Katavi Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "055c97a9-4010-46e3-84d8-e7a137c72bd3",
+    "name": "Katavi Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "c0710c15-35a4-4e43-be44-615f011d8c79",
+    "name": "Kigosi Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a89eff35-da55-4de7-b4ae-f368cf96ebfd",
+    "name": "Kigosi Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "49404f4d-cfc9-408a-b811-af2b37b2f1bc",
+    "name": "Kigosi Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "da7510e3-1291-4667-9925-64b6ff6495a3",
+    "name": "Kigosi Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "43aa5652-a94d-4324-aad3-03cdce5ca4d0",
+    "name": "Kilimanjaro Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "eaba6b79-c995-404a-bd75-d296dc8bda5a",
+    "name": "Kilimanjaro Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "d057d982-175e-42b4-ba41-af6fcd2bff0b",
+    "name": "Kilimanjaro Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "9b9723fa-c3a4-4fab-98da-1123a1be92e4",
+    "name": "Kilimanjaro Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "39ac6957-1014-4bb3-946e-d8684c093280",
+    "name": "Kitulo Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e5f3dcf4-8ff8-4be5-9ddb-ce575f7fb56e",
+    "name": "Kitulo Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a00798ab-1f1c-41b6-8d65-a049e506e347",
+    "name": "Kitulo Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "06e753b4-3e85-4d51-8c89-d439c248a7ad",
+    "name": "Kitulo Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "ea0ac20a-a3b5-4556-9ab3-a85a5ece595f",
+    "name": "Lake Manyara Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6a38fc1d-ac5f-45c4-84df-1f5b7e90ba8a",
+    "name": "Lake Manyara Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "d6fd7f2f-cd8c-4989-95fb-f7edf3072aa5",
+    "name": "Lake Manyara Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "f992a887-bde0-4cef-b7f5-6f3574a15afa",
+    "name": "Lake Manyara Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "58f12d57-e235-4f0b-bbc2-99eb0e22dbbd",
+    "name": "Mahale Mountains Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "06e4630c-f262-4777-892a-f597edf586b4",
+    "name": "Mahale Mountains Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "f25beffe-8ff4-4783-82ee-d8b7581f4ba4",
+    "name": "Mahale Mountains Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "5a2d7bdf-4ff4-473a-82a9-656f3ea9e817",
+    "name": "Mahale Mountains Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "55f5eb44-08a1-4eb8-861e-ddf501df420a",
+    "name": "Mikumi Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "85117e09-e1dc-4784-970f-ba7740732766",
+    "name": "Mikumi Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "35e75d15-a557-460b-b7f1-1e276ecc5cef",
+    "name": "Mikumi Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "bd875577-7ff1-4529-8cad-28275346351b",
+    "name": "Mikumi Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "90b9dd1d-0108-491a-a98b-7ab0a8c853bf",
+    "name": "Mkomazi Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e14b5dcc-90f7-4c29-8f41-cc03e12ee865",
+    "name": "Mkomazi Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "2a145570-f195-4179-9a93-79534ddb1fd4",
+    "name": "Mkomazi Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "070a7352-9099-432d-be25-f7c6802890c6",
+    "name": "Mkomazi Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "87295e7d-e705-4385-af8f-287fd7347b71",
+    "name": "Ngorongoro Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "0a367275-aedc-487e-a4fa-003561395ba4",
+    "name": "Ngorongoro Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "c183e087-cd38-4796-b832-8c835cae77b2",
+    "name": "Ngorongoro Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "007d8958-df81-458b-9c31-77ecc4d75607",
+    "name": "Nyerere Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "9ab4c06e-a299-4666-b75a-8ede44f41626",
+    "name": "Nyerere Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a6b6cc96-abf2-451e-ad69-0059299f0abd",
+    "name": "Nyerere Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "1ec0c85f-ee31-4e93-b57d-7831417ebd5d",
+    "name": "Nyerere Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "376267bb-c1ce-4e69-b8d1-7f58bb57c77c",
+    "name": "Ruaha Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6c009170-6bba-4c99-b12d-f1df564bc28f",
+    "name": "Ruaha Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "392b7037-022f-4052-bbc4-b53854853c45",
+    "name": "Ruaha Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "3f74f805-a4b9-4d2d-a899-cebc0cb50efc",
+    "name": "Ruaha Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6ac69956-4cb3-446f-930a-f28fe54bdc76",
+    "name": "Rubondo Island Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "763d845c-cf47-48c8-a77b-69c8a49ad9a0",
+    "name": "Rubondo Island Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "88a35dda-845a-42b4-9440-bc79965cb51c",
+    "name": "Rubondo Island Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "05554b95-2fea-43ab-87ec-98eed26bc14f",
+    "name": "Rumanyika-Karagwe Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6ecbdef7-99fe-465c-9d38-881479a480ea",
+    "name": "Rumanyika-Karagwe Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "3d07e029-4e97-4a91-90e4-f92e23e59d95",
+    "name": "Rumanyika-Karagwe Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6c71afbe-065e-43d9-b8f6-f7b7b723f66b",
+    "name": "Rumanyika-Karagwe Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "2960a6c4-a6dc-484f-92a1-7f14c487152d",
+    "name": "Saadani Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "83afc434-48d5-4e4f-a8d3-e48b66a46302",
+    "name": "Saadani Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "5155656e-62f1-4957-a971-caa792f7ad3f",
+    "name": "Saadani Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "7c29fb43-d2ea-4136-8744-90d04c5b9602",
+    "name": "Saadani Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a2db8057-2faa-4ed3-972b-e0a3a067400d",
+    "name": "Saanane Island Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "1608d09c-b17d-4481-a21a-08b606631e3b",
+    "name": "Saanane Island Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "50f9ca60-138e-4818-be56-9dd4f77385a3",
+    "name": "Saanane Island Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "5895f82e-a17e-4096-a2e1-a54bb4609072",
+    "name": "Saanane Island Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "26549032-fecc-461f-b294-2cfdceb6e84d",
+    "name": "Serengeti Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a3148c16-7674-4a52-94e0-18a5d367c9b5",
+    "name": "Serengeti Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "0fca6e67-c0b5-4047-9b06-23db3278be8a",
+    "name": "Serengeti Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "57ed5854-106f-4a08-b410-dea205e2b7e6",
+    "name": "Tarangire Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "014d83b2-35e4-4564-8a00-ada073667b63",
+    "name": "Tarangire Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "c6735f30-5efb-4a78-873b-ec51e74a3dc1",
+    "name": "Tarangire Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "ce5f19db-3fe1-404d-bdd5-e3264178b740",
+    "name": "Tarangire Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "45a08483-9b72-4117-adc7-d480f50967c4",
+    "name": "Udzungwa Mountains Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6ebd7db4-ff65-497b-9f16-d8ff923c1f31",
+    "name": "Udzungwa Mountains Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "1ac8c892-16f3-4f9d-92ae-00051c400bbb",
+    "name": "Udzungwa Mountains Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "a850c4cb-7e10-4ce1-baa4-a37ab0f9bb89",
+    "name": "Ugalla River Baobab Safari Hotel",
+    "country": "Tanzania"
+  },
+  {
+    "id": "61f9b3b0-62c0-4c30-889d-45e20149a95e",
+    "name": "Ugalla River Lagoon Safari Camp",
+    "country": "Tanzania"
+  },
+  {
+    "id": "6d269e99-87a0-4304-ab4f-11c941da49eb",
+    "name": "Ugalla River Mist Luxury Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "e5f20bf5-7ed4-489f-a017-38aeac1ce483",
+    "name": "Ugalla River Sunset Safari Bandas",
+    "country": "Tanzania"
+  },
+  {
+    "id": "dcc5485c-52d2-4f15-aaef-7312318243d7",
+    "name": "Blue Lagoon Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "e33d0b70-e35b-4abd-8723-6be271c6549b",
+    "name": "Blue Lagoon Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "2a8dd2dc-a432-45ec-a3fc-7fb73688768b",
+    "name": "Blue Lagoon Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "e2fc5f23-f44b-4c23-848b-f29d73995705",
+    "name": "Blue Lagoon Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "29abddb7-52fd-40b1-8445-556b0ab197d0",
+    "name": "Blue Lagoon Valley Luxury Lodge",
+    "country": "Zambia"
+  },
+  {
+    "id": "050acba0-1563-4ead-bda5-62741aa4f229",
+    "name": "Isangano Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "a6068024-a186-49f5-bdfd-1d2efcfbc54f",
+    "name": "Isangano Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "c0f567b5-375e-4dca-963b-79d525ad04a9",
+    "name": "Isangano Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "4153e7a1-9afb-4f2b-9f0b-1f8bf5b64732",
+    "name": "Kafue Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "2863a83f-90e7-48db-9971-cb2085b3fe2c",
+    "name": "Kafue Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "5bd964be-3798-4bfb-9765-795aa33dc0b1",
+    "name": "Kasanka Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "f0af6a1d-e635-4f91-93db-fdee24d5da38",
+    "name": "Kasanka Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "09cbf820-9bea-479b-8363-5d9b39cfeae9",
+    "name": "Kasanka Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "c25fd1c4-c2d4-4a6b-b5a7-f818ab0c4851",
+    "name": "Kasanka Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "05e95dad-6ed9-421e-a2f9-12e5300fc754",
+    "name": "Lavushi Manda Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "dd36898c-d49b-4af3-9258-86a4acd6a65f",
+    "name": "Lavushi Manda Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "74d5f2d7-371e-4263-998d-41c43e285c0e",
+    "name": "Lavushi Manda Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "1876608c-6acb-4de3-b93a-8b041eb44d6d",
+    "name": "Liuwa Plain Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "0e21eec4-e9d7-46d9-9681-e213e8bf6111",
+    "name": "Liuwa Plain Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "cf9fc117-4e83-4b9d-879e-a7e6ea72b4f6",
+    "name": "Liuwa Plain Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "d8bc739b-f593-451a-8358-4c66221936b5",
+    "name": "Liuwa Plain Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "bc468999-e761-439e-b1a8-d2a560ae0d63",
+    "name": "Lochinvar Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "b3e1317d-2d84-44ef-807c-80acc454311b",
+    "name": "Lochinvar Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "53ba685c-b663-4b13-92fc-11cfa05c2a31",
+    "name": "Lochinvar Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "ece3e8a6-5bf0-4ecd-baa7-a59c2cf36dd0",
+    "name": "Lower Zambezi Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "734e1038-fd23-419f-91a8-26e7563b80af",
+    "name": "Lower Zambezi Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "12a8af91-2ba0-47a3-992e-60db25196146",
+    "name": "Lower Zambezi Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "d23d42a2-1709-4ac4-8efc-5a1efec85ce8",
+    "name": "Luambe Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "4acb4866-9278-4e10-a614-472be65d65bb",
+    "name": "Luambe Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "5dd7153d-b347-498c-8908-410773af019f",
+    "name": "Luambe Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "6bb7a6fd-fbd4-4a1b-a5cb-fbbe41078369",
+    "name": "Luambe Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "a2d4c1b1-1c3a-4f0f-a8e5-413fbf51f2ab",
+    "name": "Lukusuzi Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "3db8a621-16ce-45a3-b5a2-06918cd9e5f6",
+    "name": "Lukusuzi Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "c40cffd7-5ae2-433d-97bf-5a97f915db0e",
+    "name": "Lukusuzi Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "8331ec52-cbfb-4c71-a5ea-a3774bf670e0",
+    "name": "Lusaka Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "f47c3039-27c9-4fb9-b954-12d8e11c5f2c",
+    "name": "Lusaka Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "1e53a429-d99a-47af-ab6b-db3b0007c1f8",
+    "name": "Lusaka Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "f00c0def-323b-4d37-b19b-206b3342eafc",
+    "name": "Lusenga Plain Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "a261575d-c850-421b-809c-23782a7571ce",
+    "name": "Lusenga Plain Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "f1983912-ed3e-438b-8bfd-ebf01a53daf5",
+    "name": "Lusenga Plain Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "9d6b8524-cb7f-471b-9b25-aa07ebaaf583",
+    "name": "Lusenga Plain Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "e5d229c8-2a66-40d6-b765-06da13acab2c",
+    "name": "Mosi-oa-Tunya Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "6d6baae7-f938-41aa-b425-8f4adb4cfd99",
+    "name": "Mosi-oa-Tunya Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "efa982c2-2b29-42b7-9abe-62575c6c8581",
+    "name": "Mosi-oa-Tunya Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "599f0f7f-a89d-4911-99a8-0d3092530190",
+    "name": "Mweru Wantipa Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "41474186-7157-4ded-9a30-fbfce4e40063",
+    "name": "Mweru Wantipa Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "5b897ab2-19d3-48a9-9003-481bfdbada5e",
+    "name": "Mweru Wantipa Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "499fd3b8-dab6-4128-bc58-aa93c9f4b22a",
+    "name": "Mweru Wantipa Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "ac796256-1927-4bf3-a1e8-e4d80927160a",
+    "name": "North Luangwa Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "7efb7e22-d5a6-4980-84d2-5725e49b8525",
+    "name": "North Luangwa Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "fcc9be63-695f-4a1b-8c34-cdab2ee3c865",
+    "name": "North Luangwa Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "c2d32ab6-dcd7-4b62-a444-f82891acea53",
+    "name": "North Luangwa Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "ca841670-d24c-4522-9387-925340444a6e",
+    "name": "Nsumbu Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "8105a6d1-4311-4870-ba51-ab1e47409d18",
+    "name": "Nsumbu Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "d8dc126c-834c-4e13-80e0-3a21a1605f18",
+    "name": "Nsumbu Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "a4d321ab-40b0-48a3-8085-52b5956230da",
+    "name": "Nsumbu Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "beb2d481-a186-4bcd-a0e7-11776177c2c7",
+    "name": "Sioma Ngwezi Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "20f386bc-6ea8-4ed1-abe0-74b316804ede",
+    "name": "Sioma Ngwezi Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "2e4487c2-e504-4345-8f26-6a1bdf9518da",
+    "name": "Sioma Ngwezi Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "1f5b2fe7-efeb-4930-a32f-e5b0c161e9b7",
+    "name": "Sioma Ngwezi Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "52482cd2-1330-448b-8ea8-843d197b4c39",
+    "name": "South Luangwa Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "508d7c87-dc7c-4003-a204-0e33357a58e9",
+    "name": "South Luangwa Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "5e8327c9-e4cf-4ab6-9a27-a77318e2aff8",
+    "name": "South Luangwa Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "2695bc37-0ad0-4f42-b63a-b67fc3c8737e",
+    "name": "West Lunga Baobab Safari Hotel",
+    "country": "Zambia"
+  },
+  {
+    "id": "d91a9d3b-ff58-4158-8d42-c7c4549ca205",
+    "name": "West Lunga Lagoon Safari Camp",
+    "country": "Zambia"
+  },
+  {
+    "id": "af0be7b6-0a7d-46bc-9a25-edfd05f9f64f",
+    "name": "West Lunga Mist Luxury Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "7bc07546-b1a4-4d57-9636-0cb005678029",
+    "name": "West Lunga Sunset Safari Bandas",
+    "country": "Zambia"
+  },
+  {
+    "id": "d99961f0-8061-43bb-9873-d073d0dde263",
+    "name": "Chizarira Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "36a4ec0c-dd7e-4ff9-8e3d-d233793bfdda",
+    "name": "Chizarira Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "1ba749e5-eef6-4da7-a3bf-76be2644679d",
+    "name": "Chizarira Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "35324dbe-92ee-4afe-a19c-70e12c723647",
+    "name": "Chizarira Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "6e8bc7e5-afde-4fdf-ba50-6710b31725c8",
+    "name": "Gonarezhou Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "da69a299-cb67-46f9-907c-3ac22a929f1a",
+    "name": "Gonarezhou Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "c3e3060b-3f09-4688-bcdc-08323ad7eec5",
+    "name": "Gonarezhou Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "20523512-8c6d-4a6f-9037-b21e51de833d",
+    "name": "Gonarezhou Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "d2cca29b-da8f-4850-801a-d0b212248bb0",
+    "name": "Hwange Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "feb0a669-2e7a-4aa3-b69d-4e18107b7743",
+    "name": "Hwange Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "28cede18-5a98-4419-85f7-aa078a7ae370",
+    "name": "Hwange Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "a45934d2-6cda-4e09-bcea-d89ad9fa459d",
+    "name": "Kazuma Pan Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "ef195896-8437-495f-bc8f-2fab6e605d5c",
+    "name": "Kazuma Pan Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "aa0087fe-d242-4f0b-b666-d014b093dc02",
+    "name": "Kazuma Pan Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "a1d8dedd-7170-4f04-b79a-f3f749949924",
+    "name": "Mana Pools Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "c4588f26-4fb3-473b-b608-279c63ea7ec1",
+    "name": "Mana Pools Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "0dd9f4ed-3a95-4c88-8f6e-d90936ef9bb3",
+    "name": "Matobo Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "885932de-0421-453f-b6f9-46ee6bfdb59d",
+    "name": "Matobo Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "20698e78-1557-4252-beb5-7b0634e03ebd",
+    "name": "Matobo Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "75587989-619b-4cb9-a6bd-9ddc12e7d103",
+    "name": "Matobo Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "64e5f9ee-3d2d-4da3-a8d4-a045d8abe36c",
+    "name": "Matusadona Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "51f73923-4bb7-4a45-94d3-1eb212633e26",
+    "name": "Matusadona Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "1e2f36e3-4afe-4cd2-8aec-918a7f4913cf",
+    "name": "Matusadona Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "c2d6826a-ad98-465e-819d-bb4c81cb4df4",
+    "name": "Matusadona Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "7b3e6802-1f11-4d5f-94e9-9d6a08dfc972",
+    "name": "Nyanga Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "5f12690a-0c38-4d47-bdd0-c18f50d7863a",
+    "name": "Nyanga Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "a2c4c433-f374-4814-86e9-5c3d6a3886d5",
+    "name": "Nyanga Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "1bab8b43-1663-4871-a40b-efcfd5555e20",
+    "name": "Victoria Falls Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "4e76257a-e812-437e-91ae-570172bb1c23",
+    "name": "Victoria Falls Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "59a9bf51-b150-478d-95c3-96039db02ba7",
+    "name": "Zambezi Baobab Safari Hotel",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "47c8b320-e4b1-4b2a-93e8-1c768096825b",
+    "name": "Zambezi Lagoon Safari Camp",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "94991e6f-f5ea-4ba0-8796-99f6968c956b",
+    "name": "Zambezi Mist Luxury Bandas",
+    "country": "Zimbabwe"
+  },
+  {
+    "id": "22a027f9-b8dc-4ca4-808c-830eadece508",
+    "name": "Zambezi Sunset Safari Bandas",
+    "country": "Zimbabwe"
+  }
+]

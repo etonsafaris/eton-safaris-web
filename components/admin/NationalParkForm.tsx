@@ -12,6 +12,7 @@ import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { faqsForEditor } from '@/lib/default-faqs';
 import { serializeFaqs, type PageFaq } from '@/lib/cms-page-model';
 import {
@@ -253,6 +254,7 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
     setError('');
 
     const stamp = publishStampForSave(publishedAt, isEdit);
+    const textBlocks = blocksWithoutMedia(blocks);
     const payload = buildSavePayload(
       'national_park',
       {
@@ -260,7 +262,7 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
         location,
         description_title: descriptionTitle,
         description: embedContent(description, {
-          blocks,
+          blocks: textBlocks,
           fields: {
             description_title: descriptionTitle,
             location,
@@ -271,7 +273,7 @@ function NationalParkFormInner({ parkId }: NationalParkFormProps) {
         }),
         country,
         image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
-        park_blocks: JSON.stringify(blocks),
+        park_blocks: JSON.stringify(textBlocks),
         published_at: stamp,
         slug: seo.slug || slugify(name),
       },

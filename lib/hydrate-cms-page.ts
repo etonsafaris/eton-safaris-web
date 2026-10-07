@@ -57,7 +57,7 @@ function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBl
     return {
       title: String(block.title || '').trim() || match?.title || '',
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description || '',
-      image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
+      image_url: '',
     };
   });
 }
@@ -75,13 +75,11 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
   const seededBlocks = (seeded?.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
-    image_url: block.image_url || '',
+    image_url: '',
   }));
   const cmsBlocks = parseCmsBlocks(page);
   const usableCmsBlocks = cmsBlocks.filter(
-    (block) =>
-      Boolean(String(block.title || '').trim()) &&
-      (hasVisibleCopy(block.description) || resolvePublicImage(block.image_url))
+    (block) => Boolean(String(block.title || '').trim()) && hasVisibleCopy(block.description)
   );
   const isCommunity = extras.layout === 'community' || /community/i.test(slug);
   const isStoryPage =
@@ -105,7 +103,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     return {
       title: block.title,
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description,
-      image_url: resolvePublicImage(block.image_url) || match?.image_url || '',
+      image_url: '',
     };
   });
   const cmsFallback = /contact/i.test(slug) ? bestFaqsFor('contact') : bestFaqsFor('home');

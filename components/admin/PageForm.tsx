@@ -21,6 +21,7 @@ import {
   type CmsPageLayout,
   type PageFaq,
 } from '@/lib/cms-page-model';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { faqsForEditor } from '@/lib/default-faqs';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
@@ -228,7 +229,7 @@ function PageFormInner({ pageId }: PageFormProps) {
       ...(stamp ? { published_at: stamp } : {}),
     });
 
-    const pageBlocks = layout === 'home' ? [] : blocks;
+    const pageBlocks = layout === 'home' ? [] : blocksWithoutMedia(blocks);
     const payload = buildSavePayload(
       'pages',
       {
@@ -480,7 +481,7 @@ function PageFormInner({ pageId }: PageFormProps) {
             onEdit={(index) => {
               const block = blocks[index];
               if (!block) return;
-              setDraftBlock({ title: block.title, description: block.description, image_url: block.image_url || '' });
+              setDraftBlock({ title: block.title, description: block.description, image_url: '' });
               setEditingIndex(index);
             }}
             onDelete={(index) => {
@@ -535,14 +536,6 @@ function PageFormInner({ pageId }: PageFormProps) {
                 }
               />
             </div>
-            {layout === 'community' || layout === 'about' || layout === 'agency' ? (
-              <CoverImageField
-                label={layout === 'community' ? 'Initiative image' : 'Section image'}
-                folder="pages"
-                value={draftBlock.image_url || ''}
-                onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
-              />
-            ) : null}
             <div>
               <FieldLabel>
                 {layout === 'community'

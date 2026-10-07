@@ -184,21 +184,21 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
 }
 
 export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContentBlock[] {
-  const fromColumns = parseContentBlocks(record?.page_blocks || record?.blocks) as CmsContentBlock[];
+  const fromColumns = parseContentBlocks(record?.page_blocks || record?.blocks);
   if (fromColumns.length > 0) {
     return fromColumns.map((block) => ({
       title: block.title,
       description: block.description,
-      image_url: block.image_url || '',
-      caption: block.caption || '',
+      image_url: '',
+      caption: '',
     }));
   }
   const embedded = extractEmbeddedContent(pickString(record || {}, ['content', 'description', 'body']));
   return (embedded.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
-    image_url: 'image_url' in block ? String((block as CmsContentBlock).image_url || '') : '',
-    caption: 'caption' in block ? String((block as CmsContentBlock).caption || '') : '',
+    image_url: '',
+    caption: '',
   }));
 }
 

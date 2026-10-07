@@ -31,6 +31,7 @@ import {
   resolveParkSelectValue,
   stayParkLabelFromRecord,
 } from '@/lib/accommodation-park';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 import { formatUploadErrorMessage } from '@/lib/upload-error-message';
@@ -326,6 +327,7 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
     const parkFields = accommodationParkPayload(parkRow, nationalPark);
     const parkName = parkFields.national_park_name || nationalPark.trim();
     const locationInPark = ensureStayLocationInPark(location, parkName, country);
+    const textBlocks = blocksWithoutMedia(blocks);
 
     const payload = buildSavePayload(
       'accommodations',
@@ -334,7 +336,7 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
         location: locationInPark,
         description_title: descriptionTitle,
         description: embedContent(description, {
-          blocks,
+          blocks: textBlocks,
           fields: {
             description_title: descriptionTitle,
             type: accommodationType,
@@ -349,7 +351,7 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
         country,
         ...parkFields,
         image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
-        accommodation_blocks: JSON.stringify(blocks),
+        accommodation_blocks: JSON.stringify(textBlocks),
         published_at: stamp,
         slug: seo.slug || slugify(name),
       },

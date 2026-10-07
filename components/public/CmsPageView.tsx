@@ -41,8 +41,6 @@ export type CmsPageViewProps = {
 function AboutStory({
   blocks,
   html,
-  videoUrl,
-  image,
 }: {
   blocks: CmsContentBlock[];
   html: string;
@@ -53,34 +51,13 @@ function AboutStory({
     return (
       <div className="space-y-10">
         {blocks.map((block, index) => {
-          const visual = block.image_url || (index === 0 ? videoUrl : '') || (index === 0 ? image : '');
-          const isVideo = Boolean(index === 0 && videoUrl && !block.image_url);
           const copy = toHtml(block.description);
-          const reverse = index % 2 === 1;
           return (
-            <div
-              key={`${block.title}-${index}`}
-              className={`grid grid-cols-1 items-center gap-8 md:grid-cols-2 ${reverse ? 'md:[&>*:first-child]:order-2' : ''}`}
-            >
-              <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-                {isVideo && videoUrl ? (
-                  <video className="aspect-video h-full w-full object-cover" autoPlay loop muted playsInline>
-                    <source src={videoUrl} type="video/mp4" />
-                  </video>
-                ) : visual ? (
-                  <ResponsiveImage src={visual} alt="" variant="card" className="aspect-video h-full w-full object-cover" />
-                ) : (
-                  <div className="aspect-video bg-[#f3f4f6]" />
-                )}
-              </div>
-              <div>
-                {block.title ? (
-                  <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
-                ) : null}
-                {copy ? (
-                  <PublicHtml className="public-prose mt-4 max-w-none" html={copy} />
-                ) : null}
-              </div>
+            <div key={`${block.title}-${index}`}>
+              {block.title ? (
+                <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
+              ) : null}
+              {copy ? <PublicHtml className="public-prose mt-4 max-w-none" html={copy} /> : null}
             </div>
           );
         })}
@@ -147,16 +124,9 @@ export default function CmsPageView({
               <SectionHeading label="What we do" title="Our Community Initiatives" />
               <div className="mt-10 grid gap-8 md:grid-cols-2">
                 {blocks.map((block) => (
-                  <article key={block.title} className="overflow-hidden bg-white shadow-sm">
-                    {block.image_url ? (
-                      <ResponsiveImage src={block.image_url} alt={block.title} variant="card" className="h-56 w-full object-cover" />
-                    ) : (
-                      <div className="h-56 w-full bg-[#e8ece9]" />
-                    )}
-                    <div className="p-6">
-                      <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
-                      <PublicHtml className="public-prose mt-3 text-[#666]" html={toHtml(block.description)} />
-                    </div>
+                  <article key={block.title} className="bg-white p-6 shadow-sm">
+                    <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
+                    <PublicHtml className="public-prose mt-3 text-[#666]" html={toHtml(block.description)} />
                   </article>
                 ))}
               </div>

@@ -11,6 +11,7 @@ import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecordById, isLanguagePost, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -147,7 +148,7 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
     setError('');
 
     const stamp = publishStampForSave(publishedAt, isEdit);
-    const blocksWithoutImages = blocks.map(({ title, description }) => ({ title, description }));
+    const blocksWithoutImages = blocksWithoutMedia(blocks);
     const payload = buildSavePayload(
       'safari_updates',
       {

@@ -11,6 +11,7 @@ import SeoPanel from '@/components/admin/SeoPanel';
 import CoverImageField from '@/components/admin/CoverImageField';
 import { fetchCollectionRecordById, fetchCollectionRecords, getRecordTitle, parseBlocksFromRecord, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
@@ -208,6 +209,7 @@ function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
     setError('');
 
     const stamp = publishStampForSave(publishedAt, isEdit);
+    const textBlocks = blocksWithoutMedia(blocks);
     const payload = buildSavePayload(
       'explore',
       {
@@ -215,7 +217,7 @@ function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
         location,
         description_title: descriptionTitle,
         description: embedContent(description, {
-          blocks,
+          blocks: textBlocks,
           fields: {
             description_title: descriptionTitle,
             location,
@@ -225,7 +227,7 @@ function ExplorePlaceFormInner({ placeId }: ExplorePlaceFormProps) {
         }),
         country,
         image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
-        place_blocks: JSON.stringify(blocks),
+        place_blocks: JSON.stringify(textBlocks),
         published_at: stamp,
         slug: seo.slug || slugify(title),
       },

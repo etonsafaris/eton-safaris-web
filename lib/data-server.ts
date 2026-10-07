@@ -17,6 +17,7 @@ import {
   setCachedCollection,
   setInflightCollection,
 } from '@/lib/collection-cache';
+import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { matchesCountry } from '@/lib/country-utils';
 import { stayMatchesParkLoose } from '@/lib/park-stay-match';
 import { enrichTourListForCards, sortToursWithImagesFirst } from '@/lib/tour-list-images';
@@ -176,24 +177,17 @@ export function visibleRecordHtml(record: RecordRow | null | undefined, keys: st
   return stripEmbeddedContent(pickString(record || {}, keys));
 }
 
-export function parseContentBlocks(value: unknown): {
-  title: string;
-  description: string;
-  image_url?: string;
-  caption?: string;
-}[] {
+export function parseContentBlocks(value: unknown): { title: string; description: string }[] {
   if (Array.isArray(value)) {
-    const blocks: { title: string; description: string; image_url?: string; caption?: string }[] = [];
+    const blocks: { title: string; description: string }[] = [];
     for (const item of value) {
       if (!item || typeof item !== 'object') continue;
       const row = item as Record<string, unknown>;
       if (row.kind === 'faq' || (row.question && !row.title && !row.description)) continue;
       const title = String(row.title || '');
       const description = String(row.description || '');
-      const image_url = String(row.image_url || row.image || '');
-      const caption = String(row.caption || '');
-      if (!title && !description && !image_url && !caption) continue;
-      blocks.push({ title, description, image_url, caption });
+      if (!title && !description) continue;
+      blocks.push({ title, description });
     }
     return blocks;
   }
@@ -216,7 +210,7 @@ export function parseBlocksFromRecord(record: RecordRow | null | undefined): { t
       record.blocks
   );
   if (fromColumns.length > 0) return fromColumns;
-  return extractEmbeddedContent(recordBodyHtml(record)).blocks || [];
+  return blocksWithoutMedia(extractEmbeddedContent(recordBodyHtml(record)).blocks || []);
 }
 
 export function isLanguagePost(record: RecordRow): boolean {
