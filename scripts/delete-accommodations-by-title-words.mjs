@@ -9,7 +9,7 @@ import { resolve } from 'node:path';
 import pg from 'pg';
 import { parseEnvFile } from './lib/parse-env-file.mjs';
 
-const TITLE_WORDS = ['Baobab', 'Mist', 'Lagoon', 'Sunset'];
+const TITLE_WORDS = ['Baobab', 'Mist', 'Lagoon', 'Sunset', 'Horizon'];
 
 const dryRun = !process.argv.includes('--execute');
 const ENV_FILE = resolve(import.meta.dirname, '..', '.env.local');
