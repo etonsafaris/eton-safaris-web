@@ -1,9 +1,9 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { publicCountrySlug } from '@/lib/country-utils';
-import { pickAivenMediaFromRecord } from '@/lib/content-image';
 import { pickString } from '@/lib/data';
-import { resolvePublicCmsImage } from '@/lib/public-image';
+import { countryAdminFeaturedImage } from '@/lib/country-heroes';
+import { isStoredCmsMediaPath, normalizeStoredMediaPath } from '@/lib/public-image';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { resolveHomePageContent, type HomePagePayload, normalizeHomePagePayload } from '@/lib/home-page-payload';
@@ -20,11 +20,14 @@ function countryRowSlug(row: RecordRow): string {
 /** Keep only admin-uploaded covers on public country cards; strip stock/dead URLs. */
 export function sanitizeCountryRowForDisplay(row: RecordRow): RecordRow {
   const slug = countryRowSlug(row);
-  const adminImage =
-    pickAivenMediaFromRecord(row) ||
-    resolvePublicCmsImage(pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']));
+  const adminImage = countryAdminFeaturedImage(row);
   if (adminImage) {
     return { ...row, image_url: adminImage, slug: row.slug || slug };
+  }
+  const raw = pickString(row, ['image_url', 'cover_image', 'featured_image', 'image']);
+  const normalized = raw ? normalizeStoredMediaPath(raw) : '';
+  if (normalized && isStoredCmsMediaPath(normalized)) {
+    return { ...row, image_url: normalized, slug: row.slug || slug };
   }
   return {
     ...row,

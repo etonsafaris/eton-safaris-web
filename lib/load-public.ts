@@ -491,7 +491,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v9-resilient-destinations', normalized],
+      ['country-page-data-v10-admin-hero', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA
     );
@@ -726,7 +726,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v2', normalized],
+    ['country-page-sync-v3-admin-hero', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS

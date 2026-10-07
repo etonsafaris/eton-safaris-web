@@ -114,12 +114,16 @@ function CountryFormInner({ countryId }: CountryFormProps) {
       {
         name,
         tagline: headline,
+        headline,
+        hero_title: headline,
         best_time_to_visit: bestTimeToVisit.trim(),
         description: embedContent(description, {
           fields: {
             faqs: packedFaqs,
             best_time_to_visit: bestTimeToVisit.trim(),
             published_at: stamp,
+            hero_title: headline.trim(),
+            headline: headline.trim(),
           },
         }),
         summary,
