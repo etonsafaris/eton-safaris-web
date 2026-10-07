@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { formatPublishedDateValue, formatPublishedStamp } from '@/lib/public-date';
 import { stripPublicMoney } from '@/lib/public-money';
-import { publicImagePlaceholderArt, publicImageSrcOrFallback } from '@/lib/public-image';
+import ResponsiveImage from '@/components/public/ResponsiveImage';
 import type { RecordRow } from '@/lib/types';
 
 function cardStamp(date?: string, record?: RecordRow) {
@@ -47,9 +47,7 @@ export default function PlaceCard({
   record?: RecordRow;
   cta?: string;
 }) {
-  const resolved = useMemo(() => (image ? publicImageSrcOrFallback(image) : ''), [image]);
-  const [failed, setFailed] = useState(false);
-  const displaySrc = failed ? publicImagePlaceholderArt() : resolved;
+  const hasImage = useMemo(() => Boolean(image?.trim()), [image]);
 
   const stamp = cardStamp(date, record);
   const copy = typeof description === 'string' ? stripPublicMoney(description) : '';
@@ -58,17 +56,15 @@ export default function PlaceCard({
   return (
     <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        {displaySrc ? (
-          <img
-            src={displaySrc}
+        {hasImage ? (
+          <ResponsiveImage
+            src={image!}
             alt={title || ''}
+            variant="card"
             width={640}
             height={480}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading={resolved ? 'eager' : 'lazy'}
-            decoding="async"
-            fetchPriority="auto"
-            onError={() => setFailed(true)}
+            useErrorFallback
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-400">No image</div>

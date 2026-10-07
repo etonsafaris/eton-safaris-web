@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { loadMediaFile } from '@/lib/media-store';
-
+import { loadMediaFileCached } from '@/lib/media-store';
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 export async function GET(_request: Request, context: { params: { id: string } }) {
   try {
-    const file = await loadMediaFile(context.params.id);
+    const file = await loadMediaFileCached(context.params.id);
     if (!file) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }

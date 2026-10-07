@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { publicListColumnsFor } from '@/lib/data-server';
 import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { withPgClient } from '@/lib/supabase/pool';
-
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 const TABLES = new Set([
   'tours',

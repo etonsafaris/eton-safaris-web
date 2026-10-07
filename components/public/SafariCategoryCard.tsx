@@ -1,5 +1,4 @@
 import CategoryThumbnail from '@/components/public/CategoryThumbnail';
-import { DEFAULT_CATEGORY_CARD_IMAGE } from '@/lib/category-display-image';
 import { getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 import Link from 'next/link';
@@ -34,26 +33,10 @@ export default function SafariCategoryCard({
         style={{ minHeight: 130, aspectRatio: '320 / 130' }}
       >
         {imageOverride ? (
-          <img
-            src={imageOverride}
-            alt={title}
-            width={320}
-            height={130}
-            loading="lazy"
-            decoding="async"
+          <CategoryThumbnail
+            srcOverride={imageOverride}
+            alt={title ? `${title} safari category` : 'Safari category'}
             className="h-full w-full object-cover"
-            onError={(event) => {
-              try {
-                const img = event.currentTarget;
-                if (img.src !== DEFAULT_CATEGORY_CARD_IMAGE) {
-                  img.src = DEFAULT_CATEGORY_CARD_IMAGE;
-                  return;
-                }
-                img.style.visibility = 'hidden';
-              } catch {
-                // ignore
-              }
-            }}
           />
         ) : (
           <CategoryThumbnail category={category} alt={title ? `${title} safari category` : 'Safari category'} />

@@ -18,5 +18,25 @@
       "source": "/api/health",
       "headers": [{ "key": "Cache-Control", "value": "no-store, must-revalidate" }]
     }
-  ]
+  ],
+  "functions": {
+    "app/api/public/**/*.ts": {
+      "maxDuration": 30
+    },
+    "app/api/media/**/*.ts": {
+      "maxDuration": 30
+    },
+    "app/api/data/**/*.ts": {
+      "maxDuration": 30
+    },
+    "app/api/admin/records/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/upload/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/system/health/route.ts": {
+      "maxDuration": 15
+    }
+  }
 }

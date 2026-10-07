@@ -80,3 +80,27 @@ export async function loadMediaFile(id: string) {
   );
   return result.rows[0] || null;
 }
+
+const MEDIA_MEM_MAX = 80;
+const MEDIA_MEM_TTL_MS = 5 * 60 * 1000;
+type MediaMemRow = { mime: string; bytes: Buffer; filename: string; at: number };
+const mediaMem = new Map<string, MediaMemRow>();
+
+/** Short-lived in-process cache — cuts repeated BYTEA reads within warm lambdas. */
+export async function loadMediaFileCached(id: string) {
+  const now = Date.now();
+  const hit = mediaMem.get(id);
+  if (hit && now - hit.at < MEDIA_MEM_TTL_MS) {
+    return { mime: hit.mime, bytes: hit.bytes, filename: hit.filename };
+  }
+  const row = await loadMediaFile(id);
+  if (!row) return null;
+  mediaMem.set(id, { ...row, at: now });
+  if (mediaMem.size > MEDIA_MEM_MAX) {
+    const oldest = [...mediaMem.entries()].sort((a, b) => a[1].at - b[1].at);
+    for (let i = 0; i < oldest.length - MEDIA_MEM_MAX; i++) {
+      mediaMem.delete(oldest[i][0]);
+    }
+  }
+  return row;
+}

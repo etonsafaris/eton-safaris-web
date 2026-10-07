@@ -4,6 +4,8 @@ import { normalizeSlug } from '@/lib/country-utils';
 import { NextResponse } from 'next/server';
 
 export const revalidate = CMS_PUBLIC_REVALIDATE_SECONDS;
+export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

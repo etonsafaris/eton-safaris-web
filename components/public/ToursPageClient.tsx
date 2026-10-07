@@ -4,14 +4,19 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PageHero from '@/components/public/PageHero';
 import TourCard from '@/components/public/TourCard';
-import TourSearchBar from '@/components/public/TourSearchBar';
+import dynamic from 'next/dynamic';
+const TourSearchBar = dynamic(() => import('@/components/public/TourSearchBar'), {
+  loading: () => <div className="min-h-[52px] w-full rounded-md bg-gray-100" aria-hidden />,
+});
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
 import PageFaqList from '@/components/public/PageFaqList';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { fetchCollectionPage, getRecordImage, isPublishedRecord, searchTours, TOUR_LIST_COLUMNS } from '@/lib/data';
 import { searchPublishedTours } from '@/lib/tour-search';
-import DiscoverySearchSection from '@/components/public/DiscoverySearchSection';
+const DiscoverySearchSection = dynamic(() => import('@/components/public/DiscoverySearchSection'), {
+  loading: () => null,
+});
 import { bestFaqsFor } from '@/lib/best-faqs';
 import { deriveCategoriesFromTours } from '@/lib/derive-tour-categories';
 import type { RecordRow } from '@/lib/types';

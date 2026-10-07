@@ -1,7 +1,3 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
-
 import { NextResponse } from 'next/server';
 import { AGENT_TABLES, dedupeAgentRows, isMissingTable } from '@/lib/agent-tables';
 import { allowAdminRequest } from '@/lib/admin-request-auth';
@@ -20,6 +16,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
 import type { RecordRow } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
 type SupabaseClient = any;
 
 const ALLOWED_TABLES = new Set([

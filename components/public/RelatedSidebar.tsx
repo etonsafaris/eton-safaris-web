@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
@@ -21,14 +22,16 @@ function SidebarThumb({ src, title }: { src?: string | null; title: string }) {
     return <div className="h-14 w-[72px] shrink-0 rounded bg-[#d7e0e0]" />;
   }
 
+  const unoptimized = displaySrc.startsWith('/api/media/');
+
   return (
-    <img
+    <Image
       src={displaySrc}
       alt={title || ''}
       width={72}
       height={56}
-      loading="eager"
-      decoding="async"
+      sizes="72px"
+      unoptimized={unoptimized}
       className="h-14 w-[72px] shrink-0 rounded object-cover"
       onError={() => setFailed(true)}
     />

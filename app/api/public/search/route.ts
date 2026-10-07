@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import type { RecordRow } from '@/lib/types';
 import { discoverySearchCard, suggestDiscovery, type DiscoveryKind } from '@/lib/discovery-search';
 import { fetchCollectionRecords, publicListColumnsFor } from '@/lib/data';
-
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' };
 

@@ -6,7 +6,9 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import dynamic from 'next/dynamic';
 import HomePageImage from '@/components/public/HomePageImage';
-import TourSearchBar from '@/components/public/TourSearchBar';
+const TourSearchBar = dynamic(() => import('@/components/public/TourSearchBar'), {
+  loading: () => <div className="min-h-[52px] w-full max-w-3xl rounded-md bg-white/10" aria-hidden />,
+});
 import SectionHeading from '@/components/public/SectionHeading';
 const TestimonialsSection = dynamic(() => import('@/components/public/TestimonialsSection'), {
   loading: () => null,
