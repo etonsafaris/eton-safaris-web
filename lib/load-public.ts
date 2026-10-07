@@ -554,6 +554,15 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
           categories: resolveCountryPageCategories(normalized, cmsCategories, []),
         };
       }
+      if (!data.parks.length) {
+        const countryId = data.country?.id != null ? String(data.country.id) : undefined;
+        const parks = await withTimeout(
+          fetchParksForCountry(label, 48, countryId, normalized),
+          6000,
+          [] as RecordRow[]
+        ).catch(() => [] as RecordRow[]);
+        if (parks.length) data = { ...data, parks: parks.filter(isPubliclyVisibleRecord) };
+      }
       return data;
     }
     let data = raced;
@@ -598,6 +607,19 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
             ? data.categories
             : resolveCountryPageCategories(normalized, [], tourPool),
         };
+      }
+    }
+    if (!data.parks.length) {
+      const label =
+        publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
+      const countryId = data.country?.id != null ? String(data.country.id) : undefined;
+      const parks = await withTimeout(
+        fetchParksForCountry(label, 48, countryId, normalized),
+        6000,
+        [] as RecordRow[]
+      ).catch(() => [] as RecordRow[]);
+      if (parks.length) {
+        data = { ...data, parks: parks.filter(isPubliclyVisibleRecord) };
       }
     }
     return withCountryPageFallback(data, normalized);
@@ -652,7 +674,7 @@ async function loadCountryPageDataInner(
     withTimeout(resolvePublicTours({ country: countryName, limit: 48 }), 6000, [] as RecordRow[]).catch(
       () => [] as RecordRow[]
     ),
-    withTimeout(fetchParksForCountry(countryName, 20, countryId), 6000, [] as RecordRow[]),
+    withTimeout(fetchParksForCountry(countryName, 48, countryId, normalized), 6000, [] as RecordRow[]),
     withTimeout(
       fetchCollectionPage('explore', [], {
         columns: listColumns('explore'),

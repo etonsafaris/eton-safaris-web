@@ -1,0 +1,30 @@
+{
+  "description": "Import manually in UptimeRobot → Add New Monitor (HTTP/S). Interval: 5 min. Alert contacts: your email.",
+  "monitors": [
+    {
+      "friendly_name": "Eton — www home",
+      "url": "https://www.etonsafaris.com/",
+      "type": "HTTP",
+      "interval": 300
+    },
+    {
+      "friendly_name": "Eton — API health (DB)",
+      "url": "https://www.etonsafaris.com/api/system/health?deep=1",
+      "type": "HTTP",
+      "interval": 300,
+      "keyword": "connected"
+    },
+    {
+      "friendly_name": "Eton — home bundle",
+      "url": "https://www.etonsafaris.com/api/public/home-bundle",
+      "type": "HTTP",
+      "interval": 600
+    },
+    {
+      "friendly_name": "Eton — admin login",
+      "url": "https://admin.etonsafaris.com/login",
+      "type": "HTTP",
+      "interval": 300
+    }
+  ]
+}

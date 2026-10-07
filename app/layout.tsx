@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import SiteMonitoring from '@/components/monitoring/SiteMonitoring';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
 import PublicAppRoot from '@/components/public/PublicAppRoot';
 import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
@@ -66,6 +67,9 @@ export const metadata: Metadata = {
     shortcut: SITE_LOGO,
   },
   robots: { index: true, follow: true },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
   alternates: {
     canonical: '/',
   },
@@ -143,6 +147,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-white font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
         <PublicAppRoot>
+          <SiteMonitoring />
           <CmsLiveHost />
           {children}
         </PublicAppRoot>

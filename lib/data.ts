@@ -173,8 +173,13 @@ export async function resolvePublicTours(options?: { country?: string; limit?: n
   return keep(await fetchFeaturedTours(capped));
 }
 
-export async function fetchParksForCountry(countryLabel: string, limit = 200, countryId?: string) {
-  if (!browser()) return fetchParksForCountryServer(countryLabel, limit);
+export async function fetchParksForCountry(
+  countryLabel: string,
+  limit = 200,
+  countryId?: string,
+  countrySlug?: string
+) {
+  if (!browser()) return fetchParksForCountryServer(countryLabel, limit, countryId, countrySlug);
   const rows: RecordRow[] = [];
   const seen = new Set<string>();
   if (countryId) {

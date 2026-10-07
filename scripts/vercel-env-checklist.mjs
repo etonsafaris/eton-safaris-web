@@ -30,6 +30,19 @@ for (const key of KEYS) {
 console.log('\n  ✓ NEXT_PUBLIC_SITE_URL — set in vercel.json to https://www.etonsafaris.com');
 console.log('  (Vercel redirects apex → www; do not add a www → apex redirect.)\n');
 
+console.log('=== Monitoring (optional — see npm run monitoring:setup) ===\n');
+const MONITOR_KEYS = [
+  'NEXT_PUBLIC_GA_MEASUREMENT_ID',
+  'GOOGLE_SITE_VERIFICATION',
+  'SENTRY_DSN',
+  'NEXT_PUBLIC_SENTRY_DSN',
+];
+for (const key of MONITOR_KEYS) {
+  const set = Boolean(String(env[key] || '').trim());
+  console.log(`  ${set ? '✓' : '○'} ${key}`);
+}
+console.log('  Enable Vercel Analytics + Speed Insights in the project dashboard after deploy.\n');
+
 console.log('=== Vercel domains (same project: eton-safaris-web) ===\n');
 console.log('  Project → Settings → Domains — add all three, wait for Valid + SSL:\n');
 console.log('    • etonsafaris.com          (apex — use the A / ALIAS records Vercel shows for this domain)');

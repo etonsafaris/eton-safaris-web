@@ -115,7 +115,10 @@ export default function AccommodationDetailClient({
         image={getRecordImage(item)}
         metaItems={[
           { label: 'Country', value: pickString(item, ['country']) },
-          { label: 'National Park', value: pickStoredString(item, ['national_park', 'park', 'park_name']) },
+          {
+            label: 'National Park',
+            value: pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
+          },
           { label: 'Type', value: pickStoredString(item, ['type']) },
           { label: 'Published', value: published },
         ]}
