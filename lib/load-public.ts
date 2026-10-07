@@ -21,6 +21,7 @@ import {
   recordCountryValues,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
+import { enrichAccommodationParkFields } from '@/lib/accommodation-park';
 import {
   fetchCollectionRecordById,
   fetchCollectionRecords,
@@ -1002,6 +1003,23 @@ export async function loadSafariUpdatesListingResilient(options?: { limit?: numb
   }
 }
 
+async function parksForAccommodation(stay: RecordRow): Promise<RecordRow[]> {
+  const country = pickStoredString(stay, ['country']);
+  const parks = country
+    ? await withTimeout(fetchParksForCountry(country, 200), 8000, [] as RecordRow[])
+    : [];
+  const id = String(stay.national_park_id || '').trim();
+  if (id && !parks.some((park) => String(park.id || '') === id)) {
+    const linked = await withTimeout(
+      fetchCollectionRecordById('national_park', id, ['national_parks', 'parks']),
+      5000,
+      null
+    );
+    if (linked) parks.push(linked);
+  }
+  return parks;
+}
+
 async function loadAccommodationDetailLive(slug: string, synced = false) {
   try {
     const [item, stayPage] = await Promise.all([
@@ -1014,7 +1032,11 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
         { rows: [] as RecordRow[], total: 0 }
       ),
     ]);
-    const published = item && isPubliclyVisibleRecord(item) ? item : null;
+    let published = item && isPubliclyVisibleRecord(item) ? item : null;
+    if (published) {
+      const parks = await parksForAccommodation(published);
+      published = enrichAccommodationParkFields(published, parks);
+    }
     const others = published
       ? (stayPage?.rows ?? [])
           .filter(isPublishedRecord)
@@ -1054,7 +1076,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   return cachedPublic(
-    ['accommodation-detail-sync-v1', normalized],
+    ['accommodation-detail-sync-v2-park-meta', normalized],
     ['collection:accommodations', `accommodation:${normalized}`],
     () => loadAccommodationDetailLive(normalized, true),
     PUBLIC_DETAIL_REVALIDATE_SECONDS

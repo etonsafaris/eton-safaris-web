@@ -27,6 +27,11 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
+import {
+  accommodationNationalParkDisplay,
+  enrichAccommodationParkFields,
+} from '@/lib/accommodation-park';
+import { fetchParksForCountry } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailClient({
@@ -46,6 +51,7 @@ export default function AccommodationDetailClient({
   const [item, setItem] = useState<RecordRow | null>(initialItem);
   const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [parks, setParks] = useState<RecordRow[]>([]);
   const live = useCmsLive();
   const serverGate = useServerRecordGate(initialItem);
 
@@ -54,6 +60,15 @@ export default function AccommodationDetailClient({
     setOthers(initialOthers);
     setTours(initialTours);
   }, [initialItem, initialOthers, initialTours]);
+
+  useEffect(() => {
+    const country = item ? pickStoredString(item, ['country']) : '';
+    if (!country) {
+      setParks([]);
+      return;
+    }
+    void fetchParksForCountry(country, 200).then((rows) => setParks(rows ?? []));
+  }, [item?.id, item?.country]);
 
   useEffect(() => {
     if (serverGate.current && live === 0) return;
@@ -68,7 +83,10 @@ export default function AccommodationDetailClient({
           if (!serverGate.current) triggerNotFound();
           return;
         }
-        setItem(published);
+        const countryForParks = pickStoredString(published, ['country']);
+        const parkRows = countryForParks ? await fetchParksForCountry(countryForParks, 200) : [];
+        setParks(parkRows);
+        setItem(enrichAccommodationParkFields(published, parkRows));
         setOthers(
           (stayPage?.rows ?? [])
             .filter(isPublishedRecord)
@@ -95,6 +113,8 @@ export default function AccommodationDetailClient({
     void load();
   }, [slug, live, router, serverGate]);
 
+  const nationalParkLabel = accommodationNationalParkDisplay(item, parks);
+
   const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {
     setItem((row) => (row ? { ...row, published_at: stamp } : row));
   });
@@ -117,7 +137,9 @@ export default function AccommodationDetailClient({
           { label: 'Country', value: pickString(item, ['country']) },
           {
             label: 'National Park',
-            value: pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
+            value:
+              nationalParkLabel ||
+              pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
           },
           { label: 'Type', value: pickStoredString(item, ['type']) },
           { label: 'Published', value: published },

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, FileText, Mountain } from 'lucide-react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Mountain } from 'lucide-react';
 import { useAdminCollectionListHref } from '@/lib/use-admin-list-href';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import SavedBlocksGrid from '@/components/admin/SavedBlocksGrid';
@@ -33,8 +33,6 @@ import {
 } from '@/lib/accommodation-park';
 import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { uploadOptimizedImage } from '@/lib/upload-media';
-import { formatUploadErrorMessage } from '@/lib/upload-error-message';
 import type { RecordRow } from '@/lib/types';
 
 type AccommodationBlock = {
@@ -123,10 +121,6 @@ function SageSelect({
   );
 }
 
-async function uploadAccommodationImage(file: File): Promise<string> {
-  return uploadOptimizedImage(file, 'accommodations');
-}
-
 export default function AccommodationForm(props: AccommodationFormProps) {
   return (
     <Suspense fallback={<p className="p-6 text-sm text-gray-500">Loading form…</p>}>
@@ -139,7 +133,6 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
   const listHref = useAdminCollectionListHref('accommodations');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(accommodationId);
 
   const prefillRow = accommodationId ? readAdminEditPrefill('accommodations', accommodationId) : null;
@@ -164,7 +157,6 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
     prefillRow ? seoValuesFromRecord(prefillRow as Record<string, unknown>) : defaultSeoValues('stay')
   );
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [seoSaved, setSeoSaved] = useState(isEdit);
   const [error, setError] = useState('');
   const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
@@ -300,23 +292,6 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
     setEditingIndex((current) => adjustEditingIndexAfterMove(current, index, direction));
   }
 
-  async function handleImageSelect(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setError('');
-    try {
-      const publicUrl = await uploadAccommodationImage(file);
-      setFeaturedImage(publicUrl);
-    } catch (err) {
-      setError(formatUploadErrorMessage(err));
-    } finally {
-      setUploading(false);
-      event.target.value = '';
-    }
-  }
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
@@ -380,85 +355,98 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
     <form id="accommodation-form" onSubmit={handleSubmit} className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <Link
         href={listHref}
-        className="inline-flex items-center gap-2 text-sm text-[#6b7280] transition hover:text-[#111827] dark:text-gray-400 dark:hover:text-white"
+        className="mb-6 inline-block text-sm font-medium text-[#64748b] hover:text-[#475569] dark:text-gray-400 dark:hover:text-gray-200"
       >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Accommodations
+        &lt; Back to Accommodations
       </Link>
 
-      <div className="mt-4">
-        <h1 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h1 className="text-center font-serif text-3xl font-bold text-[#1e293b] dark:text-white">
           {isEdit ? 'Edit Accommodation' : 'Add New Accommodation'}
         </h1>
-        <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">
-          {isEdit
-            ? 'Update the saved stay details below, then click Save.'
-            : 'Fill in the details below to add a new lodge or camp.'}
-        </p>
-      </div>
 
-      {error ? (
-        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
-      ) : null}
-
-      <div className="mt-8 space-y-8 rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
-        <section>
-          <SectionHeader icon={FileText} title="Stay Overview" />
-          <div className="space-y-4">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <FieldLabel>Accommodation Name</FieldLabel>
-                <SoftInput
-                  value={name}
-                  onChange={(value) => {
-                    setName(value);
-                    setSeo((current) => ({
-                      ...current,
-                      seo_title: current.seo_title || value,
-                      slug: current.slug || slugify(value),
-                    }));
-                  }}
-                  required
-                />
-              </div>
-              <div>
-                <FieldLabel>Location</FieldLabel>
-                <SoftInput value={location} onChange={setLocation} />
-              </div>
-            </div>
-            <RichTextEditor
-              value={description}
-              onChange={setDescription}
-              placeholder="Describe the lodge or camp..."
-              minHeight={260}
-              showFooter
-              faqs={faqs}
-              onFaqsChange={setFaqs}
-              faqTitle="Stay FAQ"
-              faqDescription="These FAQs can be shown with this stay. Edit them here — they save with the accommodation."
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div>
+            <FieldLabel>Accommodation Name</FieldLabel>
+            <SoftInput
+              value={name}
+              onChange={(value) => {
+                setName(value);
+                setSeo((current) => ({
+                  ...current,
+                  seo_title: current.seo_title || value,
+                  slug: current.slug || slugify(value),
+                }));
+              }}
+              required
             />
           </div>
-        </section>
+          <div>
+            <FieldLabel>Location</FieldLabel>
+            <SoftInput value={location} onChange={setLocation} />
+          </div>
+        </div>
 
-        <section>
-          <SectionHeader icon={Mountain} title="Details & Media" />
+        <div className="mt-6">
+          <FieldLabel>Description Title</FieldLabel>
+          <SoftInput value={descriptionTitle} onChange={setDescriptionTitle} />
+        </div>
+
+        <div className="mt-6">
+          <FieldLabel>Description</FieldLabel>
+          <RichTextEditor
+            value={description}
+            onChange={setDescription}
+            placeholder="Type accommodation description here..."
+            minHeight={260}
+            showFooter
+            faqs={faqs}
+            onFaqsChange={setFaqs}
+            faqTitle="Stay FAQ"
+            faqDescription="These FAQs can be shown with this stay. Edit them here — they save with the accommodation."
+          />
+        </div>
+
+        <div className="mt-6">
+          <FieldLabel>Accommodation Type</FieldLabel>
+          <SageSelect
+            value={accommodationType}
+            onChange={setAccommodationType}
+            options={typeOptions}
+            placeholder="Select Type"
+          />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div>
+            <FieldLabel>Country</FieldLabel>
+            <SageSelect
+              value={country}
+              onChange={(value) => {
+                setCountry(value);
+                setNationalPark('');
+              }}
+              options={countryOptions}
+              placeholder="Select Country"
+            />
+          </div>
+          <div>
+            <FieldLabel>National Park</FieldLabel>
+            <SageSelect
+              value={nationalPark}
+              onChange={setNationalPark}
+              options={parkOptions}
+              placeholder={country ? 'Select park' : 'Select country first'}
+              disabled={!country}
+            />
+          </div>
+        </div>
+
+        <section className="mt-8">
+          <SectionHeader icon={Mountain} title="Highlights & Media" />
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-4">
-              <div>
-                <FieldLabel>Description Title</FieldLabel>
-                <SoftInput value={descriptionTitle} onChange={setDescriptionTitle} />
-              </div>
-              <div>
-                <FieldLabel>Accommodation Type</FieldLabel>
-                <SageSelect
-                  value={accommodationType}
-                  onChange={setAccommodationType}
-                  options={typeOptions}
-                  placeholder="Select Type"
-                />
-              </div>
-            </div>
             <CoverImageField
+              className="lg:col-start-2"
               label="Cover Image"
               folder="accommodations"
               value={featuredImage}
@@ -470,35 +458,7 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
           </div>
         </section>
 
-        <section className="rounded-xl bg-[#f9fafb] p-6 dark:bg-white/5">
-          <SectionHeader icon={BookOpen} title="Logistics" />
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <FieldLabel>Country</FieldLabel>
-              <SageSelect
-                value={country}
-                onChange={(value) => {
-                  setCountry(value);
-                  setNationalPark('');
-                }}
-                options={countryOptions}
-                placeholder="Select Country"
-              />
-            </div>
-            <div>
-              <FieldLabel>National Park</FieldLabel>
-              <SageSelect
-                value={nationalPark}
-                onChange={setNationalPark}
-                options={parkOptions}
-                placeholder={country ? 'Select park' : 'Please select country...'}
-                disabled={!country}
-              />
-            </div>
-          </div>
-        </section>
-
-        <div className="rounded-xl bg-[#f3f4f6] p-6 dark:bg-white/5">
+        <div className="mt-8 rounded-xl bg-[#f3f4f6] p-6 dark:bg-white/5">
           <SavedBlocksGrid
             heading="Accommodation Blocks"
             blocks={blocks}
@@ -544,10 +504,12 @@ function AccommodationFormInner({ accommodationId }: AccommodationFormProps) {
           </div>
         </div>
 
+        {error ? <p className="mt-6 text-sm text-red-600">{error}</p> : null}
+
         <div className="mt-10 flex justify-center border-t border-[#e5e7eb] pt-10 dark:border-white/10">
           <button
             type="submit"
-            disabled={saving || uploading}
+            disabled={saving}
             className="rounded-md bg-[#66bb6a] px-10 py-3 text-sm font-semibold text-white transition hover:bg-[#57a85b] disabled:opacity-60"
           >
             {saving ? 'Saving…' : isEdit ? 'Update Accommodation' : 'Create Accommodation'}

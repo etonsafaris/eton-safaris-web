@@ -1,5 +1,5 @@
 import { getRecordTitle } from '@/lib/data';
-import { parkSlug, stayParkFields } from '@/lib/park-stay-match';
+import { parkSlug, stayMatchesParkLoose, stayParkFields } from '@/lib/park-stay-match';
 import type { RecordRow } from '@/lib/types';
 
 export function parkOptionValue(park: RecordRow): string {
@@ -58,6 +58,45 @@ export function stayParkLabelFromRecord(stay: RecordRow, parks: RecordRow[] = []
     if (match) return parkOptionValue(match);
   }
   return '';
+}
+
+/** Resolve park row from explicit fields, id, or location text (longest name wins). */
+export function inferParkForStay(stay: RecordRow, parks: RecordRow[]): RecordRow | null {
+  const label = stayParkLabelFromRecord(stay, parks);
+  if (label) return findParkBySelectValue(label, parks);
+
+  const id = String(stay.national_park_id || '').trim();
+  if (id) {
+    const byId = parks.find((park) => String(park.id || '') === id);
+    if (byId) return byId;
+  }
+
+  const sorted = [...parks].sort((a, b) => parkOptionValue(b).length - parkOptionValue(a).length);
+  for (const park of sorted) {
+    const name = parkOptionValue(park);
+    if (stayMatchesParkLoose(stay, name, String(park.id || ''))) return park;
+  }
+  return null;
+}
+
+/** Label for public meta bars — never returns empty when a park can be inferred. */
+export function accommodationNationalParkDisplay(
+  stay: RecordRow | null | undefined,
+  parks: RecordRow[] = []
+): string {
+  if (!stay) return '';
+  const explicit = stayParkLabelFromRecord(stay, parks);
+  if (explicit) return explicit;
+  const park = inferParkForStay(stay, parks);
+  return park ? parkOptionValue(park) : '';
+}
+
+/** Fills national_park_* on the row when inference finds a park but columns were empty. */
+export function enrichAccommodationParkFields(stay: RecordRow, parks: RecordRow[]): RecordRow {
+  if (stayParkLabelFromRecord(stay, parks)) return stay;
+  const park = inferParkForStay(stay, parks);
+  if (!park) return stay;
+  return { ...stay, ...accommodationParkPayload(park, parkOptionValue(park)) };
 }
 
 export function ensureStayLocationInPark(location: string, parkName: string, country: string): string {
