@@ -16,7 +16,8 @@ import { showParksOnCountryPages } from '@/lib/public-discovery-policy';
 import { categoryPublicSlug, countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { resolveCountryDescriptionHtml } from '@/lib/country-page-copy';
-import { COUNTRY_SPECIALISTS_LINE, countryHeroTitle } from '@/lib/country-landing-copy';
+import { COUNTRY_SPECIALISTS_LINE } from '@/lib/country-landing-copy';
+import { countryHeroImage, countryPageHeroTitle } from '@/lib/country-heroes';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
@@ -31,7 +32,6 @@ import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import PageFaqList from '@/components/public/PageFaqList';
-import { countryHeroImage } from '@/lib/country-heroes';
 import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 import { bestTimeToVisit } from '@/lib/country-planning';
 import type { RecordRow } from '@/lib/types';
@@ -106,8 +106,7 @@ export default function CountryPageContent({
 
   const extras = parseCmsPageExtras(country, slug);
   const title = publicCountryLabel(country, slug);
-  const headline = extras.hero_title || pickString(country || {}, ['tagline', 'headline']);
-  const bannerTitle = heroTitle?.trim() || headline || countryHeroTitle(slug, title);
+  const bannerTitle = countryPageHeroTitle(slug, country, heroTitle);
   const faqs = limitFaqs(extras.faqs, bestFaqsFor('country', { countrySlug: slug, countryName: title }));
   const visitTime = bestTimeToVisit(slug, title, extras.best_time_to_visit);
   const published = useEnsurePublishedAt('countries', country, extras.published_at);
