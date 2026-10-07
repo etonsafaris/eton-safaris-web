@@ -55,6 +55,10 @@ import {
   withCountryPageFallback,
   type CountryPageData,
 } from '@/lib/country-page-fallback';
+import {
+  enrichCountryRecordForPublicPage,
+  isCountryPageShellCountry,
+} from '@/lib/country-heroes';
 import { fallbackHomeCountryRows, orderHomeCountryRows, sanitizeCountryRowForDisplay } from '@/lib/home-page-fallback';
 import { resolveCountryPageCategories } from '@/lib/country-page-categories';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
@@ -169,11 +173,13 @@ function cachedPublic<T>(
 async function fetchPublicRecordResilient(
   table: string,
   slug: string,
-  aliases: string[] = []
+  aliases: string[] = [],
+  columns?: string
 ): Promise<RecordRow | null> {
-  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 8000, null);
+  const select = columns || listColumns(table, aliases) || '*';
+  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases, select), 8000, null);
   if (first) return first;
-  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases), 10000, null);
+  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases, select), 12000, null);
 }
 
 export async function loadHomePageContent(): Promise<HomePageContent | null> {
@@ -491,9 +497,16 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v10-admin-hero', normalized],
+      ['country-page-data-v11-resilient-country', normalized],
       ['collection:countries', `country:${normalized}`],
-      async () => (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA
+      async () => {
+        const data = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
+        if (isCountryPageShellCountry(data.country)) {
+          const retry = await loadCountryPageDataInner(normalized);
+          if (retry && !isCountryPageShellCountry(retry.country)) return retry;
+        }
+        return data;
+      }
     );
     if (!isCountryPageDataSparse(cached)) return cached;
     const retry = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
@@ -518,9 +531,10 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
     ]);
     if (!raced) {
       console.warn('[Public] Country page wait exceeded — fast shell:', normalized);
-      const meta = await withTimeout(fetchRecordByPublicSlug('countries', normalized), 3500, null);
+      const meta = await fetchPublicRecordResilient('countries', normalized);
+      const metaCountry = meta ? enrichCountryRecordForPublicPage(normalized, meta) || meta : null;
       let data = withCountryPageFallback(
-        meta ? { ...EMPTY_COUNTRY_PAGE_DATA, country: meta } : EMPTY_COUNTRY_PAGE_DATA,
+        metaCountry ? { ...EMPTY_COUNTRY_PAGE_DATA, country: metaCountry } : EMPTY_COUNTRY_PAGE_DATA,
         normalized
       );
       const label =
@@ -641,7 +655,7 @@ async function loadCountryPageDataInner(
   options?: CountryPageLoadOptions
 ): Promise<CountryPageData | null> {
   const [countryMeta, categoriesRaw] = await Promise.all([
-    withTimeout(fetchRecordByPublicSlug('countries', slug), 6000, null),
+    withTimeout(fetchPublicRecordResilient('countries', slug), 14000, null),
     withTimeout(
       fetchCollectionRecords('categories', [], {
         columns: listColumns('categories'),
@@ -703,11 +717,11 @@ async function loadCountryPageDataInner(
   };
   const displayCountry =
     country && isPubliclyVisibleRecord(country)
-      ? sanitizeCountryRowForDisplay(country)
+      ? enrichCountryRecordForPublicPage(slug, country)
       : options?.requirePublishedCountry
         ? null
         : countryName
-          ? sanitizeCountryRowForDisplay(fallbackCountry)
+          ? enrichCountryRecordForPublicPage(slug, fallbackCountry)
           : null;
 
   if (options?.requirePublishedCountry && !displayCountry) return null;
@@ -726,7 +740,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v3-admin-hero', normalized],
+    ['country-page-sync-v4-resilient-country', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
