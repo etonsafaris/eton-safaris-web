@@ -45,6 +45,7 @@ export const EMPTY_TOUR_DETAIL = { tour: null as RecordRow | null, related: [] a
 export const EMPTY_PARK_DETAIL = {
   park: null as RecordRow | null,
   others: [] as RecordRow[],
+  tours: [] as RecordRow[],
   stays: [] as RecordRow[],
 };
 export const EMPTY_STAY_DETAIL = {

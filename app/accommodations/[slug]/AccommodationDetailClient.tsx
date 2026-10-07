@@ -132,9 +132,11 @@ export default function AccommodationDetailClient({
       <PageHero
         variant="park"
         title={getRecordTitle(item)}
+        location={pickString(item, ['location']) || undefined}
+        country={pickString(item, ['country']) || undefined}
+        published={published || undefined}
         image={getRecordImage(item)}
         metaItems={[
-          { label: 'Country', value: pickString(item, ['country']) },
           {
             label: 'National Park',
             value:
@@ -142,7 +144,6 @@ export default function AccommodationDetailClient({
               pickStoredString(item, ['national_park_name', 'national_park', 'park', 'park_name']),
           },
           { label: 'Type', value: pickStoredString(item, ['type']) },
-          { label: 'Published', value: published },
         ]}
       />
       <ContentDetailLayout

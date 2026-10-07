@@ -70,7 +70,7 @@ export default function HeaderSearch() {
               setOpen(true);
             }}
             onFocus={() => setOpen(true)}
-            placeholder="Search tours, parks, activities…"
+            placeholder="Search tours and safari guides…"
             autoComplete="off"
             className="w-full bg-transparent px-2 py-2 text-sm outline-none"
           />

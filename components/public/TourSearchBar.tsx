@@ -221,7 +221,7 @@ export default function TourSearchBar({
 
                 onFocus={() => setOpen(true)}
 
-                placeholder="Tour, park, lodge, or place..."
+                placeholder="Tour, place, or activity..."
 
                 autoComplete="off"
 

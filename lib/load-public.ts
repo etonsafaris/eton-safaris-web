@@ -22,6 +22,7 @@ import {
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import { enrichAccommodationParkFields } from '@/lib/accommodation-park';
+import { showParksOnCountryPages } from '@/lib/public-discovery-policy';
 import {
   fetchCollectionRecordById,
   fetchCollectionRecords,
@@ -32,7 +33,6 @@ import {
   fetchParksForCountry,
   fetchRecordByPublicSlug,
   fetchSyncedPublicRecord,
-  fetchStaysForPark,
   resolvePublicTours,
   findRecordBySlug,
   getRecordTitle,
@@ -48,7 +48,7 @@ import {
 import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
 import { HOME_PAGE_SLUG, parseHomePageContent, type HomePageContent } from '@/lib/home-page-content';
 import { mergePublicDestinations, type PublicDestination } from '@/lib/public-destinations';
-import { skipParkStaysDuringBuild, skipStaticGenerationDuringBuild } from '@/lib/build-phase';
+import { skipStaticGenerationDuringBuild } from '@/lib/build-phase';
 import {
   EMPTY_COUNTRY_PAGE_DATA,
   isCountryPageDataSparse,
@@ -555,7 +555,7 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
           categories: resolveCountryPageCategories(normalized, cmsCategories, []),
         };
       }
-      if (!data.parks.length) {
+      if (showParksOnCountryPages() && !data.parks.length) {
         const countryId = data.country?.id != null ? String(data.country.id) : undefined;
         const parks = await withTimeout(
           fetchParksForCountry(label, 48, countryId, normalized),
@@ -563,6 +563,8 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
           [] as RecordRow[]
         ).catch(() => [] as RecordRow[]);
         if (parks.length) data = { ...data, parks: parks.filter(isPubliclyVisibleRecord) };
+      } else if (!showParksOnCountryPages()) {
+        data = { ...data, parks: [] };
       }
       return data;
     }
@@ -610,7 +612,7 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
         };
       }
     }
-    if (!data.parks.length) {
+    if (showParksOnCountryPages() && !data.parks.length) {
       const label =
         publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
       const countryId = data.country?.id != null ? String(data.country.id) : undefined;
@@ -622,6 +624,8 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
       if (parks.length) {
         data = { ...data, parks: parks.filter(isPubliclyVisibleRecord) };
       }
+    } else if (!showParksOnCountryPages()) {
+      data = { ...data, parks: [] };
     }
     return withCountryPageFallback(data, normalized);
   } catch (error) {
@@ -874,15 +878,17 @@ async function loadParkDetailLive(slug: string) {
       ),
     ]);
     const published = park && isPublishedRecord(park) ? park : null;
-    const parkName = published ? getRecordTitle(published) : '';
-    const stays =
-      parkName && !skipParkStaysDuringBuild()
-        ? await withTimeout(
-            fetchStaysForPark(parkName, 10, published?.id != null ? String(published.id) : undefined),
-            4000,
-            [] as RecordRow[]
-          )
-        : [];
+    const country = published ? pickStoredString(published, ['country']) : '';
+    const tours = published
+      ? await withTimeout(
+          resolvePublicTours({
+            country,
+            limit: 12,
+          }),
+          8000,
+          [] as RecordRow[]
+        )
+      : [];
     const rows = parkPage?.rows ?? [];
     const others = published
       ? rows
@@ -890,17 +896,22 @@ async function loadParkDetailLive(slug: string) {
           .filter((row) => String(row?.id) !== String(published.id || ''))
           .slice(0, 20)
       : [];
-    return toClientProps({ park: published, others, stays: published ? stays ?? [] : [] });
+    return toClientProps({
+      park: published,
+      others,
+      tours: (tours ?? []).slice(0, 12),
+      stays: [] as RecordRow[],
+    });
   } catch (error) {
     console.warn('[Public] loadParkDetail failed:', slug, error);
-    return { park: null, others: [] as RecordRow[], stays: [] as RecordRow[] };
+    return { park: null, others: [] as RecordRow[], tours: [] as RecordRow[], stays: [] as RecordRow[] };
   }
 }
 
 export async function loadParkDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   return cachedPublic(
-    ['park-detail-v1', normalized],
+    ['park-detail-v2-country-tours', normalized],
     ['collection:national_park', `park:${normalized}`],
     () => loadParkDetailLive(normalized)
   );

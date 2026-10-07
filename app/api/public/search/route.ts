@@ -19,28 +19,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [parks, stays, places] = await Promise.all([
-      fetchCollectionRecords('national_park', ['national_parks', 'parks'], {
-        columns: listColumns('national_park', ['national_parks', 'parks']),
-        maxRows: 120,
-      }),
-      fetchCollectionRecords('accommodations', [], {
-        columns: listColumns('accommodations'),
-        maxRows: 120,
-      }),
-      fetchCollectionRecords('explore', [], {
-        columns: listColumns('explore'),
-        maxRows: 120,
-      }),
-    ]);
+    const places = await fetchCollectionRecords('explore', [], {
+      columns: listColumns('explore'),
+      maxRows: 120,
+    });
 
     const pack = (kind: DiscoveryKind, rows: RecordRow[]) =>
       suggestDiscovery(rows, q, 6).map((row) => discoverySearchCard(kind, row));
 
     return NextResponse.json(
       {
-        parks: pack('park', parks),
-        stays: pack('stay', stays),
+        parks: [],
+        stays: [],
         places: pack('place', places),
       },
       { headers: CACHE_HEADERS }

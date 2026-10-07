@@ -44,7 +44,7 @@ export default async function ParkDetailPage({ params }: PageProps) {
   );
   if (!loaded?.park) notFound();
 
-  const { park, others, stays } = loaded;
+  const { park, others, tours } = loaded;
   return (
     <PublicShellServer>
       <ParkDetailClient
@@ -52,7 +52,7 @@ export default async function ParkDetailPage({ params }: PageProps) {
         embedded
         initialPark={park}
         initialOthers={others ?? []}
-        initialStays={stays ?? []}
+        initialTours={tours ?? []}
       />
     </PublicShellServer>
   );
