@@ -21,6 +21,7 @@ import {
   seoScorePercent,
   validateSeoSchema,
   canonicalUrlForSeoContent,
+  configureSeoForKeyword,
   derivedSeoAdvancedFields,
   mergeAutoSeoAdvancedFields,
   type SeoAdvancedAutoSnapshot,
@@ -47,6 +48,7 @@ type SeoPanelProps = {
   indexRecord?: RecordRow | null;
   forceNoindex?: boolean;
   forceNoindexReason?: string;
+  onEnsureKeyphrase?: (keyphrase: string) => void;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -122,6 +124,7 @@ export default function SeoPanel({
   indexRecord = null,
   forceNoindex = false,
   forceNoindexReason = '',
+  onEnsureKeyphrase,
 }: SeoPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'seo' | 'readability' | 'schema'>('seo');
@@ -130,6 +133,7 @@ export default function SeoPanel({
   const [keywordCountry, setKeywordCountry] = useState(keywordLibraryCountry || 'Uganda');
   const [keywordCategory, setKeywordCategory] = useState(keywordLibraryCategory || '');
   const [libraryCategories, setLibraryCategories] = useState<{ value: string; label: string }[]>([]);
+  const [libraryKeywords, setLibraryKeywords] = useState<string[]>([]);
   const [keywordsLoading, setKeywordsLoading] = useState(false);
   const [toast, setToast] = useState('');
   const valuesRef = useRef(values);
@@ -198,6 +202,40 @@ export default function SeoPanel({
     'Please provide a meta description by editing the snippet below.';
   const previewSlug = values.slug.trim() || 'page-slug';
 
+  function applyKeywordChoice(keyphrase: string) {
+    const phrase = keyphrase.replace(/\s+/g, ' ').trim();
+    if (!phrase) return;
+    const current = valuesRef.current;
+    const cover =
+      coverImageUrl && !coverImageUrl.startsWith('blob:') && !coverImageUrl.startsWith('data:')
+        ? coverImageUrl
+        : '';
+    const host = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const origin = `https://${host}`;
+    const next = configureSeoForKeyword(current, {
+      keyphrase: phrase,
+      contentType,
+      pageTitle,
+      socialImageUrl: cover || current.social_image_url || `${origin}${SITE_LOGO}`,
+      siteName,
+      siteUrl: origin,
+      allowIndex: !forceNoindex,
+      categoryLabel: contentType === 'category' ? pageTitle : undefined,
+    });
+    lastAdvancedAutoRef.current = {
+      breadcrumb_title: next.breadcrumb_title,
+      og_title: next.og_title,
+      og_description: next.og_description,
+      canonical_url: next.canonical_url,
+    };
+    valuesRef.current = next;
+    onChange(next);
+    const plain = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+    if (onEnsureKeyphrase && phrase && !plain.includes(phrase.toLowerCase())) {
+      onEnsureKeyphrase(phrase);
+    }
+  }
+
   function update<K extends keyof SeoValues>(key: K, value: SeoValues[K]) {
     if (key === 'seo_title' && typeof value === 'string') {
       onChange({ ...values, seo_title: value, slug: slugify(value) });
@@ -245,6 +283,7 @@ export default function SeoPanel({
           rows.filter((row) => keywordRowMatchesScope(row, country, category))
         );
         lastKeywordScopeRef.current = scopeKey;
+        setLibraryKeywords(matched);
         const current = valuesRef.current;
         if (matched.length > 0) {
           onChange({
@@ -336,6 +375,7 @@ export default function SeoPanel({
   }
 
   useEffect(() => {
+    if (values.focus_keyphrase.trim()) return;
     if (pageTitle && !values.seo_title) {
       onChange({ ...values, seo_title: pageTitle, slug: values.slug || slugify(pageTitle) });
     }
@@ -356,6 +396,7 @@ export default function SeoPanel({
   }, [forceNoindex]);
 
   useEffect(() => {
+    if (values.focus_keyphrase.trim()) return;
     if (!values.meta_description && contentForReadability) {
       const text = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 155);
       if (text) onChange({ ...values, meta_description: text });
@@ -457,18 +498,46 @@ export default function SeoPanel({
             {tab === 'seo' && (
               <>
                 <div>
-                  <FieldLabel>Focus Keyphrase</FieldLabel>
-                  <div className="relative">
-                    <input
-                      value={values.focus_keyphrase}
-                      onChange={(event) => update('focus_keyphrase', event.target.value)}
-                      placeholder="e.g. Luxury Safari"
-                      className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 pr-10 text-sm text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
+                  <FieldLabel>Keyword</FieldLabel>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <SearchableSelect
+                      value={keywordCountry}
+                      onChange={(value) => {
+                        lastKeywordScopeRef.current = '';
+                        setKeywordCountry(value);
+                        setKeywordCategory('');
+                        setLibraryKeywords([]);
+                      }}
+                      options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
+                        value: item.name,
+                        label: item.name,
+                      }))}
+                      placeholder="Country"
                     />
-                    <Info className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+                    <SearchableSelect
+                      value={keywordCategory}
+                      onChange={(value) => {
+                        lastKeywordScopeRef.current = '';
+                        setKeywordCategory(value);
+                        setLibraryKeywords([]);
+                        void applyKeywordsForScope(keywordCountry, value);
+                      }}
+                      options={libraryCategories}
+                      placeholder="Category"
+                      disabled={!keywordCountry}
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <SearchableSelect
+                      value={values.focus_keyphrase}
+                      onChange={applyKeywordChoice}
+                      options={libraryKeywords.map((keyword) => ({ value: keyword, label: keyword }))}
+                      placeholder={keywordsLoading ? 'Loading keywords…' : 'Select keyword'}
+                      disabled={keywordsLoading || libraryKeywords.length === 0}
+                    />
                   </div>
                   <p className="mt-1.5 text-xs text-[#6b7280] dark:text-gray-400">
-                    The main keyword you want this page to rank for.
+                    Choose the country, the category, then the keyword. Title, slug, description, social image, and advanced SEO fill in automatically.
                   </p>
                 </div>
 
@@ -496,7 +565,12 @@ export default function SeoPanel({
                     onChange={(value) => update('seo_title', value)}
                     placeholder="Type meta title here"
                   />
-                  <CharacterBar length={values.seo_title.length} min={30} ideal={50} max={60} />
+                  <CharacterBar
+                    length={values.seo_title.length}
+                    min={30}
+                    ideal={50}
+                    max={Math.max(60, values.focus_keyphrase.trim().length || 60)}
+                  />
                 </div>
 
                 <div>
@@ -521,7 +595,12 @@ export default function SeoPanel({
                     placeholder="Modify your meta description here"
                     className="w-full resize-y rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
                   />
-                  <CharacterBar length={values.meta_description.length} min={70} ideal={120} max={160} />
+                  <CharacterBar
+                    length={values.meta_description.length}
+                    min={70}
+                    ideal={120}
+                    max={Math.max(160, values.focus_keyphrase.trim().length || 160)}
+                  />
                 </div>
 
                 <div>
@@ -541,34 +620,8 @@ export default function SeoPanel({
                 </div>
 
                 <div>
-                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                  <div className="mb-1.5">
                     <FieldLabel>Focus Keyword Tags</FieldLabel>
-                    <div className="flex w-full max-w-sm gap-2">
-                      <SearchableSelect
-                        value={keywordCountry}
-                        onChange={(value) => {
-                          lastKeywordScopeRef.current = '';
-                          setKeywordCountry(value);
-                          setKeywordCategory('');
-                        }}
-                        options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
-                          value: item.name,
-                          label: item.name,
-                        }))}
-                        placeholder="Country"
-                      />
-                      <SearchableSelect
-                        value={keywordCategory}
-                        onChange={(value) => {
-                          lastKeywordScopeRef.current = '';
-                          setKeywordCategory(value);
-                          void applyKeywordsForScope(keywordCountry, value);
-                        }}
-                        options={libraryCategories}
-                        placeholder="Category"
-                        disabled={!keywordCountry}
-                      />
-                    </div>
                   </div>
                   <KeywordTagBox
                     tags={values.focus_keywords}
@@ -586,7 +639,7 @@ export default function SeoPanel({
                   <p className="mt-1.5 text-xs text-[#6b7280]">
                     {keywordsLoading
                       ? 'Loading keywords for this country and category…'
-                      : 'Choose country and category — saved keywords fill in automatically. You can still type more and press Enter.'}
+                      : 'These tags fill from the category you chose. The selected keyword is the focus keyphrase.'}
                   </p>
                 </div>
 

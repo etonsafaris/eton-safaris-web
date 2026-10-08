@@ -15,6 +15,7 @@ import { blocksWithoutMedia } from '@/lib/content-blocks';
 import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   defaultSeoValues,
+  ensureKeyphraseInHtml,
   seoValuesFromRecord,
   type SeoValues,
 } from '@/lib/seo';
@@ -350,7 +351,8 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
         values={seo}
         onChange={setSeo}
         pageTitle={title}
-        contentForReadability={content}
+        contentForReadability={[content, ...blocks.map((block) => `${block.title}\n${block.description}`)].join('\n')}
+        onEnsureKeyphrase={(keyphrase) => setContent((current) => ensureKeyphraseInHtml(current, keyphrase))}
         onSave={() => setSeoSaved(true)}
         saving={saving}
         coverImageUrl={coverImage}

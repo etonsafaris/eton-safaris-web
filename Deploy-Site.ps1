@@ -44,6 +44,42 @@ Write-Host ""
 
 & $git @('add', '-A')
 & $git @('reset', '-q', 'HEAD', '--', '.env', '.env.local') 2>$null
+
+# Word documents and Excel never go to GitHub or Vercel, even if they were staged.
+$keepLocal = @(
+  'exports',
+  'public/downloads',
+  'scripts/.cache',
+  ':(glob)**/*.docx',
+  ':(glob)**/*.doc',
+  ':(glob)**/*.xlsx',
+  ':(glob)**/*.xls',
+  ':(glob)**/*.xlsm',
+  ':(glob)**/*.xlsb'
+)
+& $git @('reset', '-q', 'HEAD', '--') + $keepLocal 2>$null
+
+$staged = @(& $git @('diff', '--cached', '--name-only'))
+$blocked = @($staged | Where-Object {
+  $_ -match '(?i)\.(docx|doc|xlsx|xls|xlsm|xlsb)$' -or
+  $_ -like 'exports/*' -or $_ -eq 'exports' -or
+  $_ -like 'public/downloads/*' -or $_ -eq 'public/downloads' -or
+  $_ -like 'scripts/.cache/*'
+})
+if ($blocked.Count -gt 0) {
+  & $git @('reset', '-q', 'HEAD', '--') + $blocked 2>$null
+  $stillStaged = @(& $git @('diff', '--cached', '--name-only') | Where-Object {
+    $_ -match '(?i)\.(docx|doc|xlsx|xls|xlsm|xlsb)$' -or
+    $_ -like 'exports/*' -or $_ -like 'public/downloads/*' -or $_ -like 'scripts/.cache/*'
+  })
+  if ($stillStaged.Count -gt 0) {
+    throw "Stopped. Documents or Excel are still staged and will not be deployed:`n$($stillStaged -join "`n")"
+  }
+  Write-Host "Left on this computer (not deployed):"
+  $blocked | ForEach-Object { Write-Host "  $_" }
+  Write-Host ""
+}
+
 & $git @('status', '--short')
 
 $pending = & $git @('status', '--porcelain')

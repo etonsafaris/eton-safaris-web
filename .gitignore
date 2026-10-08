@@ -55,5 +55,16 @@ git-watch.log
 scripts/_tmp-*.mjs
 scripts/backups/
 
+# Word documents and Excel stay on this computer. Local Deploy never uploads them.
+/exports/
+/public/downloads/
+/scripts/.cache/
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+
 .vercel
 .env*

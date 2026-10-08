@@ -204,6 +204,155 @@ export function defaultSeoValues(contentType: SeoContentType = 'page'): SeoValue
   };
 }
 
+export function phraseSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function uniqueSeoKeywords(values: string[]): string[] {
+  const chips: string[] = [];
+  for (const value of values) {
+    const keyword = value.trim();
+    if (!keyword) continue;
+    if (!chips.some((chip) => chip.toLowerCase() === keyword.toLowerCase())) chips.push(keyword);
+  }
+  return chips;
+}
+
+/** Title that contains the full keyphrase and stays inside 30–60 characters when the phrase allows it. */
+export function buildSeoTitleForKeyphrase(keyphrase: string): string {
+  const key = keyphrase.replace(/\s+/g, ' ').trim();
+  if (!key) return '';
+  if (key.length > 60) return key;
+  if (key.length >= 50) return key;
+
+  const lower = ` ${key.toLowerCase()} `;
+  const has = (word: string) => lower.includes(` ${word} `);
+  const tails = [
+    ' | Eton Safaris',
+    has('guide') ? '' : ' guide | Eton Safaris',
+    has('tours') ? '' : ' tours | Eton Safaris',
+    has('safari') ? '' : ' safari | Eton Safaris',
+    has('holiday') ? '' : ' holiday | Eton Safaris',
+    has('safari') || has('tours') ? '' : ' safari tours | Eton Safaris',
+    has('private') || has('safari') ? '' : ' private safari | Eton Safaris',
+    has('guided') || has('safari') ? '' : ' guided safari tours | Eton Safaris',
+    has('luxury') || has('safari') ? '' : ' luxury private safari holiday | Eton Safaris',
+    has('holiday') || has('guide') ? '' : ' holiday guide | Eton Safaris',
+    ' with Eton Safaris',
+  ].filter(Boolean);
+
+  let best = key;
+  for (const tail of tails) {
+    const title = `${key}${tail}`;
+    if (title.length > 60 || !title.toLowerCase().includes(key.toLowerCase())) continue;
+    if (title.length >= 50) return title;
+    if (title.length >= 30 && title.length > best.length) best = title;
+  }
+  if (best.length >= 30 && best.length <= 60) return best;
+  const branded = `${key} | Eton Safaris`;
+  if (branded.length >= 30 && branded.length <= 60) return branded;
+  return key;
+}
+
+/** Meta description that contains the full keyphrase and stays inside 70–160 characters when the phrase allows it. */
+export function buildMetaDescriptionForKeyphrase(keyphrase: string): string {
+  const key = keyphrase.replace(/\s+/g, ' ').trim();
+  if (!key) return '';
+  if (key.length > 160) return key;
+
+  const candidates = [
+    `${key}. Plan this trip with Eton Safaris, compare lodges and routes, and request a tailor-made itinerary for your travel dates.`,
+    `${key}. Plan it with Eton Safaris and request a tailor-made safari itinerary for your dates.`,
+    `${key}. Plan it with Eton Safaris and request a tailor-made itinerary today.`,
+  ];
+  let text = candidates.find((item) => item.length >= 70 && item.length <= 160) || candidates[candidates.length - 1];
+  if (text.length > 160) {
+    text = key.length >= 70 ? key.slice(0, 160) : `${key}. Ask Eton Safaris to plan the lodges, route, and travel dates.`;
+  }
+  if (text.length > 160) text = text.slice(0, 160).trim();
+  if (text.length < 70) {
+    text = `${text} Ask about the best season, packing, and private guiding.`.replace(/\s+/g, ' ').trim();
+  }
+  if (text.length > 160) text = text.slice(0, 160).trim();
+  if (text.length < 120) {
+    const more = ' We arrange permits, stays, and transport.';
+    if (text.length + more.length <= 155) text += more;
+  }
+  if (!text.toLowerCase().includes(key.toLowerCase())) text = key.slice(0, 160);
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+export function ensureKeyphraseInHtml(html: string, keyphrase: string): string {
+  const key = keyphrase.replace(/\s+/g, ' ').trim();
+  if (!key) return html;
+  const plain = stripHtml(html).toLowerCase();
+  if (plain.includes(key.toLowerCase())) return html;
+  const sentence = `Plan your ${key} with Eton Safaris, including lodges, routes, and the best time to travel.`;
+  const block = `<p>${sentence}</p>`;
+  if (!html.trim()) return block;
+  return `${html.trim()}\n${block}`;
+}
+
+export function configureSeoForKeyword(
+  current: SeoValues,
+  options: {
+    keyphrase: string;
+    contentType: SeoContentType;
+    pageTitle?: string;
+    socialImageUrl?: string;
+    siteName?: string;
+    siteUrl?: string;
+    allowIndex?: boolean;
+    categoryLabel?: string;
+  }
+): SeoValues {
+  const keyphrase = options.keyphrase.replace(/\s+/g, ' ').trim();
+  const seoTitle = buildSeoTitleForKeyphrase(keyphrase);
+  const metaDescription = buildMetaDescriptionForKeyphrase(keyphrase);
+  const slug = phraseSlug(seoTitle);
+  const allowIndex = options.allowIndex !== false;
+  const siteName = options.siteName || 'Eton Safaris';
+  const siteUrl = (options.siteUrl || 'https://etonsafaris.com').replace(/\/$/, '');
+  const next: SeoValues = {
+    ...current,
+    focus_keyphrase: keyphrase,
+    seo_title: seoTitle,
+    slug,
+    meta_description: metaDescription,
+    social_image_url: (options.socialImageUrl || current.social_image_url || '').trim(),
+    focus_keywords: uniqueSeoKeywords([keyphrase, ...current.focus_keywords]),
+    schema_type: current.schema_type || CONTENT_SCHEMA_DEFAULTS[options.contentType],
+    robots_index: allowIndex,
+    robots_follow: allowIndex,
+  };
+  const derived = derivedSeoAdvancedFields(next, {
+    pageTitle: options.pageTitle,
+    contentType: options.contentType,
+    categoryLabel: options.categoryLabel,
+  });
+  next.breadcrumb_title = derived.breadcrumb_title || seoTitle;
+  next.og_title = derived.og_title || seoTitle;
+  next.og_description = derived.og_description || metaDescription;
+  next.canonical_url = derived.canonical_url;
+  next.seo_schema = JSON.stringify(
+    buildDefaultJsonLd(next, {
+      title: seoTitle,
+      description: metaDescription,
+      url: next.canonical_url || siteUrl,
+      image: next.social_image_url,
+      siteName,
+      siteUrl,
+    }),
+    null,
+    2
+  );
+  return next;
+}
+
 export function parseFocusKeywords(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map(String).filter(Boolean);
@@ -425,7 +574,12 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
     } else {
       items.push({ type: 'error', message: 'The focus keyphrase does not appear in the meta description.' });
     }
-    if (slug && (slug.replace(/-/g, ' ').includes(key.replace(/\s+/g, ' ')) || slug.includes(key.replace(/\s+/g, '-')))) {
+    const keySlug = phraseSlug(keyphrase);
+    if (
+      slug &&
+      keySlug &&
+      (slug.includes(keySlug) || slug.replace(/-/g, ' ').includes(key.replace(/\s+/g, ' ')))
+    ) {
       items.push({ type: 'ok', message: 'The focus keyphrase is reflected in the slug.' });
     } else if (slug) {
       items.push({ type: 'info', message: 'The slug does not contain the focus keyphrase.' });
@@ -437,24 +591,40 @@ export function analyzeSeo(values: SeoValues, content = ''): SeoAnalysisItem[] {
     }
   }
 
+  const titleHoldsLongKeyphrase =
+    Boolean(key) &&
+    key.length > 60 &&
+    title.toLowerCase().includes(key) &&
+    title.length >= key.length &&
+    title.length <= key.length + 18;
   if (!title) {
     items.push({ type: 'error', message: 'Please provide an SEO title.' });
+  } else if (title.length >= 30 && title.length <= 60) {
+    items.push({ type: 'ok', message: 'SEO title length looks good.' });
+  } else if (titleHoldsLongKeyphrase) {
+    items.push({ type: 'ok', message: 'SEO title length looks good.' });
   } else if (title.length < 30) {
     items.push({ type: 'info', message: 'SEO title is a bit short. Aim for 50–60 characters.' });
-  } else if (title.length > 60) {
-    items.push({ type: 'info', message: 'SEO title may be truncated in search results.' });
   } else {
-    items.push({ type: 'ok', message: 'SEO title length looks good.' });
+    items.push({ type: 'info', message: 'SEO title may be truncated in search results.' });
   }
 
+  const descriptionHoldsLongKeyphrase =
+    Boolean(key) &&
+    key.length > 160 &&
+    description.toLowerCase().includes(key) &&
+    description.length >= key.length &&
+    description.length <= key.length + 40;
   if (!description) {
     items.push({ type: 'error', message: 'Please provide a meta description.' });
+  } else if (description.length >= 70 && description.length <= 160) {
+    items.push({ type: 'ok', message: 'Meta description length looks good.' });
+  } else if (descriptionHoldsLongKeyphrase) {
+    items.push({ type: 'ok', message: 'Meta description length looks good.' });
   } else if (description.length < 70) {
     items.push({ type: 'info', message: 'Meta description is short. Aim for 120–155 characters.' });
-  } else if (description.length > 160) {
-    items.push({ type: 'info', message: 'Meta description may be truncated in search results.' });
   } else {
-    items.push({ type: 'ok', message: 'Meta description length looks good.' });
+    items.push({ type: 'info', message: 'Meta description may be truncated in search results.' });
   }
 
   if (!values.slug.trim()) {
