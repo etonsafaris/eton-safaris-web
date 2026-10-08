@@ -45,6 +45,10 @@
     "tours:dedupe": "node scripts/dedupe-tour-packages.mjs",
     "tours:trim-100": "node scripts/trim-tours-to-100.mjs",
     "tours:count": "node scripts/inspect-tour-counts-by-category.mjs",
+    "tours:export-word": "node scripts/export-tour-packages-word.mjs",
+    "keywords:export-excel": "node scripts/export-keywords-excel.mjs",
+    "keywords:generate-articles": "node scripts/generate-keyword-articles.mjs",
+    "keywords:generate-articles-remaining": "node scripts/generate-keyword-articles-remaining.mjs",
     "tours:repair-seo": "node scripts/repair-tour-titles-seo.mjs",
     "tours:fix-overview": "node scripts/fix-tour-overview-copy.mjs",
     "tours:assign-images": "node scripts/assign-tour-images-from-ddg.mjs",
@@ -150,12 +154,14 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "autoprefixer": "^10.4.21",
+    "docx": "^9.9.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.28",
     "postcss": "^8.5.3",
     "sharp": "^0.35.4",
     "tailwindcss": "^3.4.17",
     "to-ico": "^1.1.5",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "xlsx": "^0.18.5"
   }
 }

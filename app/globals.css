@@ -192,6 +192,7 @@ img {
 
 .description-box strong,
 .description-box b,
+.description-box .eton-bold,
 .description-box [style*="font-weight:bold"],
 .description-box [style*="font-weight: bold"],
 .description-box [style*="font-weight:700"],
@@ -200,12 +201,19 @@ img {
 .description-box [style*="font-weight: 600"],
 .public-prose strong,
 .public-prose b,
+.public-prose .eton-bold,
 .public-prose [style*="font-weight:bold"],
 .public-prose [style*="font-weight: bold"],
 .public-prose [style*="font-weight:700"],
 .public-prose [style*="font-weight: 700"],
 .public-prose [style*="font-weight:600"],
-.public-prose [style*="font-weight: 600"] {
+.public-prose [style*="font-weight: 600"],
+.description-box strong *,
+.description-box b *,
+.description-box .eton-bold *,
+.public-prose strong *,
+.public-prose b *,
+.public-prose .eton-bold * {
   font-weight: 700 !important;
 }
 
@@ -238,8 +246,8 @@ img {
 .public-prose,
 .public-article-body {
   font-family: var(--font-article);
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 1.6;
   text-align: justify;
   color: #000;
 }
@@ -254,18 +262,18 @@ img {
   color: #000;
 }
 
+.description-box p,
 .public-prose p,
 .public-article-body p {
-  margin: 0 0 1em;
-  line-height: 1.6;
+  margin: 0;
+  line-height: inherit;
   color: #000;
-  font-family: var(--font-article) !important;
-  text-align: justify;
 }
 
-.public-prose p:last-child,
-.public-article-body p:last-child {
-  margin-bottom: 0;
+.public-prose p,
+.public-article-body p {
+  font-family: var(--font-article) !important;
+  text-align: justify;
 }
 
 .public-prose h1,

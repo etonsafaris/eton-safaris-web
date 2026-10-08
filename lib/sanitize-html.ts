@@ -1,5 +1,5 @@
 const MSO_BLOCK = /<!--\[if[\s\S]*?<!\[endif\]-->/gi;
-const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align|margin|margin-top|margin-bottom|margin-left|margin-right|padding-left|white-space)$/i;
+const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align|margin|margin-top|margin-bottom|margin-left|margin-right|padding|padding-top|padding-bottom|padding-left|padding-right|white-space)$/i;
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'table', 'thead',
@@ -45,6 +45,16 @@ function attr(rest: string, name: string): string {
   return (match?.[2] || match?.[3] || '').trim();
 }
 
+function isBoldWeight(style: string): boolean {
+  if (/mso-bidi-font-weight\s*:\s*bold/i.test(style)) return true;
+  const match = /font-weight\s*:\s*([^;]+)/i.exec(style);
+  if (!match) return false;
+  const value = match[1].replace(/!important/i, '').trim().toLowerCase();
+  if (value === 'bold' || value === 'bolder') return true;
+  const weight = Number.parseInt(value, 10);
+  return Number.isFinite(weight) && weight >= 600;
+}
+
 /**
  * Strip Word/MSO junk and scripts, but keep visual formatting
  * (bold, italic, color, size, font, alignment, links, lists).
@@ -53,6 +63,10 @@ export function sanitizeWordHtml(input: string): string {
   if (!input) return '';
 
   let html = decodeHtmlEntities(input)
+    .replace(
+      /font-family:\s*system-ui,\s*-apple-system,\s*Roboto,\s*"Helvetica Neue",\s*sans-serif/gi,
+      "font-family: system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif"
+    )
     .replace(MSO_BLOCK, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -73,10 +87,13 @@ export function sanitizeWordHtml(input: string): string {
     if (tag === 'a') {
       const href = attr(rest, 'href').replace(/"/g, '');
       if (!href || /^(javascript|data):/i.test(href)) return '<a>';
-      const style = cleanStyleValue(attr(rest, 'style'));
+      const rawStyle = attr(rest, 'style');
+      const style = cleanStyleValue(rawStyle);
       const target = attr(rest, 'target');
+      const bold = isBoldWeight(rawStyle) || isBoldWeight(style);
       const extras = [
         `href="${href}"`,
+        bold ? 'class="eton-bold"' : '',
         style ? `style="${style}"` : '',
         target === '_blank' ? 'target="_blank" rel="noopener noreferrer"' : '',
       ]
@@ -109,18 +126,25 @@ export function sanitizeWordHtml(input: string): string {
     if (tag === 'font') {
       const face = attr(rest, 'face');
       const size = attr(rest, 'size');
+      const rawStyle = attr(rest, 'style');
+      const cleaned = cleanStyleValue(rawStyle);
       const parts = [
         face ? `font-family: ${face}` : '',
         size ? `font-size: ${Number(size) >= 5 ? '24px' : Number(size) >= 4 ? '18px' : '16px'}` : '',
-        cleanStyleValue(attr(rest, 'style')),
+        cleaned,
       ].filter(Boolean);
-      return parts.length ? `<span style="${parts.join('; ')}">` : '<span>';
+      const bold = isBoldWeight(rawStyle) || isBoldWeight(cleaned);
+      const className = bold ? ' class="eton-bold"' : '';
+      return parts.length ? `<span${className} style="${parts.join('; ')}">` : `<span${className}>`;
     }
 
-    const style = cleanStyleValue(attr(rest, 'style'));
+    const rawStyle = attr(rest, 'style');
+    const style = cleanStyleValue(rawStyle);
     const align = attr(rest, 'align');
     const merged = [style, align ? `text-align: ${align}` : ''].filter(Boolean).join('; ');
-    return merged ? `<${tag} style="${merged}">` : `<${tag}>`;
+    const bold = tag === 'b' || tag === 'strong' || isBoldWeight(rawStyle) || isBoldWeight(merged);
+    const className = bold ? ' class="eton-bold"' : '';
+    return merged ? `<${tag}${className} style="${merged}">` : `<${tag}${className}>`;
   });
 
   html = html.replace(/<p([^>]*)>(?:\s|&nbsp;|\u00a0|<br\s*\/?>)*<\/p>/gi, '<p$1><br /></p>');
@@ -128,7 +152,7 @@ export function sanitizeWordHtml(input: string): string {
   return applyEditorialTypography(html.trim());
 }
 
-const EDITORIAL_FONT = 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif';
+const EDITORIAL_FONT = "system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif";
 
 function mergeEditorialStyle(existing: string, tag: string): string {
   const isGreenHeading = /^h[1-3]$/i.test(tag);
