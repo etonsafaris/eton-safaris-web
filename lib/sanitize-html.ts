@@ -1,5 +1,5 @@
 const MSO_BLOCK = /<!--\[if[\s\S]*?<!\[endif\]-->/gi;
-const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align)$/i;
+const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align|margin|margin-top|margin-bottom|margin-left|margin-right|padding-left|white-space)$/i;
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'table', 'thead',
@@ -124,8 +124,7 @@ export function sanitizeWordHtml(input: string): string {
   });
 
   html = html.replace(/<p([^>]*)>(?:\s|&nbsp;|\u00a0|<br\s*\/?>)*<\/p>/gi, '<p$1><br /></p>');
-  html = html.replace(/&nbsp;/g, ' ');
-  html = html.replace(/\u00a0/g, ' ');
+  html = html.replace(/&nbsp;/gi, '\u00a0');
   return applyEditorialTypography(html.trim());
 }
 
