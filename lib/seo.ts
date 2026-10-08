@@ -212,6 +212,20 @@ export function phraseSlug(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+/** A focus keyword qualifies only when the full phrase is in both the SEO title and the meta description. */
+export function qualifyingFocusKeyword(candidates: string[], seoTitle: string, metaDescription: string): string {
+  const title = seoTitle.toLowerCase();
+  const meta = metaDescription.toLowerCase();
+  const hits = candidates
+    .map((item) => item.replace(/\s+/g, ' ').trim())
+    .filter((item) => {
+      const key = item.toLowerCase();
+      return Boolean(key) && title.includes(key) && meta.includes(key);
+    });
+  hits.sort((a, b) => b.length - a.length);
+  return hits[0] || '';
+}
+
 function uniqueSeoKeywords(values: string[]): string[] {
   const chips: string[] = [];
   for (const value of values) {

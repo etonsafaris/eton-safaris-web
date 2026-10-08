@@ -23,6 +23,7 @@ import {
   canonicalUrlForSeoContent,
   configureSeoForKeyword,
   derivedSeoAdvancedFields,
+  qualifyingFocusKeyword,
   mergeAutoSeoAdvancedFields,
   type SeoAdvancedAutoSnapshot,
   type SeoContentType,
@@ -138,6 +139,26 @@ export default function SeoPanel({
   const [toast, setToast] = useState('');
   const valuesRef = useRef(values);
   valuesRef.current = values;
+  const seoContextRef = useRef({
+    pageTitle,
+    contentType,
+    coverImageUrl,
+    forceNoindex,
+    onEnsureKeyphrase,
+    siteName,
+    siteUrl,
+    contentForReadability,
+  });
+  seoContextRef.current = {
+    pageTitle,
+    contentType,
+    coverImageUrl,
+    forceNoindex,
+    onEnsureKeyphrase,
+    siteName,
+    siteUrl,
+    contentForReadability,
+  };
   const lastKeywordScopeRef = useRef('');
   const lastAdvancedAutoRef = useRef<SeoAdvancedAutoSnapshot>({
     breadcrumb_title: '',
@@ -202,26 +223,7 @@ export default function SeoPanel({
     'Please provide a meta description by editing the snippet below.';
   const previewSlug = values.slug.trim() || 'page-slug';
 
-  function applyKeywordChoice(keyphrase: string) {
-    const phrase = keyphrase.replace(/\s+/g, ' ').trim();
-    if (!phrase) return;
-    const current = valuesRef.current;
-    const cover =
-      coverImageUrl && !coverImageUrl.startsWith('blob:') && !coverImageUrl.startsWith('data:')
-        ? coverImageUrl
-        : '';
-    const host = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const origin = `https://${host}`;
-    const next = configureSeoForKeyword(current, {
-      keyphrase: phrase,
-      contentType,
-      pageTitle,
-      socialImageUrl: cover || current.social_image_url || `${origin}${SITE_LOGO}`,
-      siteName,
-      siteUrl: origin,
-      allowIndex: !forceNoindex,
-      categoryLabel: contentType === 'category' ? pageTitle : undefined,
-    });
+  function publishSeo(next: SeoValues, keyphrase = '') {
     lastAdvancedAutoRef.current = {
       breadcrumb_title: next.breadcrumb_title,
       og_title: next.og_title,
@@ -230,9 +232,11 @@ export default function SeoPanel({
     };
     valuesRef.current = next;
     onChange(next);
-    const plain = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
-    if (onEnsureKeyphrase && phrase && !plain.includes(phrase.toLowerCase())) {
-      onEnsureKeyphrase(phrase);
+    const phrase = keyphrase.trim();
+    const context = seoContextRef.current;
+    const plain = context.contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+    if (context.onEnsureKeyphrase && phrase && !plain.includes(phrase.toLowerCase())) {
+      context.onEnsureKeyphrase(phrase);
     }
   }
 
@@ -285,12 +289,37 @@ export default function SeoPanel({
         lastKeywordScopeRef.current = scopeKey;
         setLibraryKeywords(matched);
         const current = valuesRef.current;
-        if (matched.length > 0) {
-          onChange({
-            ...current,
-            focus_keywords: uniqueKeywords([...matched, ...current.focus_keywords]),
-          });
-        }
+        const pool = uniqueKeywords([...matched, ...current.focus_keywords]);
+        if (pool.length === 0) return;
+        const already = qualifyingFocusKeyword(pool, current.seo_title, current.meta_description);
+        const page = seoContextRef.current.pageTitle.toLowerCase();
+        const inPage = pool
+          .filter((keyword) => page.includes(keyword.toLowerCase()))
+          .sort((a, b) => b.length - a.length);
+        const candidate = already || inPage[0] || pool[0];
+        const context = seoContextRef.current;
+        const cover =
+          context.coverImageUrl &&
+          !context.coverImageUrl.startsWith('blob:') &&
+          !context.coverImageUrl.startsWith('data:')
+            ? context.coverImageUrl
+            : '';
+        const host = context.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const origin = `https://${host}`;
+        const withTags = { ...current, focus_keywords: pool };
+        const next = already
+          ? { ...withTags, focus_keyphrase: already }
+          : configureSeoForKeyword(withTags, {
+              keyphrase: candidate,
+              contentType: context.contentType,
+              pageTitle: context.pageTitle,
+              socialImageUrl: cover || current.social_image_url || `${origin}${SITE_LOGO}`,
+              siteName: context.siteName,
+              siteUrl: origin,
+              allowIndex: !context.forceNoindex,
+              categoryLabel: context.contentType === 'category' ? context.pageTitle : undefined,
+            });
+        publishSeo(next, next.focus_keyphrase);
       } catch (error) {
         console.error('[SEO] Keyword library load failed:', error);
       } finally {
@@ -299,6 +328,16 @@ export default function SeoPanel({
     },
     [onChange]
   );
+
+  useEffect(() => {
+    const current = valuesRef.current;
+    const pool = uniqueKeywords([...libraryKeywords, ...current.focus_keywords, current.focus_keyphrase]);
+    const qualified = qualifyingFocusKeyword(pool, current.seo_title, current.meta_description);
+    if (qualified.toLowerCase() === current.focus_keyphrase.trim().toLowerCase()) return;
+    const next = { ...current, focus_keyphrase: qualified };
+    valuesRef.current = next;
+    onChange(next);
+  }, [values.seo_title, values.meta_description, values.focus_keywords, libraryKeywords, onChange]);
 
   useEffect(() => {
     fetchAdminTablePage('categories', { page: 1, limit: 50, country: keywordCountry || undefined })
@@ -498,46 +537,18 @@ export default function SeoPanel({
             {tab === 'seo' && (
               <>
                 <div>
-                  <FieldLabel>Keyword</FieldLabel>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <SearchableSelect
-                      value={keywordCountry}
-                      onChange={(value) => {
-                        lastKeywordScopeRef.current = '';
-                        setKeywordCountry(value);
-                        setKeywordCategory('');
-                        setLibraryKeywords([]);
-                      }}
-                      options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
-                        value: item.name,
-                        label: item.name,
-                      }))}
-                      placeholder="Country"
-                    />
-                    <SearchableSelect
-                      value={keywordCategory}
-                      onChange={(value) => {
-                        lastKeywordScopeRef.current = '';
-                        setKeywordCategory(value);
-                        setLibraryKeywords([]);
-                        void applyKeywordsForScope(keywordCountry, value);
-                      }}
-                      options={libraryCategories}
-                      placeholder="Category"
-                      disabled={!keywordCountry}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <SearchableSelect
+                  <FieldLabel>Focus Keyphrase</FieldLabel>
+                  <div className="relative">
+                    <input
                       value={values.focus_keyphrase}
-                      onChange={applyKeywordChoice}
-                      options={libraryKeywords.map((keyword) => ({ value: keyword, label: keyword }))}
-                      placeholder={keywordsLoading ? 'Loading keywords…' : 'Select keyword'}
-                      disabled={keywordsLoading || libraryKeywords.length === 0}
+                      readOnly
+                      placeholder="Filled when a keyword is in the SEO title and meta description"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3.5 py-2.5 pr-10 text-sm text-[#111827] outline-none dark:border-white/10 dark:bg-[#161b22] dark:text-white"
                     />
+                    <Info className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
                   </div>
                   <p className="mt-1.5 text-xs text-[#6b7280] dark:text-gray-400">
-                    Choose the country, the category, then the keyword. Title, slug, description, social image, and advanced SEO fill in automatically.
+                    Appears automatically. A keyword qualifies only when it is in the SEO title and the meta description.
                   </p>
                 </div>
 
@@ -620,8 +631,36 @@ export default function SeoPanel({
                 </div>
 
                 <div>
-                  <div className="mb-1.5">
+                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
                     <FieldLabel>Focus Keyword Tags</FieldLabel>
+                    <div className="flex w-full max-w-sm gap-2">
+                      <SearchableSelect
+                        value={keywordCountry}
+                        onChange={(value) => {
+                          lastKeywordScopeRef.current = '';
+                          setKeywordCountry(value);
+                          setKeywordCategory('');
+                          setLibraryKeywords([]);
+                        }}
+                        options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
+                          value: item.name,
+                          label: item.name,
+                        }))}
+                        placeholder="Country"
+                      />
+                      <SearchableSelect
+                        value={keywordCategory}
+                        onChange={(value) => {
+                          lastKeywordScopeRef.current = '';
+                          setKeywordCategory(value);
+                          setLibraryKeywords([]);
+                          void applyKeywordsForScope(keywordCountry, value);
+                        }}
+                        options={libraryCategories}
+                        placeholder="Category"
+                        disabled={!keywordCountry}
+                      />
+                    </div>
                   </div>
                   <KeywordTagBox
                     tags={values.focus_keywords}
@@ -639,7 +678,7 @@ export default function SeoPanel({
                   <p className="mt-1.5 text-xs text-[#6b7280]">
                     {keywordsLoading
                       ? 'Loading keywords for this country and category…'
-                      : 'These tags fill from the category you chose. The selected keyword is the focus keyphrase.'}
+                      : 'Choose country and category — saved keywords fill in automatically. The focus keyphrase is the one that also appears in the SEO title and meta description.'}
                   </p>
                 </div>
 
