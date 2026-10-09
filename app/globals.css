@@ -180,13 +180,13 @@ img {
 
 .public-prose a,
 .description-box a {
-  color: #2563eb !important;
+  color: #2563eb;
   text-decoration: none;
   cursor: pointer;
 }
 
-.description-box a:hover,
-.public-prose a:hover {
+.description-box a:not([style*="color:"]):hover,
+.public-prose a:not([style*="color:"]):hover {
   color: #1d4ed8;
 }
 
@@ -259,6 +259,9 @@ img {
 
 .description-box *:not(a):not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
   font-family: system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+}
+
+.description-box :is(p, li, td, div, blockquote) {
   color: #000;
 }
 

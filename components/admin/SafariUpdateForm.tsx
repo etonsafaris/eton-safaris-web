@@ -256,10 +256,7 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
             <FieldLabel>Post Title</FieldLabel>
             <input
               value={title}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                if (!seo.seo_title) setSeo({ ...seo, seo_title: event.target.value });
-              }}
+              onChange={(event) => setTitle(event.target.value)}
               placeholder=""
               className="w-full rounded-full border-0 bg-[#f3f4f6] px-5 py-3 text-sm text-[#111827] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#00A651]/20 dark:bg-[#0a0c10] dark:text-white dark:focus:bg-[#111318]"
             />

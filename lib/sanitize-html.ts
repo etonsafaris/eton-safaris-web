@@ -1,5 +1,5 @@
 const MSO_BLOCK = /<!--\[if[\s\S]*?<!\[endif\]-->/gi;
-const STYLE_KEEP = /^(background-color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align|margin|margin-top|margin-bottom|margin-left|margin-right|padding|padding-top|padding-bottom|padding-left|padding-right|white-space)$/i;
+const STYLE_KEEP = /^(background-color|color|font-size|font-family|font-weight|font-style|text-decoration|text-align|line-height|text-indent|vertical-align|margin|margin-top|margin-bottom|margin-left|margin-right|padding|padding-top|padding-bottom|padding-left|padding-right|white-space)$/i;
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'table', 'thead',
@@ -34,7 +34,9 @@ function cleanStyleValue(style: string): string {
       if (!prop || !value) return '';
       if (/^mso-/i.test(prop) || !STYLE_KEEP.test(prop)) return '';
       if (/expression|javascript:/i.test(value)) return '';
-      return `${prop}: ${value}`;
+      const cleanValue = value.replace(/!important/gi, '').trim();
+      if (prop.toLowerCase() === 'color') return `color: ${cleanValue} !important`;
+      return `${prop}: ${cleanValue}`;
     })
     .filter(Boolean)
     .join('; ');
@@ -126,11 +128,13 @@ export function sanitizeWordHtml(input: string): string {
     if (tag === 'font') {
       const face = attr(rest, 'face');
       const size = attr(rest, 'size');
+      const color = attr(rest, 'color').replace(/["';]|url\(|expression|javascript:/gi, '');
       const rawStyle = attr(rest, 'style');
       const cleaned = cleanStyleValue(rawStyle);
       const parts = [
         face ? `font-family: ${face}` : '',
         size ? `font-size: ${Number(size) >= 5 ? '24px' : Number(size) >= 4 ? '18px' : '16px'}` : '',
+        color ? `color: ${color} !important` : '',
         cleaned,
       ].filter(Boolean);
       const bold = isBoldWeight(rawStyle) || isBoldWeight(cleaned);

@@ -21,9 +21,7 @@ import {
   seoScorePercent,
   validateSeoSchema,
   canonicalUrlForSeoContent,
-  configureSeoForKeyword,
   derivedSeoAdvancedFields,
-  qualifyingFocusKeyword,
   mergeAutoSeoAdvancedFields,
   type SeoAdvancedAutoSnapshot,
   type SeoContentType,
@@ -79,31 +77,33 @@ function TextInput({
   );
 }
 
-function qualityTone(length: number, min: number, ideal: number, max: number) {
-  if (length === 0 || length < min) return 'bg-gray-300';
-  if (length > max) return 'bg-red-500';
-  if (length >= ideal) return 'bg-[#00A651]';
-  return 'bg-[#00A651]/70';
+function qualityTone(length: number, min: number, goodMax: number, over: 'error' | 'warn') {
+  if (length === 0) return 'bg-gray-300';
+  if (length < min) return 'bg-amber-500';
+  if (length > goodMax) return over === 'error' ? 'bg-red-500' : 'bg-amber-500';
+  return 'bg-[#00A651]';
 }
 
 function CharacterBar({
   length,
   min,
-  ideal,
+  goodMax,
   max,
+  over = 'error',
 }: {
   length: number;
   min: number;
-  ideal: number;
+  goodMax: number;
   max: number;
+  over?: 'error' | 'warn';
 }) {
   const width = Math.min(100, Math.round((length / max) * 100));
   return (
-    <div className="mt-2">
-      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
-        <div className={`h-full transition-all ${qualityTone(length, min, ideal, max)}`} style={{ width: `${width}%` }} />
-      </div>
-      <p className="mt-1 text-xs text-[#6b7280] dark:text-gray-400">{length}/{max} characters</p>
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+      <div
+        className={`h-full transition-all duration-300 ${qualityTone(length, min, goodMax, over)}`}
+        style={{ width: `${width}%` }}
+      />
     </div>
   );
 }
@@ -134,7 +134,6 @@ export default function SeoPanel({
   const [keywordCountry, setKeywordCountry] = useState(keywordLibraryCountry || 'Uganda');
   const [keywordCategory, setKeywordCategory] = useState(keywordLibraryCategory || '');
   const [libraryCategories, setLibraryCategories] = useState<{ value: string; label: string }[]>([]);
-  const [libraryKeywords, setLibraryKeywords] = useState<string[]>([]);
   const [keywordsLoading, setKeywordsLoading] = useState(false);
   const [toast, setToast] = useState('');
   const valuesRef = useRef(values);
@@ -160,6 +159,20 @@ export default function SeoPanel({
     contentForReadability,
   };
   const lastKeywordScopeRef = useRef('');
+  const autoSeo = useRef<boolean | null>(null);
+  const seoTitleEdited = useRef(false);
+  const slugEdited = useRef(false);
+  const metaEdited = useRef(false);
+
+  function resolveAutoSeo() {
+    if (autoSeo.current !== null) return autoSeo.current;
+    const current = valuesRef.current;
+    const hasSaved = Boolean(current.seo_title.trim() || current.meta_description.trim() || current.slug.trim());
+    const hasPage = Boolean(seoContextRef.current.pageTitle.trim());
+    if (!hasSaved && !hasPage) return null;
+    autoSeo.current = !hasSaved;
+    return autoSeo.current;
+  }
   const lastAdvancedAutoRef = useRef<SeoAdvancedAutoSnapshot>({
     breadcrumb_title: '',
     og_title: '',
@@ -221,7 +234,10 @@ export default function SeoPanel({
   const previewDescription =
     values.meta_description.trim() ||
     'Please provide a meta description by editing the snippet below.';
-  const previewSlug = values.slug.trim() || 'page-slug';
+  const previewHost = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const previewSlug =
+    values.slug.trim() ||
+    (values.seo_title.trim() ? values.seo_title.trim().toLowerCase().replace(/\s+/g, '-') : 'page-slug');
 
   function publishSeo(next: SeoValues, keyphrase = '') {
     lastAdvancedAutoRef.current = {
@@ -242,10 +258,33 @@ export default function SeoPanel({
 
   function update<K extends keyof SeoValues>(key: K, value: SeoValues[K]) {
     if (key === 'seo_title' && typeof value === 'string') {
-      onChange({ ...values, seo_title: value, slug: slugify(value) });
+      seoTitleEdited.current = true;
+      const slug = resolveAutoSeo() !== false && !slugEdited.current ? slugify(value) : values.slug;
+      onChange({ ...values, seo_title: value, slug });
+      return;
+    }
+    if (key === 'slug' && typeof value === 'string') {
+      slugEdited.current = true;
+      onChange({ ...values, slug: slugify(value) });
+      return;
+    }
+    if (key === 'meta_description') metaEdited.current = true;
+    if (key === 'focus_keyphrase') {
+      onChange({ ...values, focus_keyphrase: typeof value === 'string' ? value : values.focus_keyphrase });
       return;
     }
     onChange({ ...values, [key]: value });
+  }
+
+  function replaceKeyword(previous: string, next: string) {
+    const cleaned = next.trim();
+    if (!cleaned || cleaned === previous) return;
+    const mapped = values.focus_keywords.map((item) => (item === previous ? cleaned : item));
+    const unique: string[] = [];
+    for (const keyword of mapped) {
+      if (!unique.some((item) => item.toLowerCase() === keyword.toLowerCase())) unique.push(keyword);
+    }
+    update('focus_keywords', unique);
   }
 
   function addKeyword() {
@@ -287,39 +326,10 @@ export default function SeoPanel({
           rows.filter((row) => keywordRowMatchesScope(row, country, category))
         );
         lastKeywordScopeRef.current = scopeKey;
-        setLibraryKeywords(matched);
         const current = valuesRef.current;
         const pool = uniqueKeywords([...matched, ...current.focus_keywords]);
         if (pool.length === 0) return;
-        const already = qualifyingFocusKeyword(pool, current.seo_title, current.meta_description);
-        const page = seoContextRef.current.pageTitle.toLowerCase();
-        const inPage = pool
-          .filter((keyword) => page.includes(keyword.toLowerCase()))
-          .sort((a, b) => b.length - a.length);
-        const candidate = already || inPage[0] || pool[0];
-        const context = seoContextRef.current;
-        const cover =
-          context.coverImageUrl &&
-          !context.coverImageUrl.startsWith('blob:') &&
-          !context.coverImageUrl.startsWith('data:')
-            ? context.coverImageUrl
-            : '';
-        const host = context.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const origin = `https://${host}`;
-        const withTags = { ...current, focus_keywords: pool };
-        const next = already
-          ? { ...withTags, focus_keyphrase: already }
-          : configureSeoForKeyword(withTags, {
-              keyphrase: candidate,
-              contentType: context.contentType,
-              pageTitle: context.pageTitle,
-              socialImageUrl: cover || current.social_image_url || `${origin}${SITE_LOGO}`,
-              siteName: context.siteName,
-              siteUrl: origin,
-              allowIndex: !context.forceNoindex,
-              categoryLabel: context.contentType === 'category' ? context.pageTitle : undefined,
-            });
-        publishSeo(next, next.focus_keyphrase);
+        publishSeo({ ...current, focus_keywords: pool });
       } catch (error) {
         console.error('[SEO] Keyword library load failed:', error);
       } finally {
@@ -328,16 +338,6 @@ export default function SeoPanel({
     },
     [onChange]
   );
-
-  useEffect(() => {
-    const current = valuesRef.current;
-    const pool = uniqueKeywords([...libraryKeywords, ...current.focus_keywords, current.focus_keyphrase]);
-    const qualified = qualifyingFocusKeyword(pool, current.seo_title, current.meta_description);
-    if (qualified.toLowerCase() === current.focus_keyphrase.trim().toLowerCase()) return;
-    const next = { ...current, focus_keyphrase: qualified };
-    valuesRef.current = next;
-    onChange(next);
-  }, [values.seo_title, values.meta_description, values.focus_keywords, libraryKeywords, onChange]);
 
   useEffect(() => {
     fetchAdminTablePage('categories', { page: 1, limit: 50, country: keywordCountry || undefined })
@@ -414,10 +414,14 @@ export default function SeoPanel({
   }
 
   useEffect(() => {
-    if (values.focus_keyphrase.trim()) return;
-    if (pageTitle && !values.seo_title) {
-      onChange({ ...values, seo_title: pageTitle, slug: values.slug || slugify(pageTitle) });
-    }
+    if (seoTitleEdited.current || resolveAutoSeo() !== true) return;
+    const title = pageTitle.trim();
+    if (!title || values.seo_title === title) return;
+    onChange({
+      ...values,
+      seo_title: title,
+      slug: slugEdited.current ? values.slug : slugify(title),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageTitle]);
 
@@ -435,11 +439,10 @@ export default function SeoPanel({
   }, [forceNoindex]);
 
   useEffect(() => {
-    if (values.focus_keyphrase.trim()) return;
-    if (!values.meta_description && contentForReadability) {
-      const text = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 155);
-      if (text) onChange({ ...values, meta_description: text });
-    }
+    if (metaEdited.current || resolveAutoSeo() !== true || values.meta_description.trim()) return;
+    const text = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+    if (!text) return;
+    onChange({ ...values, meta_description: text });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentForReadability]);
 
@@ -541,31 +544,40 @@ export default function SeoPanel({
                   <div className="relative">
                     <input
                       value={values.focus_keyphrase}
-                      readOnly
-                      placeholder="Filled when a keyword is in the SEO title and meta description"
-                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3.5 py-2.5 pr-10 text-sm text-[#111827] outline-none dark:border-white/10 dark:bg-[#161b22] dark:text-white"
+                      onChange={(event) => update('focus_keyphrase', event.target.value)}
+                      placeholder="e.g. Luxury Safari"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-white px-3.5 py-2.5 pr-10 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 dark:border-white/10 dark:bg-[#161b22] dark:text-white"
                     />
                     <Info className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
                   </div>
                   <p className="mt-1.5 text-xs text-[#6b7280] dark:text-gray-400">
-                    Appears automatically. A keyword qualifies only when it is in the SEO title and the meta description.
+                    The main keyword you want this page to rank for.
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-[#e5e7eb] bg-[#fafafa] p-4 dark:border-white/10 dark:bg-white/5">
-                  <div className="mb-3 flex items-center gap-2">
-                    <span className="h-4 w-1 rounded-full bg-[#00A651]" />
-                    <p className="text-sm font-semibold text-[#111827] dark:text-white">Google Preview</p>
+                <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-6 shadow-inner dark:border-white/10 dark:bg-white/5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <span className="h-4 w-1.5 rounded-full bg-[#00A651]" />
+                    <p className="text-sm font-medium text-[#374151] dark:text-gray-300">Google Preview</p>
                   </div>
-                  <div className="rounded-lg border border-[#e5e7eb] bg-white p-4 dark:border-white/10 dark:bg-[#0f1419]">
-                    <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                      <img src={SITE_LOGO} alt="" className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
-                      <span>
-                        {siteName} · {siteUrl} › {previewSlug}
-                      </span>
+                  <div className="max-w-[400px] rounded-lg border border-gray-100 bg-white p-4 font-[Arial,Helvetica,sans-serif] dark:border-gray-700 dark:bg-[#202124]">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="rounded-full bg-gray-100 p-1 dark:bg-gray-800">
+                        <img src={SITE_LOGO} alt="" className="h-4 w-4 object-contain opacity-70" />
+                      </div>
+                      <div className="flex min-w-0 flex-col text-sm leading-tight">
+                        <span className="text-[#202124] dark:text-[#e8eaed]">{siteName}</span>
+                        <span className="truncate text-[12px] text-[#5f6368] dark:text-[#bdc1c6]">
+                          {previewHost} › {previewSlug}
+                        </span>
+                      </div>
                     </div>
-                    <p className="mt-2 text-xl text-[#1a0dab]">{previewTitle}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-[#4b5563]">{previewDescription}</p>
+                    <h3 className="mb-1 truncate text-[20px] font-normal leading-[1.3] text-[#1a0dab] dark:text-[#8ab4f8]">
+                      {previewTitle}
+                    </h3>
+                    <div className="line-clamp-2 text-[14px] leading-[1.58] text-[#4d5156] dark:text-[#bdc1c6]">
+                      {previewDescription}
+                    </div>
                   </div>
                 </div>
 
@@ -576,24 +588,14 @@ export default function SeoPanel({
                     onChange={(value) => update('seo_title', value)}
                     placeholder="Type meta title here"
                   />
-                  <CharacterBar
-                    length={values.seo_title.length}
-                    min={30}
-                    ideal={50}
-                    max={Math.max(60, values.focus_keyphrase.trim().length || 60)}
-                  />
+                  <CharacterBar length={values.seo_title.length} min={30} goodMax={60} max={80} />
                 </div>
 
                 <div>
                   <FieldLabel>Slug</FieldLabel>
-                  <TextInput
-                    value={values.slug}
-                    onChange={() => undefined}
-                    placeholder="generated-from-seo-title"
-                    className="bg-[#f9fafb] text-[#6b7280] dark:bg-white/5 dark:text-gray-400"
-                  />
+                  <TextInput value={values.slug} onChange={(value) => update('slug', value)} placeholder="url-slug-example" />
                   <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">
-                    The slug is generated from the SEO title and stays locked to that value.
+                    The &quot;slug&quot; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.
                   </p>
                 </div>
 
@@ -608,9 +610,10 @@ export default function SeoPanel({
                   />
                   <CharacterBar
                     length={values.meta_description.length}
-                    min={70}
-                    ideal={120}
-                    max={Math.max(160, values.focus_keyphrase.trim().length || 160)}
+                    min={50}
+                    goodMax={160}
+                    max={180}
+                    over="warn"
                   />
                 </div>
 
@@ -632,7 +635,7 @@ export default function SeoPanel({
 
                 <div>
                   <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <FieldLabel>Focus Keyword Tags</FieldLabel>
+                    <FieldLabel>Focus Keywords</FieldLabel>
                     <div className="flex w-full max-w-sm gap-2">
                       <SearchableSelect
                         value={keywordCountry}
@@ -640,7 +643,6 @@ export default function SeoPanel({
                           lastKeywordScopeRef.current = '';
                           setKeywordCountry(value);
                           setKeywordCategory('');
-                          setLibraryKeywords([]);
                         }}
                         options={[...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => ({
                           value: item.name,
@@ -653,7 +655,6 @@ export default function SeoPanel({
                         onChange={(value) => {
                           lastKeywordScopeRef.current = '';
                           setKeywordCategory(value);
-                          setLibraryKeywords([]);
                           void applyKeywordsForScope(keywordCountry, value);
                         }}
                         options={libraryCategories}
@@ -667,18 +668,16 @@ export default function SeoPanel({
                     draft={keywordDraft}
                     onDraftChange={setKeywordDraft}
                     onAdd={addKeyword}
-                    onEdit={(keyword) => {
-                      removeKeyword(keyword);
-                      setKeywordDraft(keyword);
-                    }}
+                    onReplace={replaceKeyword}
                     onRemove={removeKeyword}
-                    placeholder="Type a keyword and press Enter"
-                    minHeightClass="min-h-[88px]"
+                    placeholder="Add keyword..."
+                    appearance="pill"
+                    minHeightClass="min-h-[46px]"
                   />
                   <p className="mt-1.5 text-xs text-[#6b7280]">
                     {keywordsLoading
                       ? 'Loading keywords for this country and category…'
-                      : 'Choose country and category — saved keywords fill in automatically. The focus keyphrase is the one that also appears in the SEO title and meta description.'}
+                      : 'Type a keyword and press Enter. Click a keyword to edit it. Country and category fill this list from the saved library.'}
                   </p>
                 </div>
 
