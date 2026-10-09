@@ -21,7 +21,7 @@ import {
 } from '@/lib/seo';
 import { buildSavePayload } from '@/lib/supabase-payload';
 import { readAdminEditPrefill } from '@/lib/admin-edit-prefill';
-import { saveWithColumnFallback } from '@/lib/admin-records-client';
+import { invalidateAdminTableCache, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import { uploadOptimizedImage } from '@/lib/upload-media';
 
@@ -165,6 +165,8 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
         post_blocks: JSON.stringify(blocksWithoutImages),
         post_type: postType === 'Language Posts' ? 'language' : 'standard',
         published_at: stamp,
+        created_date: isEdit ? undefined : stamp,
+        updated_date: stamp,
         slug: seo.slug || slugify(title),
       },
       { seo }
@@ -185,6 +187,7 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
       item: { ...payload, ...(result.data?.[0] || {}), id: isEdit ? postId : result.data?.[0]?.id },
     });
 
+    invalidateAdminTableCache('safari_updates');
     router.push(listHref);
   }
 

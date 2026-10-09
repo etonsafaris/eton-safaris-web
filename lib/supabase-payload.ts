@@ -59,7 +59,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'group_size',
     'published_at',
   ],
-  safari_updates: ['post_blocks', 'post_type', 'country', 'published_at'],
+  safari_updates: ['post_blocks', 'post_type', 'country', 'published_at', 'created_date', 'updated_date'],
   national_park: ['park_blocks', 'published_at'],
   accommodations: [
     'accommodation_blocks',

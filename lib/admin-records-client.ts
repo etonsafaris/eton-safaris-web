@@ -108,6 +108,7 @@ export async function fetchAdminTablePage(
     country?: string;
     park?: string;
     category?: string;
+    postType?: 'standard' | 'language';
     q?: string;
     bustCache?: boolean;
   }
@@ -120,6 +121,7 @@ export async function fetchAdminTablePage(
     country: options?.country,
     park: options?.park,
     category: options?.category,
+    postType: options?.postType,
     q: options?.q,
   });
 
@@ -139,6 +141,7 @@ async function fetchAdminTablePageLive(
     country?: string;
     park?: string;
     category?: string;
+    postType?: 'standard' | 'language';
     q?: string;
     bustCache?: boolean;
   } | undefined,
@@ -155,6 +158,7 @@ async function fetchAdminTablePageLive(
   if (options?.country) params.set('country', options.country);
   if (options?.park) params.set('park', options.park);
   if (options?.category) params.set('category', options.category);
+  if (options?.postType) params.set('postType', options.postType);
   if (options?.q) params.set('q', options.q);
 
   const FETCH_TIMEOUT_MS = 28_000;
@@ -240,6 +244,7 @@ export function prefetchAdminTablePage(
     country?: string;
     park?: string;
     category?: string;
+    postType?: 'standard' | 'language';
     q?: string;
   }
 ) {

@@ -123,10 +123,12 @@ export async function GET(request: Request) {
     Math.max(1, Number(url.searchParams.get('limit')) || ADMIN_PAGE_SIZE_DEFAULT)
   );
   const offset = (page - 1) * limit;
+  const postTypeParam = url.searchParams.get('postType')?.trim() || '';
   const filters = {
     country: url.searchParams.get('country')?.trim() || undefined,
     park: url.searchParams.get('park')?.trim() || undefined,
     category: url.searchParams.get('category')?.trim() || undefined,
+    postType: postTypeParam === 'language' || postTypeParam === 'standard' ? postTypeParam : undefined,
     q: url.searchParams.get('q')?.trim() || undefined,
   };
 

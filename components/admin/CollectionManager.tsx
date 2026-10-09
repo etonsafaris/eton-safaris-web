@@ -237,6 +237,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             country: listCountry,
             park: listPark,
             category: isTours ? listCategory : categoryFilter || undefined,
+            postType: isSafariUpdates ? postKind : undefined,
             q: remoteQuery,
           })
         : '';
@@ -269,6 +270,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           country: listCountry,
           park: listPark,
           category: isTours ? listCategory : categoryFilter || undefined,
+          postType: isSafariUpdates ? postKind : undefined,
           q: remoteQuery,
         });
         data = result.rows ?? [];
@@ -280,6 +282,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             country: listCountry,
             park: listPark,
             category: isTours ? listCategory : categoryFilter || undefined,
+            postType: isSafariUpdates ? postKind : undefined,
             q: remoteQuery,
           });
         }
@@ -372,6 +375,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     isAccommodations ? activePark : parkFilter,
     isTours ? activeCategory : categoryFilter,
     usesRemotePaging ? debouncedQuery : '',
+    isSafariUpdates ? postKind : '',
   ]);
 
   useEffect(() => {
@@ -392,7 +396,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const filtered = useMemo(() => {
     const needle = query.toLowerCase().trim();
     return records.filter((record) => {
-      if (isSafariUpdates) {
+      if (isSafariUpdates && !usesRemotePaging) {
         const language = isLanguagePost(record);
         if (postKind === 'language' ? !language : language) return false;
       }
@@ -489,7 +493,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       (!isCountryScoped && countryFilter) ||
       (!isCountryScoped && parkFilter) ||
       (!isTours && categoryFilter) ||
-      (isSafariUpdates && postKind)
+      (isSafariUpdates && postKind && !usesRemotePaging)
   );
   const listTotal = useMemo(() => {
     if (hasListFilters) return filtered.length;

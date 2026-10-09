@@ -19,6 +19,7 @@ export function adminTableCacheKey(
     country?: string;
     park?: string;
     category?: string;
+    postType?: string;
     q?: string;
   }
 ) {
@@ -29,6 +30,7 @@ export function adminTableCacheKey(
     country: options.country || '',
     park: options.park || '',
     category: options.category || '',
+    postType: options.postType || '',
     q: options.q || '',
   });
 }

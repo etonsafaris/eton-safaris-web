@@ -162,6 +162,7 @@ export default function SeoPanel({
   const autoSeo = useRef<boolean | null>(null);
   const seoTitleEdited = useRef(false);
   const followedPostTitle = useRef<string | null>(null);
+  const followedMeta = useRef<string | null>(null);
   const slugEdited = useRef(false);
   const metaEdited = useRef(false);
 
@@ -428,12 +429,24 @@ export default function SeoPanel({
   }, [forceNoindex]);
 
   useEffect(() => {
-    if (metaEdited.current || resolveAutoSeo() !== true || values.meta_description.trim()) return;
+    if (metaEdited.current) return;
     const text = contentForReadability.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
     if (!text) return;
-    onChange({ ...values, meta_description: text });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentForReadability]);
+    onChange((current) => {
+      const existing = current.meta_description.trim();
+      if (existing === text) {
+        followedMeta.current = text;
+        return current;
+      }
+      const followed = followedMeta.current;
+      const canFollow = !existing || (followed !== null && existing === followed);
+      if (!canFollow) return current;
+      followedMeta.current = text;
+      const next = { ...current, meta_description: text };
+      valuesRef.current = next;
+      return next;
+    });
+  }, [contentForReadability, onChange]);
 
   useEffect(() => {
     const derived = derivedSeoAdvancedFields(values, {

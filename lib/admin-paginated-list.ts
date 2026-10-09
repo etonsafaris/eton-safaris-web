@@ -52,6 +52,8 @@ export type AdminListFilters = {
   country?: string;
   park?: string;
   category?: string;
+  /** Safari Updates: standard posts or language posts. */
+  postType?: 'standard' | 'language';
   /** Server-side search (Dav-style: filter in SQL, not in the browser). */
   q?: string;
 };
@@ -178,8 +180,26 @@ function buildWhere(filters: AdminListFilters | undefined, table: string) {
     const parts = searchColumnsFor(table).map((column) => `COALESCE("${column}"::text, '') ILIKE $${index}`);
     if (parts.length) clauses.push(`(${parts.join(' OR ')})`);
   }
+  if (table === 'safari_updates' && filters?.postType === 'language') {
+    clauses.push(`COALESCE(post_type::text, '') ILIKE '%language%'`);
+  } else if (table === 'safari_updates' && filters?.postType === 'standard') {
+    clauses.push(`COALESCE(post_type::text, '') NOT ILIKE '%language%'`);
+  }
   const sql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
   return { sql, params };
+}
+
+function orderSqlCandidates(table: string): string[] {
+  if (table === 'safari_updates') {
+    return [
+      'COALESCE("published_at", "created_date", "created_at", "updated_date")',
+      '"published_at"',
+      '"created_date"',
+      '"created_at"',
+      '"id"',
+    ];
+  }
+  return ['"created_date"', '"created_at"', '"published_at"', '"publish_date"', '"id"'];
 }
 
 async function runListQuery(
@@ -188,7 +208,7 @@ async function runListQuery(
   columns: string,
   whereSql: string,
   params: unknown[],
-  orderColumn: string,
+  orderSql: string,
   offset: number,
   limit: number
 ) {
@@ -201,7 +221,7 @@ async function runListQuery(
   );
   const total = Number(countRes.rows[0]?.total || 0);
   const dataRes = await client.query(
-    `SELECT ${columns} FROM ${quoted}${whereSql} ORDER BY "${orderColumn}" DESC NULLS LAST OFFSET $${off} LIMIT $${lim}`,
+    `SELECT ${columns} FROM ${quoted}${whereSql} ORDER BY ${orderSql} DESC NULLS LAST OFFSET $${off} LIMIT $${lim}`,
     [...params, offset, limit]
   );
   return { rows: dataRes.rows as RecordRow[], total };
@@ -225,28 +245,36 @@ export async function queryAdminTablePage(
   );
   const offset = Math.max(0, options.offset ?? 0);
   let columns = options.columns || adminListColumnsFor(table) || 'id';
-  const orderColumns = ['created_date', 'created_at', 'published_at', 'publish_date', 'id'];
-  const { sql: whereSql, params: whereParams } = buildWhere(options.filters, table);
+  const orderColumns = orderSqlCandidates(table);
+  let activeFilters = options.filters;
+  let where = buildWhere(activeFilters, table);
 
   return withPgRetry(async () => {
     try {
       return await withAdminPgRoute(async (client) => {
         for (let attempt = 0; attempt < 10; attempt += 1) {
           let droppedColumn = false;
-          for (const orderColumn of orderColumns) {
+          for (const orderSql of orderColumns) {
             try {
               return await runListQuery(
                 client,
                 table,
                 columns,
-                whereSql,
-                [...whereParams],
-                orderColumn,
+                where.sql,
+                [...where.params],
+                orderSql,
                 offset,
                 limit
               );
             } catch (error) {
               const detail = error instanceof Error ? error.message : String(error);
+              if (activeFilters?.postType && /post_type/i.test(detail) && /does not exist/i.test(detail)) {
+                const { postType: _ignored, ...rest } = activeFilters;
+                activeFilters = rest;
+                where = buildWhere(activeFilters, table);
+                droppedColumn = true;
+                break;
+              }
               const missing = missingSelectColumn(detail);
               if (missing && columns.split(',').map((p) => p.trim()).includes(missing)) {
                 const next = dropColumnFromSelect(columns, missing);
@@ -269,9 +297,9 @@ export async function queryAdminTablePage(
             client,
             table,
             columns,
-            whereSql,
-            [...whereParams],
-            'id',
+            where.sql,
+            [...where.params],
+            '"id"',
             offset,
             limit
           );
