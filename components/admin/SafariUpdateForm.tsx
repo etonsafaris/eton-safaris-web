@@ -251,8 +251,8 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
           </p>
         )}
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.7fr_1fr]">
-          <div>
+        <div className="mt-8 grid grid-cols-1 items-start gap-6 md:grid-cols-3">
+          <div className="md:col-span-2">
             <FieldLabel>Post Title</FieldLabel>
             <input
               value={title}
@@ -270,7 +270,8 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
               setCoverImage(url);
               setSeo((current) => ({ ...current, social_image_url: url }));
             }}
-            previewClassName="h-[148px]"
+            className="rounded-xl border border-[#e5e7eb] p-4 dark:border-white/10 md:col-span-1"
+            previewClassName="h-[200px] min-h-[200px]"
           />
         </div>
 
@@ -323,7 +324,7 @@ function SafariUpdateFormInner({ postId }: SafariUpdateFormProps) {
             <button
               type="button"
               onClick={addBlock}
-              className="rounded-full bg-[#00A651] px-5 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-[#00945a]"
+              className="flex items-center justify-center rounded-full border-2 border-[#00A651] bg-[#00A651] px-3 py-2 text-base font-bold uppercase text-white hover:bg-[#00A651]/80"
             >
               {editingIndex !== null ? 'Update' : 'Add'}
             </button>
