@@ -57,7 +57,7 @@ function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBl
     return {
       title: String(block.title || '').trim() || match?.title || '',
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description || '',
-      image_url: '',
+      image_url: String(block.image_url || '').trim() || match?.image_url || '',
     };
   });
 }
@@ -75,7 +75,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
   const seededBlocks = (seeded?.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
-    image_url: '',
+    image_url: String(block.image_url || '').trim(),
   }));
   const cmsBlocks = parseCmsBlocks(page);
   const usableCmsBlocks = cmsBlocks.filter(
@@ -103,7 +103,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     return {
       title: block.title,
       description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description,
-      image_url: '',
+      image_url: String(block.image_url || '').trim() || match?.image_url || '',
     };
   });
   const cmsFallback = /contact/i.test(slug) ? bestFaqsFor('contact') : bestFaqsFor('home');

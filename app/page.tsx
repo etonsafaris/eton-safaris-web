@@ -3,7 +3,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides, fallbackHomeHeroSlides } from '@/lib/home-hero-slides';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
 import { safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
-import { loadHomePageBundleResilient } from '@/lib/load-public';
+import { loadHomePageBundleResilient, loadHomePageContent } from '@/lib/load-public';
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import type { PublicDestination } from '@/lib/public-destinations';
@@ -13,17 +13,23 @@ import { Metadata } from 'next';
 /** Edge ISR: pre-rendered HTML snapshot, refresh every 15 minutes (CDN-friendly). */
 export const revalidate = 900;
 
-export const metadata: Metadata = {
-  title: {
-    absolute: 'Eton Safaris | Africa & Beyond',
-  },
-  description:
-    'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.',
-  alternates: {
-    canonical: publicCanonicalUrl('/'),
-  },
-  robots: { index: true, follow: true },
-};
+const HOME_TITLE = 'Eton Safaris | Africa & Beyond';
+const HOME_DESCRIPTION =
+  'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await loadHomePageContent().catch(() => null);
+  return {
+    title: {
+      absolute: content?.seoTitle?.trim() || HOME_TITLE,
+    },
+    description: content?.metaDescription?.trim() || HOME_DESCRIPTION,
+    alternates: {
+      canonical: publicCanonicalUrl('/'),
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 function safeRecordRows(value: unknown): RecordRow[] {
   try {

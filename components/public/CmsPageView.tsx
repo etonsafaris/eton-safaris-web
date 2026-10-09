@@ -53,11 +53,23 @@ function AboutStory({
         {blocks.map((block, index) => {
           const copy = toHtml(block.description);
           return (
-            <div key={`${block.title}-${index}`}>
-              {block.title ? (
-                <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
+            <div key={`${block.title}-${index}`} className="grid items-start gap-6 md:grid-cols-2">
+              {block.image_url ? (
+                <ResponsiveImage
+                  src={block.image_url}
+                  alt={block.title || 'About section'}
+                  variant="card"
+                  width={720}
+                  height={480}
+                  className="h-[240px] w-full rounded-xl object-cover md:h-[280px]"
+                />
               ) : null}
-              {copy ? <PublicHtml className="public-prose mt-4 max-w-none" html={copy} /> : null}
+              <div className={block.image_url ? '' : 'md:col-span-2'}>
+                {block.title ? (
+                  <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
+                ) : null}
+                {copy ? <PublicHtml className="public-prose mt-4 max-w-none" html={copy} /> : null}
+              </div>
             </div>
           );
         })}
@@ -124,9 +136,21 @@ export default function CmsPageView({
               <SectionHeading label="What we do" title="Our Community Initiatives" />
               <div className="mt-10 grid gap-8 md:grid-cols-2">
                 {blocks.map((block) => (
-                  <article key={block.title} className="bg-white p-6 shadow-sm">
-                    <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
-                    <PublicHtml className="public-prose mt-3 text-[#666]" html={toHtml(block.description)} />
+                  <article key={block.title} className="overflow-hidden bg-white shadow-sm">
+                    {block.image_url ? (
+                      <ResponsiveImage
+                        src={block.image_url}
+                        alt={block.title}
+                        variant="card"
+                        width={720}
+                        height={480}
+                        className="h-[220px] w-full object-cover"
+                      />
+                    ) : null}
+                    <div className="p-6">
+                      <h3 className="font-serif text-2xl font-bold text-[#333]">{block.title}</h3>
+                      <PublicHtml className="public-prose mt-3 text-[#666]" html={toHtml(block.description)} />
+                    </div>
                   </article>
                 ))}
               </div>

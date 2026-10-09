@@ -23,6 +23,7 @@ import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { inferPageLayout } from '@/lib/cms-page-model';
 import { hydratePublicCmsPage, resolvePolicyPageContent } from '@/lib/hydrate-cms-page';
 import {
+  fetchCollectionRecordById,
   fetchCollectionRecords,
   isPublishedRecord,
 } from '@/lib/data';
@@ -127,7 +128,9 @@ export default function CmsSlugClient({
           const match = matchCmsRecord(rows, resolved.canonical, pageAliases(resolved.canonical));
           const published = match && isPublishedRecord(match) ? match : null;
           if (published) {
-            if (mounted) setPage(published);
+            const id = String(published.id || '');
+            const full = id ? await fetchCollectionRecordById('pages', id) : published;
+            if (mounted) setPage(full && isPublishedRecord(full) ? full : published);
           } else {
             const found = await loadCountry(resolved.canonical, countrySlugFromLanding(resolved.canonical));
             if (mounted) setForceCountry(found);

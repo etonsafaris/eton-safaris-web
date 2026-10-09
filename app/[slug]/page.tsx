@@ -12,10 +12,10 @@ import {
 } from '@/lib/cms-routes';
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
-import { fetchCollectionRecords, getRecordImage, getRecordTitle, isPublishedRecord, pickString } from '@/lib/data';
+import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
-import { loadCountryPageDataResilient } from '@/lib/load-public';
+import { loadCmsPageResilient, loadCountryPageDataResilient } from '@/lib/load-public';
 
 type PageProps = {
   params: { slug: string };
@@ -85,9 +85,7 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
   let initialPage = null;
   if (!isCountryAlias) {
     try {
-      const rows = await fetchCollectionRecords('pages');
-      const match = matchCmsRecord(rows, resolved.canonical, pageAliases(resolved.canonical));
-      initialPage = match && isPublishedRecord(match) ? match : null;
+      initialPage = await loadCmsPageResilient(resolved.canonical);
     } catch (error) {
       console.warn('[Public] CMS page load failed:', resolved.canonical, error);
       initialPage = null;

@@ -41,7 +41,7 @@ export function mergeCommunityInitiativeBlocks(existing: CmsContentBlock[] = [])
     return {
       title: match?.title?.trim() || slot.title,
       description: String(match?.description || '').trim() || slot.description,
-      image_url: '',
+      image_url: String(match?.image_url || '').trim(),
     };
   });
 }

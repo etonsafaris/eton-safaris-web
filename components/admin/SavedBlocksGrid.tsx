@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, SquarePen, Trash2 } from 'lucide-react';
+import { adminImageSrcFromUrl } from '@/lib/admin-image';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
 export type ContentBlock = {
   title: string;
   description: string;
+  image_url?: string;
 };
 
 function previewText(value: string) {
@@ -57,11 +59,15 @@ export default function SavedBlocksGrid({
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {blocks.map((block, index) => {
           const preview = previewText(block.description);
+          const image = adminImageSrcFromUrl(block.image_url);
           return (
             <article
               key={`${block.title}-${index}`}
               className="flex min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm"
             >
+              {image ? (
+                <img src={image} alt="" className="h-36 w-full object-cover" />
+              ) : null}
               <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d1fae5] text-xs font-bold text-[#047857]">

@@ -189,7 +189,7 @@ export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContent
     return fromColumns.map((block) => ({
       title: block.title,
       description: block.description,
-      image_url: '',
+      image_url: String(block.image_url || '').trim(),
       caption: '',
     }));
   }
@@ -197,7 +197,7 @@ export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContent
   return (embedded.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
-    image_url: '',
+    image_url: String(block.image_url || '').trim(),
     caption: '',
   }));
 }

@@ -20,6 +20,7 @@ import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
 import { resolveHomePageContent, safeHeroSlides } from '@/lib/home-page-payload';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { useHomePageRecovery } from '@/lib/use-home-page-recovery';
 import type { HomePageContent } from '@/lib/home-page-content';
 import { destinationPublicPath } from '@/lib/cms-routes';
@@ -68,9 +69,10 @@ export default function HomePageClient({
   needsClientRefresh = false,
 }: HomePageClientProps) {
   const [slide, setSlide] = useState(0);
+  const liveHomeContent = useHomePageContent(initialHomeContent);
   const homeContent = useMemo(
-    () => resolveHomePageContent(initialHomeContent),
-    [initialHomeContent]
+    () => resolveHomePageContent(liveHomeContent),
+    [liveHomeContent]
   );
 
   const initialPayload = useMemo(

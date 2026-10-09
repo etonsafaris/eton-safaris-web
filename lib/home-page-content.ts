@@ -11,6 +11,8 @@ export type HomePageContent = {
   contactEmail: string;
   contactPhone: string;
   faqs: PageFaq[];
+  seoTitle: string;
+  metaDescription: string;
 };
 
 export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
@@ -20,6 +22,8 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   contactEmail: SITE.email,
   contactPhone: SITE.phoneDisplay,
   faqs: bestFaqsFor('home'),
+  seoTitle: '',
+  metaDescription: '',
 };
 
 export const HOME_PAGE_SLUG = 'home-page';
@@ -54,10 +58,14 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
     contactEmail: cmsEmail || DEFAULT_HOME_PAGE_CONTENT.contactEmail,
     contactPhone: cmsPhone || DEFAULT_HOME_PAGE_CONTENT.contactPhone,
     faqs: limitFaqs(extras.faqs, bestFaqsFor('home')),
+    seoTitle: pickString(record || {}, ['seo_title', 'og_title']),
+    metaDescription: pickString(record || {}, ['meta_description', 'og_description']),
   };
 }
 
-export function homePageFieldPack(content: HomePageContent): Record<string, string> {
+export function homePageFieldPack(
+  content: Pick<HomePageContent, 'footerAbout' | 'contactAddress' | 'contactEmail' | 'contactPhone'>
+): Record<string, string> {
   return {
     layout: 'home',
     footer_about: content.footerAbout,

@@ -73,7 +73,9 @@ export function embedContent(html: string, data: EmbeddedContent): string {
   if (!hasEmbeddedData(data)) return clean;
   const payload: EmbeddedContent = {
     blocks: blocksWithoutMedia(
-      data.blocks?.filter((block) => block.title.trim() || block.description.trim()) || []
+      data.blocks?.filter((block) => block.title.trim() || block.description.trim() || Boolean(block.image_url?.trim())) ||
+        [],
+      { keepImages: true }
     ),
     itineraries:
       data.itineraries?.filter(

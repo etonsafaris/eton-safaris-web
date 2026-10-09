@@ -167,9 +167,16 @@ export async function GET(
       } else if (url.searchParams.get('count') === '1') {
         total = result.rows.length < limit ? offset + result.rows.length : offset + result.rows.length + limit;
       }
+      const singleRow = url.searchParams.has('eq.id') || limit === 1;
       return NextResponse.json(
         { data: result.rows, total },
-        { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' } }
+        {
+          headers: {
+            'Cache-Control': singleRow
+              ? 'private, no-store'
+              : 'public, s-maxage=120, stale-while-revalidate=300',
+          },
+        }
       );
     });
   } catch (error) {

@@ -9,6 +9,7 @@ import {
   queryAdminTablePage,
 } from '@/lib/admin-paginated-list';
 import { bustAdminCountsCache } from '@/lib/admin-counts-server-cache';
+import { revalidatePublicCms } from '@/lib/revalidate-public-cms';
 import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
 import { adminListColumnsFor } from '@/lib/data-server';
@@ -205,6 +206,7 @@ export async function POST(request: Request) {
     const result = await saveWithColumnFallback(table, body.payload, body.id);
     if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
     bustAdminCountsCache();
+    revalidatePublicCms(table, { ...body.payload, ...(result.data?.[0] || {}) });
     return NextResponse.json({ data: jsonSafeRows(result.data || []) });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not save record' }, { status: 500 });
@@ -246,6 +248,7 @@ export async function DELETE(request: Request) {
       const removed = await client.from(name).delete().eq('id', id);
       if (!removed.error) {
         bustAdminCountsCache();
+        revalidatePublicCms(table);
         return NextResponse.json({ ok: true, table: name, id });
       }
       // Some tables use uuid/text ids — retry as-is already; try numeric only if it parses.
@@ -254,6 +257,7 @@ export async function DELETE(request: Request) {
         const numeric = await client.from(name).delete().eq('id', asNumber);
         if (!numeric.error) {
           bustAdminCountsCache();
+          revalidatePublicCms(table);
           return NextResponse.json({ ok: true, table: name, id });
         }
         lastMessage = isRlsError(numeric.error.message)

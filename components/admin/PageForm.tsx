@@ -212,7 +212,6 @@ function PageFormInner({ pageId }: PageFormProps) {
             contactAddress,
             contactEmail,
             contactPhone,
-            faqs,
           })
         : null;
     const extras = cmsPageFieldPack({
@@ -229,7 +228,8 @@ function PageFormInner({ pageId }: PageFormProps) {
       ...(stamp ? { published_at: stamp } : {}),
     });
 
-    const pageBlocks = layout === 'home' ? [] : blocksWithoutMedia(blocks);
+    const pageBlocks =
+      layout === 'home' ? [] : blocksWithoutMedia(blocks, { keepImages: true });
     const payload = buildSavePayload(
       'pages',
       {
@@ -481,7 +481,11 @@ function PageFormInner({ pageId }: PageFormProps) {
             onEdit={(index) => {
               const block = blocks[index];
               if (!block) return;
-              setDraftBlock({ title: block.title, description: block.description, image_url: '' });
+              setDraftBlock({
+                title: block.title,
+                description: block.description,
+                image_url: block.image_url || '',
+              });
               setEditingIndex(index);
             }}
             onDelete={(index) => {
@@ -558,6 +562,15 @@ function PageFormInner({ pageId }: PageFormProps) {
                 showFooter
               />
             </div>
+            {layout === 'community' || layout === 'about' || layout === 'agency' ? (
+              <CoverImageField
+                label={layout === 'community' ? 'Initiative image' : 'Section image'}
+                folder="pages"
+                value={draftBlock.image_url || ''}
+                onChange={(url) => setDraftBlock({ ...draftBlock, image_url: url })}
+                previewClassName="h-[180px]"
+              />
+            ) : null}
           </div>
           <div className="mt-4 flex justify-end rounded-b-xl bg-[#eceff1] px-4 py-3">
             <button

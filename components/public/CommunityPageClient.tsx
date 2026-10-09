@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import CmsPageView from '@/components/public/CmsPageView';
 import { inferPageLayout } from '@/lib/cms-page-model';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
-import { fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
+import { fetchCollectionRecordById, fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
@@ -23,9 +23,15 @@ export default function CommunityPageClient({ initialPage = null }: { initialPag
   useEffect(() => {
     if (live === 0) return;
     fetchCollectionRecords('pages')
-      .then((rows) => {
+      .then(async (rows) => {
         const match = matchCmsRecord(rows, SLUG, pageAliases(SLUG));
-        setPage(match && isPublishedRecord(match) ? match : null);
+        if (!match || !isPublishedRecord(match)) {
+          setPage(null);
+          return;
+        }
+        const id = String(match.id || '');
+        const full = id ? await fetchCollectionRecordById('pages', id) : match;
+        setPage(full && isPublishedRecord(full) ? full : match);
       })
       .catch((error) => console.error('[CMS] Community page load failed:', error))
       .finally(() => setReady(true));

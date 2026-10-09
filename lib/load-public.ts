@@ -196,18 +196,25 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
     const page = await withTimeout(
       fetchCollectionPage('pages', [], {
         columns: listColumns('pages'),
-        limit: 4,
+        limit: 48,
         offset: 0,
       }),
       5000,
       { rows: [] as RecordRow[], total: 0 }
     );
     const match =
+      page.rows.find((row) => {
+        const slug = String(row.slug || row.seo_slug || '').toLowerCase();
+        return slug === HOME_PAGE_SLUG || slug === 'home' || slug === 'homepage';
+      }) ||
       page.rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
-      page.rows.find((row) => isPublishedRecord(row)) ||
       null;
     if (!match || !isPublishedRecord(match)) return null;
-    return parseHomePageContent(match);
+    const full =
+      match.id != null
+        ? await withTimeout(fetchCollectionRecordById('pages', String(match.id)), 5000, match)
+        : match;
+    return parseHomePageContent(full || match);
   } catch {
     return null;
   }
