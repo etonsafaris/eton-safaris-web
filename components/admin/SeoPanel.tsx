@@ -32,7 +32,7 @@ import type { RecordRow } from '@/lib/types';
 
 type SeoPanelProps = {
   values: SeoValues;
-  onChange: (values: SeoValues) => void;
+  onChange: (values: SeoValues | ((current: SeoValues) => SeoValues)) => void;
   pageTitle?: string;
   contentForReadability?: string;
   siteName?: string;
@@ -161,6 +161,7 @@ export default function SeoPanel({
   const lastKeywordScopeRef = useRef('');
   const autoSeo = useRef<boolean | null>(null);
   const seoTitleEdited = useRef(false);
+  const followedPostTitle = useRef<string | null>(null);
   const slugEdited = useRef(false);
   const metaEdited = useRef(false);
 
@@ -414,18 +415,6 @@ export default function SeoPanel({
   }
 
   useEffect(() => {
-    if (seoTitleEdited.current || resolveAutoSeo() !== true) return;
-    const title = pageTitle.trim();
-    if (!title || values.seo_title === title) return;
-    onChange({
-      ...values,
-      seo_title: title,
-      slug: slugEdited.current ? values.slug : slugify(title),
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageTitle]);
-
-  useEffect(() => {
     if (forceNoindex) {
       if (values.robots_index || values.robots_follow) {
         onChange({ ...values, robots_index: false, robots_follow: false });
@@ -476,6 +465,29 @@ export default function SeoPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageTitle, contentType, values.seo_title, values.slug, values.meta_description]);
+
+  useEffect(() => {
+    if (seoTitleEdited.current) return;
+    const title = pageTitle.trim();
+    if (!title) return;
+    onChange((current) => {
+      const existing = current.seo_title.trim();
+      if (existing === title) {
+        followedPostTitle.current = title;
+        return current;
+      }
+      const followed = followedPostTitle.current;
+      const canFollow = !existing || (followed !== null && existing === followed);
+      if (!canFollow) return current;
+      followedPostTitle.current = title;
+      const previousSlug = followed ? slugify(followed) : '';
+      const keepSlug =
+        slugEdited.current || (current.slug.trim() !== '' && current.slug.trim() !== previousSlug);
+      const next = { ...current, seo_title: title, slug: keepSlug ? current.slug : slugify(title) };
+      valuesRef.current = next;
+      return next;
+    });
+  }, [pageTitle, onChange]);
 
   return (
     <div className={className}>
