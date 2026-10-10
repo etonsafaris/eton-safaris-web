@@ -978,8 +978,20 @@ export function isPubliclyVisibleRecord(record: RecordRow | null | undefined): b
   return isPublishedRecord(record);
 }
 
+const SLUG_SCAN_TABLES = new Set([
+  'tours',
+  'safari_updates',
+  'accommodations',
+  'national_park',
+  'national_parks',
+  'parks',
+  'explore',
+  'pages',
+  'landing_pages',
+]);
+
 /** Resolve one public record by slug/seo_slug/id without downloading the whole table. */
-export async function fetchRecordByPublicSlug(
+async function fetchRecordByPublicSlugLive(
   table: string,
   slug: string,
   aliases: string[] = [],
@@ -990,13 +1002,9 @@ export async function fetchRecordByPublicSlug(
   const names = [table, ...aliases].filter(Boolean);
   const selectColumns = columns || '*';
 
-  async function hydrate(name: string, row: RecordRow | null): Promise<RecordRow | null> {
+  function finish(name: string, row: RecordRow | null): RecordRow | null {
     if (!row) return null;
     rememberKnownColumns(name, Object.keys(row));
-    if (selectColumns !== '*' && row.id != null) {
-      const full = await fetchCollectionRecordById(name, String(row.id));
-      if (full) return jsonSafeRow(full);
-    }
     return jsonSafeRow(row);
   }
 
@@ -1007,7 +1015,7 @@ export async function fetchRecordByPublicSlug(
           const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} = $1 LIMIT 1`;
           const res = await db.query(queryText, [value]);
           const row = (res.rows as RecordRow[])[0] ? jsonSafeRow((res.rows as RecordRow[])[0]) : null;
-          if (row) return hydrate(name, row);
+          if (row) return finish(name, row);
         } catch (error: any) {
           continue;
         }
@@ -1015,14 +1023,14 @@ export async function fetchRecordByPublicSlug(
     }
 
     const label = values[0].replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
-    if (label.length >= 4) {
+    if (!SLUG_SCAN_TABLES.has(name) && label.length >= 4) {
       for (const col of ['name', 'title'] as const) {
         for (const pattern of [label, `%${label}%`] as const) {
           try {
             const queryText = `SELECT ${selectColumns} FROM ${name} WHERE ${col} ILIKE $1 LIMIT 1`;
             const res = await db.query(queryText, [pattern]);
             const row = (res.rows as RecordRow[])[0] ? jsonSafeRow((res.rows as RecordRow[])[0]) : null;
-            if (row) return hydrate(name, row);
+            if (row) return finish(name, row);
           } catch (error: any) {
             continue;
           }
@@ -1031,6 +1039,37 @@ export async function fetchRecordByPublicSlug(
     }
   }
   return null;
+}
+
+/** One indexed lookup, shared by the page and its metadata. A miss is not cached. */
+export async function fetchRecordByPublicSlug(
+  table: string,
+  slug: string,
+  aliases: string[] = [],
+  columns = '*'
+): Promise<RecordRow | null> {
+  if (!slugLookupValues(slug).length) return null;
+  const cacheKey = [table, slug, aliases.join(','), columns || '*'].join('|');
+  try {
+    return await unstable_cache(
+      async () => {
+        const row = await fetchRecordByPublicSlugLive(table, slug, aliases, columns);
+        if (!row) throw new Error(`slug-miss:${table}:${slug}`);
+        return row;
+      },
+      ['public-slug-v1', cacheKey],
+      {
+        revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
+        tags: [CMS_PUBLIC_CACHE_TAG, `collection:${table}`, `slug:${slug}`],
+      }
+    )();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/slug-miss:/i.test(message)) {
+      console.warn('[Aiven] Public slug lookup failed:', message);
+    }
+    return null;
+  }
 }
 
 /** Detail routes: Aiven slug lookup — null when missing or admin-hidden. */

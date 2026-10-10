@@ -48,7 +48,6 @@ import { mergePublicDestinations, type PublicDestination } from '@/lib/public-de
 import { skipStaticGenerationDuringBuild } from '@/lib/build-phase';
 import {
   EMPTY_COUNTRY_PAGE_DATA,
-  isCountryPageDataSparse,
   withCountryPageFallback,
   type CountryPageData,
 } from '@/lib/country-page-fallback';
@@ -166,20 +165,18 @@ function cachedPublic<T>(
   })();
 }
 
-/** Two attempts — avoids false "missing" when Aiven is cold or the first query times out. */
+/** One indexed read. A second attempt would keep the first query running and stall every other page. */
 async function fetchPublicRecordResilient(
   table: string,
   slug: string,
   aliases: string[] = [],
   columns?: string
 ): Promise<RecordRow | null> {
-  const select = columns || listColumns(table, aliases) || '*';
-  const first = await withTimeout(fetchRecordByPublicSlug(table, slug, aliases, select), 8000, null);
-  if (first) return first;
-  return await withTimeout(fetchRecordByPublicSlug(table, slug, aliases, select), 12000, null);
+  const select = columns || '*';
+  return fetchRecordByPublicSlug(table, slug, aliases, select);
 }
 
-export async function loadHomePageContent(): Promise<HomePageContent | null> {
+async function loadHomePageContentLive(): Promise<HomePageContent | null> {
   try {
     const row = await withTimeout(
       fetchRecordByPublicSlug('pages', HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG)),
@@ -215,6 +212,10 @@ export async function loadHomePageContent(): Promise<HomePageContent | null> {
   } catch {
     return null;
   }
+}
+
+export function loadHomePageContent(): Promise<HomePageContent | null> {
+  return cachedPublic(['home-page-content-v1'], ['collection:pages'], () => loadHomePageContentLive());
 }
 
 async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> {
@@ -256,80 +257,30 @@ async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> 
 }
 
 async function loadHomePageCountriesSlice() {
-  const rows = await withTimeout(
-    fetchCollectionRecords('countries', [], {
-      columns: listColumns('countries'),
-      maxRows: 48,
-    }).then((data) => data.filter(isPublishedRecord)),
-    6000,
-    [] as RecordRow[]
-  );
+  const rows = await fetchCollectionRecords('countries', [], {
+    columns: listColumns('countries'),
+    maxRows: 48,
+  }).then((data) => data.filter(isPublishedRecord));
   const hydrated = await ensureNavCountryRecords(rows);
   return orderHomeCountryRows(hydrated);
 }
 
 async function loadHomePageCategoriesSlice() {
-  return await withTimeout(
-    fetchCollectionRecords('categories', [], {
-      columns: listColumns('categories'),
-      maxRows: 64,
-    }).then((rows) => rows.filter(isPublishedRecord)),
-    6000,
-    [] as RecordRow[]
-  );
+  const rows = await fetchCollectionRecords('categories', [], {
+    columns: listColumns('categories'),
+    maxRows: 64,
+  });
+  return rows.filter(isPublishedRecord);
 }
 
 async function loadHomePageToursSlice() {
-  let tours = await withTimeout(fetchEastAfricaHomeTours(48), 8000, [] as RecordRow[]);
-  if (tours.length < 6) {
-    const featured = await withTimeout(fetchFeaturedTours(24), 5000, [] as RecordRow[]);
-    const seen = new Set(tours.map((row) => String(row.id ?? '')));
-    for (const row of featured) {
-      const id = String(row.id ?? '');
-      if (!id || seen.has(id)) continue;
-      seen.add(id);
-      tours.push(row);
-    }
-  }
-  if (!tours.length) {
-    try {
-      const listing = await loadToursPageData();
-      tours = listing.tours.slice(0, 24);
-    } catch {
-      tours = [];
-    }
-  }
-  return tours.slice(0, 48);
+  const tours = await fetchEastAfricaHomeTours(24);
+  if (tours.length) return tours.slice(0, 24);
+  return (await fetchFeaturedTours(12)).slice(0, 12);
 }
 
 async function loadHomePageUpdatesSlice() {
-  const emptyPage = { rows: [] as RecordRow[], total: 0 };
-  let page = await withTimeout(
-    fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((result) => ({
-      rows: result.rows,
-      total: result.total,
-    })),
-    6000,
-    emptyPage
-  );
-  if (!page.rows.length) {
-    page = await withTimeout(
-      fetchPublicSafariUpdatesPage({ limit: 16, offset: 0 }).then((result) => ({
-        rows: result.rows,
-        total: result.total,
-      })),
-      10000,
-      emptyPage
-    );
-  }
-  if (!page.rows.length) {
-    try {
-      const listing = await loadSafariUpdatesPageData({ limit: 8, offset: 0 });
-      page = { rows: listing.posts, total: listing.total };
-    } catch {
-      page = emptyPage;
-    }
-  }
+  const page = await fetchPublicSafariUpdatesPage({ limit: 8, offset: 0 });
   return page.rows.filter((row) => isPublishedRecord(row)).slice(0, 8);
 }
 
@@ -359,7 +310,7 @@ export async function loadHomePageData() {
 }
 
 async function loadHomePageContentCached() {
-  return cachedPublic(['home-page-content-v1'], ['collection:pages'], () => loadHomePageContent());
+  return loadHomePageContent();
 }
 
 async function loadHomePageBundleLive() {
@@ -373,13 +324,11 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v19-skip-empty'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v20-slim'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
 }
-
-const HOME_BUNDLE_WAIT_MS = 8_000;
 
 function instantHomeFallbackBundle() {
   const countries = fallbackHomeCountryRows();
@@ -395,24 +344,15 @@ function instantHomeFallbackBundle() {
   };
 }
 
-/** Never throws — used by `/` and `/api/public/home-bundle` so a slow DB cannot blank the home page. */
+/** Never throws — used by `/` and `/api/public/home-bundle`. One load, no abandoned retry. */
 export async function loadHomePageBundleResilient() {
   try {
-    const pending = loadHomePageBundle().catch((error) => {
-      console.warn('[Public] Home bundle failed:', error);
-      return null;
-    });
-    const bundle = await Promise.race([
-      pending,
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), HOME_BUNDLE_WAIT_MS)),
-    ]);
-    if (bundle) return bundle;
-    console.warn('[Public] Home bundle wait exceeded — serving instant fallbacks');
-    return instantHomeFallbackBundle();
+    return await loadHomePageBundle();
   } catch (error) {
-    console.error('[Public] Home bundle failed:', error);
+    console.warn('[Public] Home bundle failed:', error);
     try {
       const data = await loadHomePageData();
+      if (!data.tours?.length) return instantHomeFallbackBundle();
       return {
         data,
         content: null,
@@ -553,133 +493,28 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v13-seo-only', normalized],
+      ['country-page-data-v14-one-read', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
         if (!isCountryPageShellCountry(data.country)) return data;
         const hydrated = await countryRowWithHero(normalized, data.country);
-        if (hydrated && !isCountryPageShellCountry(hydrated)) {
-          return { ...data, country: hydrated };
-        }
-        const retry = await loadCountryPageDataInner(normalized);
-        if (retry && !isCountryPageShellCountry(retry.country)) return retry;
         return hydrated ? { ...data, country: hydrated } : data;
       }
     );
-    if (!isCountryPageDataSparse(cached)) return cached;
-    const retry = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
-    return isCountryPageDataSparse(retry) ? cached : retry;
+    return cached;
   } catch (error) {
     console.warn('[Public] loadCountryPageData failed:', slug, error);
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
   }
 }
 
-const COUNTRY_PAGE_WAIT_MS = 7000;
-
-/** Never throws — used by destination routes and recovery API. */
+/** Never throws — one country load, shared with the page cache. */
 export async function loadCountryPageDataResilient(slug: string): Promise<CountryPageData> {
   const normalized = normalizeSlug(slug);
   try {
-    const raced = await Promise.race([
-      loadCountryPageData(normalized),
-      new Promise<CountryPageData | null>((resolve) =>
-        setTimeout(() => resolve(null), COUNTRY_PAGE_WAIT_MS)
-      ),
-    ]);
-    if (!raced) {
-      console.warn('[Public] Country page wait exceeded — fast shell:', normalized);
-      const meta = await fetchPublicRecordResilient('countries', normalized);
-      const metaCountry = await countryRowWithHero(normalized, meta);
-      let data = withCountryPageFallback(
-        metaCountry ? { ...EMPTY_COUNTRY_PAGE_DATA, country: metaCountry } : EMPTY_COUNTRY_PAGE_DATA,
-        normalized
-      );
-      const label =
-        publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
-      const tours = await withTimeout(
-        resolvePublicTours({ country: label, limit: 24 }),
-        5000,
-        [] as RecordRow[]
-      ).catch(() => [] as RecordRow[]);
-      const categoriesRaw = await withTimeout(
-        fetchCollectionRecords('categories', [], {
-          columns: listColumns('categories'),
-          maxRows: 80,
-        })
-          .then((rows) => rows.filter(isPublishedRecord))
-          .catch(() => [] as RecordRow[]),
-        5000,
-        [] as RecordRow[]
-      );
-      const cmsCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, normalized));
-      if (tours.length) {
-        const matched = tours.filter((row) => matchesCountry(row, normalized));
-        const tourPool = matched.length ? matched : tours;
-        data = {
-          ...data,
-          tours: tourPool,
-          categories: resolveCountryPageCategories(normalized, cmsCategories, tourPool),
-        };
-      } else if (cmsCategories.length) {
-        data = {
-          ...data,
-          categories: resolveCountryPageCategories(normalized, cmsCategories, []),
-        };
-      }
-      return { ...data, parks: [], places: [] };
-    }
-    let data = raced;
-    if (isCountryPageDataSparse(data)) {
-      const retry = await withTimeout(loadCountryPageDataInner(normalized), 6000, null).catch(() => null);
-      if (retry && !isCountryPageDataSparse(retry)) data = retry;
-    }
-    if (!data.categories.length) {
-      const categoriesRaw = await withTimeout(
-        fetchCollectionRecords('categories', [], {
-          columns: listColumns('categories'),
-          maxRows: 80,
-        })
-          .then((rows) => rows.filter(isPublishedRecord))
-          .catch(() => [] as RecordRow[]),
-        5000,
-        [] as RecordRow[]
-      );
-      const cmsCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, normalized));
-      if (cmsCategories.length) {
-        data = {
-          ...data,
-          categories: resolveCountryPageCategories(normalized, cmsCategories, data.tours),
-        };
-      }
-    }
-    if (!data.tours.length) {
-      const label =
-        publicCountryLabel(data.country, normalized) || countryLabelFromSlug(normalized) || normalized;
-      const tours = await withTimeout(
-        resolvePublicTours({ country: label, limit: 48 }),
-        8000,
-        [] as RecordRow[]
-      ).catch(() => [] as RecordRow[]);
-      if (tours.length) {
-        const matched = tours.filter((row) => matchesCountry(row, normalized));
-        const tourPool = matched.length ? matched : tours;
-        data = {
-          ...data,
-          tours: tourPool,
-          categories: data.categories.length
-            ? data.categories
-            : resolveCountryPageCategories(normalized, [], tourPool),
-        };
-      }
-    }
-    data = { ...data, parks: [], places: [] };
-    if (isCountryPageShellCountry(data.country)) {
-      const hydrated = await countryRowWithHero(normalized, data.country);
-      if (hydrated) data = { ...data, country: hydrated };
-    }
-    return withCountryPageFallback(data, normalized);
+    const data = await loadCountryPageData(normalized);
+    return withCountryPageFallback({ ...data, parks: [], places: [] }, normalized);
   } catch (error) {
     console.warn('[Public] loadCountryPageDataResilient failed:', normalized, error);
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
@@ -693,30 +528,19 @@ async function loadCountryPageDataInner(
   options?: CountryPageLoadOptions
 ): Promise<CountryPageData | null> {
   const [countryMeta, categoriesRaw] = await Promise.all([
-    withTimeout(fetchPublicRecordResilient('countries', slug), 14000, null),
-    withTimeout(
-      fetchCollectionRecords('categories', [], {
-        columns: listColumns('categories'),
-        maxRows: 80,
-      })
-        .then((rows) => rows.filter(isPublishedRecord))
-        .catch(() => [] as RecordRow[]),
-      6000,
-      [] as RecordRow[]
-    ),
+    fetchPublicRecordResilient('countries', slug),
+    fetchCollectionRecords('categories', [], {
+      columns: listColumns('categories'),
+      maxRows: 80,
+    })
+      .then((rows) => rows.filter(isPublishedRecord))
+      .catch(() => [] as RecordRow[]),
   ]);
   if (options?.requirePublishedCountry) {
     if (!countryMeta || !isPubliclyVisibleRecord(countryMeta)) return null;
   }
 
-  let country: RecordRow | null = countryMeta;
-  if (countryMeta?.id != null) {
-    country = await withTimeout(
-      fetchCollectionRecordById('countries', String(countryMeta.id)),
-      6000,
-      countryMeta
-    );
-  }
+  const country: RecordRow | null = countryMeta;
 
   if (options?.requirePublishedCountry && (!country || !isPubliclyVisibleRecord(country))) {
     return null;
@@ -726,11 +550,7 @@ async function loadCountryPageDataInner(
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
     slug;
-  const tours = await withTimeout(
-    resolvePublicTours({ country: countryName, limit: 48 }),
-    6000,
-    [] as RecordRow[]
-  ).catch(() => [] as RecordRow[]);
+  const tours = await resolvePublicTours({ country: countryName, limit: 24 }).catch(() => [] as RecordRow[]);
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
   const toursForPage = matchedTours.length ? matchedTours : tours;
   const categories = resolveCountryPageCategories(slug, countryCategories, toursForPage);
@@ -789,11 +609,11 @@ async function loadTourDetailLive(slug: string, synced = false) {
     }
     const country = tour ? pickString(tour, ['country']) : '';
     const category = tour ? pickString(tour, ['category']) : '';
-    const relatedPool = await withTimeout(
-      resolvePublicTours({ country, limit: 40, excludeId: tour?.id != null ? String(tour.id) : undefined }),
-      6000,
-      [] as RecordRow[]
-    );
+    const relatedPool = await resolvePublicTours({
+      country,
+      limit: 8,
+      excludeId: tour?.id != null ? String(tour.id) : undefined,
+    }).catch(() => [] as RecordRow[]);
     const sameCountry = (relatedPool ?? []).filter((row) => row && String(row.id) !== String(tour?.id || ''));
     const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
     return toClientProps({
@@ -817,12 +637,21 @@ export async function loadTourDetail(slug: string) {
 export async function loadTourDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { tour: null, related: [] as RecordRow[] };
-  return cachedPublic(
-    ['tour-detail-sync-v1', normalized],
-    ['collection:tours', `tour:${normalized}`],
-    () => loadTourDetailLive(normalized, true),
-    PUBLIC_DETAIL_REVALIDATE_SECONDS
-  );
+  try {
+    return await cachedPublic(
+      ['tour-detail-sync-v2', normalized],
+      ['collection:tours', `tour:${normalized}`],
+      async () => {
+        const loaded = await loadTourDetailLive(normalized, true);
+        if (!loaded.tour) throw new Error('Tour detail empty');
+        return loaded;
+      },
+      PUBLIC_DETAIL_REVALIDATE_SECONDS
+    );
+  } catch (error) {
+    console.warn('[Public] Tour detail cache skipped:', normalized, error);
+    return loadTourDetailLive(normalized, true);
+  }
 }
 
 async function loadParksPageDataLive(_limit: number, _offset: number) {
@@ -994,36 +823,29 @@ async function loadSafariUpdateDetailLive(slug: string) {
 
 export async function loadSafariUpdateDetail(slug: string) {
   const normalized = normalizeSlug(slug);
-  const cached = await cachedPublic(
-    ['safari-update-detail-v5-recent', normalized],
-    ['collection:safari_updates', `safari_update:${normalized}`],
-    () => loadSafariUpdateDetailLive(normalized)
-  );
-  if (cached.post) return cached;
-  const retry = await loadSafariUpdateDetailLive(normalized);
-  return retry.post ? retry : cached;
+  try {
+    return await cachedPublic(
+      ['safari-update-detail-v6-one-read', normalized],
+      ['collection:safari_updates', `safari_update:${normalized}`],
+      async () => {
+        const loaded = await loadSafariUpdateDetailLive(normalized);
+        if (!loaded.post) throw new Error('Safari update detail empty');
+        return loaded;
+      }
+    );
+  } catch (error) {
+    console.warn('[Public] Safari update detail cache skipped:', normalized, error);
+    return loadSafariUpdateDetailLive(normalized);
+  }
 }
 
-const SAFARI_DETAIL_WAIT_MS = 12000;
-
-/** Used by the detail page and recovery API — does not throw on slow DB. */
+/** Used by the detail page and recovery API — does not throw on a slow database. */
 export async function loadSafariUpdateDetailResilient(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
-    const detail = await Promise.race([
-      loadSafariUpdateDetail(normalized),
-      new Promise<typeof EMPTY_SAFARI_UPDATE_DETAIL>((resolve) =>
-        setTimeout(() => resolve(EMPTY_SAFARI_UPDATE_DETAIL), SAFARI_DETAIL_WAIT_MS)
-      ),
-    ]);
+    const detail = await loadSafariUpdateDetail(normalized);
     if (detail.post) return withRecentSafariUpdates(detail);
-    const post = await withTimeout(resolveSafariUpdatePost(normalized), 10000, null);
-    if (!post) return detail;
-    return withRecentSafariUpdates({
-      post,
-      related: detail.related ?? [],
-      tours: detail.tours ?? [],
-    });
+    return detail;
   } catch (error) {
     console.warn('[Public] loadSafariUpdateDetailResilient failed:', normalized, error);
     return EMPTY_SAFARI_UPDATE_DETAIL;

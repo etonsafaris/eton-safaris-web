@@ -85,9 +85,16 @@ export async function GET(
           .filter((column) => identifier.test(column))
           .join(', ')
     : listColumns || '*';
+  columns = columns
+    .split(',')
+    .map((column) => column.trim())
+    .filter((column) => column && column !== 'seo_schema' && column !== '*')
+    .join(', ');
+  if (!columns) columns = listColumns || 'id';
   if (!columns) return NextResponse.json({ error: 'Invalid select columns' }, { status: 400 });
-  if (columns === '*' && HEAVY_TABLES.has(table) && limit > 2 && listColumns) {
-    columns = listColumns;
+  const keyedRow = ['eq.id', 'eq.slug', 'eq.seo_slug'].some((key) => url.searchParams.has(key));
+  if (keyedRow && !requested) {
+    columns = `${columns},description,content,excerpt,description_title,highlights,price_includes,price_excludes,journey_details,journey_map_url,itinerary,itineraries,tagline,headline,hero_title,cover_image,featured_image`;
   }
 
   const params: unknown[] = [];

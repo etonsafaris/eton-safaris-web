@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { SITE, SITE_LOGO } from '@/lib/collections';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { fetchCollectionRecords, fetchRecordByPublicSlug, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
-import { normalizeSlug } from '@/lib/country-utils';
+import { fetchRecordByPublicSlug, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { isDeployableImageUrl } from '@/lib/public-image';
 import {
   buildDefaultJsonLd,
@@ -117,16 +116,7 @@ export function metadataFromSeo(
 export async function findPublicRecord(table: string, slug: string, aliases: string[] = []) {
   const { skipStaticGenerationDuringBuild } = await import('@/lib/build-phase');
   if (skipStaticGenerationDuringBuild()) return null;
-  const direct = await fetchRecordByPublicSlug(table, slug, aliases).catch(() => null);
-  if (direct) return direct;
-  const rows = await fetchCollectionRecords(table, aliases);
-  const needle = normalizeSlug(slug);
-  return (
-    rows.find((row) => {
-      const candidates = [pickString(row, ['slug']), pickString(row, ['name']), pickString(row, ['title']), String(row.id || '')];
-      return candidates.some((value) => normalizeSlug(value) === needle);
-    }) || null
-  );
+  return (await fetchRecordByPublicSlug(table, slug, aliases).catch(() => null)) || null;
 }
 
 export function jsonLdFromRecord(
