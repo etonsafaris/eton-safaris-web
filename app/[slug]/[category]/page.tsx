@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect, redirect } from 'next/navigation';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
 import JsonLd from '@/components/public/JsonLd';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { countrySlugFromLanding, landingSlugForCountry, resolvePublicSlug } from '@/lib/cms-routes';
+import { countrySlugFromLanding, destinationPublicPath, landingSlugForCountry, resolvePublicSlug } from '@/lib/cms-routes';
 import { findCategoryBySlug } from '@/lib/country-utils';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { loadCategoryPageData, loadStaticCategoryParams } from '@/lib/load-public';
@@ -26,7 +26,9 @@ function isReservedPublicSlug(slug: string): boolean {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  if (isReservedPublicSlug(params.slug)) notFound();
+  if (isReservedPublicSlug(params.slug)) {
+    return { title: 'Eton Safaris', robots: { index: false, follow: false } };
+  }
   const path = `/${params.slug}/${params.category}`;
   const resolved = resolvePublicSlug(params.slug);
   const countryKey = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
@@ -50,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CountryCategoryPage({ params }: PageProps) {
-  if (isReservedPublicSlug(params.slug)) notFound();
+  if (isReservedPublicSlug(params.slug)) permanentRedirect('/destinations');
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
   const landingSlug = params.slug.includes('-safaris') ? params.slug : landingSlugForCountry(countrySlug);
@@ -81,5 +83,5 @@ export default async function CountryCategoryPage({ params }: PageProps) {
     );
   }
 
-  notFound();
+  redirect(destinationPublicPath(countrySlug));
 }

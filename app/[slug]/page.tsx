@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import CmsSlugClient from '@/components/public/CmsSlugClient';
 import JsonLd from '@/components/public/JsonLd';
 import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
@@ -29,7 +29,9 @@ function isReservedPublicSlug(slug: string): boolean {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  if (isReservedPublicSlug(params.slug)) notFound();
+  if (isReservedPublicSlug(params.slug)) {
+    return { title: 'Eton Safaris', robots: { index: false, follow: false } };
+  }
   const resolved = resolvePublicSlugLenient(params.slug);
   if (!resolved) return { title: 'Eton Safaris', robots: { index: false, follow: false } };
 
@@ -67,7 +69,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PublicCmsSlugPage({ params }: PageProps) {
-  if (isReservedPublicSlug(params.slug)) notFound();
+  if (isReservedPublicSlug(params.slug)) permanentRedirect('/');
   const resolved = resolvePublicSlugLenient(params.slug);
   if (!resolved) {
     return (

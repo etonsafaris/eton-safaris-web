@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { countrySlugFromLanding, landingCmsSlug } from '@/lib/cms-routes';
+import { countrySlugFromLanding, destinationPublicPath, landingCmsSlug } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { loadCountryPageDataResilient } from '@/lib/load-public';
 
@@ -11,16 +11,16 @@ import { loadCountryPageDataResilient } from '@/lib/load-public';
  */
 export default async function LandingAdminPreviewPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(landingCmsSlug(params.slug));
-  if (!slug) notFound();
+  if (!slug) permanentRedirect('/destinations');
 
   let data;
   try {
     data = await loadCountryPageDataResilient(slug);
   } catch (error) {
     console.error('[Landing preview] Failed to load country:', error);
-    notFound();
+    permanentRedirect(destinationPublicPath(slug));
   }
-  if (!data.country) notFound();
+  if (!data.country) permanentRedirect(destinationPublicPath(slug));
 
   const country =
     data.country ||

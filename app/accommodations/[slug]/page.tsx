@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadAccommodationDetailSynced, loadStaticAccommodationParams } from '@/lib/load-public';
@@ -35,23 +35,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
-  if (!slug) notFound();
+  if (!slug) permanentRedirect('/tours');
 
   const data = await safePublicDetailLoad(
     'accommodation detail page',
     () => loadAccommodationDetailSynced(slug),
     slug
   );
-  if (!data?.item) notFound();
 
   return (
     <PublicShellServer>
       <AccommodationDetailClient
         key={slug}
         embedded
-        initialItem={data.item}
-        initialOthers={data.others ?? []}
-        initialTours={data.tours ?? []}
+        initialItem={data?.item ?? null}
+        initialOthers={data?.others ?? []}
+        initialTours={data?.tours ?? []}
       />
     </PublicShellServer>
   );

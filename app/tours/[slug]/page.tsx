@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadStaticTourParams, loadTourDetailSynced } from '@/lib/load-public';
@@ -32,20 +32,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TourDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
-  if (!slug) notFound();
+  if (!slug) permanentRedirect('/tours');
 
   const loaded = await safePublicDetailLoad('tour detail page', () => loadTourDetailSynced(slug), slug);
-  if (!loaded?.tour) notFound();
-
-  const { tour, related } = loaded;
 
   return (
     <PublicShellServer>
       <TourDetailClient
         key={params.slug}
         embedded
-        initialTour={tour}
-        initialRelated={related ?? []}
+        initialTour={loaded?.tour ?? null}
+        initialRelated={loaded?.related ?? []}
       />
     </PublicShellServer>
   );

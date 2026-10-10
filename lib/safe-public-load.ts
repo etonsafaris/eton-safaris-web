@@ -19,7 +19,7 @@ export async function safePublicLoad<T>(
   }
 }
 
-/** Detail routes: return `null` on timeout/DB errors so pages can call `notFound()`. */
+/** Detail routes: return `null` on timeout/DB errors. Pages render the client and let it recover. */
 export async function safePublicDetailLoad<T>(
   scope: string,
   loader: () => Promise<T>,

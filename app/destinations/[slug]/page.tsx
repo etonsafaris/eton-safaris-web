@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
@@ -40,16 +40,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
-  if (!slug || !isDedicatedLandingCountry(slug)) notFound();
+  if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
 
   let data;
   try {
     data = await loadCountryPageDataResilient(slug);
   } catch (error) {
     console.warn('[Public] Destination page load failed:', slug, error);
-    notFound();
+    permanentRedirect('/destinations');
   }
-  if (!data?.country) notFound();
+  if (!data?.country) permanentRedirect('/destinations');
 
   const country = data.country;
   const heroSrc = countryHeroImage(slug, country);
