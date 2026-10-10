@@ -60,7 +60,11 @@ export async function GET(request: Request) {
       const [subscribersResult, toursResult, updatesResult] = await Promise.all([
         client.query('SELECT id,email,last_digest_at FROM subscribers'),
         client.query('SELECT id,title,slug,country FROM tours LIMIT 6'),
-        client.query('SELECT title,slug FROM safari_updates LIMIT 5'),
+        client.query(
+          `SELECT title, slug FROM safari_updates
+           WHERE COALESCE(post_type::text, '') NOT ILIKE '%language%'
+           LIMIT 5`
+        ),
       ]);
       return {
         subscribers: subscribersResult.rows,

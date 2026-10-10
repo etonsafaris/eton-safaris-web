@@ -2,8 +2,6 @@ import {
   fetchCollectionRecordById,
   fetchPublicSafariUpdatesPage,
   fetchRecordByPublicSlug,
-  filterPublicSafariUpdates,
-  isLanguagePost,
   isPublishedRecord,
   publicRecordSlug,
 } from '@/lib/data-server';
@@ -21,7 +19,7 @@ async function hydrateSafariUpdate(row: RecordRow | null): Promise<RecordRow | n
   if (!row?.id) return row;
   try {
     const full = await fetchCollectionRecordById('safari_updates', String(row.id));
-    if (full && isPublishedRecord(full) && !isLanguagePost(full)) return full;
+    if (full && isPublishedRecord(full)) return full;
   } catch {
     // keep list row
   }
@@ -29,7 +27,7 @@ async function hydrateSafariUpdate(row: RecordRow | null): Promise<RecordRow | n
 }
 
 function isPublicSafariPost(row: RecordRow | null | undefined) {
-  return Boolean(row && isPublishedRecord(row) && !isLanguagePost(row));
+  return Boolean(row && isPublishedRecord(row));
 }
 
 async function findInSafariListing(slug: string, scanLimit = 96): Promise<RecordRow | null> {
@@ -37,9 +35,13 @@ async function findInSafariListing(slug: string, scanLimit = 96): Promise<Record
   if (!needle) return null;
   for (const limit of [48, scanLimit]) {
     try {
-      const page = await fetchPublicSafariUpdatesPage({ limit, offset: 0 });
+      const page = await fetchPublicSafariUpdatesPage({
+        limit,
+        offset: 0,
+        includeLanguagePosts: true,
+      });
       const match =
-        filterPublicSafariUpdates(page.rows).find((row) => {
+        page.rows.find((row) => {
           const rowSlug = normalizeSlug(publicRecordSlug(row) || '');
           return rowSlug === needle || String(row.id ?? '') === slug;
         }) || null;

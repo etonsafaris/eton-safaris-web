@@ -10,7 +10,6 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   getRecordImage,
   getRecordTitle,
@@ -61,19 +60,11 @@ export default function ParkDetailClient({
     if (serverGate.current && live === 0) return;
     async function load() {
       try {
-        const [full, parkPage] = await Promise.all([
-          fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']),
-          fetchCollectionPage('national_park', ['national_parks', 'parks'], { limit: 20, offset: 0 }),
-        ]);
+        const full = await fetchRecordByPublicSlug('national_park', slug, ['national_parks', 'parks']);
         const published = full && isPublishedRecord(full) ? full : null;
         if (published) {
           setPark(published);
-          setOthers(
-            (parkPage?.rows ?? [])
-              .filter(isPublishedRecord)
-              .filter((row) => String(row?.id) !== String(published?.id || ''))
-              .slice(0, 20)
-          );
+          setOthers([]);
           const country = pickStoredString(published, ['country']);
           const tourRows = await resolvePublicTours({ country, limit: 12 });
           if (tourRows.length) setTours(tourRows);

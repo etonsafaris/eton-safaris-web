@@ -43,17 +43,20 @@ export default function RelatedSidebar({
   items,
   countryName = '',
   showExpert = true,
+  alwaysShow = false,
 }: {
   title: string;
   items: RelatedSidebarItem[];
   countryName?: string;
   showExpert?: boolean;
+  alwaysShow?: boolean;
 }) {
   const safeItems = (items ?? []).filter((item) => item?.href);
+  const showList = safeItems.length > 0 || alwaysShow;
 
   return (
     <aside className="lg:col-span-1 lg:self-start">
-      {safeItems.length > 0 ? (
+      {showList ? (
         <div className="rounded-[20px] bg-[#edf2f2] p-2.5">
           <div className="p-2.5">
             <h2 className="mb-0 text-[28px] font-normal italic leading-[1.2] text-[#6aa441]">{title}</h2>

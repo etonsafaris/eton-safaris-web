@@ -215,7 +215,7 @@ export function parseBlocksFromRecord(record: RecordRow | null | undefined): { t
 }
 
 export function isLanguagePost(record: RecordRow): boolean {
-  return String(record.post_type || '').toLowerCase().includes('language');
+  return String(record.post_type || record.type || '').toLowerCase().includes('language');
 }
 
 export function recordBodyHtml(record: RecordRow | null | undefined): string {
@@ -677,6 +677,7 @@ export async function fetchCollectionPage(
 const SAFARI_UPDATE_PUBLIC_LIST_FALLBACK =
   'id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date';
 
+/** Public lists, home, nav, and RSS. Language posts stay out of browse. */
 export function filterPublicSafariUpdates(rows: RecordRow[]): RecordRow[] {
   return rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
 }
@@ -685,9 +686,15 @@ export function filterPublicSafariUpdates(rows: RecordRow[]): RecordRow[] {
 export async function fetchPublicSafariUpdatesPage(options?: {
   limit?: number;
   offset?: number;
+  /** Detail-page slug fallback only. Browse lists leave this false. */
+  includeLanguagePosts?: boolean;
 }): Promise<{ rows: RecordRow[]; total: number }> {
   const limit = Math.max(1, Math.min(options?.limit ?? 48, 200));
   const offset = Math.max(0, options?.offset ?? 0);
+  const keep = (raw: RecordRow[]) =>
+    options?.includeLanguagePosts
+      ? raw.filter((row) => isPublishedRecord(row))
+      : filterPublicSafariUpdates(raw);
   const initialColumns = publicListColumnsFor('safari_updates') || SAFARI_UPDATE_PUBLIC_LIST_FALLBACK;
   const orderColumns = ['published_at', 'publish_date', 'created_date', 'created_at', 'id'];
 
@@ -701,7 +708,7 @@ export async function fetchPublicSafariUpdatesPage(options?: {
         initialColumns,
         'safari_updates::public-list'
       );
-      const rows = filterPublicSafariUpdates(raw);
+      const rows = keep(raw);
       const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
       return { rows, total };
     } catch (error) {
@@ -721,7 +728,7 @@ export async function fetchPublicSafariUpdatesPage(options?: {
       initialColumns,
       'safari_updates::public-list'
     );
-    const rows = filterPublicSafariUpdates(raw);
+    const rows = keep(raw);
     const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
     return { rows, total };
   } catch (error) {

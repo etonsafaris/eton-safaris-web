@@ -10,12 +10,6 @@ import { useRouter } from 'next/navigation';
 
 import { Search } from 'lucide-react';
 
-import { languagePostSearchCard, searchLanguagePosts } from '@/lib/content-search';
-
-import { fetchCollectionRecords } from '@/lib/data';
-import { useCmsLive } from '@/lib/cms-live';
-
-import type { DiscoverySearchCard } from '@/lib/discovery-search';
 import { suggestTours, tourSearchCard } from '@/lib/tour-search';
 
 import type { RecordRow } from '@/lib/types';
@@ -70,14 +64,9 @@ export default function TourSearchBar({
 
   const [category, setCategory] = useState(initialCategory);
 
-  const [languagePosts, setLanguagePosts] = useState<RecordRow[]>([]);
-  const [discovery, setDiscovery] = useState<DiscoverySearchCard[]>([]);
-
   const [open, setOpen] = useState(false);
 
   const boxRef = useRef<HTMLDivElement>(null);
-
-  const live = useCmsLive();
 
 
 
@@ -93,45 +82,9 @@ export default function TourSearchBar({
 
 
 
-  useEffect(() => {
-
-    fetchCollectionRecords('safari_updates', [], { maxRows: 48 })
-
-      .then(setLanguagePosts)
-
-      .catch((error) => console.error('[Search] Failed to load language posts:', error));
-
-  }, [live]);
-
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setDiscovery([]);
-      return;
-    }
-    let cancelled = false;
-    const timer = window.setTimeout(() => {
-      fetch(`/api/public/search?q=${encodeURIComponent(q)}`, { credentials: 'same-origin' })
-        .then((res) => res.json())
-        .then((body: { parks?: DiscoverySearchCard[]; stays?: DiscoverySearchCard[]; places?: DiscoverySearchCard[] }) => {
-          if (cancelled) return;
-          setDiscovery([...(body.parks || []), ...(body.stays || []), ...(body.places || [])].slice(0, 8));
-        })
-        .catch(() => {
-          if (!cancelled) setDiscovery([]);
-        });
-    }, 220);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [query]);
-
   const suggestions = useMemo(() => suggestTours(tours, query), [tours, query]);
 
-  const guides = useMemo(() => searchLanguagePosts(languagePosts, query), [languagePosts, query]);
-
-  const hasDropdownResults = suggestions.length > 0 || guides.length > 0 || discovery.length > 0;
+  const hasDropdownResults = suggestions.length > 0;
 
 
 
@@ -294,72 +247,6 @@ export default function TourSearchBar({
                       );
 
                     })}
-
-                    {guides.map((post, index) => {
-
-                      const card = languagePostSearchCard(post);
-
-                      return (
-
-                        <Link
-
-                          key={`guide-${String(post.id ?? index)}`}
-
-                          href={card.href}
-
-                          onClick={() => setOpen(false)}
-
-                          className="flex gap-3 border-b px-3 py-2 last:border-0 hover:bg-[#f9f9f9]"
-
-                        >
-
-                          <div className="flex h-14 w-16 shrink-0 items-center justify-center bg-moss/10 text-[10px] font-bold uppercase tracking-wide text-moss">
-
-                            Guide
-
-                          </div>
-
-                          <span className="min-w-0 text-left font-normal normal-case">
-
-                            <span className="block truncate text-sm font-semibold text-[#333]">{card.title}</span>
-
-                            {card.excerpt ? (
-
-                              <span className="block truncate text-[11px] text-gray-500">{card.excerpt}</span>
-
-                            ) : null}
-
-                          </span>
-
-                        </Link>
-
-                      );
-
-                    })}
-
-                    {discovery.map((item) => (
-                      <Link
-                        key={`${item.kind}-${item.href}`}
-                        href={item.href}
-                        onClick={() => setOpen(false)}
-                        className="flex gap-3 border-b px-3 py-2 hover:bg-[#f9f9f9]"
-                      >
-                        {item.image ? (
-                          <img src={item.image} alt="" width={64} height={56} loading="lazy" className="h-14 w-16 shrink-0 object-cover" />
-                        ) : (
-                          <div className="flex h-14 w-16 shrink-0 items-center justify-center bg-moss/10 text-[10px] font-bold uppercase text-moss">
-                            {item.kindLabel.slice(0, 4)}
-                          </div>
-                        )}
-                        <span className="min-w-0 text-left font-normal normal-case">
-                          <span className="block text-[10px] font-semibold uppercase tracking-wide text-moss">{item.kindLabel}</span>
-                          <span className="block truncate text-sm font-semibold text-[#333]">{item.title}</span>
-                          {item.meta ? (
-                            <span className="block truncate text-[11px] text-gray-500">{item.meta}</span>
-                          ) : null}
-                        </span>
-                      </Link>
-                    ))}
 
                   </>
 

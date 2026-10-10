@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { isLanguagePost, safariUpdatePublicPath } from '@/lib/data';
 import { loadSafariUpdateDetailResilient, loadStaticSafariUpdateParams } from '@/lib/load-public';
+import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
 import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
@@ -21,7 +24,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
-    return await publicRecordMetadata('safari_updates', params.slug, `/safari-updates/${params.slug}`, {
+    const post = await resolveSafariUpdatePost(params.slug).catch(() => null);
+    const path =
+      post && isLanguagePost(post) ? safariUpdatePublicPath(post) : `/safari-updates/${params.slug}`;
+    return await publicRecordMetadata('safari_updates', params.slug, path, {
       contentType: 'article',
     });
   } catch (error) {
@@ -31,6 +37,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SafariUpdateDetailPage({ params }: PageProps) {
+  const loadedPost = await resolveSafariUpdatePost(params.slug).catch(() => null);
+  if (loadedPost && isLanguagePost(loadedPost)) {
+    permanentRedirect(safariUpdatePublicPath(loadedPost));
+  }
   const { post, related, tours } = await safePublicLoad(
     'safari update detail page',
     () => loadSafariUpdateDetailResilient(params.slug),

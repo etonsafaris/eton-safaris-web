@@ -7,11 +7,10 @@ import PageHero from '@/components/public/PageHero';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import RelatedSidebar from '@/components/public/RelatedSidebar';
 import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
-import { matchesCountry, publicCountryLabel } from '@/lib/country-utils';
+import { publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -75,23 +74,14 @@ export default function PlacePageContent({
     if (initialPlace && live === 0) return undefined;
     async function load() {
       try {
-        const [full, placePage] = await Promise.all([
-          fetchRecordByPublicSlug('explore', placeSlug),
-          fetchCollectionPage('explore', [], { limit: 24, offset: 0 }),
-        ]);
+        const full = await fetchRecordByPublicSlug('explore', placeSlug);
         if (!mounted) return;
         const match = (full && isPublishedRecord(full) ? full : null) || initialPlace;
         setPlace(match);
+        setOthers([]);
         const countryKey =
           countrySlugProp ||
           pickStoredString(match, ['country', 'country_slug', 'destination', 'nation']);
-        const otherPlaces = (placePage?.rows ?? [])
-          .filter(isPublishedRecord)
-          .filter((row) => String(row?.id) !== String(match?.id || ''));
-        const countryPlaces = countryKey
-          ? otherPlaces.filter((row) => matchesCountry(row, countryKey))
-          : [];
-        setOthers((countryPlaces.length ? countryPlaces : otherPlaces).slice(0, 20));
         const tourRows = await resolvePublicTours({ country: countryKey, limit: 12 });
         if (tourRows.length) setTours(tourRows);
       } catch (error) {

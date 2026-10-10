@@ -94,9 +94,7 @@ export function meetsIndexQuality(record: RecordRow, kind: IndexableContentKind)
  */
 export function shouldIndexPublicRecord(record: RecordRow, kind: IndexableContentKind): boolean {
   void kind;
-  if (!isPublishedRecord(record)) return false;
-  const seo = seoValuesFromRecord(record);
-  return seo.robots_index !== false;
+  return isPublishedRecord(record);
 }
 
 export function indexableKindForCollectionId(collectionId: string): IndexableContentKind | null {
@@ -121,9 +119,7 @@ export type PublicIndexStatus = {
 
 function noindexReason(record: RecordRow, kind: IndexableContentKind): string {
   void kind;
-  const seo = seoValuesFromRecord(record);
   if (!isPublishedRecord(record)) return 'Not published — hidden from the public site.';
-  if (!seo.robots_index) return 'Advanced SEO is set to No Index.';
   return 'Excluded from Google indexing.';
 }
 
@@ -140,7 +136,6 @@ export function getPublicIndexStatus(
     };
   }
   const indexable = shouldIndexPublicRecord(record, kind);
-  const seo = seoValuesFromRecord(record);
   const qualityOk = meetsIndexQuality(record, kind);
   return {
     indexable,

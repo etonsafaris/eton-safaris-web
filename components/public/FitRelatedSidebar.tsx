@@ -12,11 +12,13 @@ export default function FitRelatedSidebar({
   items,
   countryName = '',
   articleSelector = '[data-content-article]',
+  alwaysShow = false,
 }: {
   title: string;
   items: RelatedSidebarItem[];
   countryName?: string;
   articleSelector?: string;
+  alwaysShow?: boolean;
 }) {
   const measureRef = useRef<HTMLDivElement>(null);
   const safeItems = useMemo(() => items ?? [], [items]);
@@ -100,7 +102,7 @@ export default function FitRelatedSidebar({
           </ul>
         </div>
       </div>
-      <RelatedSidebar title={title} items={visibleItems} countryName={countryName} />
+      <RelatedSidebar title={title} items={visibleItems} countryName={countryName} alwaysShow={alwaysShow} />
     </>
   );
 }

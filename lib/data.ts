@@ -407,6 +407,13 @@ export function isLanguagePost(record: RecordRow): boolean {
   return pickString(record, ['post_type', 'type']).toLowerCase().includes('language');
 }
 
+/** Dav-style path: language posts are sitemap URLs, not blog-listing URLs. */
+export function safariUpdatePublicPath(record: RecordRow): string {
+  const slug = publicRecordSlug(record);
+  if (!slug) return '/safari-updates';
+  return isLanguagePost(record) ? `/safari-updates/languages/${slug}` : `/safari-updates/${slug}`;
+}
+
 export function formatColumnLabel(column: string): string {
   return column.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

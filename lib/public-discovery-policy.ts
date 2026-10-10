@@ -1,17 +1,19 @@
 /**
- * Parks and stays: indexable detail URLs (sitemap + Google), hidden from browse UX
- * (nav, listings, country carousels, site search). Detail pages promote country tours.
+ * Language posts, parks, stays, and explore places: detail URLs stay in the sitemap
+ * and open when Google sends a visitor. They are not listed, linked, or searched
+ * on the public site. Standard safari updates and tours stay public.
  */
-export const PUBLIC_LISTING_PATHS = ['/explore', '/tours', '/safari-updates'] as const;
+export const PUBLIC_LISTING_PATHS = ['/tours', '/safari-updates'] as const;
 
-/** Legacy hub URLs — redirect to tours; omitted from sitemap. */
-export const SEO_ONLY_LISTING_HUB_PATHS = ['/parks', '/accommodations'] as const;
+/** Listing hubs — redirect to tours; omitted from sitemap. Detail URLs stay. */
+export const SEO_ONLY_LISTING_HUB_PATHS = ['/parks', '/accommodations', '/explore'] as const;
 
 const HIDDEN_BROWSE_TABLES = new Set([
   'national_park',
   'national_parks',
   'parks',
   'accommodations',
+  'explore',
 ]);
 
 export function isSeoOnlyListingHub(pathname: string): boolean {

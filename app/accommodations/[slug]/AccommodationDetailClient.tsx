@@ -10,7 +10,6 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -27,11 +26,7 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
-import {
-  accommodationNationalParkDisplay,
-  enrichAccommodationParkFields,
-} from '@/lib/accommodation-park';
-import { fetchParksForCountry } from '@/lib/data';
+import { accommodationNationalParkDisplay } from '@/lib/accommodation-park';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailClient({
@@ -62,37 +57,18 @@ export default function AccommodationDetailClient({
   }, [initialItem, initialOthers, initialTours]);
 
   useEffect(() => {
-    const country = item ? pickStoredString(item, ['country']) : '';
-    if (!country) {
-      setParks([]);
-      return;
-    }
-    void fetchParksForCountry(country, 200).then((rows) => setParks(rows ?? []));
-  }, [item?.id, item?.country]);
-
-  useEffect(() => {
     if (serverGate.current && live === 0) return;
     async function load() {
       try {
-        const [full, stayPage] = await Promise.all([
-          fetchRecordByPublicSlug('accommodations', slug),
-          fetchCollectionPage('accommodations', [], { limit: 20, offset: 0 }),
-        ]);
+        const full = await fetchRecordByPublicSlug('accommodations', slug);
         const published = full && isPublishedRecord(full) ? full : null;
         if (!published) {
           if (!serverGate.current) triggerNotFound();
           return;
         }
-        const countryForParks = pickStoredString(published, ['country']);
-        const parkRows = countryForParks ? await fetchParksForCountry(countryForParks, 200) : [];
-        setParks(parkRows);
-        setItem(enrichAccommodationParkFields(published, parkRows));
-        setOthers(
-          (stayPage?.rows ?? [])
-            .filter(isPublishedRecord)
-            .filter((row) => String(row?.id) !== String(published?.id || ''))
-            .slice(0, 20)
-        );
+        setParks([]);
+        setItem(published);
+        setOthers([]);
         const country = published ? pickStoredString(published, ['country']) : '';
         const tourRows = await resolvePublicTours({
           country,

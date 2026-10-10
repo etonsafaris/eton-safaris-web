@@ -10,11 +10,10 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import {
   getRecordImage,
   getRecordTitle,
-  isLanguagePost,
   isPublishedRecord,
   pickStoredString,
-  pickString,
   recordPublishedAt,
+  safariUpdatePublicPath,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -26,7 +25,7 @@ import { readPublicReadPrefill } from '@/lib/public-read-prefill';
 import type { RecordRow } from '@/lib/types';
 
 function isReadableSafariPost(row: RecordRow | null | undefined) {
-  return Boolean(row && isPublishedRecord(row) && !isLanguagePost(row));
+  return Boolean(row && isPublishedRecord(row));
 }
 
 export default function SafariUpdateDetailClient({
@@ -132,6 +131,23 @@ export default function SafariUpdateDetailClient({
     };
   }, [slug, live, post]);
 
+  useEffect(() => {
+    if (!slug || related.length > 0) return undefined;
+    let cancelled = false;
+    fetch('/api/public/safari-updates?limit=12&offset=0', { credentials: 'same-origin' })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { posts?: RecordRow[] } | null) => {
+        if (cancelled || !body?.posts?.length) return;
+        const currentId = String(post?.id || '');
+        const rows = body.posts.filter((row) => row && String(row.id || '') !== currentId);
+        if (rows.length) setRelated(rows.slice(0, 8));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, related.length, post?.id]);
+
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = post ? getRecordImage(post) || undefined : undefined;
   const published = useEnsurePublishedAt('safari_updates', post, '', (stamp) => {
@@ -152,11 +168,12 @@ export default function SafariUpdateDetailClient({
         published={published || undefined}
         showLocation={false}
         hideMeta
+        sidebarAlways
         sidebarTitle="Recent Updates"
         sidebarItems={(related ?? [])
           .filter(Boolean)
           .map((item) => ({
-            href: `/safari-updates/${pickString(item, ['slug']) || item?.id || ''}`,
+            href: safariUpdatePublicPath(item),
             image: getRecordImage(item) || undefined,
             title: getRecordTitle(item) || 'Safari update',
             date: formatPublishedDate(recordPublishedAt(item)),

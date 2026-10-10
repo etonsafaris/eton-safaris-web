@@ -11,7 +11,10 @@ function publicPathForSavedRow(table: string, payload?: Record<string, unknown> 
     if (!key || key === 'home' || key === 'homepage' || key === 'home-page') return '/';
     return pagePublicPath(slug);
   }
-  if (table === 'safari_updates' && slug) return `/safari-updates/${slug}`;
+  if (table === 'safari_updates' && slug) {
+    const kind = String(payload?.post_type || payload?.type || '').toLowerCase();
+    return kind.includes('language') ? `/safari-updates/languages/${slug}` : `/safari-updates/${slug}`;
+  }
   if (table === 'tours' && slug) return `/tours/${slug}`;
   if ((table === 'national_park' || table === 'parks') && slug) return `/parks/${slug}`;
   if (table === 'accommodations' && slug) return `/accommodations/${slug}`;

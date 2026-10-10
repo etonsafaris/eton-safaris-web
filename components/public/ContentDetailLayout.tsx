@@ -10,6 +10,7 @@ export default function ContentDetailLayout({
   hideMeta = false,
   sidebarTitle,
   sidebarItems,
+  sidebarAlways = false,
   children,
   below,
 }: {
@@ -21,6 +22,7 @@ export default function ContentDetailLayout({
   hideMeta?: boolean;
   sidebarTitle: string;
   sidebarItems: { href: string; image?: string | null; title: string; date?: string }[];
+  sidebarAlways?: boolean;
   children: React.ReactNode;
   below?: React.ReactNode;
 }) {
@@ -40,7 +42,12 @@ export default function ContentDetailLayout({
           <article data-content-article className="min-w-0 lg:col-span-3 lg:pl-[30px] lg:pr-[50px]">
             {children}
           </article>
-          <FitRelatedSidebar title={sidebarTitle} items={sidebarItems} countryName={country} />
+          <FitRelatedSidebar
+            title={sidebarTitle}
+            items={sidebarItems}
+            countryName={country}
+            alwaysShow={sidebarAlways}
+          />
         </div>
       </section>
       {below}

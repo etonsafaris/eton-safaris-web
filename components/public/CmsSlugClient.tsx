@@ -27,7 +27,7 @@ import {
   fetchCollectionRecords,
   isPublishedRecord,
 } from '@/lib/data';
-import { countryLabelFromSlug, findCategoryBySlug, findPlaceBySlug, publicCountryLabel } from '@/lib/country-utils';
+import { countryLabelFromSlug, findCategoryBySlug, publicCountryLabel } from '@/lib/country-utils';
 import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 import type { RecordRow } from '@/lib/types';
 
@@ -96,16 +96,9 @@ export default function CmsSlugClient({
       let categoryMatch = null;
       let placeMatch = null;
       if (categorySlug) {
-        const [categoryRows, placeRows] = await Promise.all([
-          fetchCollectionRecords('categories', [], { maxRows: 80 }),
-          fetchCollectionRecords('explore', [], { maxRows: 80 }),
-        ]);
+        const categoryRows = await fetchCollectionRecords('categories', [], { maxRows: 80 });
         categoryMatch = findCategoryBySlug(categoryRows.filter(isPublishedRecord), categorySlug, countrySlug);
-        placeMatch =
-          !categoryMatch
-            ? findPlaceBySlug(placeRows.filter(isPublishedRecord), categorySlug, countrySlug) ||
-              findPlaceBySlug(placeRows, categorySlug, countrySlug)
-            : null;
+        placeMatch = null;
       }
       if (mounted) {
         setCountry(countryMatch);

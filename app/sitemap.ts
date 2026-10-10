@@ -7,6 +7,7 @@ import {
   publicListColumnsFor,
   publicRecordSlug,
   recordPublishedAt,
+  safariUpdatePublicPath,
 } from '@/lib/data';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { mergePublicDestinations } from '@/lib/public-destinations';
@@ -96,7 +97,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('', now, 1, 'daily'),
     entry('/tours', now, 0.9),
     entry('/tours/compare', now, 0.7),
-    entry('/explore', now, 0.75),
     entry('/safari-updates', now, 0.8),
     entry('/safari-updates/rss.xml', now, 0.4, 'daily'),
     entry('/community-support', now, 0.8),
@@ -125,8 +125,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return path ? indexableRow('accommodations', row, path, 0.6) : null;
     }),
     ...posts.map((row) => {
-      const path = recordPath('/safari-updates', row);
-      return path ? indexableRow('safari_updates', row, path, 0.6, 'weekly') : null;
+      const path = safariUpdatePublicPath(row);
+      return path && path !== '/safari-updates'
+        ? indexableRow('safari_updates', row, path, 0.6, 'weekly')
+        : null;
     }),
     ...places.map((row) => {
       const path = recordPath('/explore', row);
