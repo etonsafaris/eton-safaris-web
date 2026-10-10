@@ -1,4 +1,4 @@
-﻿import { isPgTooManyClientsError } from '@/lib/pg-retry';
+﻿import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
 import { serialPgWork } from '@/lib/pg-serial';
 
 const isServer = typeof window === 'undefined';
@@ -56,7 +56,7 @@ export function isDatabaseConfigured(): boolean {
 /** Aiven free tier Γëê 20 connections ΓÇö cap per isolate/process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 1 : 5;
 
 const POOL_MAX = Math.max(
   1,
@@ -85,9 +85,9 @@ function getEdgeSql(): Sql {
     global._aivenSql = postgres(connectionString, {
       ssl: 'require',
       max: POSTGRES_MAX,
-      idle_timeout: 20,
+      idle_timeout: process.env.VERCEL ? 5 : 20,
       connect_timeout: 10,
-      max_lifetime: 60 * 5,
+      max_lifetime: process.env.VERCEL ? 60 : 60 * 5,
       prepare: false,
       fetch_types: false,
       connection: {
@@ -218,19 +218,21 @@ export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): P
   if (!pool) {
     throw new Error('Aiven DATABASE_URL is not configured.');
   }
-  return serialPgWork(async () => {
-    let slotHeld = false;
-    let client: PoolClient | null = null;
-    try {
-      await acquirePgSlot();
-      slotHeld = true;
-      client = await connectWithRetry(pool);
-      return await fn(client);
-    } finally {
-      client?.release();
-      if (slotHeld) releasePgSlot();
-    }
-  });
+  return serialPgWork(() =>
+    withPgRetry(async () => {
+      let slotHeld = false;
+      let client: PoolClient | null = null;
+      try {
+        await acquirePgSlot();
+        slotHeld = true;
+        client = await connectWithRetry(pool);
+        return await fn(client);
+      } finally {
+        client?.release();
+        if (slotHeld) releasePgSlot();
+      }
+    }, process.env.VERCEL ? 4 : 6)
+  );
 }
 
 export async function queryRows<T extends QueryResultRow = QueryResultRow>(

@@ -35,10 +35,9 @@ export function useHomePageRecovery(options: {
   useEffect(() => {
     const popularToursMissing =
       data.tours.length > 0 && selectHomePopularTours(data.tours, 1).length === 0;
-    // One optional refetch per visit — avoid hammering /api/public/home-bundle (exhausts Aiven pool).
     const sparse =
       needsClientRefresh ||
-      (data.tours.length === 0 && data.countries.length === 0) ||
+      data.tours.length === 0 ||
       (heroSlides.length === 0 && data.countries.length === 0) ||
       popularToursMissing;
     if (!sparse || attemptedRef.current) return undefined;
@@ -47,19 +46,26 @@ export function useHomePageRecovery(options: {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       void (async () => {
-        const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
-        if (cancelled || !body?.data) return;
-        setData((current) => {
-          const merged = mergeHomePagePayload(normalizeHomePagePayload(body.data), current);
-          const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
-          if (slides.length) setHeroSlides(slides);
-          else if (Array.isArray(body.heroSlides) && body.heroSlides.length) {
-            setHeroSlides(body.heroSlides);
-          } else {
-            setHeroSlides(safeHeroSlides(fallbackHomeHeroSlides()));
+        for (let attempt = 0; attempt < 4 && !cancelled; attempt += 1) {
+          const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
+          const incoming = normalizeHomePagePayload(body?.data);
+          if (cancelled) return;
+          if (incoming.tours.length > 0) {
+            setData((current) => {
+              const merged = mergeHomePagePayload(incoming, current);
+              const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+              if (slides.length) setHeroSlides(slides);
+              else if (Array.isArray(body?.heroSlides) && body.heroSlides.length) {
+                setHeroSlides(body.heroSlides);
+              } else {
+                setHeroSlides(safeHeroSlides(fallbackHomeHeroSlides()));
+              }
+              return merged;
+            });
+            return;
           }
-          return merged;
-        });
+          await new Promise((resolve) => window.setTimeout(resolve, 1200 * (attempt + 1)));
+        }
       })();
     }, 400);
 
@@ -67,7 +73,7 @@ export function useHomePageRecovery(options: {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [needsClientRefresh, heroSlides.length, data.tours.length, data.countries.length]);
+  }, [needsClientRefresh, data.tours.length]);
 
   return { data, heroSlides };
 }

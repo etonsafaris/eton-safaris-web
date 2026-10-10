@@ -363,13 +363,16 @@ async function loadHomePageContentCached() {
 
 async function loadHomePageBundleLive() {
   const [data, content] = await Promise.all([loadHomePageData(), loadHomePageContentCached()]);
+  if (!data.tours?.length) {
+    throw new Error('Home bundle had no tours');
+  }
   const destinations = mergePublicDestinations(data.countries ?? []);
   return { data, content, destinations };
 }
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v18-isr-900'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v19-skip-empty'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
@@ -394,8 +397,12 @@ function instantHomeFallbackBundle() {
 /** Never throws — used by `/` and `/api/public/home-bundle` so a slow DB cannot blank the home page. */
 export async function loadHomePageBundleResilient() {
   try {
+    const pending = loadHomePageBundle().catch((error) => {
+      console.warn('[Public] Home bundle failed:', error);
+      return null;
+    });
     const bundle = await Promise.race([
-      loadHomePageBundle(),
+      pending,
       new Promise<null>((resolve) => setTimeout(() => resolve(null), HOME_BUNDLE_WAIT_MS)),
     ]);
     if (bundle) return bundle;
@@ -473,7 +480,16 @@ async function loadToursPageDataLive() {
 }
 
 export async function loadToursPageData() {
-  return cachedPublic(['tours-page-data-v5-aiven-priority'], ['collection:tours'], loadToursPageDataLive);
+  try {
+    return await cachedPublic(['tours-page-data-v6-skip-empty'], ['collection:tours'], async () => {
+      const loaded = await loadToursPageDataLive();
+      if (!loaded.tours.length) throw new Error('Public tours listing returned no packages');
+      return loaded;
+    });
+  } catch (error) {
+    console.warn('[Public] Tours listing cache skipped:', error);
+    return loadToursPageDataLive();
+  }
 }
 
 export async function loadDestinationsIndexCountries() {
@@ -831,11 +847,20 @@ async function loadSafariUpdatesPageDataLive(limit: number, offset: number) {
 export async function loadSafariUpdatesPageData(options?: { limit?: number; offset?: number }) {
   const limit = options?.limit ?? 48;
   const offset = options?.offset ?? 0;
-  return cachedPublic(
-    ['safari-updates-page-v3', String(limit), String(offset)],
-    ['collection:safari_updates'],
-    () => loadSafariUpdatesPageDataLive(limit, offset)
-  );
+  try {
+    return await cachedPublic(
+      ['safari-updates-page-v4-skip-empty', String(limit), String(offset)],
+      ['collection:safari_updates'],
+      async () => {
+        const loaded = await loadSafariUpdatesPageDataLive(limit, offset);
+        if (offset === 0 && !loaded.posts.length) throw new Error('Safari updates listing returned no posts');
+        return loaded;
+      }
+    );
+  } catch (error) {
+    console.warn('[Public] Safari updates cache skipped:', error);
+    return loadSafariUpdatesPageDataLive(limit, offset);
+  }
 }
 
 async function loadExplorePageDataLive(_limit: number, _offset: number) {

@@ -58,19 +58,26 @@ export default function ToursPageClient({
   }, [initialTours, initialCategories, initialCountries]);
 
   useCmsPageReload(() => {
-    Promise.all([
-      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
-        page.rows.filter(isPublishedRecord)
-      ),
-      fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
-      fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
-    ])
-      .then(([tourRows, categoryRows, countryRows]) => {
-        if (tourRows.length) setTours(tourRows);
+    async function load(attempt = 0): Promise<void> {
+      const [tourRows, categoryRows, countryRows] = await Promise.all([
+        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
+          page.rows.filter(isPublishedRecord)
+        ),
+        fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
+        fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
+      ]);
+      if (tourRows.length) {
+        setTours(tourRows);
         setCategories(categoryRows);
         setCountries(countryRows.filter(isPublishedRecord));
-      })
-      .catch((error) => console.error(error));
+        return;
+      }
+      if (attempt < 3) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1200 * (attempt + 1)));
+        return load(attempt + 1);
+      }
+    }
+    return load().catch((error) => console.error(error));
   }, initialTours.length > 0);
 
   useEffect(() => {
