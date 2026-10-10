@@ -24,6 +24,7 @@ import {
 import {
   fetchCollectionRecordById,
   fetchCollectionRecords,
+  countPublicTable,
   fetchCollectionPage,
   fetchPublicSafariUpdatesPage,
   fetchEastAfricaHomeTours,
@@ -437,39 +438,41 @@ export async function loadAccommodationsPageData(options?: { limit?: number; off
   );
 }
 
-async function loadToursPageDataLive() {
+async function loadToursPageDataLive(limit = 24, offset = 0) {
   try {
-    const [tourPage, categories, countries] = await Promise.all([
+    const [tourPage, categories, countries, counted] = await Promise.all([
       withTimeout(
-        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 120, offset: 0 }),
-        12000,
+        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit, offset }),
+        8000,
         { rows: [] as RecordRow[], total: 0 }
       ),
       withTimeout(
         fetchCollectionRecords('categories', [], { columns: listColumns('categories'), maxRows: 80 }),
-        6000,
+        4000,
         [] as RecordRow[]
       ),
       withTimeout(
         fetchCollectionRecords('countries', [], { columns: listColumns('countries'), maxRows: 48 }),
-        6000,
+        4000,
         [] as RecordRow[]
       ),
+      countPublicTable('tours'),
     ]);
     let tours = tourPage.rows.filter(isPublishedRecord);
-    if (!tours.length) {
-      tours = await withTimeout(resolvePublicTours({ limit: 120 }), 10000, [] as RecordRow[]).catch(
+    if (!tours.length && offset === 0) {
+      tours = await withTimeout(resolvePublicTours({ limit }), 6000, [] as RecordRow[]).catch(
         () => [] as RecordRow[]
       );
     }
+    const total = counted && counted > 0 ? counted : Math.max(tourPage.total, offset + tours.length);
     return toClientProps({
       tours,
-      total: Math.max(tourPage.total, tours.length, tourPage.rows.length),
+      total,
       categories: categories.filter(isPublishedRecord),
       countries: countries.filter(isPublishedRecord),
     });
   } catch {
-    const fallback = await resolvePublicTours({ limit: 120 }).catch(() => [] as RecordRow[]);
+    const fallback = offset === 0 ? await resolvePublicTours({ limit }).catch(() => [] as RecordRow[]) : [];
     return {
       tours: fallback,
       total: fallback.length,
@@ -479,16 +482,22 @@ async function loadToursPageDataLive() {
   }
 }
 
-export async function loadToursPageData() {
+export async function loadToursPageData(options?: { limit?: number; offset?: number }) {
+  const limit = options?.limit ?? 24;
+  const offset = options?.offset ?? 0;
   try {
-    return await cachedPublic(['tours-page-data-v6-skip-empty'], ['collection:tours'], async () => {
-      const loaded = await loadToursPageDataLive();
-      if (!loaded.tours.length) throw new Error('Public tours listing returned no packages');
-      return loaded;
-    });
+    return await cachedPublic(
+      ['tours-page-data-v7-paged', String(limit), String(offset)],
+      ['collection:tours'],
+      async () => {
+        const loaded = await loadToursPageDataLive(limit, offset);
+        if (offset === 0 && !loaded.tours.length) throw new Error('Public tours listing returned no packages');
+        return loaded;
+      }
+    );
   } catch (error) {
     console.warn('[Public] Tours listing cache skipped:', error);
-    return loadToursPageDataLive();
+    return loadToursPageDataLive(limit, offset);
   }
 }
 

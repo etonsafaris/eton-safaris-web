@@ -46,26 +46,20 @@ export function useHomePageRecovery(options: {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       void (async () => {
-        for (let attempt = 0; attempt < 4 && !cancelled; attempt += 1) {
-          const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
-          const incoming = normalizeHomePagePayload(body?.data);
-          if (cancelled) return;
-          if (incoming.tours.length > 0) {
-            setData((current) => {
-              const merged = mergeHomePagePayload(incoming, current);
-              const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
-              if (slides.length) setHeroSlides(slides);
-              else if (Array.isArray(body?.heroSlides) && body.heroSlides.length) {
-                setHeroSlides(body.heroSlides);
-              } else {
-                setHeroSlides(safeHeroSlides(fallbackHomeHeroSlides()));
-              }
-              return merged;
-            });
-            return;
+        const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
+        const incoming = normalizeHomePagePayload(body?.data);
+        if (cancelled || incoming.tours.length === 0) return;
+        setData((current) => {
+          const merged = mergeHomePagePayload(incoming, current);
+          const slides = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+          if (slides.length) setHeroSlides(slides);
+          else if (Array.isArray(body?.heroSlides) && body.heroSlides.length) {
+            setHeroSlides(body.heroSlides);
+          } else {
+            setHeroSlides(safeHeroSlides(fallbackHomeHeroSlides()));
           }
-          await new Promise((resolve) => window.setTimeout(resolve, 1200 * (attempt + 1)));
-        }
+          return merged;
+        });
       })();
     }, 400);
 

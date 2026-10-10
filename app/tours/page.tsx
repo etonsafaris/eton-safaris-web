@@ -3,6 +3,8 @@ import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
 import { Metadata } from 'next';
 
+const PAGE_SIZE = 24;
+
 export { revalidate } from '@/lib/public-page-config';
 export const dynamicParams = true;
 
@@ -32,14 +34,15 @@ function param(value?: string | string[]) {
 export default async function ToursPage({
   searchParams,
 }: {
-  searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string };
+  searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string; page?: string };
 }) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
   let tours: Awaited<ReturnType<typeof loadToursPageData>>['tours'] = [];
   let total = 0;
   let categories: Awaited<ReturnType<typeof loadToursPageData>>['categories'] = [];
   let countries: Awaited<ReturnType<typeof loadToursPageData>>['countries'] = [];
   try {
-    const loaded = await loadToursPageData();
+    const loaded = await loadToursPageData({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
     tours = loaded.tours ?? [];
     total = loaded.total ?? 0;
     categories = loaded.categories ?? [];
@@ -54,6 +57,8 @@ export default async function ToursPage({
       initialCategories={categories}
       initialCountries={countries}
       initialTotal={total}
+      page={page}
+      pageSize={PAGE_SIZE}
       initialQuery={param(searchParams?.q)}
       initialCategory={param(searchParams?.category)}
       initialDestination={param(searchParams?.destination)}

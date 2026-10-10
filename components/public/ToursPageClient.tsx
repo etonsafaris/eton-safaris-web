@@ -9,6 +9,7 @@ const TourSearchBar = dynamic(() => import('@/components/public/TourSearchBar'),
   loading: () => <div className="min-h-[52px] w-full rounded-md bg-gray-100" aria-hidden />,
 });
 import ListingSection, { ListingGrid } from '@/components/public/ListingSection';
+import ListingPager from '@/components/public/ListingPager';
 import PageFaqList from '@/components/public/PageFaqList';
 import { mergePublicDestinations, publicDestinationNames } from '@/lib/public-destinations';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
@@ -26,6 +27,8 @@ export default function ToursPageClient({
   initialCategories,
   initialCountries,
   initialTotal = 0,
+  page = 1,
+  pageSize = 24,
   initialQuery = '',
   initialCategory = '',
   initialDestination = '',
@@ -36,6 +39,8 @@ export default function ToursPageClient({
   initialCategories: RecordRow[];
   initialCountries: RecordRow[];
   initialTotal?: number;
+  page?: number;
+  pageSize?: number;
   initialQuery?: string;
   initialCategory?: string;
   initialDestination?: string;
@@ -58,26 +63,20 @@ export default function ToursPageClient({
   }, [initialTours, initialCategories, initialCountries]);
 
   useCmsPageReload(() => {
-    async function load(attempt = 0): Promise<void> {
-      const [tourRows, categoryRows, countryRows] = await Promise.all([
-        fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: 48, offset: 0 }).then((page) =>
-          page.rows.filter(isPublishedRecord)
-        ),
-        fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((page) => page.rows).catch(() => []),
-        fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((page) => page.rows).catch(() => []),
-      ]);
-      if (tourRows.length) {
-        setTours(tourRows);
-        setCategories(categoryRows);
-        setCountries(countryRows.filter(isPublishedRecord));
-        return;
-      }
-      if (attempt < 3) {
-        await new Promise((resolve) => window.setTimeout(resolve, 1200 * (attempt + 1)));
-        return load(attempt + 1);
-      }
-    }
-    return load().catch((error) => console.error(error));
+    const pageOffset = (page - 1) * pageSize;
+    return Promise.all([
+      fetchCollectionPage('tours', [], { columns: TOUR_LIST_COLUMNS, limit: pageSize, offset: pageOffset }).then(
+        (result) => result.rows.filter(isPublishedRecord)
+      ),
+      fetchCollectionPage('categories', [], { limit: 80, offset: 0 }).then((result) => result.rows).catch(() => []),
+      fetchCollectionPage('countries', [], { limit: 40, offset: 0 }).then((result) => result.rows).catch(() => []),
+    ])
+      .then(([tourRows, categoryRows, countryRows]) => {
+        if (tourRows.length) setTours(tourRows);
+        if (categoryRows.length) setCategories(categoryRows);
+        if (countryRows.length) setCountries(countryRows.filter(isPublishedRecord));
+      })
+      .catch((error) => console.error(error));
   }, initialTours.length > 0);
 
   useEffect(() => {
@@ -147,6 +146,9 @@ export default function ToursPageClient({
             </ListingGrid>
           </div>
         )}
+        {!q && !category && !(destination && destination !== 'All destinations') && !days ? (
+          <ListingPager basePath="/tours" page={page} pageSize={pageSize} total={initialTotal || tours.length} label="tours" />
+        ) : null}
       </ListingSection>
       <div className="mx-auto max-w-[1200px] px-4 pb-12">
         <PageFaqList faqs={bestFaqsFor('tours')} tone="light" />

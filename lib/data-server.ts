@@ -401,7 +401,8 @@ export async function fetchAllRecords(
 /** Lightweight columns for tour cards / listing pages (avoids huge description payloads).
  * Must match real Aiven database columns — wrong names cause retry storms on large tables.
  */
-const SEO_INDEX_LIST_COLUMNS = 'seo_schema,meta_description';
+/** List cards do not need the full schema JSON. That field made every listing multi-megabyte. */
+const SEO_INDEX_LIST_COLUMNS = 'meta_description';
 
 export const TOUR_LIST_COLUMNS =
   `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
@@ -677,6 +678,19 @@ export async function fetchCollectionPage(
 const SAFARI_UPDATE_PUBLIC_LIST_FALLBACK =
   'id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date';
 
+/** Fast row count. Returns null when the table or filter cannot be queried. */
+export async function countPublicTable(table: string, whereSql = ''): Promise<number | null> {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) return null;
+  try {
+    const res = await db.query(`SELECT COUNT(*)::int AS total FROM ${table} ${whereSql}`);
+    const total = Number((res.rows[0] as { total?: number } | undefined)?.total);
+    return Number.isFinite(total) ? total : null;
+  } catch (error) {
+    console.warn(`[Aiven] Count ${table} failed:`, error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
 /** Public lists, home, nav, and RSS. Language posts stay out of browse. */
 export function filterPublicSafariUpdates(rows: RecordRow[]): RecordRow[] {
   return rows.filter((row) => isPublishedRecord(row) && !isLanguagePost(row));
@@ -697,10 +711,50 @@ export async function fetchPublicSafariUpdatesPage(options?: {
       : filterPublicSafariUpdates(raw);
   const initialColumns = publicListColumnsFor('safari_updates') || SAFARI_UPDATE_PUBLIC_LIST_FALLBACK;
   const orderColumns = ['published_at', 'publish_date', 'created_date', 'created_at', 'id'];
+  const publicWhere = options?.includeLanguagePosts
+    ? ''
+    : `WHERE COALESCE(post_type::text, '') NOT ILIKE '%language%'`;
+
+  async function selectPage(whereSql: string) {
+    for (const orderColumn of orderColumns) {
+      try {
+        return await queryWithColumnFallback(
+          (cols) => ({
+            text: `SELECT ${cols} FROM safari_updates ${whereSql} ORDER BY ${orderColumn} DESC NULLS LAST OFFSET ${offset} LIMIT ${limit}`,
+            values: [],
+          }),
+          initialColumns,
+          'safari_updates::public-list'
+        );
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        if (/post_type/i.test(detail)) throw error;
+        if (!/column .* does not exist|does not exist/i.test(detail)) {
+          console.warn('[Aiven] Safari updates list query failed:', detail);
+        }
+      }
+    }
+    return null;
+  }
+
+  let whereSql = publicWhere;
+  let raw: RecordRow[] | null = null;
+  try {
+    raw = await selectPage(whereSql);
+  } catch {
+    whereSql = '';
+    raw = await selectPage('');
+  }
+  if (raw) {
+    const rows = whereSql ? raw.filter(isPublishedRecord) : keep(raw);
+    const counted = await countPublicTable('safari_updates', whereSql);
+    const total = counted ?? (rows.length < limit ? offset + rows.length : offset + rows.length + limit);
+    return { rows, total };
+  }
 
   for (const orderColumn of orderColumns) {
     try {
-      const raw = await queryWithColumnFallback(
+      const fallbackRaw = await queryWithColumnFallback(
         (cols) => ({
           text: `SELECT ${cols} FROM safari_updates ORDER BY ${orderColumn} DESC NULLS LAST OFFSET ${offset} LIMIT ${limit}`,
           values: [],
@@ -708,7 +762,7 @@ export async function fetchPublicSafariUpdatesPage(options?: {
         initialColumns,
         'safari_updates::public-list'
       );
-      const rows = keep(raw);
+      const rows = keep(fallbackRaw);
       const total = rows.length < limit ? offset + rows.length : offset + rows.length + limit;
       return { rows, total };
     } catch (error) {

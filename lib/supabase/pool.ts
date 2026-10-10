@@ -56,7 +56,7 @@ export function isDatabaseConfigured(): boolean {
 /** Aiven free tier Γëê 20 connections ΓÇö cap per isolate/process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 1 : 5;
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
 
 const POOL_MAX = Math.max(
   1,
