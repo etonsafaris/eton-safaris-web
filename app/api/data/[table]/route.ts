@@ -96,7 +96,7 @@ export async function GET(
   if (keyedRow) {
     const pageBody =
       table === 'pages' || table === 'landing_pages'
-        ? 'content,description,body,excerpt,page_blocks,blocks,layout,image_url,cover_image,featured_image,social_image_url,hero_title,subtitle,faqs,status,video_url,destinations,cta_label,cta_href,footer_about,contact_address,contact_email,contact_phone,contact_phones,social_links,published_at'
+        ? 'content,description,body,excerpt,page_blocks,blocks,layout,image_url,cover_image,featured_image,social_image_url,hero_title,subtitle,faqs,status,video_url,destinations,cta_label,cta_href,footer_about,contact_address,contact_email,contact_emails,contact_phone,contact_phones,social_links,published_at'
         : 'description,content,excerpt,description_title,highlights,price_includes,price_excludes,journey_details,journey_map_url,itinerary,itineraries,tagline,headline,hero_title,cover_image,featured_image';
     const have = new Set(
       columns

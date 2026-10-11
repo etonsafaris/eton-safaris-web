@@ -7,7 +7,7 @@ import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicPhones, publicSocials } from '@/lib/home-page-content';
+import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
 import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
@@ -85,6 +85,7 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
   const home = useHomePageContent();
   const socialItems = publicSocials(home);
   const phoneItems = publicPhones(home);
+  const emailItems = publicEmails(home);
 
   return (
     <PublicShellServer>
@@ -248,12 +249,14 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                 <Mail className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Email Address</h5>
-                  <ul className="list-none pl-2.5 text-base text-[#343434]">
-                    <li>
-                      <a href={`mailto:${home.contactEmail || SITE.email}`} className="hover:text-[#5bc787]">
-                        {home.contactEmail || SITE.email}
-                      </a>
-                    </li>
+                  <ul className="list-none space-y-1 pl-2.5 text-base text-[#343434]">
+                    {emailItems.map((email) => (
+                      <li key={email.id}>
+                        <a href={`mailto:${email.address}`} className="hover:text-[#5bc787]">
+                          {email.address}
+                        </a>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>

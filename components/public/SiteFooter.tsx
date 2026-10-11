@@ -7,7 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { PUBLIC_SITE_LABELS, SITE } from '@/lib/collections';
-import { phoneCallHref, phoneWhatsAppHref, publicPhones, publicSocials } from '@/lib/home-page-content';
+import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
@@ -39,6 +39,7 @@ export default function SiteFooter() {
 
   const socialItems = publicSocials(home);
   const phoneItems = publicPhones(home);
+  const emailItems = publicEmails(home);
 
   return (
     <footer className="bg-forest text-white">
@@ -146,9 +147,13 @@ export default function SiteFooter() {
                 </div>
               ))}
             </div>
-            <a href={`mailto:${home.contactEmail || SITE.email}`} className="site-footer-link flex items-center gap-2">
-              <Mail className="h-4 w-4 text-white" /> {home.contactEmail || SITE.email}
-            </a>
+            <div className="flex flex-col gap-2">
+              {emailItems.map((email) => (
+                <a key={email.id} href={`mailto:${email.address}`} className="site-footer-link flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-white" /> {email.address}
+                </a>
+              ))}
+            </div>
             <Link
               href="/request-a-quote"
               className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#f5c518] px-5 py-3 text-center text-[15px] font-extrabold uppercase tracking-wide text-[#111] shadow-[0_4px_0_#c49200,0_8px_18px_rgba(0,0,0,0.28)] transition hover:bg-[#ffd84d] hover:shadow-[0_2px_0_#c49200,0_6px_14px_rgba(0,0,0,0.25)]"

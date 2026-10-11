@@ -5,7 +5,7 @@ import CmsLiveHost from '@/components/public/CmsLiveHost';
 import PublicAppRoot from '@/components/public/PublicAppRoot';
 import { SITE, SITE_LOGO, SOCIAL_LINKS } from '@/lib/collections';
 import { loadHomePageContent } from '@/lib/load-public';
-import { publicPhones, publicSocials } from '@/lib/home-page-content';
+import { publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
 
 /**
  * System font stacks — Google Fonts were aborting/timing out and blocking every
@@ -147,7 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (home) {
     const phones = publicPhones(home);
     agency.telephone = phones.map((phone) => phone.number).join(', ') || agency.telephone;
-    agency.email = home.contactEmail || agency.email;
+    agency.email = publicEmails(home).map((email) => email.address).join(', ') || agency.email;
     agency.sameAs = publicSocials(home).map((link) => link.url);
   }
   return (

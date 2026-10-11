@@ -18,6 +18,11 @@ export type ContactPhone = {
   whatsapp: boolean;
 };
 
+export type ContactEmail = {
+  id: string;
+  address: string;
+};
+
 export const SOCIAL_NETWORKS = [
   { id: 'facebook', label: 'Facebook' },
   { id: 'instagram', label: 'Instagram' },
@@ -33,6 +38,7 @@ export type HomePageContent = {
   footerAbout: string;
   contactAddress: string;
   contactEmail: string;
+  emails: ContactEmail[];
   contactPhone: string;
   phones: ContactPhone[];
   socials: SocialLink[];
@@ -46,6 +52,7 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
     'Eton Safaris is a premier tours and travel agency based in Uganda, offering gorilla trekking, wildlife safaris, and cultural experiences across Africa. Tailor-made luxury expeditions for every clientele.',
   contactAddress: SITE.address,
   contactEmail: SITE.email,
+  emails: [{ id: 'primary', address: SITE.email }],
   contactPhone: SITE.phoneDisplay,
   phones: [{ id: 'primary', number: SITE.phoneDisplay, call: true, whatsapp: true }],
   socials: Object.entries(SOCIAL_LINKS).map(([network, url]) => ({ id: network, network, url })),
@@ -63,6 +70,10 @@ export function whatsappDigitsFromPhone(phone: string): string {
 
 export function newContactPhone(): ContactPhone {
   return { id: `phone-${Date.now()}`, number: '', call: true, whatsapp: false };
+}
+
+export function newContactEmail(): ContactEmail {
+  return { id: `email-${Date.now()}`, address: '' };
 }
 
 export function newSocialLink(): SocialLink {
@@ -108,6 +119,32 @@ export function parseContactPhones(value: unknown, fallbackNumber = ''): Contact
   return [{ id: 'primary', number: single, call: true, whatsapp: true }];
 }
 
+export function parseContactEmails(value: unknown, fallbackAddress = ''): ContactEmail[] {
+  let source: unknown = value;
+  if (typeof source === 'string' && source.trim()) {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = null;
+    }
+  }
+  if (Array.isArray(source)) {
+    const emails = source
+      .map((item, index) => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as Record<string, unknown>;
+        const address = String(row.address || row.email || '').trim();
+        if (!address) return null;
+        return { id: String(row.id || `email-${index}`), address };
+      })
+      .filter((item): item is ContactEmail => Boolean(item));
+    if (emails.length) return emails;
+  }
+  const single = String(fallbackAddress || '').trim();
+  if (!single) return DEFAULT_HOME_PAGE_CONTENT.emails.map((email) => ({ ...email }));
+  return [{ id: 'primary', address: single }];
+}
+
 export function parseSocialLinks(value: unknown): SocialLink[] {
   let source: unknown = value;
   if (typeof source === 'string' && source.trim()) {
@@ -137,6 +174,12 @@ export function publicPhones(content: Pick<HomePageContent, 'phones' | 'contactP
   const phones = (content.phones || []).filter((phone) => phone.number.trim());
   if (phones.length) return phones;
   return parseContactPhones(null, content.contactPhone);
+}
+
+export function publicEmails(content: Pick<HomePageContent, 'emails' | 'contactEmail'>): ContactEmail[] {
+  const emails = (content.emails || []).filter((email) => email.address.trim());
+  if (emails.length) return emails;
+  return parseContactEmails(null, content.contactEmail);
 }
 
 export function publicSocials(content: Pick<HomePageContent, 'socials'>): SocialLink[] {
@@ -173,12 +216,14 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
     fields.contact_phone || fields.footer_phone
   );
   const phones = parseContactPhones(fields.contact_phones || record?.contact_phones, cmsPhone);
+  const emails = parseContactEmails(fields.contact_emails || record?.contact_emails, cmsEmail);
   const socials = parseSocialLinks(fields.social_links || record?.social_links);
 
   return {
     footerAbout: cmsFooterAbout || DEFAULT_HOME_PAGE_CONTENT.footerAbout,
     contactAddress: cmsAddress || DEFAULT_HOME_PAGE_CONTENT.contactAddress,
-    contactEmail: cmsEmail || DEFAULT_HOME_PAGE_CONTENT.contactEmail,
+    contactEmail: emails[0]?.address || cmsEmail || DEFAULT_HOME_PAGE_CONTENT.contactEmail,
+    emails,
     contactPhone: phones[0]?.number || cmsPhone || DEFAULT_HOME_PAGE_CONTENT.contactPhone,
     phones,
     socials,
@@ -189,14 +234,16 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
 }
 
 export function homePageFieldPack(
-  content: Pick<HomePageContent, 'footerAbout' | 'contactAddress' | 'contactEmail' | 'contactPhone' | 'phones' | 'socials'>
+  content: Pick<HomePageContent, 'footerAbout' | 'contactAddress' | 'contactEmail' | 'emails' | 'contactPhone' | 'phones' | 'socials'>
 ): Record<string, string> {
   const phones = (content.phones || []).filter((phone) => phone.number.trim());
+  const emails = (content.emails || []).filter((email) => email.address.trim());
   return {
     layout: 'home',
     footer_about: content.footerAbout,
     contact_address: content.contactAddress,
-    contact_email: content.contactEmail,
+    contact_email: emails[0]?.address || content.contactEmail,
+    contact_emails: JSON.stringify(emails),
     contact_phone: phones[0]?.number || content.contactPhone,
     contact_phones: JSON.stringify(phones),
     social_links: JSON.stringify((content.socials || []).filter((link) => link.url.trim())),

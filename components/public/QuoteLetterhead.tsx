@@ -3,7 +3,7 @@
 import { MapPin, Mail, Phone, Globe2 } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
+import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
 import { QUOTE_SERVICES_LINE } from '@/lib/quote-document';
 
 /** Eton quotation masthead — diagonal gold slash, logo left, green brand panel right. */
@@ -48,7 +48,11 @@ export function QuoteContactFooter() {
     ...phoneItems,
     { icon: Globe2, label: SITE.url.replace(/^https?:\/\//, ''), href: SITE.url },
     { icon: MapPin, label: home.contactAddress || SITE.address, href: undefined },
-    { icon: Mail, label: home.contactEmail || SITE.email, href: `mailto:${home.contactEmail || SITE.email}` },
+    ...publicEmails(home).map((email) => ({
+      icon: Mail,
+      label: email.address,
+      href: `mailto:${email.address}`,
+    })),
   ];
 
   return (

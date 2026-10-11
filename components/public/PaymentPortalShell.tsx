@@ -4,7 +4,7 @@ import { Home, Mail, Phone } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { SITE } from '@/lib/collections';
-import { phoneCallHref, publicPhones } from '@/lib/home-page-content';
+import { phoneCallHref, publicEmails, publicPhones } from '@/lib/home-page-content';
 
 type PaymentPortalShellProps = {
   step: 1 | 2 | 3;
@@ -20,6 +20,7 @@ const STEPS = [
 export default function PaymentPortalShell({ step, children }: PaymentPortalShellProps) {
   const home = useHomePageContent();
   const phones = publicPhones(home);
+  const emails = publicEmails(home);
   return (
     <div className="min-h-screen bg-[#f3f3f3]">
       <header className="border-b border-[#e5e5e5] bg-white">
@@ -107,10 +108,12 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
                 </p>
               )
             )}
-            <a href={`mailto:${home.contactEmail || SITE.email}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
-              <Mail className="h-4 w-4 text-[#8f2742]" />
-              {home.contactEmail || SITE.email}
-            </a>
+            {emails.map((email) => (
+              <a key={email.id} href={`mailto:${email.address}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
+                <Mail className="h-4 w-4 text-[#8f2742]" />
+                {email.address}
+              </a>
+            ))}
           </div>
         </div>
       </div>

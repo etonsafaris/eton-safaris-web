@@ -1,11 +1,13 @@
 'use client';
 
-import { Phone, Trash2 } from 'lucide-react';
+import { Mail, Phone, Trash2 } from 'lucide-react';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import {
   SOCIAL_NETWORKS,
+  newContactEmail,
   newContactPhone,
   newSocialLink,
+  type ContactEmail,
   type ContactPhone,
   type SocialLink,
 } from '@/lib/home-page-content';
@@ -17,26 +19,30 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 export default function HomePageFields({
   footerAbout,
   contactAddress,
-  contactEmail,
+  emails,
   phones,
   socials,
   onFooterAbout,
   onContactAddress,
-  onContactEmail,
+  onEmails,
   onPhones,
   onSocials,
 }: {
   footerAbout: string;
   contactAddress: string;
-  contactEmail: string;
+  emails: ContactEmail[];
   phones: ContactPhone[];
   socials: SocialLink[];
   onFooterAbout: (value: string) => void;
   onContactAddress: (value: string) => void;
-  onContactEmail: (value: string) => void;
+  onEmails: (value: ContactEmail[]) => void;
   onPhones: (value: ContactPhone[]) => void;
   onSocials: (value: SocialLink[]) => void;
 }) {
+  function updateEmail(id: string, address: string) {
+    onEmails(emails.map((email) => (email.id === id ? { ...email, address } : email)));
+  }
+
   function updatePhone(id: string, patch: Partial<ContactPhone>) {
     onPhones(phones.map((phone) => (phone.id === id ? { ...phone, ...patch } : phone)));
   }
@@ -112,7 +118,7 @@ export default function HomePageFields({
       <section className="rounded-xl border border-[#e5e7eb] bg-[#f8faf9] p-6">
         <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Footer — Contact Info</h2>
         <p className="mt-1 text-sm text-[#6b7280]">
-          Location, email, and phone numbers. Add numbers one under another. Choose Call, WhatsApp, or both for each number.
+          Location, emails, and phone numbers. Add each email or number on its own line. Choose Call, WhatsApp, or both for each number.
         </p>
         <div className="mt-5 space-y-4">
           <div>
@@ -125,15 +131,38 @@ export default function HomePageFields({
               placeholder="Wakiso District, Central Region, Uganda"
             />
           </div>
-          <div>
-            <FieldLabel>Email</FieldLabel>
-            <input
-              type="email"
-              value={contactEmail}
-              onChange={(event) => onContactEmail(event.target.value)}
-              className="w-full rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm outline-none focus:border-[#66bb9a]"
-              placeholder="hello@example.com"
-            />
+          <div className="space-y-3">
+            <FieldLabel>Email addresses</FieldLabel>
+            {emails.map((email, index) => (
+              <div key={email.id} className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+                <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                  <Mail className="h-3.5 w-3.5" /> Email {index + 1}
+                </p>
+                <input
+                  type="email"
+                  value={email.address}
+                  onChange={(event) => updateEmail(email.id, event.target.value)}
+                  className="w-full rounded-full border border-[#e5e7eb] px-5 py-3 text-sm outline-none focus:border-[#66bb9a]"
+                  placeholder="hello@example.com"
+                />
+                {emails.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => onEmails(emails.filter((item) => item.id !== email.id))}
+                    className="mt-3 text-xs font-semibold text-[#6b7280] hover:text-red-600"
+                  >
+                    Remove this email
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => onEmails([...emails, newContactEmail()])}
+              className="rounded-full bg-[#10b981] px-5 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-[#059669]"
+            >
+              Add email
+            </button>
           </div>
           <div className="space-y-3">
             <FieldLabel>Phone numbers</FieldLabel>

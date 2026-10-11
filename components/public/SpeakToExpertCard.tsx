@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
+import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
 import { quoteRequestPath } from '@/lib/quote-request';
 
 export default function SpeakToExpertCard({
@@ -22,6 +22,7 @@ export default function SpeakToExpertCard({
 }) {
   const home = useHomePageContent();
   const phones = publicPhones(home);
+  const emails = publicEmails(home);
   if (variant === 'country') {
     const destination = countryName || 'destination';
     return (
@@ -61,6 +62,13 @@ export default function SpeakToExpertCard({
                   WhatsApp {phone.number}
                 </a>
               ) : null}
+            </li>
+          ))}
+          {emails.map((email) => (
+            <li key={email.id} className="border-b border-[#eee] py-0.5">
+              <a href={`mailto:${email.address}`} className="block font-bold text-[#5bc787] hover:underline">
+                {email.address}
+              </a>
             </li>
           ))}
         </ul>
@@ -119,10 +127,12 @@ export default function SpeakToExpertCard({
             ) : null}
           </div>
         ))}
-        <a href={`mailto:${home.contactEmail || SITE.email}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
-          <Mail className="h-3.5 w-3.5 shrink-0 text-sage" />
-          {home.contactEmail || SITE.email}
-        </a>
+        {emails.map((email) => (
+          <a key={email.id} href={`mailto:${email.address}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
+            <Mail className="h-3.5 w-3.5 shrink-0 text-sage" />
+            {email.address}
+          </a>
+        ))}
       </div>
       <Link
         href={inquiryHref}

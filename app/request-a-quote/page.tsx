@@ -7,13 +7,14 @@ import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
+import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function RequestQuotePage() {
   const home = useHomePageContent();
   const phones = publicPhones(home);
+  const emails = publicEmails(home);
   return (
     <PublicShellServer>
       <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
@@ -87,11 +88,13 @@ export default function RequestQuotePage() {
                 <Mail className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Email</h5>
-                  <p className="public-article-body pl-2.5 text-base text-[#343434]">
-                    <a href={`mailto:${home.contactEmail || SITE.email}`} className="hover:text-[#5bc787]">
-                      {home.contactEmail || SITE.email}
-                    </a>
-                  </p>
+                  <div className="public-article-body flex flex-col gap-1 pl-2.5 text-base text-[#343434]">
+                    {emails.map((email) => (
+                      <a key={email.id} href={`mailto:${email.address}`} className="hover:text-[#5bc787]">
+                        {email.address}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

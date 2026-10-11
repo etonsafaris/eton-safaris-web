@@ -34,6 +34,7 @@ import {
   HOME_PAGE_SLUG,
   homePageFieldPack,
   parseHomePageContent,
+  type ContactEmail,
   type ContactPhone,
   type SocialLink,
 } from '@/lib/home-page-content';
@@ -128,7 +129,7 @@ function PageFormInner({ pageId }: PageFormProps) {
   const [publishedAt, setPublishedAt] = useState(() => (prefillRow ? recordPublishedAt(prefillRow) : ''));
   const [footerAbout, setFooterAbout] = useState(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
   const [contactAddress, setContactAddress] = useState(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
-  const [contactEmail, setContactEmail] = useState(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
+  const [emails, setEmails] = useState<ContactEmail[]>(DEFAULT_HOME_PAGE_CONTENT.emails);
   const [phones, setPhones] = useState<ContactPhone[]>(DEFAULT_HOME_PAGE_CONTENT.phones);
   const [socials, setSocials] = useState<SocialLink[]>(DEFAULT_HOME_PAGE_CONTENT.socials);
 
@@ -163,7 +164,7 @@ function PageFormInner({ pageId }: PageFormProps) {
         const home = parseHomePageContent(page);
         setFooterAbout(home.footerAbout);
         setContactAddress(home.contactAddress);
-        setContactEmail(home.contactEmail);
+        setEmails(home.emails);
         setPhones(home.phones);
         setSocials(home.socials);
         setBlocks([]);
@@ -227,7 +228,8 @@ function PageFormInner({ pageId }: PageFormProps) {
         ? homePageFieldPack({
             footerAbout,
             contactAddress,
-            contactEmail,
+            contactEmail: emails.find((email) => email.address.trim())?.address || '',
+            emails,
             contactPhone: phones.find((phone) => phone.number.trim())?.number || '',
             phones,
             socials,
@@ -341,7 +343,7 @@ function PageFormInner({ pageId }: PageFormProps) {
                   setSeo((current) => ({ ...current, slug: HOME_PAGE_SLUG, breadcrumb_title: 'Home Page' }));
                   setFooterAbout(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
                   setContactAddress(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
-                  setContactEmail(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
+                  setEmails(DEFAULT_HOME_PAGE_CONTENT.emails.map((email) => ({ ...email })));
                   setPhones(DEFAULT_HOME_PAGE_CONTENT.phones.map((phone) => ({ ...phone })));
                   setSocials(DEFAULT_HOME_PAGE_CONTENT.socials.map((link) => ({ ...link })));
                 }
@@ -370,12 +372,12 @@ function PageFormInner({ pageId }: PageFormProps) {
             <HomePageFields
               footerAbout={footerAbout}
               contactAddress={contactAddress}
-              contactEmail={contactEmail}
+              emails={emails}
               phones={phones}
               socials={socials}
               onFooterAbout={setFooterAbout}
               onContactAddress={setContactAddress}
-              onContactEmail={setContactEmail}
+              onEmails={setEmails}
               onPhones={setPhones}
               onSocials={setSocials}
             />
@@ -631,7 +633,7 @@ function PageFormInner({ pageId }: PageFormProps) {
         coverImageUrl={featuredImage.startsWith('blob:') ? '' : featuredImage}
         contentForReadability={
           layout === 'home'
-            ? `${footerAbout}\n${contactAddress}\n${contactEmail}\n${phones.map((phone) => phone.number).join('\n')}\n${socials
+            ? `${footerAbout}\n${contactAddress}\n${emails.map((email) => email.address).join('\n')}\n${phones.map((phone) => phone.number).join('\n')}\n${socials`
                 .map((link) => link.url)
                 .join('\n')}\n${faqs
                 .map((item) => `${item.question}\n${item.answer}`)
