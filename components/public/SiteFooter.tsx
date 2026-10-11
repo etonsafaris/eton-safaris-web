@@ -7,17 +7,24 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { PUBLIC_SITE_LABELS, SITE } from '@/lib/collections';
-import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
+import {
+  phoneCallHref,
+  phoneWhatsAppHref,
+  publicEmails,
+  publicPhones,
+  publicSocials,
+  type HomePageContent,
+} from '@/lib/home-page-content';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 
-export default function SiteFooter() {
+export default function SiteFooter({ initialHome = null }: { initialHome?: HomePageContent | null }) {
   const [email, setEmail] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState('');
   const { destinations } = usePublicDestinations();
-  const home = useHomePageContent();
+  const home = useHomePageContent(initialHome);
 
   async function subscribe(event: React.FormEvent) {
     event.preventDefault();

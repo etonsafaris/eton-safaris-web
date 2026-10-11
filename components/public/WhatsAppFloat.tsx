@@ -1,10 +1,10 @@
 'use client';
 
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
+import { phoneWhatsAppHref, publicPhones, type HomePageContent } from '@/lib/home-page-content';
 
-export default function WhatsAppFloat() {
-  const home = useHomePageContent();
+export default function WhatsAppFloat({ initialHome = null }: { initialHome?: HomePageContent | null }) {
+  const home = useHomePageContent(initialHome);
   const phone = publicPhones(home).find((item) => item.whatsapp);
   if (!phone) return null;
   return (

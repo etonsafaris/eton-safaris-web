@@ -1,5 +1,6 @@
 import PublicShell from '@/components/public/PublicShell';
-import { loadPublicNavDestinations } from '@/lib/load-public';
+import { loadHomePageContent, loadPublicNavDestinations } from '@/lib/load-public';
+import type { HomePageContent } from '@/lib/home-page-content';
 import type { PublicDestination } from '@/lib/public-destinations';
 
 /** Server wrapper — preloads header/footer destinations for faster first paint. */
@@ -20,5 +21,15 @@ export default async function PublicShellServer({
       console.error('[Public] Nav destinations failed (using empty shell):', error);
     }
   }
-  return <PublicShell initialDestinations={destinations}>{children}</PublicShell>;
+  let home: HomePageContent | null = null;
+  try {
+    home = await loadHomePageContent();
+  } catch (error) {
+    console.error('[Public] Home footer content failed:', error);
+  }
+  return (
+    <PublicShell initialDestinations={destinations} initialHome={home}>
+      {children}
+    </PublicShell>
+  );
 }

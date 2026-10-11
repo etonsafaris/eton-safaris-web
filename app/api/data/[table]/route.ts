@@ -145,6 +145,7 @@ export async function GET(
       let result;
       for (let attempt = 0; attempt < 24; attempt += 1) {
         let lastError: unknown = null;
+        let droppedColumn = false;
         for (const orderSql of orderClauses) {
           try {
             result = await client.query(
@@ -156,26 +157,29 @@ export async function GET(
           } catch (error) {
             lastError = error;
             const detail = error instanceof Error ? error.message : String(error);
-            if (/column .* does not exist/i.test(detail) && orderSql) {
-              continue;
-            }
             const missing = columns !== '*' ? missingSelectColumn(detail) : null;
             if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
               const next = dropColumnFromSelect(columns, missing);
               if (next && next !== columns) {
                 console.warn(`[Aiven] Dropping missing column "${missing}" from ${table} public select.`);
                 columns = next;
+                droppedColumn = true;
                 break;
               }
             }
+            if (/column .* does not exist/i.test(detail) && orderSql) {
+              continue;
+            }
             if (!keyedRow && listColumns && columns !== listColumns && columns !== '*') {
               columns = listColumns;
+              droppedColumn = true;
               break;
             }
             throw error;
           }
         }
         if (result) break;
+        if (droppedColumn) continue;
         if (lastError) throw lastError;
       }
       if (!result) {

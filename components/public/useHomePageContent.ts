@@ -51,7 +51,16 @@ export function useHomePageContent(initial?: HomePageContent | null) {
       .then(async (row) => {
         if (cancelled) return;
         if (row && isPublishedRecord(row)) {
-          const savedBody = String(row.content || row.description || row.body || row.footer_about || '');
+          const savedBody = String(
+            row.content ||
+              row.description ||
+              row.body ||
+              row.footer_about ||
+              row.contact_address ||
+              row.contact_email ||
+              row.contact_emails ||
+              ''
+          );
           if (savedBody.trim() || !initial) setContent(parseHomePageContent(row));
         } else if (!initial) {
           setContent(DEFAULT_HOME_PAGE_CONTENT);
