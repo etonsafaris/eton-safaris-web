@@ -633,12 +633,15 @@ function PageFormInner({ pageId }: PageFormProps) {
         coverImageUrl={featuredImage.startsWith('blob:') ? '' : featuredImage}
         contentForReadability={
           layout === 'home'
-            ? `${footerAbout}\n${contactAddress}\n${emails.map((email) => email.address).join('\n')}\n${phones.map((phone) => phone.number).join('\n')}\n${socials`
-                .map((link) => link.url)
-                .join('\n')}\n${faqs
-                .map((item) => `${item.question}\n${item.answer}`)
-                .join('\n')}`
-            : `${excerpt}\n${content}\n${blocks.map((block) => block.description).join('\n')}`
+            ? [
+                footerAbout,
+                contactAddress,
+                emails.map((email) => email.address).join('\n'),
+                phones.map((phone) => phone.number).join('\n'),
+                socials.map((link) => link.url).join('\n'),
+                faqs.map((item) => `${item.question}\n${item.answer}`).join('\n'),
+              ].join('\n')
+            : [excerpt, content, blocks.map((block) => block.description).join('\n')].join('\n')
         }
         onSave={() => setSeoSaved(true)}
         saving={saving}
