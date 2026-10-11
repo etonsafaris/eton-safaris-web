@@ -94,28 +94,19 @@ export function findCountryRecord(rows: RecordRow[], slug: string) {
 
 export { findRecordBySlug };
 
+/** One full Pages-module row. List columns omit the body, so a card lookup cannot show an admin edit. */
 export async function loadCmsPage(slug: string) {
-  if (skipStaticGenerationDuringBuild()) return null;
+  if (!process.env.DATABASE_URL?.trim()) return null;
   try {
-    const columns = listColumns('pages');
-    const rows = await fetchCollectionRecords('pages', [], columns ? { columns } : undefined);
-    let match = matchCmsRecord(rows, slug, pageAliases(slug));
-
-    if (!match && (slug === 'terms-of-services' || slug === 'privacy-policies')) {
-      const needle = slug.includes('terms') ? 'terms' : 'privacy';
-      match =
-        rows.find((row) => {
-          const title = pickString(row, ['title', 'name', 'post_title']).toLowerCase();
-          const rowSlug = normalizeSlug(pickString(row, ['slug', 'seo_slug']));
-          return title.includes(needle) || rowSlug.includes(needle);
-        }) || null;
+    const wanted = [slug, ...pageAliases(slug)].filter(Boolean);
+    const seen = new Set<string>();
+    for (const candidate of wanted) {
+      const key = candidate.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const row = await fetchRecordByPublicSlug('pages', candidate);
+      if (row && isPublishedRecord(row)) return row;
     }
-
-    if (!match || !isPublishedRecord(match)) return null;
-    const id = String(match.id || '');
-    if (!id) return null;
-    const full = await fetchCollectionRecordById('pages', id);
-    if (full && isPublishedRecord(full)) return full;
     return null;
   } catch {
     return null;
@@ -132,9 +123,9 @@ function toClientProps<T>(value: T): T {
   ) as T;
 }
 
-/** CMS static pages — fail fast during SSG when Aiven pool is exhausted. */
-export async function loadCmsPageResilient(slug: string, ms = 8000) {
-  return withTimeout(loadCmsPage(slug), ms, null);
+/** Full CMS page. Do not swap in an empty result — that gets cached and hides the saved page. */
+export async function loadCmsPageResilient(slug: string) {
+  return loadCmsPage(slug);
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -178,44 +169,15 @@ async function fetchPublicRecordResilient(
 
 async function loadHomePageContentLive(): Promise<HomePageContent | null> {
   try {
-    const row = await withTimeout(
-      fetchRecordByPublicSlug('pages', HOME_PAGE_SLUG, pageAliases(HOME_PAGE_SLUG)),
-      5000,
-      null
-    );
-    if (row && isPublishedRecord(row)) {
-      return parseHomePageContent(row);
-    }
-
-    const page = await withTimeout(
-      fetchCollectionPage('pages', [], {
-        columns: listColumns('pages'),
-        limit: 48,
-        offset: 0,
-      }),
-      5000,
-      { rows: [] as RecordRow[], total: 0 }
-    );
-    const match =
-      page.rows.find((row) => {
-        const slug = String(row.slug || row.seo_slug || '').toLowerCase();
-        return slug === HOME_PAGE_SLUG || slug === 'home' || slug === 'homepage';
-      }) ||
-      page.rows.find((row) => String(row.layout || '').toLowerCase() === 'home') ||
-      null;
-    if (!match || !isPublishedRecord(match)) return null;
-    const full =
-      match.id != null
-        ? await withTimeout(fetchCollectionRecordById('pages', String(match.id)), 5000, match)
-        : match;
-    return parseHomePageContent(full || match);
+    const row = await loadCmsPage(HOME_PAGE_SLUG);
+    return row ? parseHomePageContent(row) : null;
   } catch {
     return null;
   }
 }
 
 export function loadHomePageContent(): Promise<HomePageContent | null> {
-  return cachedPublic(['home-page-content-v1'], ['collection:pages'], () => loadHomePageContentLive());
+  return cachedPublic(['home-page-content-v2-page-body'], ['collection:pages'], () => loadHomePageContentLive());
 }
 
 async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> {

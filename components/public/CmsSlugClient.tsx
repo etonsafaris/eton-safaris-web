@@ -123,7 +123,12 @@ export default function CmsSlugClient({
           if (published) {
             const id = String(published.id || '');
             const full = id ? await fetchCollectionRecordById('pages', id) : published;
-            if (mounted) setPage(full && isPublishedRecord(full) ? full : published);
+            const next = full && isPublishedRecord(full) ? full : published;
+            const nextBody = String(next.content || next.description || next.body || next.page_blocks || '');
+            const currentBody = String(
+              (initialPage && (initialPage.content || initialPage.description || initialPage.body || initialPage.page_blocks)) || ''
+            );
+            if (mounted && (nextBody.trim() || !currentBody.trim())) setPage(next);
           } else {
             const found = await loadCountry(resolved.canonical, countrySlugFromLanding(resolved.canonical));
             if (mounted) setForceCountry(found);

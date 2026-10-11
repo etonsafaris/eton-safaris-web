@@ -50,6 +50,7 @@ function AboutStory({
   if (blocks.length > 0) {
     return (
       <div className="space-y-10">
+        {html ? <PublicHtml className="public-prose mx-auto max-w-4xl" html={html} /> : null}
         {blocks.map((block, index) => {
           const copy = toHtml(block.description);
           return (

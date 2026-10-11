@@ -1,0 +1,15 @@
+---
+description: Never commit Word, Excel, or export documents
+alwaysApply: true
+---
+
+# Local documents stay off Git
+
+Never stage, commit, or push these, from this chat or from a local deploy:
+
+- `exports/` (accommodation lists, explore-place lists, and their index files)
+- `public/downloads/`
+- `scripts/.cache/`
+- Any `.docx`, `.doc`, `.xlsx`, `.xls`, `.xlsm`, or `.xlsb` file
+
+`git add -A` must be followed by unstaging those paths before a commit. If a commit would include one of them, leave it out and commit only the site code.

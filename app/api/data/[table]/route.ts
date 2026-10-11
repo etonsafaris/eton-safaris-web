@@ -93,8 +93,22 @@ export async function GET(
   if (!columns) columns = listColumns || 'id';
   if (!columns) return NextResponse.json({ error: 'Invalid select columns' }, { status: 400 });
   const keyedRow = ['eq.id', 'eq.slug', 'eq.seo_slug'].some((key) => url.searchParams.has(key));
-  if (keyedRow && !requested) {
-    columns = `${columns},description,content,excerpt,description_title,highlights,price_includes,price_excludes,journey_details,journey_map_url,itinerary,itineraries,tagline,headline,hero_title,cover_image,featured_image`;
+  if (keyedRow) {
+    const pageBody =
+      table === 'pages' || table === 'landing_pages'
+        ? 'content,description,body,excerpt,page_blocks,blocks,layout,image_url,hero_title,subtitle,faqs,status,video_url,destinations,cta_label,cta_href,footer_about,contact_address,contact_email,contact_phone,published_at'
+        : 'description,content,excerpt,description_title,highlights,price_includes,price_excludes,journey_details,journey_map_url,itinerary,itineraries,tagline,headline,hero_title,cover_image,featured_image';
+    const have = new Set(
+      columns
+        .split(',')
+        .map((column) => column.trim())
+        .filter(Boolean)
+    );
+    const extra = pageBody
+      .split(',')
+      .map((column) => column.trim())
+      .filter((column) => column && !have.has(column));
+    if (extra.length) columns = `${columns},${extra.join(',')}`;
   }
 
   const params: unknown[] = [];
@@ -129,7 +143,7 @@ export async function GET(
   try {
     return await withPgClient(async (client) => {
       let result;
-      for (let attempt = 0; attempt < 8; attempt += 1) {
+      for (let attempt = 0; attempt < 24; attempt += 1) {
         let lastError: unknown = null;
         for (const orderSql of orderClauses) {
           try {
@@ -154,7 +168,7 @@ export async function GET(
                 break;
               }
             }
-            if (listColumns && columns !== listColumns && columns !== '*') {
+            if (!keyedRow && listColumns && columns !== listColumns && columns !== '*') {
               columns = listColumns;
               break;
             }

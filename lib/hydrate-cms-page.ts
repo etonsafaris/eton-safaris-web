@@ -48,30 +48,11 @@ export function resolvePolicyPageContent(page: RecordRow | null | undefined, slu
   return STATIC_PAGES[slug]?.content || '';
 }
 
-function mergeWithSeededBlocks(existing: CmsContentBlock[], seeded: CmsContentBlock[]): CmsContentBlock[] {
-  if (!existing.length) return seeded.map((block) => ({ ...block }));
-  return existing.map((block, index) => {
-    const match =
-      seeded.find((item) => item.title.trim().toLowerCase() === String(block.title || '').trim().toLowerCase()) ||
-      seeded[index];
-    return {
-      title: String(block.title || '').trim() || match?.title || '',
-      description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description || '',
-      image_url: String(block.image_url || '').trim() || match?.image_url || '',
-    };
-  });
-}
-
 export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: string) {
   const seeded = seededCmsPage(slug);
   const extras = parseCmsPageExtras(page, slug);
   const isPolicy = extras.layout === 'policy' || /privacy|terms/i.test(slug);
   const cmsContent = page ? pickString(page, ['content', 'description', 'body']) : '';
-  const content = isPolicy
-    ? resolvePolicyPageContent(page, slug)
-    : hasVisibleCopy(cmsContent)
-      ? cmsContent
-      : seeded?.content || '';
   const seededBlocks = (seeded?.blocks || []).map((block) => ({
     title: block.title,
     description: block.description,
@@ -86,26 +67,30 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     extras.layout === 'about' ||
     extras.layout === 'agency' ||
     /about-us|travel-agency|agency/i.test(slug);
+  const content = isPolicy
+    ? resolvePolicyPageContent(page, slug)
+    : hasVisibleCopy(cmsContent)
+      ? cmsContent
+      : isStoryPage || isCommunity || usableCmsBlocks.length
+        ? ''
+        : seeded?.content || '';
 
   let sourceBlocks: CmsContentBlock[];
-  if (isCommunity) {
-    sourceBlocks = usableCmsBlocks.length
-      ? mergeCommunityInitiativeBlocks(usableCmsBlocks)
-      : mergeCommunityInitiativeBlocks(seededBlocks);
+  if (usableCmsBlocks.length) {
+    sourceBlocks = usableCmsBlocks;
+  } else if (isCommunity) {
+    sourceBlocks = mergeCommunityInitiativeBlocks(seededBlocks);
   } else if (isStoryPage) {
-    sourceBlocks = mergeWithSeededBlocks(usableCmsBlocks, seededBlocks);
+    sourceBlocks = seededBlocks;
   } else {
-    sourceBlocks = usableCmsBlocks.length ? usableCmsBlocks : seededBlocks;
+    sourceBlocks = seededBlocks;
   }
 
-  const blocks: CmsContentBlock[] = sourceBlocks.map((block) => {
-    const match = seededBlocks.find((item) => item.title.toLowerCase() === block.title.toLowerCase());
-    return {
-      title: block.title,
-      description: hasVisibleCopy(block.description) ? block.description : match?.description || block.description,
-      image_url: String(block.image_url || '').trim() || match?.image_url || '',
-    };
-  });
+  const blocks: CmsContentBlock[] = sourceBlocks.map((block) => ({
+    title: block.title,
+    description: block.description,
+    image_url: String(block.image_url || '').trim(),
+  }));
   const cmsFallback = /contact/i.test(slug) ? bestFaqsFor('contact') : bestFaqsFor('home');
   const faqs: PageFaq[] = limitFaqs(mergeFaqs(extras.faqs, seeded?.faqs || []), cmsFallback);
 

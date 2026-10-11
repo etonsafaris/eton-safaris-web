@@ -45,7 +45,17 @@ Write-Host ""
 & $git @('add', '-A')
 & $git @('reset', '-q', 'HEAD', '--', '.env', '.env.local') 2>$null
 
-# Word documents and Excel never go to GitHub or Vercel, even if they were staged.
+function Test-LocalOnlyPath([string]$path) {
+  $normalized = ($path -replace '\\', '/').Trim()
+  return (
+    $normalized -match '(?i)\.(docx|doc|xlsx|xls|xlsm|xlsb)$' -or
+    $normalized -eq 'exports' -or $normalized -like 'exports/*' -or
+    $normalized -eq 'public/downloads' -or $normalized -like 'public/downloads/*' -or
+    $normalized -eq 'scripts/.cache' -or $normalized -like 'scripts/.cache/*'
+  )
+}
+
+# Word documents, Excel, and the exports folder never go to GitHub or Vercel.
 $keepLocal = @(
   'exports',
   'public/downloads',
@@ -60,18 +70,12 @@ $keepLocal = @(
 & $git @('reset', '-q', 'HEAD', '--') + $keepLocal 2>$null
 
 $staged = @(& $git @('diff', '--cached', '--name-only'))
-$blocked = @($staged | Where-Object {
-  $_ -match '(?i)\.(docx|doc|xlsx|xls|xlsm|xlsb)$' -or
-  $_ -like 'exports/*' -or $_ -eq 'exports' -or
-  $_ -like 'public/downloads/*' -or $_ -eq 'public/downloads' -or
-  $_ -like 'scripts/.cache/*'
-})
+$blocked = @($staged | Where-Object { Test-LocalOnlyPath $_ })
 if ($blocked.Count -gt 0) {
-  & $git @('reset', '-q', 'HEAD', '--') + $blocked 2>$null
-  $stillStaged = @(& $git @('diff', '--cached', '--name-only') | Where-Object {
-    $_ -match '(?i)\.(docx|doc|xlsx|xls|xlsm|xlsb)$' -or
-    $_ -like 'exports/*' -or $_ -like 'public/downloads/*' -or $_ -like 'scripts/.cache/*'
-  })
+  foreach ($path in $blocked) {
+    & $git @('reset', '-q', 'HEAD', '--', $path) 2>$null
+  }
+  $stillStaged = @(& $git @('diff', '--cached', '--name-only') | Where-Object { Test-LocalOnlyPath $_ })
   if ($stillStaged.Count -gt 0) {
     throw "Stopped. Documents or Excel are still staged and will not be deployed:`n$($stillStaged -join "`n")"
   }

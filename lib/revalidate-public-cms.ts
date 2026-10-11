@@ -23,13 +23,37 @@ function publicPathForSavedRow(table: string, payload?: Record<string, unknown> 
   return null;
 }
 
+function pagePaths(slug: string): string[] {
+  const key = slug.toLowerCase();
+  const paths = new Set<string>();
+  const main = pagePublicPath(slug);
+  if (main) paths.add(main);
+  if (!key || key === 'home' || key === 'homepage' || key === 'home-page') paths.add('/');
+  if (key.includes('community')) {
+    paths.add('/community');
+    paths.add('/community-support');
+  }
+  if (key.includes('contact')) paths.add('/contact-us');
+  if (key.includes('about')) paths.add('/about-us');
+  if (key.includes('terms')) paths.add('/terms-of-services');
+  if (key.includes('privacy')) paths.add('/privacy-policies');
+  if (key.includes('agency')) paths.add('/tours-and-travel-agency');
+  return [...paths];
+}
+
 /** Drop the public CMS cache so admin edits show on the live site. */
 export function revalidatePublicCms(table: string, payload?: Record<string, unknown> | null) {
   try {
     revalidateTag(CMS_PUBLIC_CACHE_TAG);
     revalidatePath('/', 'layout');
-    const path = publicPathForSavedRow(table, payload);
-    if (path) revalidatePath(path);
+    const slug = String(payload?.slug || payload?.seo_slug || '')
+      .trim()
+      .replace(/^\/+|\/+$/g, '');
+    const paths =
+      table === 'pages' && slug
+        ? pagePaths(slug)
+        : [publicPathForSavedRow(table, payload)].filter((path): path is string => Boolean(path));
+    for (const path of paths) revalidatePath(path);
   } catch (error) {
     console.warn('[CMS] Public cache refresh failed:', error);
   }

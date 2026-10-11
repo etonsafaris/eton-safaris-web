@@ -51,7 +51,8 @@ export function useHomePageContent(initial?: HomePageContent | null) {
       .then(async (row) => {
         if (cancelled) return;
         if (row && isPublishedRecord(row)) {
-          setContent(parseHomePageContent(row));
+          const savedBody = String(row.content || row.description || row.body || row.footer_about || '');
+          if (savedBody.trim() || !initial) setContent(parseHomePageContent(row));
         } else if (!initial) {
           setContent(DEFAULT_HOME_PAGE_CONTENT);
         }

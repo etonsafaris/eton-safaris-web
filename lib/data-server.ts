@@ -947,17 +947,17 @@ function isBlankPublishToken(value: string): boolean {
   return !value || value === 'null' || value === 'undefined' || value === 'none' || value === '-';
 }
 
-/** Empty / missing status counts as published. Prefer status over visibility so Base44 visibility defaults do not hide CMS countries. */
+/** Empty / missing status counts as published. An explicit status wins over a leftover boolean so a saved Page stays public. */
 export function isPublishedRecord(record: RecordRow): boolean {
-  for (const key of ['published', 'is_published', 'isPublished'] as const) {
-    const flag = record[key];
-    if (typeof flag === 'boolean') return flag;
-  }
-
   const status = normalizePublishToken(pickString(record, ['status', 'publish_status']));
   if (!isBlankPublishToken(status)) {
     if (PUBLISHED_STATUSES.has(status)) return true;
     if (UNPUBLISHED_STATUSES.has(status)) return false;
+  }
+
+  for (const key of ['published', 'is_published', 'isPublished'] as const) {
+    const flag = record[key];
+    if (typeof flag === 'boolean') return flag;
   }
 
   const visibility = normalizePublishToken(pickString(record, ['visibility']));
