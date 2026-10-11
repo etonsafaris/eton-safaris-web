@@ -68,12 +68,13 @@ export default function ResponsiveImage({
         : COUNTRY_IMAGE_DIMENSIONS.countryCard;
   const imgWidth = width ?? dims.width;
   const imgHeight = height ?? dims.height;
-  const motionClass = variant === 'hero' ? 'hero-motion' : '';
   // Fill only when the parent is a sized frame. A hero variant inside a card
   // (h-[220px]) must keep its own height, or the photo collapses to nothing.
   const useFill =
     Boolean(className?.includes('absolute')) ||
     (variant === 'hero' && Boolean(className?.includes('h-full')) && !/h-\[\d/.test(className || ''));
+  // hero-motion is position:absolute. That is only safe inside a sized hero frame.
+  const motionClass = useFill ? 'hero-motion' : '';
   const unoptimized =
     displaySrc.startsWith('/api/media/') ||
     displaySrc.includes('images.unsplash.com') ||
