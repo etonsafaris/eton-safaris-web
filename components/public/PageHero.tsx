@@ -112,20 +112,22 @@ export default function PageHero({
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/20" />
       {isAbout || isPolicy || (!isTour && !isCountry && !isPark && !isUpdate) ? (
-        <div className="absolute inset-x-0 bottom-0 px-6 pb-8 text-center md:pb-10">
-          <h1
-            className={`text-white ${
-              isPolicy || isAbout
-                ? 'font-merry text-[34px] font-semibold italic leading-tight md:text-[46px]'
-                : 'font-serif text-3xl font-bold md:text-5xl'
-            }`}
-            style={{ textShadow: '0 2px 16px rgba(0,0,0,0.75)' }}
-          >
-            {title}
-          </h1>
-          {subtitle ? (
-            <p className="mt-2 text-sm font-semibold uppercase tracking-widest text-white/90 md:text-base">{subtitle}</p>
-          ) : null}
+        <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+          <div className="w-full max-w-[900px]">
+            <h1
+              className={`text-white ${
+                isPolicy || isAbout
+                  ? 'font-merry text-[34px] font-semibold italic leading-tight md:text-[46px]'
+                  : 'font-serif text-3xl font-bold md:text-5xl'
+              }`}
+              style={{ textShadow: '0 2px 16px rgba(0,0,0,0.75)' }}
+            >
+              {title}
+            </h1>
+            {subtitle ? (
+              <p className="mt-2 text-sm font-semibold uppercase tracking-widest text-white/90 md:text-base">{subtitle}</p>
+            ) : null}
+          </div>
         </div>
       ) : (
         <>
