@@ -104,7 +104,7 @@ export default function PageHero({
           quality={85}
           width={1440}
           height={900}
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           useErrorFallback={true}
         />
       ) : (

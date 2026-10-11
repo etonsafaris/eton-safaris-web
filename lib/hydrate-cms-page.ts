@@ -1,6 +1,6 @@
 import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
-import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
+import { COMMUNITY_INITIATIVES, mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { mergeFaqs } from '@/lib/default-faqs';
@@ -69,8 +69,11 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     image_url: String(block.image_url || '').trim(),
   }));
   const cmsBlocks = parseCmsBlocks(page);
-  const usableCmsBlocks = cmsBlocks.filter(
-    (block) => Boolean(String(block.title || '').trim()) && hasVisibleCopy(block.description)
+  const savedBlocks = cmsBlocks.filter(
+    (block) =>
+      Boolean(String(block.title || '').trim()) ||
+      Boolean(String(block.image_url || '').trim()) ||
+      hasVisibleCopy(block.description)
   );
   const isCommunity = extras.layout === 'community' || /community/i.test(slug);
   const isStoryPage =
@@ -81,13 +84,16 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     ? resolvePolicyPageContent(page, slug)
     : hasVisibleCopy(cmsContent)
       ? cmsContent
-      : isStoryPage || isCommunity || usableCmsBlocks.length
+      : isStoryPage || isCommunity || savedBlocks.length
         ? ''
         : seeded?.content || '';
 
   let sourceBlocks: CmsContentBlock[];
-  if (usableCmsBlocks.length) {
-    sourceBlocks = usableCmsBlocks;
+  if (isCommunity && savedBlocks.length) {
+    sourceBlocks =
+      savedBlocks.length >= COMMUNITY_INITIATIVES.length ? savedBlocks : mergeCommunityInitiativeBlocks(savedBlocks);
+  } else if (savedBlocks.length) {
+    sourceBlocks = savedBlocks;
   } else if (isCommunity) {
     sourceBlocks = mergeCommunityInitiativeBlocks(seededBlocks);
   } else if (isStoryPage) {
