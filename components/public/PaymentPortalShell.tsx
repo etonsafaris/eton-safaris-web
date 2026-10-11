@@ -1,6 +1,10 @@
+'use client';
+
 import { Home, Mail, Phone } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { SITE } from '@/lib/collections';
+import { phoneCallHref, publicPhones } from '@/lib/home-page-content';
 
 type PaymentPortalShellProps = {
   step: 1 | 2 | 3;
@@ -14,6 +18,8 @@ const STEPS = [
 ] as const;
 
 export default function PaymentPortalShell({ step, children }: PaymentPortalShellProps) {
+  const home = useHomePageContent();
+  const phones = publicPhones(home);
   return (
     <div className="min-h-screen bg-[#f3f3f3]">
       <header className="border-b border-[#e5e5e5] bg-white">
@@ -86,15 +92,24 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
           <div className="flex flex-wrap gap-x-8 gap-y-3">
             <p className="inline-flex items-center gap-2">
               <Home className="h-4 w-4 text-[#8f2742]" />
-              {SITE.address}
+              {home.contactAddress || SITE.address}
             </p>
-            <a href={`tel:${SITE.phone}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
-              <Phone className="h-4 w-4 text-[#8f2742]" />
-              {SITE.phoneDisplay}
-            </a>
-            <a href={`mailto:${SITE.email}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
+            {phones.map((phone) =>
+              phone.call ? (
+                <a key={phone.id} href={phoneCallHref(phone.number)} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
+                  <Phone className="h-4 w-4 text-[#8f2742]" />
+                  {phone.number}
+                </a>
+              ) : (
+                <p key={phone.id} className="inline-flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[#8f2742]" />
+                  {phone.number}
+                </p>
+              )
+            )}
+            <a href={`mailto:${home.contactEmail || SITE.email}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
               <Mail className="h-4 w-4 text-[#8f2742]" />
-              {SITE.email}
+              {home.contactEmail || SITE.email}
             </a>
           </div>
         </div>

@@ -1,5 +1,9 @@
+'use client';
+
 import { MapPin, Mail, Phone, Globe2 } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
+import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
 import { QUOTE_SERVICES_LINE } from '@/lib/quote-document';
 
 /** Eton quotation masthead — diagonal gold slash, logo left, green brand panel right. */
@@ -32,13 +36,19 @@ export function QuoteLetterhead() {
 
 /** Green contact footer with gold edge accents for quotations. */
 export function QuoteContactFooter() {
-  const wa = `https://wa.me/${SITE.whatsapp.replace(/\D/g, '')}`;
+  const home = useHomePageContent();
+  const phones = publicPhones(home);
+  const phoneItems = phones.flatMap((phone) => {
+    const rows: { icon: typeof Phone; label: string; href?: string }[] = [];
+    if (phone.call) rows.push({ icon: Phone, label: phone.number, href: phoneCallHref(phone.number) });
+    if (phone.whatsapp) rows.push({ icon: Phone, label: `WhatsApp ${phone.number}`, href: phoneWhatsAppHref(phone.number) });
+    return rows;
+  });
   const items = [
-    { icon: Phone, label: SITE.phoneDisplay, href: `tel:${SITE.phone}` },
-    { icon: Phone, label: `WhatsApp ${SITE.phoneDisplay}`, href: wa },
+    ...phoneItems,
     { icon: Globe2, label: SITE.url.replace(/^https?:\/\//, ''), href: SITE.url },
-    { icon: MapPin, label: SITE.address, href: undefined },
-    { icon: Mail, label: SITE.email, href: `mailto:${SITE.email}` },
+    { icon: MapPin, label: home.contactAddress || SITE.address, href: undefined },
+    { icon: Mail, label: home.contactEmail || SITE.email, href: `mailto:${home.contactEmail || SITE.email}` },
   ];
 
   return (

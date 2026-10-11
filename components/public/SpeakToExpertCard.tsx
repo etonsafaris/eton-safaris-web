@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
+import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
 import { quoteRequestPath } from '@/lib/quote-request';
 
 export default function SpeakToExpertCard({
@@ -18,6 +20,8 @@ export default function SpeakToExpertCard({
   countryName?: string;
   showEnquiry?: boolean;
 }) {
+  const home = useHomePageContent();
+  const phones = publicPhones(home);
   if (variant === 'country') {
     const destination = countryName || 'destination';
     return (
@@ -40,21 +44,25 @@ export default function SpeakToExpertCard({
           </p>
         </div>
         <ul className="mt-3 list-none text-center">
-          <li className="border-b border-[#eee] py-0.5">
-            <a href={`tel:${SITE.phone}`} className="font-bold text-[#5bc787] hover:underline">
-              {SITE.phoneDisplay}
-            </a>
-          </li>
-          <li className="border-b border-[#eee] py-0.5">
-            <a
-              href={`https://wa.me/${SITE.whatsapp}`}
-              target="_blank"
-              rel="noreferrer"
-              className="font-bold text-[#5bc787] hover:underline"
-            >
-              {SITE.phoneDisplay}
-            </a>
-          </li>
+          {phones.map((phone) => (
+            <li key={phone.id} className="border-b border-[#eee] py-0.5">
+              {phone.call ? (
+                <a href={phoneCallHref(phone.number)} className="block font-bold text-[#5bc787] hover:underline">
+                  {phone.number}
+                </a>
+              ) : null}
+              {phone.whatsapp ? (
+                <a
+                  href={phoneWhatsAppHref(phone.number)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block font-bold text-[#5bc787] hover:underline"
+                >
+                  WhatsApp {phone.number}
+                </a>
+              ) : null}
+            </li>
+          ))}
         </ul>
         {showEnquiry ? (
           <div className="mt-4 text-center">
@@ -88,24 +96,32 @@ export default function SpeakToExpertCard({
       <div className="mb-4 flex flex-col gap-2 text-left">
         <div className="flex items-start gap-2 text-xs text-[#444]">
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage" />
-          <span>Wakiso District, Uganda</span>
+          <span>{home.contactAddress || 'Wakiso District, Uganda'}</span>
         </div>
-        <a href={`tel:${SITE.phone}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
-          <Phone className="h-3.5 w-3.5 shrink-0 text-sage" />
-          {SITE.phoneDisplay}
-        </a>
-        <a
-          href={`https://wa.me/${SITE.whatsapp}`}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 text-xs text-[#444] hover:text-moss"
-        >
-          <MessageCircle className="h-3.5 w-3.5 shrink-0 text-sage" />
-          WhatsApp Chat
-        </a>
-        <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
+        {phones.map((phone) => (
+          <div key={phone.id} className="flex flex-col gap-2">
+            {phone.call ? (
+              <a href={phoneCallHref(phone.number)} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-sage" />
+                {phone.number}
+              </a>
+            ) : null}
+            {phone.whatsapp ? (
+              <a
+                href={phoneWhatsAppHref(phone.number)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-xs text-[#444] hover:text-moss"
+              >
+                <MessageCircle className="h-3.5 w-3.5 shrink-0 text-sage" />
+                WhatsApp {phone.number}
+              </a>
+            ) : null}
+          </div>
+        ))}
+        <a href={`mailto:${home.contactEmail || SITE.email}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
           <Mail className="h-3.5 w-3.5 shrink-0 text-sage" />
-          {SITE.email}
+          {home.contactEmail || SITE.email}
         </a>
       </div>
       <Link

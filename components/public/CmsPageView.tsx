@@ -59,7 +59,7 @@ function AboutStory({
                 <ResponsiveImage
                   src={block.image_url}
                   alt={block.title || 'About section'}
-                  variant="card"
+                  variant="hero"
                   width={720}
                   height={480}
                   className="h-[240px] w-full rounded-xl object-cover md:h-[280px]"
@@ -142,7 +142,7 @@ export default function CmsPageView({
                       <ResponsiveImage
                         src={block.image_url}
                         alt={block.title}
-                        variant="card"
+                        variant="hero"
                         width={720}
                         height={480}
                         className="h-[220px] w-full object-cover"

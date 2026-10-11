@@ -6,10 +6,14 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import { SITE } from '@/lib/collections';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
+import { phoneCallHref, phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function RequestQuotePage() {
+  const home = useHomePageContent();
+  const phones = publicPhones(home);
   return (
     <PublicShellServer>
       <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
@@ -49,18 +53,34 @@ export default function RequestQuotePage() {
                 <MapPin className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Address</h5>
-                  <p className="public-article-body pl-2.5 text-base text-[#343434]">{SITE.address}</p>
+                  <p className="public-article-body pl-2.5 text-base text-[#343434]">{home.contactAddress || SITE.address}</p>
                 </div>
               </div>
               <div className="flex gap-2 pb-4">
                 <Phone className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Contacts</h5>
-                  <p className="public-article-body pl-2.5 text-base text-[#343434]">
-                    <a href={`tel:${SITE.phone}`} className="hover:text-[#5bc787]">
-                      {SITE.phoneDisplay}
-                    </a>
-                  </p>
+                  <div className="public-article-body flex flex-col gap-1 pl-2.5 text-base text-[#343434]">
+                    {phones.map((phone) => (
+                      <p key={phone.id}>
+                        {phone.call ? (
+                          <a href={phoneCallHref(phone.number)} className="hover:text-[#5bc787]">
+                            {phone.number}
+                          </a>
+                        ) : (
+                          phone.number
+                        )}
+                        {phone.whatsapp ? (
+                          <>
+                            {' '}
+                            <a href={phoneWhatsAppHref(phone.number)} className="hover:text-[#5bc787]" target="_blank" rel="noreferrer">
+                              WhatsApp
+                            </a>
+                          </>
+                        ) : null}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -68,8 +88,8 @@ export default function RequestQuotePage() {
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Email</h5>
                   <p className="public-article-body pl-2.5 text-base text-[#343434]">
-                    <a href={`mailto:${SITE.email}`} className="hover:text-[#5bc787]">
-                      {SITE.email}
+                    <a href={`mailto:${home.contactEmail || SITE.email}`} className="hover:text-[#5bc787]">
+                      {home.contactEmail || SITE.email}
                     </a>
                   </p>
                 </div>

@@ -80,6 +80,12 @@ export function pagePublicPath(slug: string): string {
   return `/${PAGE_ALIASES[key] || key}`;
 }
 
+/** About, Community, and the other fixed pages share one slug in the editor and on the site. */
+export function canonicalPageSlug(slug: string): string {
+  const key = publicSlugFromInput(slug);
+  return PAGE_ALIASES[key] || key;
+}
+
 /** CMS slug stored on landing_pages (uganda-safaris). Never a public menu URL. */
 export function landingCmsSlug(slug: string): string {
   const key = publicSlugFromInput(slug);

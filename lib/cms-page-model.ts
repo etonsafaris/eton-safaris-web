@@ -184,22 +184,22 @@ export function parseCmsPageExtras(record: RecordRow | null | undefined, slugFal
 }
 
 export function parseCmsBlocks(record: RecordRow | null | undefined): CmsContentBlock[] {
+  const embedded = extractEmbeddedContent(pickString(record || {}, ['content', 'description', 'body']));
+  const embeddedBlocks = embedded.blocks || [];
   const fromColumns = parseContentBlocks(record?.page_blocks || record?.blocks);
-  if (fromColumns.length > 0) {
-    return fromColumns.map((block) => ({
+  const source = fromColumns.length > 0 ? fromColumns : embeddedBlocks;
+  return source.map((block, index) => {
+    const match =
+      embeddedBlocks.find(
+        (item) => item.title.trim().toLowerCase() === String(block.title || '').trim().toLowerCase()
+      ) || embeddedBlocks[index];
+    return {
       title: block.title,
       description: block.description,
-      image_url: String(block.image_url || '').trim(),
+      image_url: String(block.image_url || match?.image_url || '').trim(),
       caption: '',
-    }));
-  }
-  const embedded = extractEmbeddedContent(pickString(record || {}, ['content', 'description', 'body']));
-  return (embedded.blocks || []).map((block) => ({
-    title: block.title,
-    description: block.description,
-    image_url: String(block.image_url || '').trim(),
-    caption: '',
-  }));
+    };
+  });
 }
 
 export function cmsPageFieldPack(extras: Partial<CmsPageExtras>): Record<string, string> {

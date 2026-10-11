@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
-import { SITE, SOCIAL_LINKS } from '@/lib/collections';
+import { SITE } from '@/lib/collections';
+import SocialBrandIcon from '@/components/public/SocialBrandIcon';
+import { useHomePageContent } from '@/components/public/useHomePageContent';
+import { phoneCallHref, phoneWhatsAppHref, publicPhones, publicSocials } from '@/lib/home-page-content';
 import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
@@ -78,14 +81,9 @@ export default function ContactPage() {
     setNewsletterStatus('Subscribed. Thank you!');
   }
 
-  const socialItems = [
-    { href: SOCIAL_LINKS.instagram, label: 'Instagram', icon: InstagramSocialIcon },
-    { href: SOCIAL_LINKS.linkedin, label: 'LinkedIn', icon: LinkedInSocialIcon },
-    { href: SOCIAL_LINKS.facebook, label: 'Facebook', icon: FacebookSocialIcon },
-    { href: SOCIAL_LINKS.x, label: 'X', icon: XSocialIcon },
-    { href: SOCIAL_LINKS.youtube, label: 'YouTube', icon: YoutubeSocialIcon },
-    { href: SOCIAL_LINKS.tiktok, label: 'TikTok', icon: TikTokSocialIcon },
-  ];
+  const home = useHomePageContent();
+  const socialItems = publicSocials(home);
+  const phoneItems = publicPhones(home);
 
   return (
     <PublicShellServer>
@@ -202,9 +200,7 @@ export default function ContactPage() {
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Address</h5>
                   <p className="pl-2.5 text-base text-[#343434]">
-                    Wakiso District
-                    <br />
-                    Central Region, Uganda
+                    {home.contactAddress || 'Wakiso District, Central Region, Uganda'}
                   </p>
                 </div>
               </div>
@@ -212,19 +208,26 @@ export default function ContactPage() {
                 <Phone className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Contacts</h5>
-                  <ul className="list-none pl-2.5 text-base text-[#343434]">
-                    <li>
-                      Phone:{' '}
-                      <a href={`tel:${SITE.phone}`} className="hover:text-[#5bc787]">
-                        {SITE.phoneDisplay}
-                      </a>
-                    </li>
-                    <li>
-                      WhatsApp:{' '}
-                      <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noreferrer" className="hover:text-[#5bc787]">
-                        {SITE.phoneDisplay}
-                      </a>
-                    </li>
+                  <ul className="list-none space-y-1 pl-2.5 text-base text-[#343434]">
+                    {phoneItems.map((phone) => (
+                      <li key={phone.id}>
+                        {phone.call ? (
+                          <a href={phoneCallHref(phone.number)} className="hover:text-[#5bc787]">
+                            {phone.number}
+                          </a>
+                        ) : (
+                          <span>{phone.number}</span>
+                        )}
+                        {phone.whatsapp ? (
+                          <>
+                            {' '}
+                            <a href={phoneWhatsAppHref(phone.number)} target="_blank" rel="noreferrer" className="hover:text-[#5bc787]">
+                              WhatsApp
+                            </a>
+                          </>
+                        ) : null}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -234,8 +237,8 @@ export default function ContactPage() {
                   <h5 className="text-xl font-medium text-black/80">Our Email Address</h5>
                   <ul className="list-none pl-2.5 text-base text-[#343434]">
                     <li>
-                      <a href={`mailto:${SITE.email}`} className="hover:text-[#5bc787]">
-                        {SITE.email}
+                      <a href={`mailto:${home.contactEmail || SITE.email}`} className="hover:text-[#5bc787]">
+                        {home.contactEmail || SITE.email}
                       </a>
                     </li>
                   </ul>
@@ -248,16 +251,16 @@ export default function ContactPage() {
             <div className="mb-2.5 bg-white p-5 shadow-sm">
               <h5 className="font-merry text-xl font-medium italic text-black/80">Our Social Media Links</h5>
               <div className="flex flex-wrap justify-center gap-[5px] p-2.5">
-                {socialItems.map(({ href, label, icon: Icon }) => (
+                {socialItems.map((link) => (
                   <a
-                    key={label}
-                    href={href}
+                    key={link.id}
+                    href={link.url}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={label}
+                    aria-label={link.network}
                     className="inline-flex rounded-full bg-[#5bc787] p-2 text-white hover:bg-[#588048]"
                   >
-                    <Icon className="h-6 w-6" />
+                    <SocialBrandIcon network={link.network} className="h-6 w-6" />
                   </a>
                 ))}
               </div>

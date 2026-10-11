@@ -1,9 +1,15 @@
-import { SITE } from '@/lib/collections';
+'use client';
+
+import { useHomePageContent } from '@/components/public/useHomePageContent';
+import { phoneWhatsAppHref, publicPhones } from '@/lib/home-page-content';
 
 export default function WhatsAppFloat() {
+  const home = useHomePageContent();
+  const phone = publicPhones(home).find((item) => item.whatsapp);
+  if (!phone) return null;
   return (
     <a
-      href={`https://wa.me/${SITE.whatsapp}`}
+      href={phoneWhatsAppHref(phone.number)}
       target="_blank"
       rel="noreferrer"
       className="fixed bottom-6 right-6 z-50 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_12px_rgba(0,0,0,0.25)] transition hover:scale-105 hover:bg-[#20bd5a]"

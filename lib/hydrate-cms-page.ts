@@ -5,7 +5,7 @@ import { parseCmsBlocks, parseCmsPageExtras, type CmsContentBlock, type PageFaq 
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { mergeFaqs } from '@/lib/default-faqs';
 import { getRecordImage, getRecordTitle, pickStoredString, pickString, recordPublishedAt } from '@/lib/data';
-import { publicBodyHtml, recordBodyHtml } from '@/lib/embedded-content';
+import { extractEmbeddedContent, publicBodyHtml, recordBodyHtml } from '@/lib/embedded-content';
 import { resolvePublicImage } from '@/lib/public-image';
 import { STATIC_PAGES } from '@/lib/static-pages';
 import type { RecordRow } from '@/lib/types';
@@ -46,6 +46,16 @@ export function resolvePolicyPageContent(page: RecordRow | null | undefined, slu
   const seeded = seededCmsPage(slug);
   if (seeded?.content && hasVisibleCopy(seeded.content)) return seeded.content;
   return STATIC_PAGES[slug]?.content || '';
+}
+
+function pageHeroImage(page: RecordRow | null | undefined, seeded: string) {
+  const embedded = extractEmbeddedContent(pickString(page || {}, ['content', 'description', 'body']));
+  const raw = pickString(
+    page || {},
+    ['image_url', 'cover_image', 'featured_image', 'social_image_url'],
+    embedded.fields?.image_url || ''
+  );
+  return resolvePublicImage(raw) || resolvePublicImage(page ? getRecordImage(page) : '') || resolvePublicImage(seeded) || raw || seeded || '';
 }
 
 export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: string) {
@@ -98,7 +108,7 @@ export function hydratePublicCmsPage(page: RecordRow | null | undefined, slug: s
     title: extras.hero_title || (page ? getRecordTitle(page) : '') || seeded?.hero_title || seeded?.title || '',
     subtitle: extras.subtitle || seeded?.subtitle || '',
     content,
-    image: resolvePublicImage(page ? getRecordImage(page) : '') || seeded?.image_url || '',
+    image: pageHeroImage(page, seeded?.image_url || ''),
     blocks,
     faqs,
     videoUrl: extras.video_url || seeded?.video_url || '',

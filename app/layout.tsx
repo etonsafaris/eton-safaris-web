@@ -3,7 +3,9 @@ import './globals.css';
 import SiteMonitoring from '@/components/monitoring/SiteMonitoring';
 import CmsLiveHost from '@/components/public/CmsLiveHost';
 import PublicAppRoot from '@/components/public/PublicAppRoot';
-import { SOCIAL_LINKS, SITE, SITE_LOGO } from '@/lib/collections';
+import { SITE, SITE_LOGO, SOCIAL_LINKS } from '@/lib/collections';
+import { loadHomePageContent } from '@/lib/load-public';
+import { publicPhones, publicSocials } from '@/lib/home-page-content';
 
 /**
  * System font stacks — Google Fonts were aborting/timing out and blocking every
@@ -138,14 +140,23 @@ const SITE_GRAPH = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const home = await loadHomePageContent().catch(() => null);
+  const graph = structuredClone(SITE_GRAPH);
+  const agency = graph['@graph'][0] as { telephone?: string; email?: string; sameAs?: string[] };
+  if (home) {
+    const phones = publicPhones(home);
+    agency.telephone = phones.map((phone) => phone.number).join(', ') || agency.telephone;
+    agency.email = home.contactEmail || agency.email;
+    agency.sameAs = publicSocials(home).map((link) => link.url);
+  }
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body className="bg-white font-sans">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }} />
         <PublicAppRoot>
           <SiteMonitoring />
           <CmsLiveHost />

@@ -22,17 +22,20 @@ import {
   type PageFaq,
 } from '@/lib/cms-page-model';
 import { blocksWithoutMedia } from '@/lib/content-blocks';
+import { canonicalPageSlug } from '@/lib/cms-routes';
 import { faqsForEditor } from '@/lib/default-faqs';
 import { mergeCommunityInitiativeBlocks } from '@/lib/community-initiatives';
 import { ABOUT_DESTINATION_CHIPS } from '@/lib/destination-chips';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { fetchCollectionRecordById, pickRecordId, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
-import { embedContent, stripEmbeddedContent } from '@/lib/embedded-content';
+import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
 import {
   DEFAULT_HOME_PAGE_CONTENT,
   HOME_PAGE_SLUG,
   homePageFieldPack,
   parseHomePageContent,
+  type ContactPhone,
+  type SocialLink,
 } from '@/lib/home-page-content';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { defaultSeoValues, seoValuesFromRecord, type SeoValues } from '@/lib/seo';
@@ -126,7 +129,8 @@ function PageFormInner({ pageId }: PageFormProps) {
   const [footerAbout, setFooterAbout] = useState(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
   const [contactAddress, setContactAddress] = useState(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
   const [contactEmail, setContactEmail] = useState(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
-  const [contactPhone, setContactPhone] = useState(DEFAULT_HOME_PAGE_CONTENT.contactPhone);
+  const [phones, setPhones] = useState<ContactPhone[]>(DEFAULT_HOME_PAGE_CONTENT.phones);
+  const [socials, setSocials] = useState<SocialLink[]>(DEFAULT_HOME_PAGE_CONTENT.socials);
 
   useEffect(() => {
     if (!pageId) return;
@@ -141,7 +145,16 @@ function PageFormInner({ pageId }: PageFormProps) {
       setContent(stripEmbeddedContent(String(page.content || page.description || '')));
       setVideoUrl(extras.video_url);
       setDestinations(extras.destinations.join(', ') || ABOUT_DESTINATION_CHIPS.join(', '));
-      setFeaturedImage(String(page.image_url || ''));
+      const embedded = extractEmbeddedContent(String(page.content || page.description || ''));
+      const storedImage = String(
+        page.image_url ||
+          page.cover_image ||
+          page.featured_image ||
+          page.social_image_url ||
+          embedded.fields?.image_url ||
+          ''
+      );
+      setFeaturedImage(storedImage);
       setStatus(extras.status);
       setCtaLabel(extras.cta_label || 'Talk to Us');
       setCtaHref(extras.cta_href || '/contact-us');
@@ -151,28 +164,32 @@ function PageFormInner({ pageId }: PageFormProps) {
         setFooterAbout(home.footerAbout);
         setContactAddress(home.contactAddress);
         setContactEmail(home.contactEmail);
-        setContactPhone(home.contactPhone);
+        setPhones(home.phones);
+        setSocials(home.socials);
         setBlocks([]);
       } else {
+        const canonical =
+          canonicalPageSlug(pageSlug) ||
+          (extras.layout === 'about'
+            ? 'about-us'
+            : extras.layout === 'agency'
+              ? 'tours-and-travel-agency'
+              : extras.layout === 'community'
+                ? 'community-support'
+                : pageSlug);
         const isEditableStoryPage =
           extras.layout === 'community' ||
           extras.layout === 'about' ||
           extras.layout === 'agency' ||
-          /community|about-us|travel-agency|agency/i.test(pageSlug) ||
+          /community|about-us|travel-agency|agency/i.test(canonical) ||
           /community|about/i.test(String(page.title || ''));
-        setBlocks(
-          isEditableStoryPage
-            ? hydratePublicCmsPage(
-                page,
-                pageSlug ||
-                  (extras.layout === 'about'
-                    ? 'about-us'
-                    : extras.layout === 'agency'
-                      ? 'tours-and-travel-agency'
-                      : 'community-support')
-              ).blocks
-            : parseCmsBlocks(page)
-        );
+        const view = hydratePublicCmsPage(page, canonical);
+        if (!String(page.image_url || page.cover_image || page.featured_image || page.social_image_url || '').trim() && view.image) {
+          setFeaturedImage(view.image);
+        }
+        const storedBody = stripEmbeddedContent(String(page.content || page.description || ''));
+        if (!storedBody.trim() && view.content) setContent(view.content);
+        setBlocks(isEditableStoryPage ? view.blocks : parseCmsBlocks(page));
       }
       setFaqs(faqsForEditor(page, 'pages'));
       setSeo(seoValuesFromRecord(page as Record<string, unknown>));
@@ -211,7 +228,9 @@ function PageFormInner({ pageId }: PageFormProps) {
             footerAbout,
             contactAddress,
             contactEmail,
-            contactPhone,
+            contactPhone: phones.find((phone) => phone.number.trim())?.number || '',
+            phones,
+            socials,
           })
         : null;
     const extras = cmsPageFieldPack({
@@ -250,7 +269,10 @@ function PageFormInner({ pageId }: PageFormProps) {
         published_at: stamp,
         content: embedContent(layout === 'home' ? `<p>${footerAbout}</p>` : content, {
           blocks: pageBlocks,
-          fields: homePack ? { ...extras, ...homePack } : extras,
+          fields: {
+            ...(homePack ? { ...extras, ...homePack } : extras),
+            image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
+          },
         }),
       },
       { seo: { ...seo, slug, social_image_url: seo.social_image_url || featuredImage } }
@@ -320,7 +342,8 @@ function PageFormInner({ pageId }: PageFormProps) {
                   setFooterAbout(DEFAULT_HOME_PAGE_CONTENT.footerAbout);
                   setContactAddress(DEFAULT_HOME_PAGE_CONTENT.contactAddress);
                   setContactEmail(DEFAULT_HOME_PAGE_CONTENT.contactEmail);
-                  setContactPhone(DEFAULT_HOME_PAGE_CONTENT.contactPhone);
+                  setPhones(DEFAULT_HOME_PAGE_CONTENT.phones.map((phone) => ({ ...phone })));
+                  setSocials(DEFAULT_HOME_PAGE_CONTENT.socials.map((link) => ({ ...link })));
                 }
                 if (next === 'community') {
                   setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
@@ -348,11 +371,13 @@ function PageFormInner({ pageId }: PageFormProps) {
               footerAbout={footerAbout}
               contactAddress={contactAddress}
               contactEmail={contactEmail}
-              contactPhone={contactPhone}
+              phones={phones}
+              socials={socials}
               onFooterAbout={setFooterAbout}
               onContactAddress={setContactAddress}
               onContactEmail={setContactEmail}
-              onContactPhone={setContactPhone}
+              onPhones={setPhones}
+              onSocials={setSocials}
             />
             <div className="mt-8">
               <FaqEditor
@@ -606,7 +631,9 @@ function PageFormInner({ pageId }: PageFormProps) {
         coverImageUrl={featuredImage.startsWith('blob:') ? '' : featuredImage}
         contentForReadability={
           layout === 'home'
-            ? `${footerAbout}\n${contactAddress}\n${contactEmail}\n${contactPhone}\n${faqs
+            ? `${footerAbout}\n${contactAddress}\n${contactEmail}\n${phones.map((phone) => phone.number).join('\n')}\n${socials
+                .map((link) => link.url)
+                .join('\n')}\n${faqs
                 .map((item) => `${item.question}\n${item.answer}`)
                 .join('\n')}`
             : `${excerpt}\n${content}\n${blocks.map((block) => block.description).join('\n')}`
