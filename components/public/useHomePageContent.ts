@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useCmsLive } from '@/lib/cms-live';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecordById, fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
@@ -22,7 +22,7 @@ export function HomePageContentProvider({
   initial?: HomePageContent | null;
   children: ReactNode;
 }) {
-  return <HomePageContentContext.Provider value={initial ?? null}>{children}</HomePageContentContext.Provider>;
+  return createElement(HomePageContentContext.Provider, { value: initial ?? null }, children);
 }
 
 async function fetchHomePageRecord(): Promise<RecordRow | null> {
