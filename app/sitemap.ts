@@ -31,10 +31,17 @@ function sitemapColumns(table: string, aliases: string[] = []) {
 }
 
 function sitemapFetch(table: string, aliases: string[] = []) {
-  return fetchCollectionRecords(table, aliases, {
+  const load = fetchCollectionRecords(table, aliases, {
     columns: sitemapColumns(table, aliases),
-    unlimited: true,
+    maxRows: 400,
   }).catch(() => [] as RecordRow[]);
+  return new Promise<RecordRow[]>((resolve) => {
+    const timer = setTimeout(() => resolve([]), 8000);
+    load.then((rows) => {
+      clearTimeout(timer);
+      resolve(rows);
+    });
+  });
 }
 
 function entry(
@@ -82,7 +89,7 @@ export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (isNextProductionBuild()) {
     return Promise.resolve([entry('', new Date(), 1, 'daily')]);
   }
-  return unstable_cache(buildSitemap, ['public-sitemap-v3-seo-detail'], {
+  return unstable_cache(buildSitemap, ['public-sitemap-v4-seo-detail'], {
     revalidate: 3600,
     tags: ['cms-public'],
   })();
