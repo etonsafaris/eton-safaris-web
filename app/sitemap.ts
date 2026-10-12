@@ -36,7 +36,7 @@ function sitemapFetch(table: string, aliases: string[] = []) {
     maxRows: 400,
   }).catch(() => [] as RecordRow[]);
   return new Promise<RecordRow[]>((resolve) => {
-    const timer = setTimeout(() => resolve([]), 8000);
+    const timer = setTimeout(() => resolve([]), 20000);
     load.then((rows) => {
       clearTimeout(timer);
       resolve(rows);
@@ -89,7 +89,7 @@ export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (isNextProductionBuild()) {
     return Promise.resolve([entry('', new Date(), 1, 'daily')]);
   }
-  return unstable_cache(buildSitemap, ['public-sitemap-v4-seo-detail'], {
+  return unstable_cache(buildSitemap, ['public-sitemap-v5-seo-detail'], {
     revalidate: 3600,
     tags: ['cms-public'],
   })();
