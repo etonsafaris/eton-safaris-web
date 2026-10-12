@@ -11,6 +11,7 @@ import { publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -78,12 +79,20 @@ export default function PlacePageContent({
         if (!mounted) return;
         const match = (full && isPublishedRecord(full) ? full : null) || initialPlace;
         setPlace(match);
-        setOthers([]);
         const countryKey =
           countrySlugProp ||
           pickStoredString(match, ['country', 'country_slug', 'destination', 'nation']);
-        const tourRows = await resolvePublicTours({ country: countryKey, limit: 12 });
+        const [tourRows, relatedPage] = await Promise.all([
+          resolvePublicTours({ country: countryKey, limit: 12 }),
+          countryKey
+            ? fetchCollectionPage('explore', [], { limit: 12, filters: { country: countryKey } })
+            : Promise.resolve({ rows: [] as RecordRow[], total: 0 }),
+        ]);
         if (tourRows.length) setTours(tourRows);
+        const related = (relatedPage.rows ?? [])
+          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(match?.id ?? ''))
+          .slice(0, 8);
+        if (related.length) setOthers(related);
       } catch (error) {
         console.error('[Supabase] Failed to load place page data:', error);
       } finally {
@@ -95,6 +104,25 @@ export default function PlacePageContent({
       mounted = false;
     };
   }, [placeSlug, countrySlugProp, initialPlace, live]);
+
+  useEffect(() => {
+    if ((others?.length ?? 0) > 0 || !place) return undefined;
+    const countryKey = pickStoredString(place, ['country', 'country_slug', 'destination', 'nation']);
+    if (!countryKey) return undefined;
+    let cancelled = false;
+    fetchCollectionPage('explore', [], { limit: 12, filters: { country: countryKey } })
+      .then((page) => {
+        if (cancelled) return;
+        const related = (page.rows ?? [])
+          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(place.id ?? ''))
+          .slice(0, 8);
+        if (related.length) setOthers(related);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [place, others.length]);
 
   const placeTitle = place ? getRecordTitle(place) : placeSlug.replace(/-/g, ' ');
   const countryTitle =

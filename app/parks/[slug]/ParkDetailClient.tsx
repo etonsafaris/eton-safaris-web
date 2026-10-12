@@ -10,6 +10,7 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   getRecordImage,
   getRecordTitle,
@@ -64,10 +65,19 @@ export default function ParkDetailClient({
         const published = full && isPublishedRecord(full) ? full : null;
         if (published) {
           setPark(published);
-          setOthers([]);
           const country = pickStoredString(published, ['country']);
-          const tourRows = await resolvePublicTours({ country, limit: 12 });
+          const [tourRows, relatedPage] = await Promise.all([
+            resolvePublicTours({ country, limit: 12 }),
+            fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+              limit: 12,
+              filters: { country },
+            }),
+          ]);
           if (tourRows.length) setTours(tourRows);
+          const related = (relatedPage.rows ?? [])
+            .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(published.id ?? ''))
+            .slice(0, 8);
+          if (related.length) setOthers(related);
           setReady(true);
           return;
         }
@@ -91,6 +101,28 @@ export default function ParkDetailClient({
     }
     load();
   }, [slug, live, router, serverGate]);
+
+  useEffect(() => {
+    if ((others?.length ?? 0) > 0 || !park) return undefined;
+    const country = pickStoredString(park, ['country']);
+    if (!country) return undefined;
+    let cancelled = false;
+    fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+      limit: 12,
+      filters: { country },
+    })
+      .then((page) => {
+        if (cancelled) return;
+        const related = (page.rows ?? [])
+          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(park.id ?? ''))
+          .slice(0, 8);
+        if (related.length) setOthers(related);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [park, others.length]);
 
   const published = useEnsurePublishedAt('national_park', park, '', (stamp) => {
     setPark((row) => (row ? { ...row, published_at: stamp } : row));

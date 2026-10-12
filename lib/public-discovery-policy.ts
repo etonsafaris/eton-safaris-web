@@ -30,7 +30,7 @@ export function includeInPublicSiteSearch(table: string): boolean {
 }
 
 export function showParksOnCountryPages(): boolean {
-  return false;
+  return true;
 }
 
 export function showStaysOnParkPages(): boolean {

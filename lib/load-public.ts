@@ -456,7 +456,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v14-one-read', normalized],
+      ['country-page-data-v15-related', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
@@ -477,7 +477,7 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
   const normalized = normalizeSlug(slug);
   try {
     const data = await loadCountryPageData(normalized);
-    return withCountryPageFallback({ ...data, parks: [], places: [] }, normalized);
+    return withCountryPageFallback(data, normalized);
   } catch (error) {
     console.warn('[Public] loadCountryPageDataResilient failed:', normalized, error);
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
@@ -513,7 +513,11 @@ async function loadCountryPageDataInner(
     (country ? publicCountryLabel(country, slug) : '') ||
     pickString(country || {}, ['name', 'title']) ||
     slug;
-  const tours = await resolvePublicTours({ country: countryName, limit: 24 }).catch(() => [] as RecordRow[]);
+  const [tours, parks, places] = await Promise.all([
+    resolvePublicTours({ country: countryName, limit: 24 }).catch(() => [] as RecordRow[]),
+    relatedPublicRecords('national_park', ['national_parks', 'parks'], countryName, undefined, 12),
+    relatedPublicRecords('explore', [], countryName, undefined, 12),
+  ]);
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
   const toursForPage = matchedTours.length ? matchedTours : tours;
   const categories = resolveCountryPageCategories(slug, countryCategories, toursForPage);
@@ -537,8 +541,8 @@ async function loadCountryPageDataInner(
     country: displayCountry,
     categories,
     tours: toursForPage.filter(isPubliclyVisibleRecord),
-    parks: [] as RecordRow[],
-    places: [] as RecordRow[],
+    parks,
+    places,
   };
 }
 
@@ -547,7 +551,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v5-seo-only', normalized],
+    ['country-page-sync-v6-related', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
@@ -678,24 +682,65 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
   );
 }
 
+async function relatedPublicRecords(
+  table: string,
+  aliases: string[],
+  country: string,
+  excludeId?: string,
+  limit = 8
+): Promise<RecordRow[]> {
+  const label = String(country || '').trim();
+  const exclude = String(excludeId || '');
+  const keep = (rows: RecordRow[]) =>
+    (rows ?? [])
+      .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== exclude)
+      .slice(0, limit);
+  if (!label) return [];
+  try {
+    const page = await withTimeout(
+      fetchCollectionPage(table, aliases, {
+        columns: listColumns(table, aliases),
+        limit: limit + 4,
+        offset: 0,
+        filters: { country: label },
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    return keep(page.rows ?? []);
+  } catch (error) {
+    console.warn('[Public] Related records failed:', table, label, error);
+    return [];
+  }
+}
+
 async function loadParkDetailLive(slug: string) {
   try {
     const park = await fetchPublicRecordResilient('national_park', slug, ['national_parks', 'parks']);
     const published = park && isPublishedRecord(park) ? park : null;
     const country = published ? pickStoredString(published, ['country']) : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
+    const [tours, others] = published
+      ? await Promise.all([
+          withTimeout(
+            resolvePublicTours({
+              country,
+              limit: 12,
+            }),
+            8000,
+            [] as RecordRow[]
+          ),
+          relatedPublicRecords(
+            'national_park',
+            ['national_parks', 'parks'],
             country,
-            limit: 12,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
+            published.id != null ? String(published.id) : '',
+            8
+          ),
+        ])
+      : [[], []];
     return toClientProps({
       park: published,
-      others: [] as RecordRow[],
+      others,
       tours: (tours ?? []).slice(0, 12),
       stays: [] as RecordRow[],
     });
@@ -708,7 +753,7 @@ async function loadParkDetailLive(slug: string) {
 export async function loadParkDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   return cachedPublic(
-    ['park-detail-v3-seo-only', normalized],
+    ['park-detail-v4-related', normalized],
     ['collection:national_park', `park:${normalized}`],
     () => loadParkDetailLive(normalized)
   );
@@ -836,20 +881,29 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
       : await fetchPublicRecordResilient('accommodations', slug);
     const published = item && isPubliclyVisibleRecord(item) ? item : null;
     const country = published ? pickStoredString(published, ['country']) : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
+    const [tours, others] = published
+      ? await Promise.all([
+          withTimeout(
+            resolvePublicTours({
+              country,
+              limit: 12,
+              excludeId: published.id != null ? String(published.id) : undefined,
+            }),
+            8000,
+            [] as RecordRow[]
+          ),
+          relatedPublicRecords(
+            'accommodations',
+            [],
             country,
-            limit: 12,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
+            published.id != null ? String(published.id) : '',
+            8
+          ),
+        ])
+      : [[], []];
     return toClientProps({
       item: published,
-      others: [] as RecordRow[],
+      others,
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {
@@ -868,7 +922,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   return cachedPublic(
-    ['accommodation-detail-sync-v3-seo-only', normalized],
+    ['accommodation-detail-sync-v4-related', normalized],
     ['collection:accommodations', `accommodation:${normalized}`],
     () => loadAccommodationDetailLive(normalized, true),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
@@ -882,20 +936,29 @@ export async function loadExploreDetail(slug: string) {
     const countryKey = published
       ? pickStoredString(published, ['country', 'country_slug', 'destination', 'nation'])
       : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
-            country: countryKey,
-            limit: 12,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
+    const [tours, others] = published
+      ? await Promise.all([
+          withTimeout(
+            resolvePublicTours({
+              country: countryKey,
+              limit: 12,
+              excludeId: published.id != null ? String(published.id) : undefined,
+            }),
+            8000,
+            [] as RecordRow[]
+          ),
+          relatedPublicRecords(
+            'explore',
+            [],
+            countryKey,
+            published.id != null ? String(published.id) : '',
+            8
+          ),
+        ])
+      : [[], []];
     return toClientProps({
       place: published,
-      others: [] as RecordRow[],
+      others,
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {

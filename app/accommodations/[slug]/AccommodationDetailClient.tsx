@@ -10,6 +10,7 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -68,14 +69,23 @@ export default function AccommodationDetailClient({
         }
         setParks([]);
         setItem(published);
-        setOthers([]);
         const country = published ? pickStoredString(published, ['country']) : '';
-        const tourRows = await resolvePublicTours({
-          country,
-          limit: 12,
-          excludeId: published.id != null ? String(published.id) : undefined,
-        });
+        const [tourRows, relatedPage] = await Promise.all([
+          resolvePublicTours({
+            country,
+            limit: 12,
+            excludeId: published.id != null ? String(published.id) : undefined,
+          }),
+          fetchCollectionPage('accommodations', [], {
+            limit: 12,
+            filters: { country },
+          }),
+        ]);
         if (tourRows.length) setTours(tourRows);
+        const related = (relatedPage.rows ?? [])
+          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(published.id ?? ''))
+          .slice(0, 8);
+        if (related.length) setOthers(related);
       } catch (error) {
         console.error('[Accommodation detail] Failed to load stay:', error);
         if (!serverGate.current) {
@@ -88,6 +98,25 @@ export default function AccommodationDetailClient({
     }
     void load();
   }, [slug, live, router, serverGate]);
+
+  useEffect(() => {
+    if ((others?.length ?? 0) > 0 || !item) return undefined;
+    const country = pickStoredString(item, ['country']);
+    if (!country) return undefined;
+    let cancelled = false;
+    fetchCollectionPage('accommodations', [], { limit: 12, filters: { country } })
+      .then((page) => {
+        if (cancelled) return;
+        const related = (page.rows ?? [])
+          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(item.id ?? ''))
+          .slice(0, 8);
+        if (related.length) setOthers(related);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [item, others.length]);
 
   const nationalParkLabel = accommodationNationalParkDisplay(item, parks);
 
