@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { allowAdminRequest } from '@/lib/admin-request-auth';
 import { isOwnerAdminEmail } from '@/lib/inbox';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { updateAgentFields } from '@/lib/agent-row';
 import { decodeJwtPayload, emailFromJwtPayload } from '@/lib/supabase/jwt-payload';
 
 function encodeSegment(value: unknown) {
@@ -76,9 +77,21 @@ export async function POST(request: Request) {
           patch.must_change_password = false;
           user_metadata.must_change_password = false;
         }
+        const nextName = String(body.data?.full_name || body.data?.username || '').trim();
+        if (nextName) {
+          patch.name = nextName;
+          user_metadata.full_name = nextName;
+        }
         if (nextEmail !== currentEmail) patch.email = nextEmail;
         if (Object.keys(patch).length) {
-          await client.from('registered_agents').update(patch).eq('id', row.id);
+          const saved = await updateAgentFields(client, 'registered_agents', row, {
+            ...(nextPassword ? { password: nextPassword } : {}),
+            ...(nextName ? { name: nextName } : {}),
+            ...(nextEmail !== currentEmail ? { email: nextEmail } : {}),
+          });
+          if (saved.error) {
+            return NextResponse.json({ error: saved.error.message }, { status: 400 });
+          }
         }
       }
     } catch (error) {
@@ -99,8 +112,23 @@ export async function POST(request: Request) {
     } catch {
       /* profiles table is optional */
     }
-  } else if (nextPassword) {
-    user_metadata.must_change_password = false;
+  } else if (nextPassword || body.data?.full_name || body.data?.username) {
+    user_metadata.must_change_password = nextPassword ? false : user_metadata.must_change_password;
+    try {
+      const client = createAdminClient();
+      const lookup = await client.from('registered_agents').select('*').ilike('email', currentEmail).limit(1);
+      const row = lookup.data?.[0] as Record<string, unknown> | undefined;
+      const nextName = String(body.data?.full_name || body.data?.username || '').trim();
+      if (row?.id != null) {
+        await updateAgentFields(client, 'registered_agents', row as Record<string, unknown>, {
+          ...(nextPassword ? { password: nextPassword } : {}),
+          ...(nextName ? { name: nextName } : {}),
+          ...(nextEmail !== currentEmail ? { email: nextEmail } : {}),
+        });
+      }
+    } catch (error) {
+      console.error('[Auth] owner account update failed:', error);
+    }
   }
 
   const user = { id, email: nextEmail, user_metadata };

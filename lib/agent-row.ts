@@ -23,6 +23,7 @@ export const LIVE_AGENT_COLUMNS = [
   'is_sample',
   'is_active',
   'allowed_modules',
+  'password',
 ] as const;
 
 const FIELD_ALIASES: Record<string, string[]> = {
@@ -41,6 +42,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
   user_id: ['user_id', 'userId'],
   allowed_modules: ['allowed_modules'],
   approval_token: ['approval_token'],
+  password: ['password', 'password_hash'],
 };
 
 export type AgentApplicationInput = {
@@ -92,6 +94,7 @@ export function buildLiveAgentInsert(input: AgentApplicationInput, userId?: stri
     approval_token: crypto.randomUUID(),
     is_sample: false,
     is_active: false,
+    ...(input.password?.trim() ? { password: input.password.trim() } : {}),
   };
 }
 
@@ -265,6 +268,7 @@ export async function updateAgentFields(
     role: patch.role,
     allowed_modules: patch.allowed_modules,
     approval_token: patch.approval_token,
+    password: patch.password,
     isActive:
       patch.isActive ??
       (typeof patch.status === 'string' ? /active/i.test(patch.status) && !/inactive/i.test(patch.status) : undefined),
@@ -280,6 +284,9 @@ export async function updateAgentFields(
   }
   if (patch.approval_token !== undefined) {
     payload.approval_token = patch.approval_token;
+  }
+  if (patch.password !== undefined && String(patch.password).length > 0) {
+    payload.password = String(patch.password);
   }
 
   if (Object.keys(payload).length === 0) {

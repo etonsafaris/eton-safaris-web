@@ -87,10 +87,15 @@ function ProfilePanel() {
     event.preventDefault();
     setSaving(true);
     setStatus('');
-    const metadata: Record<string, string | boolean> = { full_name: fullName, phone };
+    const metadata: Record<string, string | boolean> = { full_name: fullName, username: fullName, phone };
     if (password) {
       metadata.must_change_password = false;
       metadata.password_changed_at = new Date().toISOString();
+    }
+    if (password && password.length < 8) {
+      setStatus('Use at least 8 characters for a new password.');
+      setSaving(false);
+      return;
     }
     const updates: { data: Record<string, string | boolean>; email?: string; password?: string } = {
       data: metadata,
@@ -128,7 +133,7 @@ function ProfilePanel() {
       <p className="text-sm text-gray-500">Update your account details and password.</p>
       <input
         required
-        placeholder="Name"
+        placeholder="Username"
         value={fullName}
         onChange={(event) => setFullName(event.target.value)}
         className="w-full rounded-lg border px-3 py-2.5 text-sm"
@@ -310,15 +315,15 @@ function UserManagement() {
         role,
       }),
     });
-    const body = (await response.json().catch(() => ({}))) as { error?: string; emailed?: boolean };
+    const body = (await response.json().catch(() => ({}))) as { error?: string; emailed?: boolean; inviteUrl?: string };
     if (!response.ok) {
       setStatus(body.error || 'Could not send the invite.');
       return;
     }
     setStatus(
       body.emailed
-        ? `Invite emailed to ${email}. They stay Pending until you activate the account.`
-        : `Invite saved for ${email}, but the email could not be sent. Check Resend, then activate after they can sign in.`
+        ? `Invite emailed to ${email}. They open the link, choose a username and password, then you activate the account.`
+        : `Invite saved for ${email}. Email was not sent. Share this link so they can create the account: ${body.inviteUrl || ''}`
     );
     setEmail('');
     await loadUsers();
@@ -418,6 +423,7 @@ function UserManagement() {
             <option>Limited Access (User)</option>
             <option>Tour Operator</option>
             <option>Content Manager</option>
+            <option>Travel Agent</option>
             <option>Full Access (Admin)</option>
           </select>
           <button type="submit" className="rounded-lg bg-forest px-4 py-2 text-sm font-semibold text-white">

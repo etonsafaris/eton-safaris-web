@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ensureConfirmedAuthUser } from '@/lib/ensure-auth-user';
-import { findAgentRecord, isStaffRole } from '@/lib/find-agent';
+import { findAgentRecord } from '@/lib/find-agent';
 import { updateAgentFields } from '@/lib/agent-row';
 import { staffRoleLabel } from '@/lib/invite-staff';
 import type { RecordRow } from '@/lib/types';
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   try {
     const client = createAdminClient();
     const found = await findAgentRecord(client, { token });
-    if (!found || !isStaffRole(found.row.role)) {
+    if (!found) {
       return NextResponse.json({ error: 'This invite link is invalid or has expired.' }, { status: 404 });
     }
     return NextResponse.json({ ok: true, invite: publicInvite(found.row) });
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     const client = createAdminClient();
     const found = await findAgentRecord(client, { token });
-    if (!found || !isStaffRole(found.row.role)) {
+    if (!found) {
       return NextResponse.json({ error: 'This invite link is invalid or has expired.' }, { status: 404 });
     }
 
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
 
     const updated = await updateAgentFields(client, found.table, found.row, {
       name,
+      password,
       user_id: authUser?.id || found.row.user_id,
       approval_token: crypto.randomUUID(),
     });

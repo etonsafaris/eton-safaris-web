@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       emailed: result.emailed,
       alreadyExists: Boolean(result.alreadyExists),
       table: result.table,
+      inviteUrl: result.inviteUrl,
     });
   } catch (error) {
     console.error('[Staff invite] Failed:', error);

@@ -127,15 +127,20 @@ export const supabase = {
       return { data: { user: body.user || null }, error: null };
     },
     resetPasswordForEmail: async (
-      _email: string,
+      email: string,
       _options?: { redirectTo?: string }
-    ) => ({
-      data: {},
-      error: {
-        message:
-          'Email password reset is not enabled. Use “Forgot password” on the login page or ask an administrator to reset your password.',
-      },
-    }),
+    ) => {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { data: {}, error: { message: String(body.error || 'Could not send the reset email.') } };
+      }
+      return { data: body, error: null };
+    },
     signUp: async ({
       email,
       password,

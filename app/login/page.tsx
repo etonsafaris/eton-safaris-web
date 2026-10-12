@@ -22,6 +22,7 @@ const ROLES = [
   { label: 'Content Manager', value: 'Content Manager' },
   { label: 'Tour Operator', value: 'Tour Operator' },
   { label: 'Travel Agent', value: 'Travel Agent' },
+  { label: 'User', value: 'Limited Access (User)' },
 ] as const;
 
 const inputClass =
@@ -82,6 +83,7 @@ function LoginForm() {
   useEffect(() => {
     const invitedEmail = searchParams?.get('email') || '';
     if (invitedEmail.includes('@')) setEmail(invitedEmail);
+    if (searchParams?.get('mode') === 'signup') setMode('signup');
   }, [searchParams]);
 
   useEffect(() => {
@@ -127,8 +129,8 @@ function LoginForm() {
       return;
     }
 
-    if (isSignup && isAgentRole(role)) {
-      router.push('/agents/register');
+    if (isSignup && password.length < 8) {
+      setError('Use at least 8 characters.');
       setLoading(false);
       return;
     }
@@ -236,15 +238,7 @@ function LoginForm() {
     router.replace(destination);
   }
 
-  function isAgentRole(value: string) {
-    return /travel agent/i.test(value);
-  }
-
   function onRoleChange(value: string) {
-    if (isAgentRole(value)) {
-      router.push('/agents/register');
-      return;
-    }
     setRole(value);
   }
 
@@ -354,7 +348,7 @@ function LoginForm() {
               {isSignup ? (
                 <div className="space-y-1.5">
                   <label className={labelClass} htmlFor="role">
-                    Role
+                    Category
                   </label>
                   <select
                     id="role"

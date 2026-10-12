@@ -11,6 +11,7 @@ export function staffRoleLabel(role: string) {
   if (/content manager/i.test(value)) return 'Content Manager';
   if (/tour operator/i.test(value)) return 'Tour Operator';
   if (/admin|full access/i.test(value)) return 'Admin';
+  if (/travel agent|^agent$/i.test(value)) return 'Travel Agent';
   if (/limited access|\(user\)|^user$/i.test(value)) return 'User';
   return value || 'User';
 }

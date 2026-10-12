@@ -20,8 +20,18 @@ export async function POST(request: Request) {
     const configuredEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     const configuredPassword = process.env.ADMIN_PASSWORD || '';
     let row: Record<string, unknown> | undefined;
+    const client = createAdminClient();
+    const result = await client.from('registered_agents').select('*').ilike('email', email).limit(1);
+    if (result.error) throw new Error(result.error.message);
+    row = result.data?.[0] as Record<string, unknown> | undefined;
+    const storedPassword = String(row?.password || row?.password_hash || '');
+    const ownerLogin = isOwnerAdminEmail(email) && email === configuredEmail;
 
-    if (isOwnerAdminEmail(email) && email === configuredEmail) {
+    if (storedPassword) {
+      if (storedPassword !== password) {
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      }
+    } else if (ownerLogin) {
       if (configuredPassword.length < 8) {
         console.error('[Auth] ADMIN_PASSWORD is missing or too short on the Worker (min 8 chars).');
         return NextResponse.json(
@@ -35,16 +45,13 @@ export async function POST(request: Request) {
       if (password !== configuredPassword) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
-      row = { id: `owner-${email}`, email, role: 'Admin', is_active: true };
+      row = row || { id: `owner-${email}`, email, role: 'Admin', is_active: true };
     } else {
-      const client = createAdminClient();
-      const result = await client.from('registered_agents').select('*').ilike('email', email).limit(1);
-      if (result.error) throw new Error(result.error.message);
-      row = result.data?.[0] as Record<string, unknown> | undefined;
-      const storedPassword = String(row?.password || row?.password_hash || '');
-      if (!row || !storedPassword || storedPassword !== password) {
-        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
-      }
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    if (!row) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     const user = {

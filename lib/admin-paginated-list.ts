@@ -244,7 +244,7 @@ export async function queryAdminTablePage(
     Math.max(1, options.limit ?? ADMIN_PAGE_SIZE_DEFAULT)
   );
   const offset = Math.max(0, options.offset ?? 0);
-  let columns = options.columns || adminListColumnsFor(table) || 'id';
+  let columns = options.columns || adminListColumnsFor(table) || '*';
   const orderColumns = orderSqlCandidates(table);
   let activeFilters = options.filters;
   let where = buildWhere(activeFilters, table);
