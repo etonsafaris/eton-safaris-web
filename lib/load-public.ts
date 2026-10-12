@@ -4,6 +4,7 @@ import {
   PUBLIC_DETAIL_REVALIDATE_SECONDS,
 } from '@/lib/cms-public-cache';
 /** All loaders delegate to `@/lib/data-server` → `getAivenPool()` (same pool as admin). */
+import { enrichAccommodationParkFields } from '@/lib/accommodation-park';
 import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { normalizeSlug } from '@/lib/country-utils';
 import { unstable_cache } from 'next/cache';
@@ -900,7 +901,7 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
       : await fetchPublicRecordResilient('accommodations', slug);
     const published = item && isPubliclyVisibleRecord(item) ? item : null;
     const country = published ? pickStoredString(published, ['country']) : '';
-    const [tours, others] = published
+    const [tours, others, parks] = published
       ? await Promise.all([
           withTimeout(
             resolvePublicTours({
@@ -918,10 +919,11 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
             published.id != null ? String(published.id) : '',
             8
           ),
+          relatedPublicRecords('national_park', ['national_parks', 'parks'], country, undefined, 40),
         ])
-      : [[], []];
+      : [[], [], []];
     return toClientProps({
-      item: published,
+      item: published ? enrichAccommodationParkFields(published, parks) : null,
       others,
       tours: (tours ?? []).slice(0, 12),
     });
@@ -941,7 +943,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   return cachedPublic(
-    ['accommodation-detail-sync-v5-related', normalized],
+    ['accommodation-detail-sync-v6-park', normalized],
     ['collection:accommodations', `accommodation:${normalized}`],
     () => loadAccommodationDetailLive(normalized, true),
     PUBLIC_DETAIL_REVALIDATE_SECONDS

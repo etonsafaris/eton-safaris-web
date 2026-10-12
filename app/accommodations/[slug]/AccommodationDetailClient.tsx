@@ -27,7 +27,7 @@ import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
-import { accommodationNationalParkDisplay } from '@/lib/accommodation-park';
+import { accommodationNationalParkDisplay, enrichAccommodationParkFields } from '@/lib/accommodation-park';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailClient({
@@ -67,10 +67,8 @@ export default function AccommodationDetailClient({
           if (!serverGate.current) triggerNotFound();
           return;
         }
-        setParks([]);
-        setItem(published);
         const country = published ? pickStoredString(published, ['country']) : '';
-        const [tourRows, relatedPage] = await Promise.all([
+        const [tourRows, relatedPage, parkPage] = await Promise.all([
           resolvePublicTours({
             country,
             limit: 12,
@@ -80,7 +78,14 @@ export default function AccommodationDetailClient({
             limit: 12,
             filters: { country },
           }),
+          fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+            limit: 40,
+            filters: { country },
+          }),
         ]);
+        const parkRows = (parkPage.rows ?? []).filter((row) => row && isPublishedRecord(row));
+        setParks(parkRows);
+        setItem(enrichAccommodationParkFields(published, parkRows));
         if (tourRows.length) setTours(tourRows);
         const related = (relatedPage.rows ?? [])
           .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(published.id ?? ''))

@@ -1,4 +1,4 @@
-import { getRecordTitle } from '@/lib/data';
+import { getRecordTitle, pickStoredString } from '@/lib/data';
 import { parkSlug, stayMatchesParkLoose, stayParkFields } from '@/lib/park-stay-match';
 import type { RecordRow } from '@/lib/types';
 
@@ -48,8 +48,17 @@ export function accommodationParkPayload(park: RecordRow | null, parkLabel: stri
 }
 
 /** Prefer explicit park columns; fall back to national_park_id on the stay row. */
+function parkNameMentionedIn(text: string): string {
+  const match = String(text || '').match(
+    /\b([A-Za-z][A-Za-z0-9'’.\- ]{2,70}?(?:National Park|National Reserve|Game Reserve|Conservation Area))\b/
+  );
+  return match?.[1]?.replace(/\s+/g, ' ').trim() || '';
+}
+
 export function stayParkLabelFromRecord(stay: RecordRow, parks: RecordRow[] = []): string {
-  const fromFields = stayParkFields(stay)[0];
+  const fromFields =
+    stayParkFields(stay)[0] ||
+    pickStoredString(stay, ['national_park', 'national_park_name', 'park', 'park_name']);
   if (fromFields) return resolveParkSelectValue(fromFields, parks);
 
   const id = String(stay.national_park_id || '').trim();
@@ -88,7 +97,8 @@ export function accommodationNationalParkDisplay(
   const explicit = stayParkLabelFromRecord(stay, parks);
   if (explicit) return explicit;
   const park = inferParkForStay(stay, parks);
-  return park ? parkOptionValue(park) : '';
+  if (park) return parkOptionValue(park);
+  return parkNameMentionedIn(pickStoredString(stay, ['location']));
 }
 
 /** Fills national_park_* on the row when inference finds a park but columns were empty. */

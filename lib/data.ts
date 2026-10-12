@@ -316,7 +316,17 @@ export function pickString(record: RecordRow, keys: string[], fallback = ''): st
 
 export function pickStoredString(record: RecordRow | null | undefined, keys: string[], fallback = ''): string {
   if (!record) return fallback;
-  return pickString(record, keys, fallback);
+  const direct = pickString(record, keys, '');
+  if (direct) return direct;
+  const body = ['description', 'content', 'body', 'html', 'text', 'overview', 'about', 'summary', 'excerpt']
+    .map((key) => record[key])
+    .find((value) => typeof value === 'string' && value.trim()) as string | undefined;
+  const fields = extractEmbeddedContent(body || '').fields || {};
+  for (const key of keys) {
+    const value = fields[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return fallback;
 }
 
 export function pickNumber(record: RecordRow, keys: string[], fallback = 0): number {
