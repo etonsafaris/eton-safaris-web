@@ -17,7 +17,7 @@ import {
   sitemapPriorityForRecord,
 } from '@/lib/public-indexing';
 import type { RecordRow } from '@/lib/types';
-import { skipStaticGenerationDuringBuild } from '@/lib/build-phase';
+import { isNextProductionBuild } from '@/lib/build-phase';
 import { unstable_cache } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
@@ -79,10 +79,10 @@ function indexableRow(
 }
 
 export default function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (skipStaticGenerationDuringBuild()) {
+  if (isNextProductionBuild()) {
     return Promise.resolve([entry('', new Date(), 1, 'daily')]);
   }
-  return unstable_cache(buildSitemap, ['public-sitemap-v2-seo-detail'], {
+  return unstable_cache(buildSitemap, ['public-sitemap-v3-seo-detail'], {
     revalidate: 3600,
     tags: ['cms-public'],
   })();
