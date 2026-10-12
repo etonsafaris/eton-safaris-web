@@ -4,15 +4,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   LogOut,
   Menu,
   Moon,
-  PanelLeftClose,
-  PanelLeftOpen,
   Search,
+  Settings,
+  Shield,
   Sun,
+  User,
   X,
 } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
@@ -27,6 +29,13 @@ import { collectionIcon } from '@/lib/admin-icons';
 import { useAdminTheme } from '@/components/admin/AdminThemeProvider';
 import { clearAdminSessionCookieServer } from '@/lib/admin-session-sync';
 import { supabase } from '@/lib/supabase/client';
+
+function accountInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'U';
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+}
 
 function NavLink({
   href,
@@ -57,16 +66,16 @@ function NavLink({
         onGuard(event, id);
         onNavigate?.();
       }}
-      className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition ${
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
         collapsed ? 'lg:justify-center lg:gap-0 lg:px-0' : ''
       } ${
         active
-          ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
-          : 'text-gray-600 hover:bg-emerald-500/10 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white'
+          ? 'bg-gradient-to-r from-[#00A651] to-[#009247] text-white shadow-lg shadow-emerald-500/25'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
       }`}
     >
       <span className="relative shrink-0">
-        <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#6b7280] dark:text-gray-400'}`} />
+        <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
         {badge && collapsed ? (
           <span className={`absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none ${
             active ? 'bg-white text-[#00A651]' : 'bg-red-500 text-white'
@@ -100,8 +109,11 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accessReady, setAccessReady] = useState(false);
   const [headerQuery, setHeaderQuery] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -187,6 +199,21 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, []);
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
+      event.preventDefault();
+      if (window.innerWidth < 768) {
+        setMobileSearchOpen(true);
+        window.setTimeout(() => mobileSearchRef.current?.focus(), 0);
+        return;
+      }
+      searchRef.current?.focus();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   function guard(event: React.MouseEvent, id: string) {
     if (canAccess(id)) return;
     event.preventDefault();
@@ -216,14 +243,12 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const displayName = user.email?.split('@')[0]?.replace(/\./g, ' ') || 'Admin';
-  const initial = displayName.charAt(0).toUpperCase();
-  const currentCollection =
-    MAIN_COLLECTIONS.find((item) => {
-      const href = item.id === 'overview' ? '/admin' : `/admin/${item.id}`;
-      return pathname === href || (item.id !== 'overview' && pathname?.startsWith(`${href}/`));
-    }) ||
-    SYSTEM_COLLECTIONS.find((item) => pathname?.startsWith(`/admin/${item.id}`));
+  const displayName =
+    String(user.user_metadata?.full_name || user.user_metadata?.name || '').trim() ||
+    user.email?.split('@')[0]?.replace(/\./g, ' ') ||
+    'User';
+  const initials = accountInitials(displayName);
+  const roleLabel = (role || 'Member').replace(/_/g, ' ');
   const searchHits = headerQuery.trim()
     ? [...MAIN_COLLECTIONS, ...SYSTEM_COLLECTIONS].filter((item) => {
         if (!canAccess(item.id)) return false;
@@ -249,38 +274,42 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       {menuOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden"
           aria-label="Close menu"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-dvh flex-col border-r border-gray-200 bg-white transition-all duration-200 dark:border-gray-800 dark:bg-gray-900 lg:static lg:translate-x-0 ${
-          collapsed ? 'lg:w-20' : 'lg:w-[280px]'
-        } w-[280px] ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-50 flex h-dvh flex-col overflow-hidden border-r border-gray-200 bg-white transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900 lg:static lg:z-40 lg:translate-x-0 ${
+          collapsed ? 'w-72 lg:w-20' : 'w-72'
+        } ${menuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
       >
-        <div className={`flex shrink-0 items-center border-b border-[#e5e7eb] py-3 dark:border-white/10 ${collapsed ? 'justify-between px-3 lg:justify-center lg:px-2' : 'justify-between px-4'}`}>
-          {collapsed ? (
-            <>
-              <Link href="/admin" className="lg:hidden" onClick={() => setMenuOpen(false)}>
-                <BrandLogo size={64} light={dark} compact admin />
-              </Link>
-              <Link href="/admin" className="hidden lg:flex" title="Eton Safaris">
-                <BrandLogo size={48} light={dark} />
-              </Link>
-            </>
-          ) : (
-            <Link href="/admin" onClick={() => setMenuOpen(false)}>
-              <BrandLogo size={64} light={dark} compact admin />
-            </Link>
-          )}
-          <button type="button" onClick={() => setMenuOpen(false)} className="rounded p-1 hover:bg-[#f0fdf4] dark:hover:bg-white/5 lg:hidden" aria-label="Close sidebar">
-            <X className="h-4 w-4 text-[#6b7280] dark:text-gray-400" />
+        <div className={`flex h-[72px] shrink-0 items-center border-b border-gray-100 px-4 dark:border-gray-800 ${collapsed ? 'justify-between lg:justify-center' : 'justify-between'}`}>
+          <Link href="/admin" onClick={() => setMenuOpen(false)} className={collapsed ? 'lg:flex' : 'flex items-center gap-3'}>
+            <BrandLogo size={collapsed ? 40 : 48} light={dark} />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-6 w-6" />
           </button>
+          {!collapsed ? (
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="group/collapse hidden h-8 w-8 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400 transition-all duration-300 hover:border-emerald-200 hover:bg-emerald-50 hover:text-[#00A651] dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-500/30 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400 lg:flex"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="h-4 w-4 transition-transform group-hover/collapse:-translate-x-0.5" />
+            </button>
+          ) : null}
         </div>
 
-        <nav className={`min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-4 ${collapsed ? 'lg:px-2' : ''}`}>
+        <nav className={`sidebar-scroll min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-visible px-3 py-4 ${collapsed ? 'lg:px-2' : ''}`}>
           {MAIN_COLLECTIONS.filter((item) => canAccess(item.id)).map((item) => {
             const href = item.id === 'overview' ? '/admin' : `/admin/${item.id}`;
             const active = pathname === href || (item.id !== 'overview' && pathname?.startsWith(`${href}/`));
@@ -300,167 +329,244 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className={`shrink-0 border-t border-[#e5e7eb] px-3 py-3 dark:border-white/10 ${collapsed ? 'lg:px-2' : ''}`}>
-          <div className={`flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3 dark:bg-[#161b22] ${collapsed ? 'lg:justify-center lg:p-2' : ''}`}>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00A651] text-sm font-bold text-white">
-              {initial}
+        <div className="shrink-0 border-t border-gray-100 p-3 dark:border-gray-800">
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              title="Expand Sidebar"
+              className="group/expand mx-auto mb-4 hidden h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-[#00A651] shadow-sm transition-all duration-300 hover:bg-[#00A651] hover:text-white hover:shadow-lg hover:shadow-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-400 lg:flex"
+              aria-label="Expand sidebar"
+            >
+              <ChevronRight className="h-4 w-4 transition-transform group-hover/expand:translate-x-0.5" />
+            </button>
+          ) : null}
+          <div className={`group mb-2 flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50 ${collapsed ? 'lg:hidden' : ''}`}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-[#00A651] text-sm font-semibold text-white shadow-md transition-transform group-hover:scale-105">
+              {displayName.charAt(0).toUpperCase() || 'U'}
             </div>
-            <div className={`min-w-0 flex-1 ${collapsed ? 'lg:hidden' : ''}`}>
-              <p className="truncate text-sm font-semibold capitalize text-[#111827] dark:text-white">{displayName}</p>
-              <p className="truncate text-xs text-[#6b7280] dark:text-gray-400">Admin</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold capitalize text-gray-900 dark:text-white">{displayName}</p>
+              <p className="truncate text-[11px] font-medium capitalize text-gray-500 dark:text-gray-400">{roleLabel}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={signOut}
             title="Log Out"
-            className={`mt-2 flex w-full items-center gap-2 rounded-full border border-red-500/40 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 ${
-              collapsed ? 'lg:justify-center lg:gap-0 lg:p-2' : ''
+            className={`flex w-full items-center gap-3 rounded-xl bg-red-50 px-3 py-2.5 text-red-600 transition-all duration-200 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 ${
+              collapsed ? 'lg:justify-center' : ''
             }`}
           >
-            <LogOut className="h-4 w-4" />
-            <span className={collapsed ? 'lg:hidden' : ''}>Log Out</span>
+            <LogOut className="h-5 w-5" />
+            <span className={`text-sm font-bold ${collapsed ? 'lg:hidden' : ''}`}>Log Out</span>
           </button>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-white/80 px-4 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80 sm:px-6">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              className="rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5 lg:hidden"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <Link href="/admin" className="shrink-0 lg:hidden">
-              <BrandLogo size={44} light={dark} />
-            </Link>
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="hidden rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5 lg:inline-flex"
-              aria-label={collapsed ? 'Expand dashboard' : 'Collapse dashboard'}
-            >
-              {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-            </button>
-            {currentCollection ? (
-              <h1 className="hidden truncate text-sm font-semibold text-[#111827] dark:text-white sm:block">
-                {currentCollection.label}
-              </h1>
-            ) : null}
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                const first = searchHits[0];
-                if (first) goToCollection(first.id);
-              }}
-              className="relative hidden max-w-md flex-1 md:block"
-            >
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                value={headerQuery}
-                onChange={(event) => setHeaderQuery(event.target.value)}
-                placeholder="Search modules..."
-                className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#00A651] dark:border-white/10 dark:bg-[#161b22] dark:text-white"
-              />
-              {searchHits.length > 0 ? (
-                <div className="absolute z-40 mt-1 w-full overflow-hidden rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#161b22]">
-                  {searchHits.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => goToCollection(item.id)}
-                      className="flex w-full items-center px-3 py-2 text-left text-sm text-[#111827] hover:bg-[#ecfdf3] dark:text-white dark:hover:bg-white/5"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </form>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="rounded-xl border border-gray-200 bg-gray-50 p-2 text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800"
-              aria-label="Toggle dark mode"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            {canAccess('notifications') ? <NotificationBell /> : null}
-            <div className="relative" ref={adminMenuRef}>
+        <header className="relative z-30 h-16 shrink-0 border-b border-gray-200/50 bg-white/80 backdrop-blur-lg dark:border-gray-800/50 dark:bg-gray-900/80 lg:h-[72px]">
+          <div className="flex h-full items-center justify-between gap-4 px-4 lg:px-6">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setAdminMenuOpen((open) => !open)}
-                className="ml-1 flex items-center gap-2 rounded-full bg-[#00A651] py-1 pl-1 pr-3 text-white shadow-sm hover:bg-[#009247]"
-                aria-expanded={adminMenuOpen}
-                aria-haspopup="menu"
+                onClick={() => setMenuOpen(true)}
+                className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
+                aria-label="Open menu"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-xs font-bold">
-                  {initial}
-                </span>
-                <span className="hidden text-sm font-semibold sm:inline">Admin</span>
-                <ChevronDown className={`h-4 w-4 transition ${adminMenuOpen ? 'rotate-180' : ''}`} />
+                <Menu className="h-6 w-6" />
               </button>
-              {adminMenuOpen ? (
-                <div
-                  role="menu"
-                  className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white py-2 shadow-lg dark:border-white/10 dark:bg-[#161b22]"
-                >
-                  <p className="px-4 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ca3af]">
-                    System
-                  </p>
-                  <div className="space-y-0.5 px-1">
-                    {SYSTEM_COLLECTIONS.filter((item) => canAccess(item.id)).map((item) => {
-                      const href = `/admin/${item.id}`;
-                      const active = pathname === href || pathname?.startsWith(`${href}/`);
-                      return (
-                        <NavLink
-                          key={item.id}
-                          href={href}
-                          label={item.label}
-                          iconName={item.icon}
-                          active={Boolean(active)}
-                          onNavigate={() => setAdminMenuOpen(false)}
-                          onGuard={guard}
-                        />
-                      );
-                    })}
-                    <Link
-                      href="/"
-                      target="_blank"
-                      role="menuitem"
-                      className="flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium text-[#4b5563] hover:bg-[#f0fdf4] hover:text-[#111827] dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
-                      onClick={() => setAdminMenuOpen(false)}
-                    >
-                      <ExternalLink className="h-4 w-4 shrink-0 text-[#6b7280] dark:text-gray-400" />
-                      Back to Website
-                    </Link>
-                    <p className="px-3 pb-2 pt-1 text-[11px] leading-4 text-[#059669]">
-                      Saves appear on the public website immediately. No rebuild needed.
-                    </p>
+              <Link href="/admin" className="lg:hidden">
+                <BrandLogo size={40} light={dark} />
+              </Link>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const first = searchHits[0];
+                  if (first) goToCollection(first.id);
+                }}
+                className="relative hidden md:block"
+              >
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  ref={searchRef}
+                  value={headerQuery}
+                  onChange={(event) => setHeaderQuery(event.target.value)}
+                  placeholder="Search..."
+                  className="h-10 w-64 rounded-xl border-none bg-gray-100 pl-10 pr-16 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-[#00A651]/20 dark:bg-gray-800 dark:text-white lg:w-80"
+                />
+                <kbd className="absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-400 dark:border-gray-600 dark:bg-gray-700 lg:inline-flex">
+                  ⌘K
+                </kbd>
+                {searchHits.length > 0 ? (
+                  <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                    {searchHits.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => goToCollection(item.id)}
+                        className="flex w-full items-center px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
-                  <div className="mx-3 my-2 border-t border-[#e5e7eb] dark:border-white/10" />
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setAdminMenuOpen(false);
-                      void signOut();
-                    }}
-                    className="mx-1 flex w-[calc(100%-0.5rem)] items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                ) : null}
+              </form>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileSearchOpen((open) => !open)}
+                className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              {canAccess('notifications') ? <NotificationBell /> : null}
+              <div className="relative" ref={adminMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setAdminMenuOpen((open) => !open)}
+                  className="flex items-center gap-3 rounded-xl p-1.5 pr-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-expanded={adminMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-[#00A651] text-sm font-semibold text-white">
+                    {initials}
+                  </span>
+                  <span className="hidden text-left lg:block">
+                    <span className="block text-sm font-medium capitalize text-gray-900 dark:text-white">{displayName}</span>
+                    <span className="block text-xs capitalize text-gray-500 dark:text-gray-400">{roleLabel}</span>
+                  </span>
+                </button>
+                {adminMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Log Out
-                  </button>
-                </div>
-              ) : null}
+                    <div className="border-b border-gray-100 p-4 dark:border-gray-800">
+                      <p className="font-semibold capitalize text-gray-900 dark:text-white">{displayName}</p>
+                      <p className="truncate text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <div className="p-2">
+                      {canAccess('profile') ? (
+                        <Link
+                          href="/admin/profile"
+                          onClick={(event) => {
+                            guard(event, 'profile');
+                            setAdminMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                        >
+                          <User className="h-5 w-5" />
+                          <span className="text-sm">Profile</span>
+                        </Link>
+                      ) : null}
+                      {canAccess('settings') ? (
+                        <Link
+                          href="/admin/settings"
+                          onClick={(event) => {
+                            guard(event, 'settings');
+                            setAdminMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                        >
+                          <Settings className="h-5 w-5" />
+                          <span className="text-sm">Settings</span>
+                        </Link>
+                      ) : null}
+                      {canAccess('user_management') ? (
+                        <Link
+                          href="/admin/user_management"
+                          onClick={(event) => {
+                            guard(event, 'user_management');
+                            setAdminMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                        >
+                          <Shield className="h-5 w-5" />
+                          <span className="text-sm">User Management</span>
+                        </Link>
+                      ) : null}
+                      <Link
+                        href="/"
+                        target="_blank"
+                        onClick={() => setAdminMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                      >
+                        <ExternalLink className="h-5 w-5" />
+                        <span className="text-sm">Back to Website</span>
+                      </Link>
+                    </div>
+                    <div className="border-t border-gray-100 p-2 dark:border-gray-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdminMenuOpen(false);
+                          void signOut();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span className="text-sm">Log out</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
+          {mobileSearchOpen ? (
+            <div className="absolute left-0 right-0 top-full border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const first = searchHits[0];
+                  if (first) {
+                    setMobileSearchOpen(false);
+                    goToCollection(first.id);
+                  }
+                }}
+                className="relative"
+              >
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  ref={mobileSearchRef}
+                  value={headerQuery}
+                  onChange={(event) => setHeaderQuery(event.target.value)}
+                  placeholder="Search..."
+                  className="h-10 w-full rounded-xl border-none bg-gray-100 pl-10 pr-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#00A651]/20 dark:bg-gray-800 dark:text-white"
+                />
+                {searchHits.length > 0 ? (
+                  <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                    {searchHits.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setMobileSearchOpen(false);
+                          goToCollection(item.id);
+                        }}
+                        className="flex w-full items-center px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </form>
+            </div>
+          ) : null}
         </header>
 
         <main className="min-h-0 flex-1 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-950 sm:p-5 lg:p-6">{children}</main>

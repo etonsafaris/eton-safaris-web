@@ -32,6 +32,18 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, []);
 
+  async function markAllRead() {
+    if (unread === 0) return;
+    await fetch('/api/admin/inbox', {
+      method: 'POST',
+      credentials: 'include',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ action: 'mark-all-read', table: 'notifications' }),
+    });
+    notifyAdminNotificationsChanged();
+    void reload();
+  }
+
   async function openNotice(record: RecordRow) {
     setViewing(record);
     setOpen(false);
@@ -54,62 +66,69 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative rounded-lg p-2 text-[#6b7280] hover:bg-[#f3f4f6] dark:text-gray-300 dark:hover:bg-white/5"
+        className="relative rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
         aria-label={unread ? `${unread} unread notifications` : 'Notifications'}
         aria-expanded={open}
       >
-        <Bell className="h-4 w-4" />
-        {unread > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
-            {unread > 99 ? '99+' : unread}
-          </span>
-        ) : null}
+        <Bell className="h-5 w-5" />
+        {unread > 0 ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" /> : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-xl dark:border-white/10 dark:bg-[#161b22]">
-          <div className="flex items-center justify-between border-b border-[#e5e7eb] px-4 py-3 dark:border-white/10">
-            <p className="text-sm font-semibold text-[#111827] dark:text-white">Notifications</p>
-            {unread > 0 ? (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">{unread} unread</span>
-            ) : (
-              <span className="text-xs text-[#6b7280]">All caught up</span>
-            )}
+        <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+            <button
+              type="button"
+              disabled={unread === 0}
+              onClick={() => void markAllRead()}
+              className="text-sm text-[#00A651] hover:text-[#009247] disabled:opacity-40"
+            >
+              Mark all read
+            </button>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto">
             {preview.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-[#6b7280]">No notifications yet.</p>
+              <p className="px-4 py-8 text-center text-sm text-gray-500">No notifications yet.</p>
             ) : (
               preview.map((record, index) => {
                 const unreadItem = isUnreadNotification(record);
                 const date = notificationDate(record);
+                const detail = notificationMessage(record) || notificationCategory(record);
                 return (
                   <button
                     key={String(pickRecordId(record) ?? index)}
                     type="button"
                     onClick={() => void openNotice(record)}
-                    className={`flex w-full flex-col items-start gap-1 border-b border-[#f3f4f6] px-4 py-3 text-left hover:bg-[#f8fafc] dark:border-white/5 dark:hover:bg-white/5 ${
-                      unreadItem ? 'bg-[#ecfdf5]' : 'bg-white dark:bg-[#161b22]'
-                    }`}
+                    className="w-full border-b border-gray-50 p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
                   >
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-[#111827] dark:text-white">{notificationTitle(record)}</p>
-                      {unreadItem ? <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" /> : null}
+                    <div className="flex gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[#00A651] dark:bg-emerald-500/20 dark:text-emerald-400">
+                        <Bell className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-gray-900 dark:text-white">
+                          {notificationTitle(record)}
+                          {unreadItem ? <span className="ml-2 inline-block h-2 w-2 rounded-full bg-red-500 align-middle" /> : null}
+                        </p>
+                        {detail ? <p className="mt-1 line-clamp-2 text-xs text-gray-500">{detail}</p> : null}
+                        {date ? <p className="mt-1 text-xs text-gray-500">{formatPublishedDate(date)}</p> : null}
+                      </div>
                     </div>
-                    <p className="line-clamp-2 text-xs text-[#6b7280]">{notificationMessage(record) || notificationCategory(record)}</p>
-                    {date ? <p className="text-[11px] text-[#9ca3af]">{formatPublishedDate(date)}</p> : null}
                   </button>
                 );
               })
             )}
           </div>
-          <Link
-            href="/admin/notifications"
-            onClick={() => setOpen(false)}
-            className="block bg-[#f8fafc] px-4 py-3 text-center text-sm font-semibold text-[#00A651] hover:bg-[#ecfdf5] dark:bg-white/5"
-          >
-            View all notifications
-          </Link>
+          <div className="bg-gray-50 p-3 text-center dark:bg-gray-800/50">
+            <Link
+              href="/admin/notifications"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-[#00A651] hover:text-[#009247]"
+            >
+              View all notifications
+            </Link>
+          </div>
         </div>
       ) : null}
 
