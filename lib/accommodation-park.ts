@@ -47,12 +47,21 @@ export function accommodationParkPayload(park: RecordRow | null, parkLabel: stri
   return fields;
 }
 
-/** Prefer explicit park columns; fall back to national_park_id on the stay row. */
+const PARK_NAME_LEAD =
+  /^(?:Inside|In|At|Near|Within|Of|The|And|A|An|On|By|From|To|For|Into|Around|Outside)\s+/i;
+
+/** Park title written in a location or description, without the surrounding sentence. */
 function parkNameMentionedIn(text: string): string {
-  const match = String(text || '').match(
-    /\b([A-Za-z][A-Za-z0-9'’.\- ]{2,70}?(?:National Park|National Reserve|Game Reserve|Conservation Area))\b/
-  );
-  return match?.[1]?.replace(/\s+/g, ' ').trim() || '';
+  const source = String(text || '').replace(/\s+/g, ' ');
+  const pattern =
+    /\b((?:[A-Z][A-Za-z0-9'’.\-]*)(?:\s+[A-Z][A-Za-z0-9'’.\-]*){0,6}\s+(?:National Park|National Reserve|Game Reserve|Conservation Area))\b/g;
+  const found: string[] = [];
+  for (const match of source.matchAll(pattern)) {
+    let name = match[1].replace(/\s+/g, ' ').trim();
+    while (PARK_NAME_LEAD.test(name)) name = name.replace(PARK_NAME_LEAD, '').trim();
+    if (name) found.push(name);
+  }
+  return found.sort((a, b) => b.length - a.length)[0] || '';
 }
 
 export function stayParkLabelFromRecord(stay: RecordRow, parks: RecordRow[] = []): string {
