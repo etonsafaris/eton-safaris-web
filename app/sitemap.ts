@@ -18,7 +18,9 @@ import {
 } from '@/lib/public-indexing';
 import type { RecordRow } from '@/lib/types';
 import { skipStaticGenerationDuringBuild } from '@/lib/build-phase';
+import { unstable_cache } from 'next/cache';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 function sitemapColumns(table: string, aliases: string[] = []) {
@@ -76,11 +78,18 @@ function indexableRow(
   return entry(path, recordDate(row), sitemapPriorityForRecord(row, kind, basePriority), changeFrequency);
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (skipStaticGenerationDuringBuild()) {
-    return [entry('', now, 1, 'daily')];
+    return Promise.resolve([entry('', new Date(), 1, 'daily')]);
   }
+  return unstable_cache(buildSitemap, ['public-sitemap-v2-seo-detail'], {
+    revalidate: 3600,
+    tags: ['cms-public'],
+  })();
+}
+
+async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
   const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
     sitemapFetch('tours'),
     sitemapFetch('national_park', ['national_parks', 'parks']),
