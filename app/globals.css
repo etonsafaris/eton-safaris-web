@@ -152,6 +152,17 @@ img {
   min-height: 11.5cm;
 }
 
+.wysiwyg-editor-container.is-fullscreen {
+  display: flex;
+  flex-direction: column;
+}
+
+.wysiwyg-editor-container.is-fullscreen .description-box {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+}
+
 .description-box {
   width: 100%;
   min-height: 250px;
@@ -176,6 +187,69 @@ img {
 .description-box table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.description-box p.drop-cap::first-letter,
+.public-prose p.drop-cap::first-letter,
+.public-html-surface p.drop-cap::first-letter {
+  float: left;
+  margin: 2px 8px -4px 0;
+  font-family: Georgia, serif;
+  font-size: 3.5em;
+  font-weight: bold;
+  line-height: 0.85;
+}
+
+.description-box .col-2,
+.public-prose .col-2,
+.public-html-surface .col-2 {
+  column-count: 2;
+  column-gap: 28px;
+  column-rule: 1px solid #e2e8f0;
+}
+
+.description-box .col-3,
+.public-prose .col-3,
+.public-html-surface .col-3 {
+  column-count: 3;
+  column-gap: 20px;
+  column-rule: 1px solid #e2e8f0;
+}
+
+.description-box ul.tox-checklist,
+.public-prose ul.tox-checklist,
+.public-html-surface ul.tox-checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.description-box ul.tox-checklist li,
+.public-prose ul.tox-checklist li,
+.public-html-surface ul.tox-checklist li {
+  position: relative;
+  padding-left: 1.6em;
+}
+
+.description-box ul.tox-checklist li::before,
+.public-prose ul.tox-checklist li::before,
+.public-html-surface ul.tox-checklist li::before {
+  content: "☐";
+  position: absolute;
+  left: 0;
+}
+
+.description-box ul.tox-checklist li.tox-checklist--checked::before,
+.public-prose ul.tox-checklist li.tox-checklist--checked::before,
+.public-html-surface ul.tox-checklist li.tox-checklist--checked::before {
+  content: "☑";
+}
+
+.description-box .mce-pagebreak,
+.public-prose .mce-pagebreak,
+.public-html-surface .mce-pagebreak {
+  border-top: 1px dashed #ccc;
+  margin: 16pt 0;
+  page-break-after: always;
 }
 
 .public-prose a,
