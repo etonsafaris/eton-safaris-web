@@ -4,14 +4,11 @@ import { useEffect, useState } from 'react';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
 import PageHero from '@/components/public/PageHero';
-import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import RelatedSidebar from '@/components/public/RelatedSidebar';
-import { countryPlacePath, explorePlacePath } from '@/lib/cms-routes';
 import { publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -54,21 +51,19 @@ export default function PlacePageContent({
   slug: countrySlugProp = '',
   country = null,
   place: initialPlace = null,
-  initialOthers = [],
+  initialOthers: _initialOthers = [],
   initialTours = [],
 }: PlacePageContentProps) {
   const live = useCmsLive();
   const [place, setPlace] = useState<RecordRow | null>(initialPlace);
-  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [ready, setReady] = useState(Boolean(initialPlace));
 
   useEffect(() => {
     setPlace(initialPlace);
-    setOthers(initialOthers);
     setTours(initialTours);
     setReady(Boolean(initialPlace));
-  }, [initialPlace, initialOthers, initialTours]);
+  }, [initialPlace, initialTours]);
 
   useEffect(() => {
     let mounted = true;
@@ -82,17 +77,8 @@ export default function PlacePageContent({
         const countryKey =
           countrySlugProp ||
           pickStoredString(match, ['country', 'country_slug', 'destination', 'nation']);
-        const [tourRows, relatedPage] = await Promise.all([
-          resolvePublicTours({ country: countryKey, limit: 12 }),
-          countryKey
-            ? fetchCollectionPage('explore', [], { limit: 12, filters: { country: countryKey } })
-            : Promise.resolve({ rows: [] as RecordRow[], total: 0 }),
-        ]);
+        const tourRows = await resolvePublicTours({ country: countryKey, limit: 12 });
         if (tourRows.length) setTours(tourRows);
-        const related = (relatedPage.rows ?? [])
-          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(match?.id ?? ''))
-          .slice(0, 8);
-        if (related.length) setOthers(related);
       } catch (error) {
         console.error('[Supabase] Failed to load place page data:', error);
       } finally {
@@ -104,25 +90,6 @@ export default function PlacePageContent({
       mounted = false;
     };
   }, [placeSlug, countrySlugProp, initialPlace, live]);
-
-  useEffect(() => {
-    if ((others?.length ?? 0) > 0 || !place) return undefined;
-    const countryKey = pickStoredString(place, ['country', 'country_slug', 'destination', 'nation']);
-    if (!countryKey) return undefined;
-    let cancelled = false;
-    fetchCollectionPage('explore', [], { limit: 12, filters: { country: countryKey } })
-      .then((page) => {
-        if (cancelled) return;
-        const related = (page.rows ?? [])
-          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(place.id ?? ''))
-          .slice(0, 8);
-        if (related.length) setOthers(related);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [place, others.length]);
 
   const placeTitle = place ? getRecordTitle(place) : placeSlug.replace(/-/g, ' ');
   const countryTitle =
@@ -187,12 +154,7 @@ export default function PlacePageContent({
               <RelatedSidebar
                 title="Other Places"
                 countryName={countryTitle}
-                items={(others ?? []).map((row) => ({
-                  href: countrySlugProp ? countryPlacePath(countrySlugProp, row) : explorePlacePath(row),
-                  image: getRecordImage(row),
-                  title: getRecordTitle(row),
-                  date: formatPublishedDate(recordPublishedAt(row)),
-                }))}
+                items={[]}
               />
             </div>
           </div>

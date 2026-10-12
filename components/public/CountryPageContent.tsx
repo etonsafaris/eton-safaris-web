@@ -12,7 +12,7 @@ import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
-import { showParksOnCountryPages } from '@/lib/public-discovery-policy';
+import { showExploreOnCountryPages, showParksOnCountryPages } from '@/lib/public-discovery-policy';
 import { categoryPublicSlug, countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { resolveCountryDescriptionHtml } from '@/lib/country-page-copy';
@@ -95,8 +95,8 @@ export default function CountryPageContent({
       if (body.country) setCountry(body.country);
       if (Array.isArray(body.categories)) setCategories(body.categories);
       if (body.tours?.length) setTours(body.tours);
-      if (body.parks?.length) setParks(body.parks);
-      if (body.places?.length) setPlaces(body.places);
+      if (showParksOnCountryPages() && body.parks?.length) setParks(body.parks);
+      if (showExploreOnCountryPages() && body.places?.length) setPlaces(body.places);
     } catch (error) {
       console.error('[Country page] Live refresh failed:', error);
     } finally {
@@ -229,7 +229,7 @@ export default function CountryPageContent({
         </section>
       ) : null}
 
-      {(places?.length ?? 0) > 0 ? (
+      {showExploreOnCountryPages() && (places?.length ?? 0) > 0 ? (
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-[1200px]">
             <CountrySectionHeading>Explore {title}</CountrySectionHeading>

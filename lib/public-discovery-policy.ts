@@ -29,8 +29,14 @@ export function includeInPublicSiteSearch(table: string): boolean {
   return !isHiddenBrowseTable(table);
 }
 
+/** Country pages do not list parks. Detail URLs stay in the sitemap for Google. */
 export function showParksOnCountryPages(): boolean {
-  return true;
+  return false;
+}
+
+/** Country pages do not list explore places. Detail URLs stay in the sitemap for Google. */
+export function showExploreOnCountryPages(): boolean {
+  return false;
 }
 
 export function showStaysOnParkPages(): boolean {

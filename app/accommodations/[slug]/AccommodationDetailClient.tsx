@@ -10,7 +10,6 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -18,22 +17,19 @@ import {
   isPublishedRecord,
   pickStoredString,
   pickString,
-  publicRecordSlug,
-  recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
-import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { useCmsLive } from '@/lib/cms-live';
-import { accommodationNationalParkDisplay, enrichAccommodationParkFields } from '@/lib/accommodation-park';
+import { accommodationNationalParkDisplay } from '@/lib/accommodation-park';
 import type { RecordRow } from '@/lib/types';
 
 export default function AccommodationDetailClient({
   embedded = false,
   initialItem = null,
-  initialOthers = [],
+  initialOthers: _initialOthers = [],
   initialTours = [],
 }: {
   embedded?: boolean;
@@ -45,17 +41,14 @@ export default function AccommodationDetailClient({
   const router = useRouter();
   const slug = params?.slug || '';
   const [item, setItem] = useState<RecordRow | null>(initialItem);
-  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
-  const [parks, setParks] = useState<RecordRow[]>([]);
   const live = useCmsLive();
   const serverGate = useServerRecordGate(initialItem);
 
   useEffect(() => {
     setItem(initialItem);
-    setOthers(initialOthers);
     setTours(initialTours);
-  }, [initialItem, initialOthers, initialTours]);
+  }, [initialItem, initialTours]);
 
   useEffect(() => {
     if (serverGate.current && live === 0) return;
@@ -68,34 +61,17 @@ export default function AccommodationDetailClient({
           return;
         }
         const country = published ? pickStoredString(published, ['country']) : '';
-        const [tourRows, relatedPage, parkPage] = await Promise.all([
-          resolvePublicTours({
-            country,
-            limit: 12,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          fetchCollectionPage('accommodations', [], {
-            limit: 12,
-            filters: { country },
-          }),
-          fetchCollectionPage('national_park', ['national_parks', 'parks'], {
-            limit: 40,
-            filters: { country },
-          }),
-        ]);
-        const parkRows = (parkPage.rows ?? []).filter((row) => row && isPublishedRecord(row));
-        setParks(parkRows);
-        setItem(enrichAccommodationParkFields(published, parkRows));
+        const tourRows = await resolvePublicTours({
+          country,
+          limit: 12,
+          excludeId: published.id != null ? String(published.id) : undefined,
+        });
+        setItem(published);
         if (tourRows.length) setTours(tourRows);
-        const related = (relatedPage.rows ?? [])
-          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(published.id ?? ''))
-          .slice(0, 8);
-        if (related.length) setOthers(related);
       } catch (error) {
         console.error('[Accommodation detail] Failed to load stay:', error);
         if (!serverGate.current) {
           setItem(null);
-          setOthers([]);
           setTours([]);
           triggerNotFound();
         }
@@ -104,26 +80,7 @@ export default function AccommodationDetailClient({
     void load();
   }, [slug, live, router, serverGate]);
 
-  useEffect(() => {
-    if ((others?.length ?? 0) > 0 || !item) return undefined;
-    const country = pickStoredString(item, ['country']);
-    if (!country) return undefined;
-    let cancelled = false;
-    fetchCollectionPage('accommodations', [], { limit: 12, filters: { country } })
-      .then((page) => {
-        if (cancelled) return;
-        const related = (page.rows ?? [])
-          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(item.id ?? ''))
-          .slice(0, 8);
-        if (related.length) setOthers(related);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [item, others.length]);
-
-  const nationalParkLabel = accommodationNationalParkDisplay(item, parks);
+  const nationalParkLabel = accommodationNationalParkDisplay(item);
 
   const published = useEnsurePublishedAt('accommodations', item, '', (stamp) => {
     setItem((row) => (row ? { ...row, published_at: stamp } : row));
@@ -160,14 +117,7 @@ export default function AccommodationDetailClient({
         hideMeta
         country={pickString(item, ['country'])}
         sidebarTitle="Other Accommodations"
-        sidebarItems={(others ?? [])
-          .filter(Boolean)
-          .map((row) => ({
-            href: `/accommodations/${publicRecordSlug(row) || ''}`,
-            image: getRecordImage(row) || undefined,
-            title: getRecordTitle(row) || 'Accommodation',
-            date: formatPublishedDate(recordPublishedAt(row)),
-          }))}
+        sidebarItems={[]}
         below={
           <AmazingSafaris
             tours={tours}

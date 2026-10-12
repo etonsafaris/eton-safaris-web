@@ -10,15 +10,12 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
-  fetchCollectionPage,
   fetchRecordByPublicSlug,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickStoredString,
   pickString,
-  publicRecordSlug,
-  recordPublishedAt,
   resolvePublicTours,
   visibleRecordHtml,
 } from '@/lib/data';
@@ -26,13 +23,12 @@ import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import { useCmsLive } from '@/lib/cms-live';
-import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import type { RecordRow } from '@/lib/types';
 
 export default function ParkDetailClient({
   embedded = false,
   initialPark = null,
-  initialOthers = [],
+  initialOthers: _initialOthers = [],
   initialTours = [],
 }: {
   embedded?: boolean;
@@ -44,7 +40,6 @@ export default function ParkDetailClient({
   const router = useRouter();
   const slug = params?.slug || '';
   const [park, setPark] = useState<RecordRow | null>(initialPark);
-  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [ready, setReady] = useState(Boolean(initialPark));
   const live = useCmsLive();
@@ -52,10 +47,9 @@ export default function ParkDetailClient({
 
   useEffect(() => {
     setPark(initialPark);
-    setOthers(initialOthers);
     setTours(initialTours);
     setReady(Boolean(initialPark));
-  }, [initialPark, initialOthers, initialTours]);
+  }, [initialPark, initialTours]);
 
   useEffect(() => {
     if (serverGate.current && live === 0) return;
@@ -66,32 +60,20 @@ export default function ParkDetailClient({
         if (published) {
           setPark(published);
           const country = pickStoredString(published, ['country']);
-          const [tourRows, relatedPage] = await Promise.all([
-            resolvePublicTours({ country, limit: 12 }),
-            fetchCollectionPage('national_park', ['national_parks', 'parks'], {
-              limit: 12,
-              filters: { country },
-            }),
-          ]);
+          const tourRows = await resolvePublicTours({ country, limit: 12 });
           if (tourRows.length) setTours(tourRows);
-          const related = (relatedPage.rows ?? [])
-            .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(published.id ?? ''))
-            .slice(0, 8);
-          if (related.length) setOthers(related);
           setReady(true);
           return;
         }
         if (!serverGate.current) triggerNotFound();
         if (!serverGate.current) {
           setPark(null);
-          setOthers([]);
           setTours([]);
         }
       } catch (error) {
         console.error('[Park detail] Failed to load park:', error);
         if (!serverGate.current) {
           setPark(null);
-          setOthers([]);
           setTours([]);
           triggerNotFound();
         }
@@ -101,28 +83,6 @@ export default function ParkDetailClient({
     }
     load();
   }, [slug, live, router, serverGate]);
-
-  useEffect(() => {
-    if ((others?.length ?? 0) > 0 || !park) return undefined;
-    const country = pickStoredString(park, ['country']);
-    if (!country) return undefined;
-    let cancelled = false;
-    fetchCollectionPage('national_park', ['national_parks', 'parks'], {
-      limit: 12,
-      filters: { country },
-    })
-      .then((page) => {
-        if (cancelled) return;
-        const related = (page.rows ?? [])
-          .filter((row) => row && isPublishedRecord(row) && String(row.id ?? '') !== String(park.id ?? ''))
-          .slice(0, 8);
-        if (related.length) setOthers(related);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [park, others.length]);
 
   const published = useEnsurePublishedAt('national_park', park, '', (stamp) => {
     setPark((row) => (row ? { ...row, published_at: stamp } : row));
@@ -155,14 +115,7 @@ export default function ParkDetailClient({
         hideMeta
         country={countryLabel}
         sidebarTitle="Other National Parks"
-        sidebarItems={(others ?? [])
-          .filter(Boolean)
-          .map((item) => ({
-            href: `/parks/${publicRecordSlug(item) || ''}`,
-            image: getRecordImage(item) || undefined,
-            title: getRecordTitle(item) || 'Park',
-            date: formatPublishedDate(recordPublishedAt(item)),
-          }))}
+        sidebarItems={[]}
         below={
           <AmazingSafaris
             tours={tours}
