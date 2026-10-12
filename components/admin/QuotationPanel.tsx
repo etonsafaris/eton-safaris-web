@@ -26,6 +26,23 @@ type InquirySource = 'inquiries' | 'quotations_inquiries';
 
 type InquiryCard = RecordRow & { _source: InquirySource };
 
+function inquiryText(row: RecordRow, keys: string[], fallback = '') {
+  for (const key of keys) {
+    const value = row[key];
+    if (value === null || value === undefined || value === '') continue;
+    return String(value);
+  }
+  return fallback;
+}
+
+function inquiryName(row: RecordRow) {
+  return inquiryText(row, ['name', 'guest_name', 'client_name']);
+}
+
+function inquiryMessage(row: RecordRow) {
+  return inquiryText(row, ['message', 'special_requests', 'budget']);
+}
+
 function displayOrDash(value: string) {
   return value.trim() || '—';
 }
@@ -263,18 +280,15 @@ export default function QuotationPanel() {
     setStatus('');
     setError('');
 
-    const rawMessage = pickString(row, ['message', 'budget']);
+    const rawMessage = inquiryMessage(row);
     const parsed = parseInquiryGuestFields(rawMessage);
     const countryHint =
-      pickString(row, ['destination', 'country']) ||
+      pickString(row, ['destination', 'country', 'travel_destination']) ||
       parsed.destination ||
       '';
-    const guests =
-      pickString(row, ['guests']) ||
-      parsed.travellers ||
-      '1';
+    const guests = inquiryText(row, ['guests', 'number_of_guests'], '1') || parsed.travellers || '1';
     const travelDate =
-      pickString(row, ['travel_date']).slice(0, 10) ||
+      inquiryText(row, ['travel_date', 'preferred_travel_date', 'dates']).slice(0, 10) ||
       parsed.travelDate ||
       '';
     const durationHint = parsed.duration;
@@ -282,7 +296,7 @@ export default function QuotationPanel() {
     const tourHint = pickString(row, ['tour']) || parsed.tour || '';
 
     setForm({
-      name: pickString(row, ['name', 'guest_name']),
+      name: inquiryName(row),
       email: pickString(row, ['email']),
       phone: pickString(row, ['phone']),
       guests,
@@ -412,14 +426,21 @@ export default function QuotationPanel() {
       .join('\n\n');
     const quoteFields = {
       name: form.name,
+      client_name: form.name,
       email: form.email,
-      phone: form.phone,
+      phone: form.phone.replace(/\D/g, '') || null,
       tour: tourTitle,
       destination: form.country,
+      travel_destination: form.country,
       message: storedMessage,
+      special_requests: storedMessage,
       guests: form.guests,
+      number_of_guests: form.guests,
       travel_date: form.travel_date || null,
+      preferred_travel_date: form.travel_date || null,
+      dates: form.travel_date || null,
       agreed_price: form.agreed_price,
+      budget: form.agreed_price,
       expiration_days: form.expiration_days,
       title: `Quotation: ${tourTitle}`,
       source: 'quotation',
@@ -531,7 +552,7 @@ export default function QuotationPanel() {
       setError('This item has no id and cannot be deleted.');
       return;
     }
-    const label = pickString(row, ['name', 'guest_name', 'email']) || 'this item';
+    const label = inquiryName(row) || pickString(row, ['email']) || 'this item';
     if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
 
     setDeletingId(String(id));
@@ -649,7 +670,7 @@ export default function QuotationPanel() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-bold text-[#111827]">
-                        {pickString(row, ['name', 'guest_name']) || 'Guest'}
+                        {inquiryName(row) || 'Guest'}
                       </h3>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${source.className}`}>
                         {source.label}
@@ -704,13 +725,13 @@ export default function QuotationPanel() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Field label="Email" value={pickString(row, ['email'])} />
-                    <Field label="Destination" value={pickString(row, ['destination', 'tour', 'title'])} />
-                    <Field label="Guests" value={pickString(row, ['guests']) || '1'} />
+                    <Field label="Destination" value={pickString(row, ['destination', 'travel_destination', 'tour', 'title'])} />
+                    <Field label="Guests" value={inquiryText(row, ['guests', 'number_of_guests'], '1')} />
                   </div>
                   <div className="space-y-1.5">
-                    <Field label="Phone" value={pickString(row, ['phone'])} />
-                    <Field label="Travel Date" value={pickString(row, ['travel_date']).slice(0, 10)} />
-                    <Field label="Message" value={pickString(row, ['message', 'budget']).slice(0, 120)} />
+                    <Field label="Phone" value={inquiryText(row, ['phone'])} />
+                    <Field label="Travel Date" value={pickString(row, ['travel_date', 'preferred_travel_date', 'dates']).slice(0, 10)} />
+                    <Field label="Message" value={inquiryMessage(row).slice(0, 120)} />
                   </div>
                 </div>
               </article>

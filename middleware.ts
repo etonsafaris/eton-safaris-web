@@ -60,7 +60,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (pathname === '/login' || pathname.startsWith('/login/')) {
+    if (
+      pathname === '/login' ||
+      pathname.startsWith('/login/') ||
+      pathname === '/invite' ||
+      pathname.startsWith('/invite/')
+    ) {
       return NextResponse.next();
     }
 

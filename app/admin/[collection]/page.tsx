@@ -255,9 +255,11 @@ function SettingsPanel() {
   );
 }
 
+const INVITE_ROLES = ['Travel Agent', 'Content Manager', 'Tour Operator', 'Full Access', 'Limited Access'] as const;
+
 function UserManagement() {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Limited Access (User)');
+  const [role, setRole] = useState<(typeof INVITE_ROLES)[number]>('Limited Access');
   const [status, setStatus] = useState('');
   const [users, setUsers] = useState<RecordRow[]>([]);
   const [viewerRole, setViewerRole] = useState('');
@@ -270,7 +272,10 @@ function UserManagement() {
 
   async function loadUsers() {
     try {
-      const rows = (await fetchAdminTable('registered_agents')).filter(isStaffRow);
+      const rows = (await fetchAdminTable('registered_agents')).filter((row) => {
+        if (isStaffRow(row)) return true;
+        return /travel agent|^agent$/i.test(String(row.role || '').trim());
+      });
       rows.sort((a, b) => {
         const aPending = String(a.status || '').toLowerCase() === 'pending' ? 0 : 1;
         const bPending = String(b.status || '').toLowerCase() === 'pending' ? 0 : 1;
@@ -315,15 +320,20 @@ function UserManagement() {
         role,
       }),
     });
-    const body = (await response.json().catch(() => ({}))) as { error?: string; emailed?: boolean; inviteUrl?: string };
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+      emailed?: boolean;
+      inviteUrl?: string;
+      emailError?: string;
+    };
     if (!response.ok) {
       setStatus(body.error || 'Could not send the invite.');
       return;
     }
     setStatus(
       body.emailed
-        ? `Invite emailed to ${email}. They open the link, choose a username and password, then you activate the account.`
-        : `Invite saved for ${email}. Email was not sent. Share this link so they can create the account: ${body.inviteUrl || ''}`
+        ? `Invite emailed to ${email} as ${role}. They open the link in that inbox, choose a username and password, then you activate the account.`
+        : `The account was saved, but the email did not reach ${email}${body.emailError ? ` (${body.emailError})` : ''}. Share this link: ${body.inviteUrl || ''}`
     );
     setEmail('');
     await loadUsers();
@@ -406,7 +416,7 @@ function UserManagement() {
     <div>
       <h2 className="font-serif text-3xl">User Management</h2>
       <p className="mt-1 text-sm text-gray-500">
-        Invite a Tour Operator, Content Manager, or User. They receive an email, complete signup with their name and password, then you activate access and tick the modules they may open.
+        Invite a Travel Agent, Content Manager, Tour Operator, Full Access, or Limited Access user. The invitation email goes straight to the address you type, and the link opens their account form.
       </p>
       <form onSubmit={invite} className="mt-6 rounded-xl border bg-white p-5">
         <h3 className="font-semibold">Invite New User</h3>
@@ -419,12 +429,12 @@ function UserManagement() {
             placeholder="Enter email address"
             className="flex-1 rounded-lg border px-3 py-2"
           />
-          <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-lg border px-3 py-2">
-            <option>Limited Access (User)</option>
-            <option>Tour Operator</option>
-            <option>Content Manager</option>
-            <option>Travel Agent</option>
-            <option>Full Access (Admin)</option>
+          <select value={role} onChange={(event) => setRole(event.target.value as (typeof INVITE_ROLES)[number])} className="rounded-lg border px-3 py-2">
+            {INVITE_ROLES.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
           <button type="submit" className="rounded-lg bg-forest px-4 py-2 text-sm font-semibold text-white">
             Send Invite

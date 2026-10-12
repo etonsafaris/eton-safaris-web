@@ -669,14 +669,11 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     }
     if (config.id === 'pesapal_payments') {
       return [
-        { label: 'Reference', keys: ['reference', 'order_tracking_id'] },
-        { label: 'Email', keys: ['email'] },
-        { label: 'Tour', keys: ['tour'] },
-        { label: 'Amount', keys: ['pesapal_amount', 'amount', 'total_amount'], money: true },
-        { label: 'Type', keys: ['payment_type'] },
-        { label: 'Status', keys: ['status'], badge: true },
-        { label: 'Tracking ID', keys: ['order_tracking_id'] },
-        { label: 'Date', keys: ['created_at', 'created_date'], date: true },
+        { label: 'Tracking ID', keys: ['order_tracking_id', 'last_ipn_tracking_id', 'reference'] },
+        { label: 'Status', keys: ['status', 'last_payment_status', 'last_verify_status'], badge: true },
+        { label: 'Environment', keys: ['environment'] },
+        { label: 'Last payment', keys: ['last_payment_at', 'created_at', 'created_date'], date: true },
+        { label: 'Note', keys: ['last_error', 'tour'], clamp: true },
       ];
     }
     if (config.id === 'registered_agents') {

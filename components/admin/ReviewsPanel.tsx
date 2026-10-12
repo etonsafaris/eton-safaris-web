@@ -64,14 +64,14 @@ export default function ReviewsPanel() {
   function openEdit(row: RecordRow) {
     setEditing(row);
     setForm({
-      author: pickString(row, ['author']),
+      author: pickString(row, ['author', 'customer_name', 'name']),
       email: pickString(row, ['email']),
       country: pickString(row, ['country', 'country_of_residence']),
-      title: pickString(row, ['title']),
+      title: pickString(row, ['title', 'tour_title']),
       rating: String(pickNumber(row, ['rating'], 5)),
       source: pickString(row, ['source']) || 'Website',
       source_url: pickString(row, ['source_url']),
-      content: pickString(row, ['content', 'review']),
+      content: pickString(row, ['content', 'review', 'review_text']),
     });
   }
 
@@ -82,6 +82,9 @@ export default function ReviewsPanel() {
     const payload = buildSavePayload('reviews', {
       ...form,
       rating: Number(form.rating),
+      customer_name: form.author,
+      review_text: form.content,
+      tour_title: form.title,
     });
     const { error: updateError, data } = await saveWithColumnFallback('reviews', payload, editing.id);
     setSaving(false);
@@ -183,7 +186,7 @@ export default function ReviewsPanel() {
                   const href = reviewClickHref(row);
                   return (
                     <tr key={String(row.id ?? index)} className="border-t border-[#eef0f3] dark:border-white/5">
-                      <td className="px-4 py-3 font-medium">{pickString(row, ['author', 'name']) || '—'}</td>
+                      <td className="px-4 py-3 font-medium">{pickString(row, ['author', 'customer_name', 'name']) || '—'}</td>
                       <td className="px-4 py-3 text-gray-600">{pickString(row, ['email']) || '—'}</td>
                       <td className="px-4 py-3">{pickString(row, ['country', 'country_of_residence']) || '—'}</td>
                       <td className="px-4 py-3">
@@ -197,16 +200,16 @@ export default function ReviewsPanel() {
                             pickString(row, ['source']) || 'Website'
                           )}`}
                         >
-                          {pickString(row, ['source']) || 'Website'}
+                          {pickString(row, ['source']) || pickString(row, ['tour_title']) || 'Website'}
                         </span>
                       </td>
                       <td className="max-w-[320px] px-4 py-3">
                         <p className="line-clamp-3 text-gray-600 dark:text-gray-400">
-                          {pickString(row, ['content', 'review']) || '—'}
+                          {pickString(row, ['content', 'review', 'review_text']) || '—'}
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                        {formatPublishedDate(pickDateValue(row, ['created_at']))}
+                        {formatPublishedDate(pickDateValue(row, ['created_at', 'created_date']))}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">

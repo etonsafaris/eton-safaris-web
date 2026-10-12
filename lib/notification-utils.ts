@@ -52,6 +52,7 @@ export function markNotificationReadPayload() {
     status: 'Read',
     read: true,
     seen: true,
+    is_read: true,
   };
 }
 

@@ -39,8 +39,8 @@ export default function SubscribersModule() {
       const rows = await fetchAdminTable('subscribers');
       setRecords(
         rows.slice().sort((a, b) =>
-          String(b.created_at || b.createdAt || b.created_date || '').localeCompare(
-            String(a.created_at || a.createdAt || a.created_date || '')
+          String(b.subscribed_date || b.created_at || b.createdAt || b.created_date || '').localeCompare(
+            String(a.subscribed_date || a.created_at || a.createdAt || a.created_date || '')
           )
         )
       );
@@ -158,7 +158,7 @@ export default function SubscribersModule() {
                       </td>
                       <td className="px-4 py-3 text-gray-500">{phone || '—'}</td>
                       <td className="px-4 py-3 text-xs tabular-nums text-gray-400">
-                        {formatJoined(String(row.created_at || row.createdAt || row.created_date || ''))}
+                        {formatJoined(String(row.subscribed_date || row.created_at || row.createdAt || row.created_date || ''))}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button

@@ -9,23 +9,31 @@ import type { RecordRow } from '@/lib/types';
 function dashboardSignInOrigin(origin: string) {
   try {
     const host = new URL(origin).host.toLowerCase();
-    if (/(^|\.)etonsafaris\.com$/i.test(host) && !host.startsWith('admin.')) {
-      return 'https://admin.etonsafaris.com';
-    }
+    if (/localhost|127\.0\.0\.1/i.test(host)) return origin.replace(/\/$/, '');
+    if (host.startsWith('admin.') || /\.vercel\.app$/i.test(host)) return `https://${host}`;
+    if (/(^|\.)etonsafaris\.com$/i.test(host)) return 'https://admin.etonsafaris.com';
   } catch {
-    return origin;
+    return 'https://admin.etonsafaris.com';
   }
-  return origin;
+  return 'https://admin.etonsafaris.com';
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function staffRoleLabel(role: string) {
   const value = role.trim();
   if (/content manager/i.test(value)) return 'Content Manager';
   if (/tour operator/i.test(value)) return 'Tour Operator';
-  if (/admin|full access/i.test(value)) return 'Admin';
   if (/travel agent|^agent$/i.test(value)) return 'Travel Agent';
-  if (/limited access|\(user\)|^user$/i.test(value)) return 'User';
-  return value || 'User';
+  if (/full access|\badmin\b/i.test(value)) return 'Full Access';
+  if (/limited access|\(user\)|^user$/i.test(value)) return 'Limited Access';
+  return value || 'Limited Access';
 }
 
 async function ensureInviteToken(row: RecordRow, table: string) {
@@ -63,21 +71,28 @@ export async function inviteStaffUser(input: { email: string; role: string; name
     (saved.data?.[0] ? { row: saved.data[0] as RecordRow, table: saved.table || 'registered_agents' } : null);
   const token = found ? await ensureInviteToken(found.row, found.table) : '';
   const completeUrl = token
-    ? `${origin}/invite/${token}`
+    ? `${signInOrigin}/invite/${encodeURIComponent(token)}`
     : `${signInOrigin}/login?mode=signup&email=${encodeURIComponent(email)}`;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeRole = escapeHtml(roleLabel);
+  const safeLink = escapeHtml(completeUrl);
 
   const guestMessage = `Hello ${name}, you have been invited to ${SITE.name} as a ${roleLabel}.
 
-Complete your signup and set your name and password here:
+This invitation was sent to ${email}.
+
+Create your account here:
 ${completeUrl}
 
-Use this email: ${email}
+After you finish, sign in at ${signInOrigin}/login. An administrator will activate dashboard access if it is still pending.`;
 
-After you finish, you can sign in at ${signInOrigin}/login. An administrator will activate dashboard access if it is still pending.`;
+  const html = `<p>Hello ${safeName}, you have been invited to ${escapeHtml(SITE.name)} as a <strong>${safeRole}</strong>.</p><p>This invitation was sent directly to <strong>${safeEmail}</strong>.</p><p><a href="${safeLink}" style="display:inline-block;background:#00A651;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;">Create your account</a></p><p>If the button does not open, copy this address into your browser:<br/><a href="${safeLink}">${safeLink}</a></p><p>After you finish, sign in at <a href="${escapeHtml(signInOrigin)}/login">${escapeHtml(signInOrigin)}/login</a>.</p>`;
 
   const delivered = await deliverIncomingAlert({
     title: `Complete your ${SITE.name} ${roleLabel} account`,
     message: guestMessage,
+    html,
     category: 'system',
     guestEmail: email,
     sendToGuest: true,
@@ -91,5 +106,6 @@ After you finish, you can sign in at ${signInOrigin}/login. An administrator wil
     ...saved,
     emailed: Boolean(delivered.guestEmailed),
     inviteUrl: completeUrl,
+    emailError: delivered.guestEmailed ? '' : delivered.emailError || delivered.reason || '',
   };
 }
