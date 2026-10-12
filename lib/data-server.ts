@@ -431,6 +431,19 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
     `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   bookings:
     'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
+  quotations_inquiries:
+    'id,name,email,phone,tour,message,status,guests,travel_date,agreed_price,destination,source,quoted_at,title,created_at,created_date,updated_at',
+  quotations:
+    'id,name,email,phone,tour,message,status,guests,travel_date,agreed_price,destination,source,quoted_at,title,created_at,created_date,updated_at',
+  inquiries: 'id,name,email,phone,tour,message,status,destination,source,title,created_at,created_date,updated_at',
+  contact_inquiries: 'id,name,email,phone,message,status,source,created_at,created_date,updated_at',
+  pesapal_payments:
+    'id,reference,email,tour,pesapal_amount,amount,total_amount,payment_type,status,order_tracking_id,currency,booking_id,created_at,created_date',
+  reviews: 'id,author,email,country,title,rating,source,source_url,content,created_at,created_date',
+  registered_agents:
+    'id,name,username,email,phone,country,company,company_website,address,bio,gender,status,role,is_active,created_at,created_date',
+  notifications: 'id,title,message,body,content,category,status,read,seen,is_read,created_at,created_date',
+  subscribers: 'id,name,email,phone,created_at,created_date',
   keywords: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',
   keyword: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',
   seo_keywords: 'id,keywords,keyword,country,category,created_date,created_at,updated_date,updated_at',

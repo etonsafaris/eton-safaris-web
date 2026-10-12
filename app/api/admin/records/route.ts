@@ -142,7 +142,12 @@ export async function GET(request: Request) {
       if (rows.error) {
         return NextResponse.json({ error: rows.error, rows: [], total: 0 }, { status: 400 });
       }
-      const all = rows.data || [];
+      const all = (rows.data || []).map((row) => {
+        const copy = { ...row };
+        delete copy.password;
+        delete copy.password_hash;
+        return copy;
+      });
       const slice = all.slice(offset, offset + limit);
       return NextResponse.json({
         rows: jsonSafeRows(slice),

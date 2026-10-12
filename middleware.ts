@@ -3,8 +3,10 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Route isolation:
- * - Public guests: www.etonsafaris.com / etonsafaris.com — never serve /admin or /login.
- * - Staff panel: admin.etonsafaris.com — only /admin and /login; all other paths → www (avoids fake 404s).
+ * - Public guests: www.etonsafaris.com / etonsafaris.com — /admin, /login, and /dashboard
+ *   go to admin.etonsafaris.com and keep the path and query (password-reset links included).
+ * - Preview hosts (*.vercel.app) still render those pages.
+ * - Staff panel: admin.etonsafaris.com — only /admin and /login; all other paths → www.
  */
 
 const ADMIN_PATH_PREFIXES = ['/admin', '/login', '/dashboard'];
@@ -76,8 +78,11 @@ export function middleware(request: NextRequest) {
   }
 
   if (isMainPublicHost(hostname) && isBlockedAdminPath(pathname)) {
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+    const host = hostname.toLowerCase().split(':')[0];
+    if (/\.vercel\.app$/i.test(host)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL(`https://admin.etonsafaris.com${pathname}${search}`));
   }
 
   return NextResponse.next();

@@ -664,7 +664,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         { label: 'Tour / destination', keys: ['tour', 'destination', 'title'] },
         { label: 'Message', keys: ['message'], clamp: true },
         { label: 'Status', keys: ['status'], badge: true },
-        { label: 'Received', keys: ['created_at'], date: true },
+        { label: 'Received', keys: ['created_at', 'created_date'], date: true },
       ];
     }
     if (config.id === 'pesapal_payments') {
@@ -676,7 +676,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         { label: 'Type', keys: ['payment_type'] },
         { label: 'Status', keys: ['status'], badge: true },
         { label: 'Tracking ID', keys: ['order_tracking_id'] },
-        { label: 'Date', keys: ['created_at'], date: true },
+        { label: 'Date', keys: ['created_at', 'created_date'], date: true },
       ];
     }
     if (config.id === 'registered_agents') {
@@ -687,7 +687,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         { label: 'Phone', keys: ['phone'] },
         { label: 'Company', keys: ['company'] },
         { label: 'Status', keys: ['status'], badge: true },
-        { label: 'Registered', keys: ['created_at'], date: true },
+        { label: 'Registered', keys: ['created_at', 'created_date'], date: true },
       ];
     }
     if (config.id === 'notifications') {

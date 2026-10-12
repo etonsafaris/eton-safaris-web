@@ -39,7 +39,9 @@ export default function SubscribersModule() {
       const rows = await fetchAdminTable('subscribers');
       setRecords(
         rows.slice().sort((a, b) =>
-          String(b.created_at || b.createdAt || '').localeCompare(String(a.created_at || a.createdAt || ''))
+          String(b.created_at || b.createdAt || b.created_date || '').localeCompare(
+            String(a.created_at || a.createdAt || a.created_date || '')
+          )
         )
       );
     } catch (loadError) {

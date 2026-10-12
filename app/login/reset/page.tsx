@@ -85,6 +85,11 @@ function ResetForm() {
                 className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-3 text-sm outline-none"
               />
             </label>
+            {!token ? (
+              <p className="mt-3 text-sm text-red-600">
+                This page needs the reset link from your email. Open that link again, or request a new one from the sign-in page.
+              </p>
+            ) : null}
             {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
             <button
               type="submit"

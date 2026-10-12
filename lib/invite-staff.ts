@@ -6,6 +6,18 @@ import { updateAgentFields } from '@/lib/agent-row';
 import { findAgentRecord } from '@/lib/find-agent';
 import type { RecordRow } from '@/lib/types';
 
+function dashboardSignInOrigin(origin: string) {
+  try {
+    const host = new URL(origin).host.toLowerCase();
+    if (/(^|\.)etonsafaris\.com$/i.test(host) && !host.startsWith('admin.')) {
+      return 'https://admin.etonsafaris.com';
+    }
+  } catch {
+    return origin;
+  }
+  return origin;
+}
+
 export function staffRoleLabel(role: string) {
   const value = role.trim();
   if (/content manager/i.test(value)) return 'Content Manager';
@@ -30,6 +42,7 @@ export async function inviteStaffUser(input: { email: string; role: string; name
   const role = input.role.trim() || 'Limited Access (User)';
   const name = (input.name || email.split('@')[0] || 'there').trim();
   const origin = (input.origin || SITE.url).replace(/\/$/, '');
+  const signInOrigin = dashboardSignInOrigin(origin);
   const roleLabel = staffRoleLabel(role);
 
   const saved = await saveAgentApplicationOnServer({
@@ -49,7 +62,9 @@ export async function inviteStaffUser(input: { email: string; role: string; name
     (await findAgentRecord(client, { email })) ||
     (saved.data?.[0] ? { row: saved.data[0] as RecordRow, table: saved.table || 'registered_agents' } : null);
   const token = found ? await ensureInviteToken(found.row, found.table) : '';
-  const completeUrl = token ? `${origin}/invite/${token}` : `${origin}/login?mode=signup&email=${encodeURIComponent(email)}`;
+  const completeUrl = token
+    ? `${origin}/invite/${token}`
+    : `${signInOrigin}/login?mode=signup&email=${encodeURIComponent(email)}`;
 
   const guestMessage = `Hello ${name}, you have been invited to ${SITE.name} as a ${roleLabel}.
 
@@ -58,7 +73,7 @@ ${completeUrl}
 
 Use this email: ${email}
 
-After you finish, you can sign in at ${origin}/login. An administrator will activate dashboard access if it is still pending.`;
+After you finish, you can sign in at ${signInOrigin}/login. An administrator will activate dashboard access if it is still pending.`;
 
   const delivered = await deliverIncomingAlert({
     title: `Complete your ${SITE.name} ${roleLabel} account`,

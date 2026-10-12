@@ -74,10 +74,12 @@ function searchColumnsFor(table: string): string[] {
     bookings: ['customer_name', 'customer_email', 'tour_title', 'country', 'booking_code'],
     subscribers: ['email', 'name', 'phone'],
     notifications: ['title', 'message', 'category'],
-    pesapal_payments: ['reference', 'email', 'status'],
-    quotations_inquiries: ['name', 'email', 'tour', 'message'],
+    pesapal_payments: ['reference', 'email', 'status', 'order_tracking_id', 'tour'],
+    quotations_inquiries: ['name', 'email', 'tour', 'message', 'destination'],
+    quotations: ['name', 'email', 'tour', 'message', 'destination'],
     contact_inquiries: ['name', 'email', 'message'],
-    inquiries: ['name', 'email', 'message'],
+    inquiries: ['name', 'email', 'message', 'tour', 'destination'],
+    registered_agents: ['name', 'username', 'email', 'phone', 'company', 'country'],
   };
   return byTable[table] || ['title', 'name', 'slug', 'email'];
 }
@@ -127,6 +129,14 @@ function countryMatchColumns(table: string): string[] {
     reviews: ['country'],
     bookings: ['country', 'destination'],
     countries: ['name', 'slug'],
+    quotations_inquiries: ['destination'],
+    quotations: ['destination'],
+    inquiries: ['destination'],
+    registered_agents: ['country'],
+    pesapal_payments: [],
+    subscribers: [],
+    notifications: [],
+    contact_inquiries: [],
   };
   return byTable[table] || ['country', 'destination'];
 }
@@ -160,10 +170,9 @@ function buildWhere(filters: AdminListFilters | undefined, table: string) {
   const category = sanitizeFilter(filters?.category || '');
   const park = sanitizeFilter(filters?.park || '');
   const q = sanitizeFilter(filters?.q || '');
-  if (country) {
+  if (country && countryMatchColumns(table).length) {
     params.push(`%${country}%`);
-    const index = params.length;
-    clauses.push(countryFilterSql(table, index));
+    clauses.push(countryFilterSql(table, params.length));
   }
   if (category && TABLES_WITH_CATEGORY.has(table)) {
     params.push(`%${category}%`);
@@ -276,7 +285,13 @@ export async function queryAdminTablePage(
                 break;
               }
               const missing = missingSelectColumn(detail);
-              if (missing && columns.split(',').map((p) => p.trim()).includes(missing)) {
+              if (missing && where.sql.toLowerCase().includes(`"${missing.toLowerCase()}"`)) {
+                where = { sql: '', params: [] };
+                activeFilters = undefined;
+                droppedColumn = true;
+                break;
+              }
+              if (missing && columns.split(',').map((part) => part.trim()).includes(missing)) {
                 const next = dropColumnFromSelect(columns, missing);
                 if (next && next !== columns) {
                   columns = next;

@@ -163,12 +163,8 @@ export default function QuotationPanel() {
         loadOpsTable('inquiries', ['contact_inquiries']),
       ]);
       setTours(tourRows);
-      setRows(
-        quoteRows.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
-      );
-      setInquiries(
-        inquiryRows.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
-      );
+      setRows(quoteRows.slice().sort((a, b) => recordReceivedAt(b).localeCompare(recordReceivedAt(a))));
+      setInquiries(inquiryRows.slice().sort((a, b) => recordReceivedAt(b).localeCompare(recordReceivedAt(a))));
     } catch (loadError) {
       console.error(loadError);
       setError(loadError instanceof Error ? loadError.message : 'Could not load quotations and inquiries.');

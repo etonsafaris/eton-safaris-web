@@ -8,6 +8,18 @@ import { SITE } from '@/lib/collections';
 import { createPasswordResetToken } from '@/lib/password-reset';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+function resetPageOrigin(request: Request) {
+  const requestOrigin = String(request.headers.get('origin') || '').replace(/\/$/, '');
+  if (/localhost|127\.0\.0\.1/i.test(requestOrigin)) return requestOrigin;
+  try {
+    const host = new URL(requestOrigin || 'https://admin.etonsafaris.com').host.toLowerCase();
+    if (host.startsWith('admin.') || /\.vercel\.app$/i.test(host)) return `https://${host}`;
+  } catch {
+    /* use the admin host below */
+  }
+  return 'https://admin.etonsafaris.com';
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { email?: string };
@@ -16,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Enter the email address on your account.' }, { status: 400 });
     }
 
-    const origin = (process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || SITE.url || '').replace(/\/$/, '');
+    const origin = resetPageOrigin(request);
     const configuredEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     const client = createAdminClient();
     const found = await findAgentRecord(client, { email });
@@ -31,16 +43,18 @@ export async function POST(request: Request) {
 
     const token = createPasswordResetToken(email);
     const link = `${origin}/login/reset?token=${encodeURIComponent(token)}`;
+    const html = `<p>Use the button below within 1 hour to choose a new password.</p><p><a href="${link}" style="display:inline-block;background:#00A651;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;">Set a new password</a></p><p>If the button does not open, copy this address into your browser:<br/><a href="${link}">${link}</a></p>`;
     const delivered = await deliverIncomingAlert({
       title: `Reset your ${SITE.name} password`,
       message: `A password reset was requested for ${email}.`,
+      html,
       category: 'system',
       guestEmail: email,
       sendToGuest: true,
       emailAdmin: false,
       recordDashboard: false,
       guestTitle: `Reset your ${SITE.name} password`,
-      guestMessage: `Hello,\n\nUse this link within 1 hour to choose a new password:\n${link}\n\nIf you did not ask for this, you can ignore the email.`,
+      guestMessage: `Hello,\n\nSet a new password here (this link lasts 1 hour):\n${link}\n\nIf you did not ask for this, you can ignore the email.`,
     });
 
     if (!delivered.guestEmailed) {

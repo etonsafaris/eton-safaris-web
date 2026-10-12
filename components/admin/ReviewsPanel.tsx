@@ -35,13 +35,17 @@ export default function ReviewsPanel() {
   const [pending, setPending] = useState<{ action: 'edit' | 'delete'; row: RecordRow } | null>(null);
 
   async function load() {
+    setError('');
     try {
       const data = await fetchAdminTable('reviews');
       setRows(
-        data.slice().sort((a, b) => pickDateValue(b, ['created_at']).localeCompare(pickDateValue(a, ['created_at'])))
+        data.slice().sort((a, b) =>
+          pickDateValue(b, ['created_at', 'created_date']).localeCompare(pickDateValue(a, ['created_at', 'created_date']))
+        )
       );
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : 'Could not load reviews.');
       setRows([]);
     }
   }

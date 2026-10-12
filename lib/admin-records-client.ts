@@ -266,8 +266,19 @@ export function invalidateAdminTableCache(table?: string) {
 }
 
 export async function fetchAdminTable(table: string): Promise<RecordRow[]> {
-  const page = await fetchAdminTablePage(table, { page: 1, limit: 50 });
-  return page.rows;
+  return fetchAdminTableAll(table);
+}
+
+/** Loads every page the admin list API will return, up to 400 rows. */
+export async function fetchAdminTableAll(table: string, maxRows = 400): Promise<RecordRow[]> {
+  const rows: RecordRow[] = [];
+  const limit = 50;
+  for (let page = 1; page <= Math.ceil(maxRows / limit); page += 1) {
+    const result = await fetchAdminTablePage(table, { page, limit });
+    rows.push(...(result.rows || []));
+    if (!result.rows?.length || rows.length >= result.total || rows.length >= maxRows) break;
+  }
+  return rows;
 }
 
 /** Full CMS row for edit screens (description, itinerary, SEO, etc.). */
