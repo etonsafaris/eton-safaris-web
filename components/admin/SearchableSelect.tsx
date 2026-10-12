@@ -11,12 +11,14 @@ export default function SearchableSelect({
   options,
   placeholder = 'Select…',
   disabled = false,
+  onQueryChange,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: Option[];
   placeholder?: string;
   disabled?: boolean;
+  onQueryChange?: (query: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -54,7 +56,10 @@ export default function SearchableSelect({
             <input
               autoFocus
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                onQueryChange?.(event.target.value);
+              }}
               placeholder="Type to search…"
               className="w-full border-b border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] outline-none dark:border-white/10 dark:bg-[#161b22] dark:text-white dark:placeholder:text-gray-500"
             />

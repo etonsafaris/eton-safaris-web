@@ -7,8 +7,8 @@ import { FileText, Trash2, X } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { QuoteContactFooter, QuoteLetterhead } from '@/components/public/QuoteLetterhead';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
-import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
-import { clearCollectionCache, adminListColumnsFor, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
+import { deleteAdminRecord, fetchAdminRecordById, fetchAdminTable, fetchAdminTablePage, saveWithColumnFallback } from '@/lib/admin-records-client';
+import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickString } from '@/lib/data';
 import { gmailComposeHref, notifyWorkspace } from '@/lib/notify';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
 import {
@@ -18,7 +18,6 @@ import {
   QUOTE_TERMS_SUMMARY,
 } from '@/lib/quote-document';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import type { RecordRow } from '@/lib/types';
 
 type TabId = 'inquiry' | 'quoted' | 'all';
@@ -161,25 +160,19 @@ export default function QuotationPanel() {
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tourNotice, setTourNotice] = useState('');
+  const [tourQuery, setTourQuery] = useState('');
   const [deletingId, setDeletingId] = useState('');
 
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const [tourRows, quoteRows, inquiryRows] = await Promise.all([
-        fetchCollectionRecords('tours', [], {
-          columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
-          maxRows: 80,
-        }).catch((tourError) => {
-          console.warn('[Quotations] Tours load failed:', tourError);
-          return [] as RecordRow[];
-        }),
+      const [quoteRows, inquiryRows] = await Promise.all([
         // Admin API bypasses RLS — same path as Bookings / Notifications.
         loadOpsTable('quotations_inquiries', ['quotations']),
         loadOpsTable('inquiries', ['contact_inquiries']),
       ]);
-      setTours(tourRows);
       setRows(quoteRows.slice().sort((a, b) => recordReceivedAt(b).localeCompare(recordReceivedAt(a))));
       setInquiries(inquiryRows.slice().sort((a, b) => recordReceivedAt(b).localeCompare(recordReceivedAt(a))));
     } catch (loadError) {
@@ -194,6 +187,29 @@ export default function QuotationPanel() {
     load().catch((loadError) => console.error(loadError));
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const q = tourQuery.trim();
+      fetchAdminTablePage('tours', {
+        page: 1,
+        limit: 50,
+        country: filterCountry || undefined,
+        q: q.length >= 2 ? q : undefined,
+      })
+        .then((result) => {
+          const next = result.rows || [];
+          setTours((current) => {
+            const selected = current.find((row) => String(row.id) === tourId);
+            if (selected && !next.some((row) => String(row.id) === String(selected.id))) return [selected, ...next];
+            return next;
+          });
+          setTourNotice(next.length || tourId ? '' : 'No tours match that country or search. Type the package name.');
+        })
+        .catch(() => setTourNotice('Tours could not be loaded. Refresh and try again.'));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [filterCountry, tourQuery, tourId]);
+
   const selected = useMemo(
     () => tours.find((tour) => String(tour.id) === tourId) || null,
     [tourId, tours]
@@ -202,7 +218,7 @@ export default function QuotationPanel() {
   const durationOptions = useMemo(() => {
     const values = new Set<string>();
     tours.forEach((tour) => {
-      const days = pickString(tour, ['duration_days', 'duration']);
+      const days = inquiryText(tour, ['duration_days', 'duration']).match(/\d+/)?.[0] || '';
       if (days) values.add(days);
     });
     return Array.from(values).sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
@@ -211,11 +227,11 @@ export default function QuotationPanel() {
   const filteredTours = useMemo(() => {
     return tours.filter((tour) => {
       if (filterCountry) {
-        const country = pickString(tour, ['country', 'destination']).toLowerCase();
+        const country = inquiryText(tour, ['country', 'destination']).toLowerCase();
         if (!country.includes(filterCountry.toLowerCase())) return false;
       }
       if (filterDuration) {
-        const days = pickString(tour, ['duration_days', 'duration']);
+        const days = inquiryText(tour, ['duration_days', 'duration']).match(/\d+/)?.[0] || '';
         if (days !== filterDuration) return false;
       }
       return true;
@@ -253,24 +269,35 @@ export default function QuotationPanel() {
     return cards;
   }, [inquiries, rows]);
 
-  function applyTourSelection(id: string) {
+  async function applyTourSelection(id: string) {
     setTourId(id);
     const tour = tours.find((row) => String(row.id) === id);
     if (!tour) return;
-    const country = pickString(tour, ['country', 'destination']);
-    const durationRaw = pickString(tour, ['duration_days', 'duration']);
-    const price = pickString(tour, ['price', 'base_price', 'agreed_price']);
-    const packageDetails = packageDetailsForQuote(tour);
+    const country = inquiryText(tour, ['country', 'destination']);
+    const durationRaw = inquiryText(tour, ['duration_days', 'duration_label', 'duration']);
+    const durationDays = durationRaw.match(/\d+/)?.[0] || '';
+    const price = inquiryText(tour, ['price', 'base_price', 'agreed_price']);
     setForm((current) => ({
       ...current,
-      // Keep guest-entered fields; only fill package-side fields from the tour.
       country: country || current.country,
-      duration: durationRaw ? `${durationRaw} days` : current.duration,
+      duration: durationDays ? `${durationDays} days` : durationRaw || current.duration,
       agreed_price: price || current.agreed_price,
-      highlights: packageDetails,
+      highlights: packageDetailsForQuote(tour) || current.highlights,
     }));
     if (country) setFilterCountry(country);
-    if (durationRaw) setFilterDuration(durationRaw);
+    if (durationDays) setFilterDuration(durationDays);
+    const full = await fetchAdminRecordById('tours', id).catch(() => null);
+    if (!full) return;
+    const fullPrice = inquiryText(full, ['price', 'base_price', 'agreed_price']);
+    const fullCountry = inquiryText(full, ['country', 'destination']);
+    const fullDays = inquiryText(full, ['duration_days', 'duration']).match(/\d+/)?.[0] || durationDays;
+    setForm((current) => ({
+      ...current,
+      country: fullCountry || current.country,
+      duration: fullDays ? `${fullDays} days` : current.duration,
+      agreed_price: fullPrice || current.agreed_price,
+      highlights: packageDetailsForQuote(full) || current.highlights,
+    }));
   }
 
   function fillFromInquiry(row: InquiryCard) {
@@ -803,16 +830,17 @@ export default function QuotationPanel() {
                   <SearchableSelect
                     value={tourId}
                     onChange={applyTourSelection}
-                    options={filteredTours.map((tour) => ({
-                      value: String(tour.id),
-                      label: `${getRecordTitle(tour)}${
-                        pickString(tour, ['duration_days'])
-                          ? ` · ${pickString(tour, ['duration_days'])}d`
-                          : ''
-                      }`,
-                    }))}
-                    placeholder="Select package"
+                    onQueryChange={setTourQuery}
+                    options={filteredTours.map((tour) => {
+                      const days = inquiryText(tour, ['duration_days']).match(/\d+/)?.[0] || '';
+                      return {
+                        value: String(tour.id),
+                        label: `${getRecordTitle(tour)}${days ? ` · ${days}d` : ''}`,
+                      };
+                    })}
+                    placeholder={tours.length ? 'Select package' : 'Loading tours…'}
                   />
+                  {tourNotice ? <p className="mt-1 text-xs text-red-600">{tourNotice}</p> : null}
                 </div>
               </div>
 

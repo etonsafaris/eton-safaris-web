@@ -430,7 +430,7 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
   landing_pages:
     `id,title,post_title,slug,seo_slug,country,cover_image,social_image_url,subtitle,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   bookings:
-    'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date',
+    'id,customer_name,customer_email,customer_phone,tour_id,tour_title,country,status,travel_date,message,booking_code,total_amount,amount_paid,remaining_balance,payment_status,number_of_people,currency,created_date,updated_date,is_sample',
   quotations_inquiries:
     'id,client_name,email,phone,travel_destination,dates,special_requests,preferred_travel_date,number_of_guests,budget,status,created_date,updated_date,is_sample',
   quotations:

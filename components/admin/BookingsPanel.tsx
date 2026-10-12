@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { statusBadgeClass } from '@/components/admin/OpsRecordTable';
-import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
+import { deleteAdminRecord, fetchAdminTable, fetchAdminTablePage } from '@/lib/admin-records-client';
 import { generateBookingCode } from '@/lib/booking-code';
 import {
   bookingStatusAfterPayment,
@@ -26,7 +26,7 @@ import {
   PAYMENT_STATUSES,
 } from '@/lib/booking-status';
 import { NAV_COUNTRIES, OTHER_DESTINATIONS, SITE } from '@/lib/collections';
-import { clearCollectionCache, adminListColumnsFor, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
+import { clearCollectionCache, fetchCollectionRecords, getRecordTitle, pickNumber, pickRecordId, pickString } from '@/lib/data';
 import { notifyWorkspace } from '@/lib/notify';
 import { supabase } from '@/lib/supabase/client';
 import { buildSavePayload } from '@/lib/supabase-payload';
@@ -66,6 +66,39 @@ function Field({ label, value }: { label: string; value: string }) {
       <span className="font-semibold text-[#111827]">{label}:</span> {displayOrDash(value)}
     </p>
   );
+}
+
+function bookingText(row: RecordRow, keys: string[], fallback = '') {
+  for (const key of keys) {
+    const value = row[key];
+    if (value === null || value === undefined || value === '') continue;
+    return String(value);
+  }
+  return fallback;
+}
+
+function guestName(row: RecordRow) {
+  return bookingText(row, ['customer_name', 'guest_name', 'name']);
+}
+
+function guestMail(row: RecordRow) {
+  return bookingText(row, ['customer_email', 'email']);
+}
+
+function guestPhone(row: RecordRow) {
+  return bookingText(row, ['customer_phone', 'phone']);
+}
+
+function bookingTour(row: RecordRow) {
+  return bookingText(row, ['tour_title', 'tour', 'title']);
+}
+
+function bookingDestination(row: RecordRow) {
+  return bookingText(row, ['country', 'destination']);
+}
+
+function bookingGuests(row: RecordRow) {
+  return bookingText(row, ['number_of_people', 'guests']);
 }
 
 function money(amount: number, currency = 'USD') {
@@ -111,6 +144,7 @@ export default function BookingsPanel() {
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createSaving, setCreateSaving] = useState(false);
+  const [tourQuery, setTourQuery] = useState('');
   const [form, setForm] = useState({
     guest_name: '',
     email: '',
@@ -127,22 +161,13 @@ export default function BookingsPanel() {
     setLoading(true);
     setError('');
     try {
-      const [bookingRows, tourRows] = await Promise.all([
-        loadBookings(),
-        fetchAdminTable('tours').catch(() =>
-          fetchCollectionRecords('tours', [], {
-            columns: adminListColumnsFor('tours') || 'id,title,country,category,price,image_url',
-            maxRows: 80,
-          })
-        ),
-      ]);
+      const bookingRows = await loadBookings();
       bookingRows.sort((a, b) => {
         const aTime = Date.parse(recordReceivedAt(a) || '') || 0;
         const bTime = Date.parse(recordReceivedAt(b) || '') || 0;
         return bTime - aTime;
       });
       setRows(bookingRows);
-      setTours(tourRows);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load bookings.');
     }
@@ -152,6 +177,20 @@ export default function BookingsPanel() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const q = tourQuery.trim();
+      fetchAdminTablePage('tours', {
+        page: 1,
+        limit: 50,
+        q: q.length >= 2 ? q : undefined,
+      })
+        .then((result) => setTours(result.rows || []))
+        .catch(() => setTours([]));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [tourQuery]);
 
   const tabCounts = useMemo(() => {
     const counts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0, all: rows.length };
@@ -166,7 +205,7 @@ export default function BookingsPanel() {
     return rows.filter((row) => {
       if (tab !== 'all' && bookingTabFor(row) !== tab) return false;
       if (filterDestination) {
-        const dest = pickString(row, ['destination', 'country']).toLowerCase();
+        const dest = bookingDestination(row).toLowerCase();
         if (!dest.includes(filterDestination.toLowerCase())) return false;
       }
       if (filterPayment) {
@@ -175,11 +214,11 @@ export default function BookingsPanel() {
       }
       if (!needle) return true;
       const haystack = [
-        pickString(row, ['guest_name', 'name']),
-        pickString(row, ['email']),
-        pickString(row, ['phone']),
-        pickString(row, ['tour']),
-        pickString(row, ['destination']),
+        guestName(row),
+        guestMail(row),
+        guestPhone(row),
+        bookingTour(row),
+        bookingDestination(row),
         pickString(row, ['booking_code']),
       ]
         .join(' ')
@@ -213,7 +252,7 @@ export default function BookingsPanel() {
     if (!paymentsError && (data || []).length) {
       setPayments((data as RecordRow[]) || []);
     } else {
-      const email = pickString(record, ['email']);
+      const email = guestMail(record);
       if (email) {
         const fallback = await supabase.from('pesapal_payments').select('*').eq('email', email);
         setPayments((fallback.data as RecordRow[]) || []);
@@ -241,8 +280,8 @@ export default function BookingsPanel() {
 
   async function confirmBooking(record: RecordRow) {
     const code = pickString(record, ['booking_code']) || generateBookingCode();
-    const guestEmail = pickString(record, ['email']);
-    const guestName = pickString(record, ['guest_name', 'name']) || guestEmail;
+    const guestEmail = guestMail(record);
+    const guestNameText = guestName(record) || guestEmail;
     const ok = await updateBooking(record, {
       status: 'Confirmed',
       booking_code: code,
@@ -250,12 +289,12 @@ export default function BookingsPanel() {
     if (!ok || !guestEmail.includes('@')) return;
     await notifyWorkspace({
       title: 'Booking Confirmed',
-      message: `Hi ${guestName}, your safari booking is confirmed. Code: ${code}. Verify at ${SITE.url}/verify · Pay balance at ${SITE.url}/payment?booking=${record.id}`,
+      message: `Hi ${guestNameText}, your safari booking is confirmed. Code: ${code}. Verify at ${SITE.url}/verify · Pay balance at ${SITE.url}/payment?booking=${record.id}`,
       category: 'booking',
       guestEmail,
       sendToGuest: true,
       guestTitle: `Your safari booking is confirmed — ${SITE.name}`,
-      guestMessage: `Dear ${guestName},\n\nYour booking for ${pickString(record, ['tour'])} is confirmed.\nBooking / payment code: ${code}\nVerify (fully paid or remaining balance): ${SITE.url}/verify\nPay online: ${SITE.url}/payment?booking=${record.id}\n\n${SITE.name}`,
+      guestMessage: `Dear ${guestNameText},\n\nYour booking for ${bookingTour(record)} is confirmed.\nBooking / payment code: ${code}\nVerify (fully paid or remaining balance): ${SITE.url}/verify\nPay online: ${SITE.url}/payment?booking=${record.id}\n\n${SITE.name}`,
     });
   }
 
@@ -294,6 +333,7 @@ export default function BookingsPanel() {
     const ok = await updateBooking(paymentModal, {
       amount_paid: newPaid,
       remaining_balance: remaining,
+      total_amount: total,
       final_tour_price: total,
       booking_code: code,
       payment_status: paymentStatus,
@@ -301,10 +341,10 @@ export default function BookingsPanel() {
     });
     setPaymentSaving(false);
     if (!ok) return;
-    const guestEmail = pickString(paymentModal, ['email']);
+    const guestEmail = guestMail(paymentModal);
     const notice = guestPaymentNotice({
-      guestName: pickString(paymentModal, ['guest_name', 'name']),
-      tour: pickString(paymentModal, ['tour']),
+      guestName: guestName(paymentModal),
+      tour: bookingTour(paymentModal),
       currency: summary.currency,
       finalTourFee: total,
       amountJustPaid: paid,
@@ -331,7 +371,7 @@ export default function BookingsPanel() {
   }
 
   async function sendPaymentLink(record: RecordRow) {
-    const guestEmail = pickString(record, ['email']);
+    const guestEmail = guestMail(record);
     if (!guestEmail.includes('@')) {
       setError('This booking has no guest email.');
       return;
@@ -340,17 +380,17 @@ export default function BookingsPanel() {
     const summary = paymentSummary(record);
     await notifyWorkspace({
       title: 'Safari payment link',
-      message: `Pay remaining balance ${money(summary.balance, summary.currency)} for ${pickString(record, ['tour'])}: ${link}`,
+      message: `Pay remaining balance ${money(summary.balance, summary.currency)} for ${bookingTour(record)}: ${link}`,
       category: 'booking',
       guestEmail,
       sendToGuest: true,
       guestTitle: `Pay remaining balance ${money(summary.balance, summary.currency)} — ${SITE.name}`,
-      guestMessage: `Dear ${pickString(record, ['guest_name'])},\n\nFinal tour fee: ${money(summary.total, summary.currency)}\nAmount paid: ${money(summary.paid, summary.currency)}\nRemaining balance: ${money(summary.balance, summary.currency)}\n\nPay securely:\n${link}\n\n${SITE.name}`,
+      guestMessage: `Dear ${guestName(record)},\n\nFinal tour fee: ${money(summary.total, summary.currency)}\nAmount paid: ${money(summary.paid, summary.currency)}\nRemaining balance: ${money(summary.balance, summary.currency)}\n\nPay securely:\n${link}\n\n${SITE.name}`,
     });
   }
 
   async function cancelBooking(record: RecordRow) {
-    if (!confirm(`Cancel booking for ${pickString(record, ['guest_name'])}?`)) return;
+    if (!confirm(`Cancel booking for ${guestName(record)}?`)) return;
     await updateBooking(record, { status: 'Cancelled', payment_status: pickString(record, ['payment_status']) || 'Pending Booking' });
   }
 
@@ -364,7 +404,7 @@ export default function BookingsPanel() {
       setError('This booking has no id and cannot be deleted.');
       return;
     }
-    const label = pickString(record, ['guest_name', 'email']) || 'this booking';
+    const label = guestName(record) || guestMail(record) || 'this booking';
     if (!confirm(`Delete booking for ${label}? Related payment history for this booking will also be removed. This cannot be undone.`)) {
       return;
     }
@@ -386,18 +426,29 @@ export default function BookingsPanel() {
     setCreateSaving(true);
     setError('');
     const total = Number(form.final_tour_price) || 0;
+    const phoneDigits = form.phone.replace(/\D/g, '');
+    const selectedTour = tours.find((tour) => getRecordTitle(tour) === form.tour.trim());
     const payload = buildSavePayload('bookings', {
+      customer_name: form.guest_name.trim(),
       guest_name: form.guest_name.trim(),
+      customer_email: form.email.trim(),
       email: form.email.trim(),
-      phone: form.phone.trim(),
+      customer_phone: phoneDigits ? Number(phoneDigits) : null,
+      phone: phoneDigits ? Number(phoneDigits) : null,
+      tour_title: form.tour.trim(),
       tour: form.tour.trim(),
+      tour_id: selectedTour?.id ? String(selectedTour.id) : null,
+      country: form.destination.trim(),
       destination: form.destination.trim(),
       travel_date: form.travel_date || null,
+      number_of_people: Number(form.guests) || 1,
       guests: Number(form.guests) || 1,
       message: form.message.trim(),
       status: 'Pending',
       payment_status: 'Pending Booking',
       booking_code: generateBookingCode(),
+      currency: 'USD',
+      total_amount: total || null,
       final_tour_price: total || null,
       amount_paid: 0,
       remaining_balance: total || null,
@@ -555,7 +606,7 @@ export default function BookingsPanel() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-bold text-[#111827]">
-                        {pickString(row, ['guest_name', 'name']) || 'Guest'}
+                        {guestName(row) || 'Guest'}
                       </h3>
                       {bookingCode ? (
                         <span className="rounded-full bg-[#111827] px-2.5 py-0.5 font-mono text-xs font-semibold text-white">
@@ -629,13 +680,13 @@ export default function BookingsPanel() {
 
                 <div className="mt-4 grid gap-4 lg:grid-cols-3">
                   <div className="space-y-1.5">
-                    <Field label="Email" value={pickString(row, ['email'])} />
-                    <Field label="Phone" value={pickString(row, ['phone'])} />
-                    <Field label="Guests" value={String(pickNumber(row, ['guests'], 0) || pickString(row, ['guests']) || '—')} />
+                    <Field label="Email" value={guestMail(row)} />
+                    <Field label="Phone" value={guestPhone(row)} />
+                    <Field label="Guests" value={bookingGuests(row) || '—'} />
                   </div>
                   <div className="space-y-1.5">
-                    <Field label="Tour" value={pickString(row, ['tour'])} />
-                    <Field label="Destination" value={pickString(row, ['destination', 'country'])} />
+                    <Field label="Tour" value={bookingTour(row)} />
+                    <Field label="Destination" value={bookingDestination(row)} />
                     <Field label="Agent" value={pickString(row, ['agent_email'])} />
                   </div>
                   <div className="rounded-lg border border-[#eef0f3] bg-[#f8fafc] p-3">
@@ -688,14 +739,14 @@ export default function BookingsPanel() {
                       </span>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Guest" value={pickString(detail, ['guest_name', 'name'])} />
-                      <Field label="Email" value={pickString(detail, ['email'])} />
-                      <Field label="Phone" value={pickString(detail, ['phone'])} />
-                      <Field label="Country" value={pickString(detail, ['country'])} />
-                      <Field label="Tour" value={pickString(detail, ['tour'])} />
-                      <Field label="Destination" value={pickString(detail, ['destination'])} />
-                      <Field label="Travel date" value={pickString(detail, ['travel_date']).slice(0, 10)} />
-                      <Field label="Guests" value={pickString(detail, ['guests'])} />
+                      <Field label="Guest" value={guestName(detail)} />
+                      <Field label="Email" value={guestMail(detail)} />
+                      <Field label="Phone" value={guestPhone(detail)} />
+                      <Field label="Country" value={bookingDestination(detail)} />
+                      <Field label="Tour" value={bookingTour(detail)} />
+                      <Field label="Destination" value={bookingDestination(detail)} />
+                      <Field label="Travel date" value={bookingText(detail, ['travel_date']).slice(0, 10)} />
+                      <Field label="Guests" value={bookingGuests(detail)} />
                     </div>
                     {pickString(detail, ['travel_plans']) ? (
                       <div>
@@ -804,7 +855,7 @@ export default function BookingsPanel() {
               </button>
             </div>
             <p className="mt-2 text-sm text-[#6b7280]">
-              {pickString(paymentModal, ['guest_name'])} · Balance{' '}
+              {guestName(paymentModal)} · Balance{' '}
               {money(paymentSummary(paymentModal).balance, paymentSummary(paymentModal).currency)}
             </p>
             <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -869,7 +920,18 @@ export default function BookingsPanel() {
               />
               <SearchableSelect
                 value={form.tour}
-                onChange={(value) => setForm({ ...form, tour: value })}
+                onChange={(value) => {
+                  const tour = tours.find((row) => getRecordTitle(row) === value);
+                  const price = tour ? bookingText(tour, ['price']) : '';
+                  const country = tour ? bookingDestination(tour) : '';
+                  setForm({
+                    ...form,
+                    tour: value,
+                    destination: country || form.destination,
+                    final_tour_price: price || form.final_tour_price,
+                  });
+                }}
+                onQueryChange={setTourQuery}
                 options={[
                   { value: '', label: 'Select tour (optional)' },
                   ...tours.map((tour) => ({ value: getRecordTitle(tour), label: getRecordTitle(tour) })),

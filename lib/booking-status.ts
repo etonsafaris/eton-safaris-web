@@ -182,9 +182,10 @@ export function isPendingBooking(record: RecordRow) {
 export function paymentSummary(record: RecordRow) {
   const total =
     parseMoneyAmount(record.final_tour_price) ||
+    parseMoneyAmount(record.total_amount) ||
     parseMoneyAmount(record.total_price) ||
     parseMoneyAmount(record.amount) ||
-    pickNumber(record, ['final_tour_price', 'total_price', 'amount'], 0);
+    pickNumber(record, ['final_tour_price', 'total_amount', 'total_price', 'amount'], 0);
   const paid = parseMoneyAmount(record.amount_paid) || pickNumber(record, ['amount_paid'], 0);
   // Remaining balance is always derived from Final Tour Fee − amount paid.
   const balance = Math.max(0, Number((total - paid).toFixed(2)));
