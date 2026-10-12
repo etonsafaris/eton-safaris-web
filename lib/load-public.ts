@@ -901,7 +901,7 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
       : await fetchPublicRecordResilient('accommodations', slug);
     const published = item && isPubliclyVisibleRecord(item) ? item : null;
     const country = published ? pickStoredString(published, ['country']) : '';
-    const [tours, others, parks] = published
+    const [tours, others] = published
       ? await Promise.all([
           withTimeout(
             resolvePublicTours({
@@ -919,11 +919,25 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
             published.id != null ? String(published.id) : '',
             8
           ),
-          relatedPublicRecords('national_park', ['national_parks', 'parks'], country, undefined, 40),
         ])
-      : [[], [], []];
+      : [[], []];
+    let enriched = published;
+    if (published) {
+      try {
+        const parks = await relatedPublicRecords(
+          'national_park',
+          ['national_parks', 'parks'],
+          country,
+          undefined,
+          40
+        );
+        enriched = enrichAccommodationParkFields(published, parks);
+      } catch (error) {
+        console.warn('[Public] Accommodation park name failed:', slug, error);
+      }
+    }
     return toClientProps({
-      item: published ? enrichAccommodationParkFields(published, parks) : null,
+      item: enriched,
       others,
       tours: (tours ?? []).slice(0, 12),
     });
@@ -942,12 +956,21 @@ export async function loadAccommodationDetail(slug: string) {
 export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
-  return cachedPublic(
-    ['accommodation-detail-sync-v7-park', normalized],
-    ['collection:accommodations', `accommodation:${normalized}`],
-    () => loadAccommodationDetailLive(normalized, true),
-    PUBLIC_DETAIL_REVALIDATE_SECONDS
-  );
+  try {
+    return await cachedPublic(
+      ['accommodation-detail-sync-v8-park', normalized],
+      ['collection:accommodations', `accommodation:${normalized}`],
+      async () => {
+        const loaded = await loadAccommodationDetailLive(normalized, true);
+        if (!loaded.item) throw new Error('Accommodation detail empty');
+        return loaded;
+      },
+      PUBLIC_DETAIL_REVALIDATE_SECONDS
+    );
+  } catch (error) {
+    console.warn('[Public] Accommodation detail cache skipped:', normalized, error);
+    return loadAccommodationDetailLive(normalized, true);
+  }
 }
 
 export async function loadExploreDetail(slug: string) {
