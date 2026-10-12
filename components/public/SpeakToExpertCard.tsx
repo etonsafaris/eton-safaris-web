@@ -51,7 +51,6 @@ export default function SpeakToExpertCard({
           className="mt-3 text-sm"
           rowClassName="flex items-center gap-2 text-[#343434] hover:text-[#5bc787]"
           iconClassName="h-4 w-4 shrink-0 text-[#5bc787]"
-          labelClassName="w-[4.6rem] shrink-0 font-semibold text-[#222]"
         />
         {showEnquiry ? (
           <div className="mt-4 text-center">
@@ -92,7 +91,6 @@ export default function SpeakToExpertCard({
           emails={emails}
           rowClassName="flex items-center gap-2 text-xs text-[#444] hover:text-moss"
           iconClassName="h-3.5 w-3.5 shrink-0 text-sage"
-          labelClassName="w-[4.75rem] shrink-0 font-semibold"
         />
       </div>
       <Link

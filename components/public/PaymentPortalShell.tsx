@@ -101,7 +101,6 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
               emails={emails}
               rowClassName="inline-flex items-center gap-2 hover:text-[#8f2742]"
               iconClassName="h-4 w-4 shrink-0 text-[#8f2742]"
-              labelClassName="w-[4.6rem] shrink-0 font-semibold"
             />
           </div>
         </div>

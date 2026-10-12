@@ -134,7 +134,6 @@ export default function SiteFooter({ initialHome = null }: { initialHome?: HomeP
               emails={emailItems}
               rowClassName="site-footer-link flex items-center gap-2"
               iconClassName="h-4 w-4 shrink-0 text-white"
-              labelClassName="w-[4.6rem] shrink-0 font-semibold"
             />
             <Link
               href="/request-a-quote"

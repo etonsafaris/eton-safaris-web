@@ -67,7 +67,6 @@ export default function RequestQuotePage() {
                     className="public-article-body mt-2 text-base text-[#343434]"
                     rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
                     iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
-                    labelClassName="w-[4.6rem] shrink-0 font-semibold"
                   />
                 </div>
               </div>

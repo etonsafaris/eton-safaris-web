@@ -58,7 +58,6 @@ export function QuoteContactFooter() {
           className="sm:col-span-2"
           rowClassName="flex items-center gap-2 text-white hover:text-[#F5D56A]"
           iconClassName="h-3.5 w-3.5 shrink-0 text-[#F5D56A]"
-          labelClassName="w-[4.6rem] shrink-0 font-semibold"
         />
         <a href={SITE.url} className="inline-flex items-start gap-2 text-white hover:text-[#F5D56A]" target="_blank" rel="noreferrer">
           <Globe2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D56A]" />
