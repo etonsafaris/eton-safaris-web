@@ -98,7 +98,12 @@ export function accommodationNationalParkDisplay(
   if (explicit) return explicit;
   const park = inferParkForStay(stay, parks);
   if (park) return parkOptionValue(park);
-  return parkNameMentionedIn(pickStoredString(stay, ['location']));
+  const text = [pickStoredString(stay, ['location']), pickStoredString(stay, ['description', 'content'])]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/<[^>]+>/g, ' ');
+  const mentioned = parkNameMentionedIn(text);
+  return mentioned ? resolveParkSelectValue(mentioned, parks) : '';
 }
 
 /** Fills national_park_* on the row when inference finds a park but columns were empty. */

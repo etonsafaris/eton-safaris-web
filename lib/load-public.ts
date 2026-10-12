@@ -943,7 +943,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   return cachedPublic(
-    ['accommodation-detail-sync-v6-park', normalized],
+    ['accommodation-detail-sync-v7-park', normalized],
     ['collection:accommodations', `accommodation:${normalized}`],
     () => loadAccommodationDetailLive(normalized, true),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
