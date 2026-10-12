@@ -28,9 +28,16 @@ export function isCountryPageDataSparse(data: CountryPageData): boolean {
 
 export function withCountryPageFallback(data: CountryPageData, slug: string): CountryPageData {
   const name = countryLabelFromSlug(slug) || slug;
+  const currentName = String(data.country?.name || data.country?.title || '').trim();
+  const useLabel = !currentName || currentName.toLowerCase() === slug.toLowerCase();
   const country =
     data.country
-      ? { ...data.country, slug: data.country.slug || slug, name: data.country.name || name, title: data.country.title || name }
+      ? {
+          ...data.country,
+          slug: data.country.slug || slug,
+          name: useLabel ? name : data.country.name || name,
+          title: useLabel ? name : data.country.title || name,
+        }
       : ({
           name,
           title: name,

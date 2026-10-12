@@ -455,19 +455,25 @@ async function countryRowWithHero(slug: string, country: RecordRow | null): Prom
 export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
-    const cached = await cachedPublic(
-      ['country-page-data-v17-seo-only', normalized],
+    return await cachedPublic(
+      ['country-page-data-v18-fast', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
-        const data = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
-        if (!isCountryPageShellCountry(data.country)) return data;
-        const hydrated = await countryRowWithHero(normalized, data.country);
-        return hydrated ? { ...data, country: hydrated } : data;
+        const data = await loadCountryPageDataInner(normalized);
+        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
+          throw new Error('Country page empty');
+        }
+        return data;
       }
     );
-    return cached;
   } catch (error) {
-    console.warn('[Public] loadCountryPageData failed:', slug, error);
+    console.warn('[Public] loadCountryPageData cache skipped:', slug, error);
+    try {
+      const live = await loadCountryPageDataInner(normalized);
+      if (live?.country && !isCountryPageShellCountry(live.country)) return live;
+    } catch (retryError) {
+      console.warn('[Public] loadCountryPageData retry failed:', slug, retryError);
+    }
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
   }
 }
@@ -490,15 +496,21 @@ async function loadCountryPageDataInner(
   slug: string,
   options?: CountryPageLoadOptions
 ): Promise<CountryPageData | null> {
-  const [countryMeta, categoriesRaw] = await Promise.all([
-    fetchPublicRecordResilient('countries', slug),
-    fetchCollectionRecords('categories', [], {
-      columns: listColumns('categories'),
-      maxRows: 80,
-    })
-      .then((rows) => rows.filter(isPublishedRecord))
-      .catch(() => [] as RecordRow[]),
+  const countryLabel = countryLabelFromSlug(slug) || slug;
+  const [countryMeta, categoryPage, tours] = await Promise.all([
+    withTimeout(fetchPublicRecordResilient('countries', slug), 7000, null),
+    withTimeout(
+      fetchCollectionPage('categories', [], {
+        columns: listColumns('categories'),
+        limit: 24,
+        filters: { country: countryLabel },
+      }),
+      7000,
+      { rows: [] as RecordRow[], total: 0 }
+    ),
+    withTimeout(resolvePublicTours({ country: countryLabel, limit: 24 }), 7000, [] as RecordRow[]),
   ]);
+  const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
   if (options?.requirePublishedCountry) {
     if (!countryMeta || !isPubliclyVisibleRecord(countryMeta)) return null;
   }
@@ -510,10 +522,7 @@ async function loadCountryPageDataInner(
   }
   const countryCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
-    (country ? publicCountryLabel(country, slug) : '') ||
-    pickString(country || {}, ['name', 'title']) ||
-    slug;
-  const tours = await resolvePublicTours({ country: countryName, limit: 24 }).catch(() => [] as RecordRow[]);
+    (country ? publicCountryLabel(country, slug) : '') || countryLabelFromSlug(slug) || slug;
   const parks: RecordRow[] = [];
   const places: RecordRow[] = [];
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
@@ -549,7 +558,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v8-seo-only', normalized],
+    ['country-page-sync-v9-fast', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS

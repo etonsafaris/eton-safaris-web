@@ -12,6 +12,7 @@ import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
+import { isCountryPageShellCountry } from '@/lib/country-heroes';
 import { showExploreOnCountryPages, showParksOnCountryPages } from '@/lib/public-discovery-policy';
 import { categoryPublicSlug, countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
@@ -71,8 +72,8 @@ export default function CountryPageContent({
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
   const [ready, setReady] = useState(true);
-  /** SSR always ships a country shell — skip mount-time full-table refetch (major speed win). */
-  const hasServerContent = Boolean(slug && countryProp);
+  /** A name-only shell means the country row did not load. Refetch instead of keeping the blank page. */
+  const hasServerContent = Boolean(slug && countryProp && !isCountryPageShellCountry(countryProp));
 
   useEffect(() => {
     setCountry(countryProp);
