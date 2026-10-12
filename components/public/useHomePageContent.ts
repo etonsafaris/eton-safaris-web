@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useCmsLive } from '@/lib/cms-live';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecordById, fetchCollectionRecords, isPublishedRecord } from '@/lib/data';
@@ -11,6 +11,19 @@ import {
   parseHomePageContent,
   type HomePageContent,
 } from '@/lib/home-page-content';
+
+const HomePageContentContext = createContext<HomePageContent | null>(null);
+
+/** One saved Home page footer for every public page, including client navigations. */
+export function HomePageContentProvider({
+  initial,
+  children,
+}: {
+  initial?: HomePageContent | null;
+  children: ReactNode;
+}) {
+  return <HomePageContentContext.Provider value={initial ?? null}>{children}</HomePageContentContext.Provider>;
+}
 
 async function fetchHomePageRecord(): Promise<RecordRow | null> {
   const params = new URLSearchParams({
@@ -35,10 +48,12 @@ async function fetchHomePageRecord(): Promise<RecordRow | null> {
 }
 
 export function useHomePageContent(initial?: HomePageContent | null) {
+  const shared = useContext(HomePageContentContext);
+  const seed = initial ?? shared ?? null;
   const live = useCmsLive();
   const prevLive = useRef(live);
-  const [content, setContent] = useState<HomePageContent>(initial ?? DEFAULT_HOME_PAGE_CONTENT);
-  const [ready, setReady] = useState(Boolean(initial));
+  const [content, setContent] = useState<HomePageContent>(seed ?? DEFAULT_HOME_PAGE_CONTENT);
+  const [ready, setReady] = useState(Boolean(seed));
 
   useEffect(() => {
     const isLiveUpdate = live !== prevLive.current;
@@ -61,8 +76,8 @@ export function useHomePageContent(initial?: HomePageContent | null) {
               row.contact_emails ||
               ''
           );
-          if (savedBody.trim() || !initial) setContent(parseHomePageContent(row));
-        } else if (!initial) {
+          if (savedBody.trim() || !seed) setContent(parseHomePageContent(row));
+        } else if (!seed) {
           setContent(DEFAULT_HOME_PAGE_CONTENT);
         }
         setReady(true);
@@ -70,14 +85,14 @@ export function useHomePageContent(initial?: HomePageContent | null) {
       .catch((error) => {
         console.error('[CMS] Home page content load failed:', error);
         if (!cancelled) {
-          setContent(initial ?? DEFAULT_HOME_PAGE_CONTENT);
+          setContent(seed ?? DEFAULT_HOME_PAGE_CONTENT);
           setReady(true);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [live, initial]);
+  }, [live, seed]);
 
   return { ...content, ready };
 }

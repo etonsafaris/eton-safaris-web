@@ -157,7 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-white font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }} />
-        <PublicAppRoot>
+        <PublicAppRoot initialHome={home}>
           <SiteMonitoring />
           <CmsLiveHost />
           {children}

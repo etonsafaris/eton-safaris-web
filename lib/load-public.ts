@@ -167,17 +167,14 @@ async function fetchPublicRecordResilient(
   return fetchRecordByPublicSlug(table, slug, aliases, select);
 }
 
-async function loadHomePageContentLive(): Promise<HomePageContent | null> {
-  try {
-    const row = await loadCmsPage(HOME_PAGE_SLUG);
-    return row ? parseHomePageContent(row) : null;
-  } catch {
-    return null;
-  }
+async function loadHomePageContentLive(): Promise<HomePageContent> {
+  const row = await loadCmsPage(HOME_PAGE_SLUG);
+  if (!row) throw new Error('home-page-miss');
+  return parseHomePageContent(row);
 }
 
 export function loadHomePageContent(): Promise<HomePageContent | null> {
-  return cachedPublic(['home-page-content-v2-page-body'], ['collection:pages'], () => loadHomePageContentLive());
+  return cachedPublic(['home-page-content-v3-footer'], ['collection:pages'], () => loadHomePageContentLive());
 }
 
 async function ensureNavCountryRecords(rows: RecordRow[]): Promise<RecordRow[]> {
@@ -272,7 +269,11 @@ export async function loadHomePageData() {
 }
 
 async function loadHomePageContentCached() {
-  return loadHomePageContent();
+  try {
+    return await loadHomePageContent();
+  } catch {
+    return null;
+  }
 }
 
 async function loadHomePageBundleLive() {

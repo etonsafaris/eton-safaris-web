@@ -86,6 +86,8 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
   const socialItems = publicSocials(home);
   const phoneItems = publicPhones(home);
   const emailItems = publicEmails(home);
+  const mapAddress = home.contactAddress || SITE.address;
+  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress)}&z=15&output=embed`;
 
   return (
     <PublicShellServer>
@@ -118,12 +120,21 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
           <div className="m-2.5 w-full lg:w-[70%]">
             <div className="bg-white p-2.5 shadow-sm">
               <iframe
+                key={mapAddress}
                 title="Eton Safaris location"
-                src="https://maps.google.com/maps?q=0.316667,32.5&z=12&output=embed"
+                src={mapSrc}
                 className="h-[470px] w-full border-0"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapAddress)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-block text-sm font-semibold text-[#00A651] hover:underline"
+              >
+                Directions to {mapAddress}
+              </a>
             </div>
           </div>
           <div className="m-2.5 w-full lg:w-[30%]">
