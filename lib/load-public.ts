@@ -456,7 +456,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const cached = await cachedPublic(
-      ['country-page-data-v15-related', normalized],
+      ['country-page-data-v16-related', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = (await loadCountryPageDataInner(normalized)) ?? EMPTY_COUNTRY_PAGE_DATA;
@@ -551,7 +551,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v6-related', normalized],
+    ['country-page-sync-v7-related', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
@@ -707,7 +707,26 @@ async function relatedPublicRecords(
       8000,
       { rows: [] as RecordRow[], total: 0 }
     );
-    return keep(page.rows ?? []);
+    const matched = keep(page.rows ?? []);
+    if (matched.length) return matched;
+    const broad = await withTimeout(
+      fetchCollectionPage(table, aliases, {
+        columns: listColumns(table, aliases),
+        limit: 40,
+        offset: 0,
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    return (broad.rows ?? [])
+      .filter(
+        (row) =>
+          row &&
+          isPublishedRecord(row) &&
+          String(row.id ?? '') !== exclude &&
+          matchesCountry(row, label)
+      )
+      .slice(0, limit);
   } catch (error) {
     console.warn('[Public] Related records failed:', table, label, error);
     return [];
@@ -753,7 +772,7 @@ async function loadParkDetailLive(slug: string) {
 export async function loadParkDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   return cachedPublic(
-    ['park-detail-v4-related', normalized],
+    ['park-detail-v5-related', normalized],
     ['collection:national_park', `park:${normalized}`],
     () => loadParkDetailLive(normalized)
   );
@@ -922,7 +941,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   const normalized = normalizeSlug(slug);
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   return cachedPublic(
-    ['accommodation-detail-sync-v4-related', normalized],
+    ['accommodation-detail-sync-v5-related', normalized],
     ['collection:accommodations', `accommodation:${normalized}`],
     () => loadAccommodationDetailLive(normalized, true),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
