@@ -4,18 +4,11 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
-import dynamic from 'next/dynamic';
 import HomePageImage from '@/components/public/HomePageImage';
-const TourSearchBar = dynamic(() => import('@/components/public/TourSearchBar'), {
-  loading: () => <div className="min-h-[52px] w-full max-w-3xl rounded-md bg-white/10" aria-hidden />,
-});
+import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
-const TestimonialsSection = dynamic(() => import('@/components/public/TestimonialsSection'), {
-  loading: () => null,
-});
-const PaymentsSection = dynamic(() => import('@/components/public/PaymentsSection'), {
-  loading: () => null,
-});
+import TestimonialsSection from '@/components/public/TestimonialsSection';
+import PaymentsSection from '@/components/public/PaymentsSection';
 import TourCard from '@/components/public/TourCard';
 import PageFaqList from '@/components/public/PageFaqList';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
@@ -85,7 +78,7 @@ export default function HomePageClient({
     [initialCategories, initialCountries, initialTours, initialUpdates]
   );
 
-  const { data: liveData, heroSlides: recoveredHeroSlides } = useHomePageRecovery({
+  const { data: liveData, heroSlides: recoveredHeroSlides, pending } = useHomePageRecovery({
     initialData: initialPayload,
     initialHeroSlides: initialHeroSlides ?? [],
     needsClientRefresh,
@@ -320,7 +313,7 @@ export default function HomePageClient({
               instant
               items={tourItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage="Popular East Africa tours are loading. Refresh in a moment or browse all tours."
+              emptyMessage={pending ? 'Loading...' : 'Popular East Africa tours are loading. Refresh in a moment or browse all tours.'}
             />
           </div>
         </div>
@@ -330,7 +323,12 @@ export default function HomePageClient({
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Find tours by" title="Destination" />
           <div className="mt-10">
-            <Carousel instant items={destinationItems} itemsPerView={{ sm: 1, md: 2, lg: 3 }} emptyMessage="No records found in this collection." />
+            <Carousel
+              instant
+              items={destinationItems}
+              itemsPerView={{ sm: 1, md: 2, lg: 3 }}
+              emptyMessage={pending ? 'Loading...' : 'No records found in this collection.'}
+            />
           </div>
           <div className="mt-10 text-center">
             <Link
@@ -351,7 +349,7 @@ export default function HomePageClient({
               instant
               items={blogItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage="No records found in this collection."
+              emptyMessage={pending ? 'Loading...' : 'No records found in this collection.'}
             />
           </div>
           <div className="mt-8 text-center">

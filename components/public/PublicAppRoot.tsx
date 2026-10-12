@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import PublicErrorBoundary from '@/components/public/PublicErrorBoundary';
+import PublicShell from '@/components/public/PublicShell';
 import { HomePageContentProvider } from '@/components/public/useHomePageContent';
 import type { HomePageContent } from '@/lib/home-page-content';
 
@@ -10,6 +11,9 @@ function isStaffRoute(pathname: string) {
   return (
     pathname.startsWith('/admin') ||
     pathname === '/login' ||
+    pathname.startsWith('/login/') ||
+    pathname.startsWith('/invite') ||
+    pathname.startsWith('/payment') ||
     pathname.startsWith('/agents/portal') ||
     pathname.startsWith('/dashboard')
   );
@@ -27,7 +31,9 @@ export default function PublicAppRoot({
   if (isStaffRoute(pathname)) return <>{children}</>;
   return (
     <HomePageContentProvider initial={initialHome}>
-      <PublicErrorBoundary>{children}</PublicErrorBoundary>
+      <PublicErrorBoundary>
+        <PublicShell initialHome={initialHome}>{children}</PublicShell>
+      </PublicErrorBoundary>
     </HomePageContentProvider>
   );
 }

@@ -35,15 +35,20 @@ export function PublicDestinationsProvider({
   }, [initialDestinations]);
 
   useEffect(() => {
-    if (live === 0) return;
+    let cancelled = false;
     fetchCollectionRecords('countries', [], { maxRows: 48 })
       .then((rows) => {
+        if (cancelled) return;
         const merged = mergePublicDestinations(rows.filter(isPublishedRecord));
         setDestinations((current) => (merged.length ? merged : current.length ? current : seededDestinations()));
       })
       .catch(() => {
+        if (cancelled) return;
         setDestinations((current) => (current.length ? current : seededDestinations()));
       });
+    return () => {
+      cancelled = true;
+    };
   }, [live]);
 
   const split = useMemo(() => splitNavDestinations(destinations), [destinations]);

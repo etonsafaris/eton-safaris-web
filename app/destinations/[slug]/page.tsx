@@ -4,7 +4,7 @@ import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
-import { countryHeroImage, isCountryPageShellCountry } from '@/lib/country-heroes';
+import { isCountryPageShellCountry } from '@/lib/country-heroes';
 import { isDedicatedLandingCountry } from '@/lib/cms-routes';
 import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
@@ -54,11 +54,8 @@ export default async function DestinationCountryPage({ params }: { params: { slu
 
   const country = data.country;
   if (isCountryPageShellCountry(country) || !data.tours?.length) noStore();
-  const heroSrc = countryHeroImage(slug, country);
-
   return (
     <>
-      {heroSrc ? <link rel="preload" as="image" href={heroSrc} fetchPriority="high" /> : null}
       <PublicShellServer>
         <CountryPageContent
           key={slug}
