@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { ArrowRight, MapPin } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
+import { publicEmails, publicPhones } from '@/lib/home-page-content';
 import { quoteRequestPath } from '@/lib/quote-request';
 
 export default function SpeakToExpertCard({
@@ -44,34 +45,14 @@ export default function SpeakToExpertCard({
             Start planning your trip by contacting one of our {destination} specialists.
           </p>
         </div>
-        <ul className="mt-3 list-none text-center">
-          {phones.map((phone) => (
-            <li key={phone.id} className="border-b border-[#eee] py-0.5">
-              {phone.call ? (
-                <a href={phoneCallHref(phone.number)} className="block font-bold text-[#5bc787] hover:underline">
-                  {phone.number}
-                </a>
-              ) : null}
-              {phone.whatsapp ? (
-                <a
-                  href={phoneWhatsAppHref(phone.number)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block font-bold text-[#5bc787] hover:underline"
-                >
-                  WhatsApp {phone.number}
-                </a>
-              ) : null}
-            </li>
-          ))}
-          {emails.map((email) => (
-            <li key={email.id} className="border-b border-[#eee] py-0.5">
-              <a href={`mailto:${email.address}`} className="block font-bold text-[#5bc787] hover:underline">
-                {email.address}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <PublicContactLines
+          phones={phones}
+          emails={emails}
+          className="mt-3 text-sm"
+          rowClassName="flex items-center gap-2 text-[#343434] hover:text-[#5bc787]"
+          iconClassName="h-4 w-4 shrink-0 text-[#5bc787]"
+          labelClassName="w-[4.6rem] shrink-0 font-semibold text-[#222]"
+        />
         {showEnquiry ? (
           <div className="mt-4 text-center">
             <Link
@@ -106,33 +87,13 @@ export default function SpeakToExpertCard({
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage" />
           <span>{home.contactAddress || 'Wakiso District, Uganda'}</span>
         </div>
-        {phones.map((phone) => (
-          <div key={phone.id} className="flex flex-col gap-2">
-            {phone.call ? (
-              <a href={phoneCallHref(phone.number)} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-sage" />
-                {phone.number}
-              </a>
-            ) : null}
-            {phone.whatsapp ? (
-              <a
-                href={phoneWhatsAppHref(phone.number)}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 text-xs text-[#444] hover:text-moss"
-              >
-                <MessageCircle className="h-3.5 w-3.5 shrink-0 text-sage" />
-                WhatsApp {phone.number}
-              </a>
-            ) : null}
-          </div>
-        ))}
-        {emails.map((email) => (
-          <a key={email.id} href={`mailto:${email.address}`} className="flex items-center gap-2 text-xs text-[#444] hover:text-moss">
-            <Mail className="h-3.5 w-3.5 shrink-0 text-sage" />
-            {email.address}
-          </a>
-        ))}
+        <PublicContactLines
+          phones={phones}
+          emails={emails}
+          rowClassName="flex items-center gap-2 text-xs text-[#444] hover:text-moss"
+          iconClassName="h-3.5 w-3.5 shrink-0 text-sage"
+          labelClassName="w-[4.75rem] shrink-0 font-semibold"
+        />
       </div>
       <Link
         href={inquiryHref}

@@ -1,10 +1,11 @@
 'use client';
 
-import { Home, Mail, Phone } from 'lucide-react';
+import { Home } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { SITE } from '@/lib/collections';
-import { phoneCallHref, publicEmails, publicPhones } from '@/lib/home-page-content';
+import { publicEmails, publicPhones } from '@/lib/home-page-content';
 
 type PaymentPortalShellProps = {
   step: 1 | 2 | 3;
@@ -90,30 +91,18 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
         {children}
 
         <div className="mt-10 border-t border-[#e5e5e5] pt-6 text-sm text-[#666]">
-          <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div className="mt-4 flex flex-col gap-3">
             <p className="inline-flex items-center gap-2">
               <Home className="h-4 w-4 text-[#8f2742]" />
               {home.contactAddress || SITE.address}
             </p>
-            {phones.map((phone) =>
-              phone.call ? (
-                <a key={phone.id} href={phoneCallHref(phone.number)} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
-                  <Phone className="h-4 w-4 text-[#8f2742]" />
-                  {phone.number}
-                </a>
-              ) : (
-                <p key={phone.id} className="inline-flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-[#8f2742]" />
-                  {phone.number}
-                </p>
-              )
-            )}
-            {emails.map((email) => (
-              <a key={email.id} href={`mailto:${email.address}`} className="inline-flex items-center gap-2 hover:text-[#8f2742]">
-                <Mail className="h-4 w-4 text-[#8f2742]" />
-                {email.address}
-              </a>
-            ))}
+            <PublicContactLines
+              phones={phones}
+              emails={emails}
+              rowClassName="inline-flex items-center gap-2 hover:text-[#8f2742]"
+              iconClassName="h-4 w-4 shrink-0 text-[#8f2742]"
+              labelClassName="w-[4.6rem] shrink-0 font-semibold"
+            />
           </div>
         </div>
       </div>

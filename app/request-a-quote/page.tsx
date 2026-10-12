@@ -1,13 +1,14 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Clock, Mail, MapPin, Phone } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import QuoteRequestForm from '@/components/public/QuoteRequestForm';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import { SITE } from '@/lib/collections';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
+import { publicEmails, publicPhones } from '@/lib/home-page-content';
 import PageFaqList from '@/components/public/PageFaqList';
 import { bestFaqsFor } from '@/lib/best-faqs';
 
@@ -58,43 +59,28 @@ export default function RequestQuotePage() {
                 </div>
               </div>
               <div className="flex gap-2 pb-4">
-                <Phone className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
-                <div>
+                <div className="w-full">
                   <h5 className="text-xl font-medium text-black/80">Our Contacts</h5>
-                  <div className="public-article-body flex flex-col gap-1 pl-2.5 text-base text-[#343434]">
-                    {phones.map((phone) => (
-                      <p key={phone.id}>
-                        {phone.call ? (
-                          <a href={phoneCallHref(phone.number)} className="hover:text-[#5bc787]">
-                            {phone.number}
-                          </a>
-                        ) : (
-                          phone.number
-                        )}
-                        {phone.whatsapp ? (
-                          <>
-                            {' '}
-                            <a href={phoneWhatsAppHref(phone.number)} className="hover:text-[#5bc787]" target="_blank" rel="noreferrer">
-                              WhatsApp
-                            </a>
-                          </>
-                        ) : null}
-                      </p>
-                    ))}
-                  </div>
+                  <PublicContactLines
+                    phones={phones}
+                    emails={[]}
+                    className="public-article-body mt-2 text-base text-[#343434]"
+                    rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                    labelClassName="w-[4.6rem] shrink-0 font-semibold"
+                  />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Mail className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
-                <div>
+                <div className="w-full">
                   <h5 className="text-xl font-medium text-black/80">Email</h5>
-                  <div className="public-article-body flex flex-col gap-1 pl-2.5 text-base text-[#343434]">
-                    {emails.map((email) => (
-                      <a key={email.id} href={`mailto:${email.address}`} className="hover:text-[#5bc787]">
-                        {email.address}
-                      </a>
-                    ))}
-                  </div>
+                  <PublicContactLines
+                    phones={[]}
+                    emails={emails}
+                    className="public-article-body mt-2 text-base text-[#343434]"
+                    rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                  />
                 </div>
               </div>
             </div>

@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+import { MapPin, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { PUBLIC_SITE_LABELS, SITE } from '@/lib/collections';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import {
-  phoneCallHref,
-  phoneWhatsAppHref,
   publicEmails,
   publicPhones,
   publicSocials,
@@ -130,37 +129,13 @@ export default function SiteFooter({ initialHome = null }: { initialHome?: HomeP
             <p className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white" /> {home.contactAddress || SITE.address}
             </p>
-            <div className="flex flex-col gap-2">
-              {phoneItems.map((phone) => (
-                <div key={phone.id} className="flex flex-col gap-1">
-                  {phone.call ? (
-                    <a href={phoneCallHref(phone.number)} className="site-footer-link flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-white" /> {phone.number}
-                    </a>
-                  ) : null}
-                  {phone.whatsapp ? (
-                    <a
-                      href={phoneWhatsAppHref(phone.number)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="site-footer-link flex items-center gap-2"
-                    >
-                      <MessageCircle className="h-4 w-4 text-white" /> {phone.number}
-                    </a>
-                  ) : null}
-                  {!phone.call && !phone.whatsapp ? (
-                    <p className="flex items-center gap-2">{phone.number}</p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2">
-              {emailItems.map((email) => (
-                <a key={email.id} href={`mailto:${email.address}`} className="site-footer-link flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-white" /> {email.address}
-                </a>
-              ))}
-            </div>
+            <PublicContactLines
+              phones={phoneItems}
+              emails={emailItems}
+              rowClassName="site-footer-link flex items-center gap-2"
+              iconClassName="h-4 w-4 shrink-0 text-white"
+              labelClassName="w-[4.6rem] shrink-0 font-semibold"
+            />
             <Link
               href="/request-a-quote"
               className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#f5c518] px-5 py-3 text-center text-[15px] font-extrabold uppercase tracking-wide text-[#111] shadow-[0_4px_0_#c49200,0_8px_18px_rgba(0,0,0,0.28)] transition hover:bg-[#ffd84d] hover:shadow-[0_2px_0_#c49200,0_6px_14px_rgba(0,0,0,0.25)]"

@@ -1,9 +1,10 @@
 'use client';
 
-import { MapPin, Mail, Phone, Globe2 } from 'lucide-react';
+import { MapPin, Globe2 } from 'lucide-react';
 import { SITE, SITE_LOGO } from '@/lib/collections';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones } from '@/lib/home-page-content';
+import { publicEmails, publicPhones } from '@/lib/home-page-content';
 import { QUOTE_SERVICES_LINE } from '@/lib/quote-document';
 
 /** Eton quotation masthead — diagonal gold slash, logo left, green brand panel right. */
@@ -38,22 +39,7 @@ export function QuoteLetterhead() {
 export function QuoteContactFooter() {
   const home = useHomePageContent();
   const phones = publicPhones(home);
-  const phoneItems = phones.flatMap((phone) => {
-    const rows: { icon: typeof Phone; label: string; href?: string }[] = [];
-    if (phone.call) rows.push({ icon: Phone, label: phone.number, href: phoneCallHref(phone.number) });
-    if (phone.whatsapp) rows.push({ icon: Phone, label: `WhatsApp ${phone.number}`, href: phoneWhatsAppHref(phone.number) });
-    return rows;
-  });
-  const items = [
-    ...phoneItems,
-    { icon: Globe2, label: SITE.url.replace(/^https?:\/\//, ''), href: SITE.url },
-    { icon: MapPin, label: home.contactAddress || SITE.address, href: undefined },
-    ...publicEmails(home).map((email) => ({
-      icon: Mail,
-      label: email.address,
-      href: `mailto:${email.address}`,
-    })),
-  ];
+  const emails = publicEmails(home);
 
   return (
     <footer className="relative bg-[#1B4332] px-5 py-4 text-xs text-white sm:px-7">
@@ -66,22 +52,22 @@ export function QuoteContactFooter() {
         aria-hidden
       />
       <div className="grid gap-2.5 pl-3 sm:grid-cols-2 sm:gap-x-6">
-        {(items ?? [])?.map((item) => {
-          const Icon = item.icon;
-          const content = (
-            <span className="inline-flex items-start gap-2 leading-snug">
-              <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D56A]" />
-              <span>{item.label}</span>
-            </span>
-          );
-          return item.href ? (
-            <a key={item.label} href={item.href} className="text-white hover:text-[#F5D56A]" target={item.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
-              {content}
-            </a>
-          ) : (
-            <div key={item.label}>{content}</div>
-          );
-        })}
+        <PublicContactLines
+          phones={phones}
+          emails={emails}
+          className="sm:col-span-2"
+          rowClassName="flex items-center gap-2 text-white hover:text-[#F5D56A]"
+          iconClassName="h-3.5 w-3.5 shrink-0 text-[#F5D56A]"
+          labelClassName="w-[4.6rem] shrink-0 font-semibold"
+        />
+        <a href={SITE.url} className="inline-flex items-start gap-2 text-white hover:text-[#F5D56A]" target="_blank" rel="noreferrer">
+          <Globe2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D56A]" />
+          <span>{SITE.url.replace(/^https?:\/\//, '')}</span>
+        </a>
+        <div className="inline-flex items-start gap-2">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D56A]" />
+          <span>{home.contactAddress || SITE.address}</span>
+        </div>
       </div>
     </footer>
   );

@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
+import PublicContactLines from '@/components/public/PublicContactLines';
 import { SITE } from '@/lib/collections';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { phoneCallHref, phoneWhatsAppHref, publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
+import { publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
 import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
@@ -233,42 +234,27 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                 <Phone className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Contacts</h5>
-                  <ul className="list-none space-y-1 pl-2.5 text-base text-[#343434]">
-                    {phoneItems.map((phone) => (
-                      <li key={phone.id}>
-                        {phone.call ? (
-                          <a href={phoneCallHref(phone.number)} className="hover:text-[#5bc787]">
-                            {phone.number}
-                          </a>
-                        ) : (
-                          <span>{phone.number}</span>
-                        )}
-                        {phone.whatsapp ? (
-                          <>
-                            {' '}
-                            <a href={phoneWhatsAppHref(phone.number)} target="_blank" rel="noreferrer" className="hover:text-[#5bc787]">
-                              WhatsApp
-                            </a>
-                          </>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
+                  <PublicContactLines
+                    phones={phoneItems}
+                    emails={[]}
+                    className="pl-2.5 text-base"
+                    rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                    labelClassName="w-[4.6rem] shrink-0 font-semibold"
+                  />
                 </div>
               </div>
               <div className="flex gap-2 pb-3">
                 <Mail className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Email Address</h5>
-                  <ul className="list-none space-y-1 pl-2.5 text-base text-[#343434]">
-                    {emailItems.map((email) => (
-                      <li key={email.id}>
-                        <a href={`mailto:${email.address}`} className="hover:text-[#5bc787]">
-                          {email.address}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  <PublicContactLines
+                    phones={[]}
+                    emails={emailItems}
+                    className="pl-2.5 text-base"
+                    rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                  />
                 </div>
               </div>
             </div>
