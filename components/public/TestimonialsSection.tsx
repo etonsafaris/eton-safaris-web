@@ -5,7 +5,7 @@ import { Quote, Star } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
 import { fetchCollectionRecords, pickNumber, pickStoredString, pickString } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
-import { isWebsiteReview, reviewClickHref } from '@/lib/review-links';
+import { isWebsiteReview, REVIEW_SOURCES, reviewClickHref } from '@/lib/review-links';
 import { linkedReviewPlatforms, REVIEW_PLATFORM_FIELDS } from '@/lib/home-page-content';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import ReviewPlatformLogo from '@/components/public/ReviewPlatformLogo';
@@ -128,13 +128,32 @@ export default function TestimonialsSection() {
     return null;
   }
 
+  const rated = reviews.filter((review) => pickNumber(review, ['rating'], 0) > 0);
+
   return (
     <section className="bg-forest py-14 text-white md:py-20">
       <div className="mx-auto max-w-[900px] px-4 md:px-6">
+        <div className="mb-8 text-center">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-sage">Testimonials</p>
+          <h2 className="font-serif text-2xl font-bold md:text-3xl">What Our Clients Say</h2>
+        </div>
         {platforms.length ? (
-          <div className="mb-8 flex flex-wrap items-center justify-center gap-8">
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
             {platforms.map((platform) => {
               const label = REVIEW_PLATFORM_FIELDS.find((item) => item.id === platform.id)?.label || platform.id;
+              const source = REVIEW_SOURCES.find((item) => item.id === platform.id);
+              const matched = source
+                ? rated.filter((review) =>
+                    source.match.some((token) => pickString(review, ['source']).toLowerCase().includes(token))
+                  )
+                : [];
+              const rows = matched.length ? matched : rated;
+              const count = rows.length;
+              const score = count
+                ? rows.reduce((sum, review) => sum + pickNumber(review, ['rating'], 0), 0) / count
+                : 0;
+              const stars = Math.round(score);
+              const countLabel = count >= 100 ? '100+' : String(count);
               return (
                 <a
                   key={platform.id}
@@ -142,29 +161,39 @@ export default function TestimonialsSection() {
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-3 text-white hover:text-white"
-                  aria-label={`Read more ${label} reviews`}
+                  aria-label={
+                    count
+                      ? `${label} ${score.toFixed(1)} out of 5, based on ${countLabel} reviews`
+                      : `Read more ${label} reviews`
+                  }
                 >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5c518]">
-                    <ReviewPlatformLogo id={platform.id} />
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+                    <ReviewPlatformLogo id={platform.id} className="h-8 w-8" />
                   </span>
                   <span className="text-left">
-                    <span className="block text-lg font-bold leading-tight">{label}</span>
-                    <span className="block text-sm underline decoration-white/80 underline-offset-2">Read more reviews</span>
+                    {count ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg font-bold leading-none">{score.toFixed(1)}/5</span>
+                        <span className="inline-flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, starIndex) => (
+                            <Star
+                              key={starIndex}
+                              className={`h-4 w-4 ${starIndex < stars ? 'fill-[#f5c518] text-[#f5c518]' : 'text-white/35'}`}
+                            />
+                          ))}
+                        </span>
+                      </span>
+                    ) : null}
+                    <span className="mt-1 block text-sm underline decoration-white/80 underline-offset-2">
+                      {count ? `Based on ${countLabel} review${count === 1 ? '' : 's'}` : 'Read more reviews'}
+                    </span>
                   </span>
                 </a>
               );
             })}
           </div>
         ) : null}
-        {reviews.length ? (
-          <>
-            <div className="mb-8 text-center">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-sage">Testimonials</p>
-              <h2 className="font-serif text-2xl font-bold md:text-3xl">What Our Clients Say</h2>
-            </div>
-            <Carousel items={items} itemsPerView={{ sm: 1, md: 1, lg: 1 }} />
-          </>
-        ) : null}
+        {reviews.length ? <Carousel items={items} itemsPerView={{ sm: 1, md: 1, lg: 1 }} /> : null}
       </div>
     </section>
   );

@@ -245,7 +245,7 @@ export default function HomePageFields({
               <div key={platform.id}>
                 <FieldLabel>
                   <span className="inline-flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5c518]">
+                    <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-white px-1 ring-1 ring-[#e5e7eb]">
                       <ReviewPlatformLogo id={platform.id} className="h-5 w-5" />
                     </span>
                     {platform.label} link

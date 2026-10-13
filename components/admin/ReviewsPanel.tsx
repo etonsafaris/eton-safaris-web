@@ -243,7 +243,7 @@ export default function ReviewsPanel() {
             ))}
           </select>
           {draftId ? (
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+            <span className="flex h-14 min-w-14 shrink-0 items-center justify-center rounded-full bg-white px-2 shadow-sm ring-1 ring-[#e5e7eb]">
               <ReviewPlatformLogo id={draftId} />
             </span>
           ) : null}
@@ -270,8 +270,8 @@ export default function ReviewsPanel() {
               const label = REVIEW_PLATFORM_FIELDS.find((item) => item.id === platform.id)?.label || platform.id;
               return (
                 <li key={platform.id} className="flex items-center gap-3 rounded-xl border border-[#eef0f3] px-3 py-2">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
-                    <ReviewPlatformLogo id={platform.id} className="h-6 w-6" />
+                  <span className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full bg-white px-1.5 ring-1 ring-[#e5e7eb]">
+                    <ReviewPlatformLogo id={platform.id} className="h-7 w-7" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">{label}</span>
@@ -444,12 +444,13 @@ export default function ReviewsPanel() {
                   ))}
                 </select>
                 {REVIEW_PLATFORM_FIELDS.find((item) => item.label.toLowerCase() === form.source.toLowerCase()) ? (
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+                  <span className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full bg-white px-1.5 ring-1 ring-[#e5e7eb]">
                     <ReviewPlatformLogo
                       id={
                         REVIEW_PLATFORM_FIELDS.find((item) => item.label.toLowerCase() === form.source.toLowerCase())!
                           .id
                       }
+                      className="h-7 w-7"
                     />
                   </span>
                 ) : null}
