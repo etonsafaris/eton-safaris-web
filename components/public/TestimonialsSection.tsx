@@ -6,33 +6,10 @@ import Carousel from '@/components/public/Carousel';
 import { fetchCollectionRecords, pickNumber, pickStoredString, pickString } from '@/lib/data';
 import { useCmsLive } from '@/lib/cms-live';
 import { isWebsiteReview, reviewClickHref } from '@/lib/review-links';
-import { linkedReviewPlatforms, REVIEW_PLATFORM_FIELDS, type ReviewPlatformId } from '@/lib/home-page-content';
+import { linkedReviewPlatforms, REVIEW_PLATFORM_FIELDS } from '@/lib/home-page-content';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
+import ReviewPlatformLogo from '@/components/public/ReviewPlatformLogo';
 import type { RecordRow } from '@/lib/types';
-
-function PlatformMark({ id }: { id: ReviewPlatformId }) {
-  if (id === 'google') {
-    return (
-      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
-        <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7C21.7 18.7 23 15.8 23 12.3z" />
-        <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.2-6.9-5.1H1.3v3c2 4 6.1 6.7 10.7 6.7z" />
-        <path fill="#FBBC05" d="M5.1 14.3A7.2 7.2 0 0 1 4.7 12c0-.8.1-1.6.4-2.3v-3H1.3A12 12 0 0 0 0 12c0 1.9.5 3.8 1.3 5.3l3.8-3z" />
-        <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.3 2.7 1.3 6.7l3.8 3C6.1 7 8.8 4.8 12 4.8z" />
-      </svg>
-    );
-  }
-  if (id === 'tripadvisor') {
-    return (
-      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
-        <circle cx="8" cy="12" r="4.2" fill="#00AF87" />
-        <circle cx="16" cy="12" r="4.2" fill="#00AF87" />
-        <circle cx="8" cy="12" r="1.6" fill="#1a1a1a" />
-        <circle cx="16" cy="12" r="1.6" fill="#1a1a1a" />
-      </svg>
-    );
-  }
-  return <span className="text-sm font-black tracking-tight text-[#1a1a1a]">SB</span>;
-}
 
 function reviewAuthor(review: RecordRow) {
   return (
@@ -168,7 +145,7 @@ export default function TestimonialsSection() {
                   aria-label={`Read more ${label} reviews`}
                 >
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5c518]">
-                    <PlatformMark id={platform.id} />
+                    <ReviewPlatformLogo id={platform.id} />
                   </span>
                   <span className="text-left">
                     <span className="block text-lg font-bold leading-tight">{label}</span>

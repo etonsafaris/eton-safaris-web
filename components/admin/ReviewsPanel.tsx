@@ -5,12 +5,20 @@ import { Pencil, Star, Trash2, X } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { statusBadgeClass } from '@/components/admin/OpsRecordTable';
-import { deleteAdminRecord, fetchAdminTable } from '@/lib/admin-records-client';
+import { deleteAdminRecord, fetchAdminTable, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { pickDateValue, pickNumber, pickRecordId, pickString } from '@/lib/data';
 import { REVIEW_SOURCE_LABELS, isWebsiteReview, reviewClickHref } from '@/lib/review-links';
+import {
+  HOME_PAGE_SLUG,
+  homeContentWithReviewPlatforms,
+  parseHomePageContent,
+  REVIEW_PLATFORM_FIELDS,
+  type ReviewPlatformId,
+  type ReviewPlatformLink,
+} from '@/lib/home-page-content';
 import { buildSavePayload } from '@/lib/supabase-payload';
-import { saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
+import ReviewPlatformLogo from '@/components/public/ReviewPlatformLogo';
 import type { RecordRow } from '@/lib/types';
 
 type TabId = 'website' | 'external' | 'all';
@@ -33,6 +41,12 @@ export default function ReviewsPanel() {
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState('');
   const [pending, setPending] = useState<{ action: 'edit' | 'delete'; row: RecordRow } | null>(null);
+  const [homePage, setHomePage] = useState<RecordRow | null>(null);
+  const [platforms, setPlatforms] = useState<ReviewPlatformLink[]>([]);
+  const [draftId, setDraftId] = useState<ReviewPlatformId | ''>('');
+  const [draftUrl, setDraftUrl] = useState('');
+  const [linkSaving, setLinkSaving] = useState(false);
+  const [linkMessage, setLinkMessage] = useState('');
 
   async function load() {
     setError('');
@@ -52,7 +66,62 @@ export default function ReviewsPanel() {
 
   useEffect(() => {
     void load();
+    void loadReviewLinks();
   }, []);
+
+  async function loadReviewLinks() {
+    const params = new URLSearchParams({ 'eq.slug': HOME_PAGE_SLUG, limit: '1', select: '*' });
+    const response = await fetch(`/api/data/pages?${params}`, { cache: 'no-store', credentials: 'same-origin' });
+    const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
+    const page = body.data?.[0] || null;
+    setHomePage(page);
+    setPlatforms(page ? parseHomePageContent(page).reviewPlatforms : []);
+  }
+
+  async function persistPlatforms(next: ReviewPlatformLink[]) {
+    if (!homePage?.id) {
+      setLinkMessage('The Home page record is missing, so these links cannot be saved yet.');
+      return;
+    }
+    setLinkSaving(true);
+    setLinkMessage('');
+    const content = homeContentWithReviewPlatforms(homePage, next);
+    const result = await saveWithColumnFallback('pages', { content }, String(homePage.id));
+    setLinkSaving(false);
+    if (result.error) {
+      setLinkMessage(result.error.message);
+      return;
+    }
+    const saved = { ...homePage, content };
+    setHomePage(saved);
+    setPlatforms(next);
+    setLinkMessage('Saved. The logo now shows in the public testimonials section.');
+    await notifyAdminItemSaved({
+      module: 'Review',
+      action: 'updated',
+      item: { id: homePage.id, title: 'Review websites' },
+    });
+  }
+
+  function choosePlatform(id: ReviewPlatformId | '') {
+    setDraftId(id);
+    setDraftUrl(platforms.find((item) => item.id === id)?.url || '');
+    setLinkMessage('');
+  }
+
+  function addPlatformLink() {
+    if (!draftId) {
+      setLinkMessage('Select a review platform first.');
+      return;
+    }
+    const url = draftUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      setLinkMessage('Paste the full link, starting with https://');
+      return;
+    }
+    const next = [...platforms.filter((item) => item.id !== draftId), { id: draftId, url }];
+    void persistPlatforms(next);
+  }
 
   const websiteRows = useMemo(() => rows.filter(isWebsiteReview), [rows]);
   const externalRows = useMemo(() => rows.filter((row) => !isWebsiteReview(row)), [rows]);
@@ -154,6 +223,76 @@ export default function ReviewsPanel() {
           );
         })}
       </div>
+
+      <section className="mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#161b22]">
+        <h3 className="font-serif text-2xl font-bold text-[#111827] dark:text-white">Review websites</h3>
+        <p className="mt-1 max-w-3xl text-sm text-gray-500">
+          Choose a review platform, paste the page where guests read your reviews, and save. The logo appears as soon as you select the name, and that same logo is shown on the public testimonials section. A click there opens the review site.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+          <select
+            value={draftId}
+            onChange={(event) => choosePlatform(event.target.value as ReviewPlatformId | '')}
+            className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2.5 text-sm dark:bg-[#0d1117]"
+          >
+            <option value="">Select a review platform</option>
+            {REVIEW_PLATFORM_FIELDS.map((platform) => (
+              <option key={platform.id} value={platform.id}>
+                {platform.label}
+              </option>
+            ))}
+          </select>
+          {draftId ? (
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+              <ReviewPlatformLogo id={draftId} />
+            </span>
+          ) : null}
+          <input
+            type="url"
+            value={draftUrl}
+            onChange={(event) => setDraftUrl(event.target.value)}
+            placeholder={REVIEW_PLATFORM_FIELDS.find((item) => item.id === draftId)?.placeholder || 'https://'}
+            className="min-w-0 flex-1 rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm"
+          />
+          <button
+            type="button"
+            onClick={addPlatformLink}
+            disabled={linkSaving}
+            className="rounded-lg bg-[#00A651] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {linkSaving ? 'Saving…' : 'Save link'}
+          </button>
+        </div>
+        {linkMessage ? <p className="mt-3 text-sm text-[#374151] dark:text-gray-300">{linkMessage}</p> : null}
+        {platforms.length ? (
+          <ul className="mt-4 space-y-2">
+            {platforms.map((platform) => {
+              const label = REVIEW_PLATFORM_FIELDS.find((item) => item.id === platform.id)?.label || platform.id;
+              return (
+                <li key={platform.id} className="flex items-center gap-3 rounded-xl border border-[#eef0f3] px-3 py-2">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+                    <ReviewPlatformLogo id={platform.id} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{label}</span>
+                    <a href={platform.url} target="_blank" rel="noreferrer" className="block truncate text-xs text-[#00A651]">
+                      {platform.url}
+                    </a>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void persistPlatforms(platforms.filter((item) => item.id !== platform.id))}
+                    disabled={linkSaving}
+                    className="text-xs font-semibold text-red-500 disabled:opacity-60"
+                  >
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </section>
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
@@ -294,15 +433,27 @@ export default function ReviewsPanel() {
                 onChange={(event) => setForm({ ...form, rating: event.target.value })}
                 className="rounded-lg border px-3 py-2.5 text-sm"
               />
-              <select
-                value={form.source}
-                onChange={(event) => setForm({ ...form, source: event.target.value })}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-              >
-                {REVIEW_SOURCE_LABELS.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
+              <div className="flex items-center gap-3">
+                <select
+                  value={form.source}
+                  onChange={(event) => setForm({ ...form, source: event.target.value })}
+                  className="min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-sm"
+                >
+                  {REVIEW_SOURCE_LABELS.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+                {REVIEW_PLATFORM_FIELDS.find((item) => item.label.toLowerCase() === form.source.toLowerCase()) ? (
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
+                    <ReviewPlatformLogo
+                      id={
+                        REVIEW_PLATFORM_FIELDS.find((item) => item.label.toLowerCase() === form.source.toLowerCase())!
+                          .id
+                      }
+                    />
+                  </span>
+                ) : null}
+              </div>
               <input
                 value={form.source_url}
                 onChange={(event) => setForm({ ...form, source_url: event.target.value })}

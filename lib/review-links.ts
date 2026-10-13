@@ -9,6 +9,12 @@ export type ReviewSourceId =
   | 'travelstride'
   | 'safaripicked'
   | 'trustpilot'
+  | 'tourradar'
+  | 'getyourguide'
+  | 'viator'
+  | 'facebook'
+  | 'booking'
+  | 'trip'
   | 'website';
 
 export type ReviewSource = {
@@ -56,6 +62,42 @@ export const REVIEW_SOURCES: ReviewSource[] = [
     label: 'Trustpilot',
     match: ['trustpilot'],
     href: 'https://www.trustpilot.com/',
+  },
+  {
+    id: 'tourradar',
+    label: 'TourRadar',
+    match: ['tourradar', 'tour radar'],
+    href: 'https://www.tourradar.com/',
+  },
+  {
+    id: 'getyourguide',
+    label: 'GetYourGuide',
+    match: ['getyourguide', 'get your guide'],
+    href: 'https://www.getyourguide.com/',
+  },
+  {
+    id: 'viator',
+    label: 'Viator',
+    match: ['viator'],
+    href: 'https://www.viator.com/',
+  },
+  {
+    id: 'facebook',
+    label: 'Facebook',
+    match: ['facebook'],
+    href: 'https://www.facebook.com/',
+  },
+  {
+    id: 'booking',
+    label: 'Booking.com',
+    match: ['booking.com', 'booking'],
+    href: 'https://www.booking.com/',
+  },
+  {
+    id: 'trip',
+    label: 'Trip.com',
+    match: ['trip.com', 'trip.com'],
+    href: 'https://www.trip.com/',
   },
   {
     id: 'website',

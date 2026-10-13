@@ -1,6 +1,7 @@
 'use client';
 
 import { Mail, Phone, Trash2 } from 'lucide-react';
+import ReviewPlatformLogo from '@/components/public/ReviewPlatformLogo';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import {
   SOCIAL_NETWORKS,
@@ -235,14 +236,21 @@ export default function HomePageFields({
       <section className="rounded-xl border border-[#e5e7eb] bg-[#f8faf9] p-6">
         <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Review platforms</h2>
         <p className="mt-1 text-sm text-[#6b7280]">
-          Paste the page where guests read your Tripadvisor, Google, or SafariBookings reviews. A badge appears on the public testimonials section only after a link is saved, and a click opens that page.
+          These are the same review-site links as in Reviews. A logo is shown for each platform, and it appears on the public testimonials section only after a link is saved.
         </p>
         <div className="mt-5 space-y-4">
           {REVIEW_PLATFORM_FIELDS.map((platform) => {
             const current = reviewPlatforms.find((item) => item.id === platform.id)?.url || '';
             return (
               <div key={platform.id}>
-                <FieldLabel>{platform.label} link</FieldLabel>
+                <FieldLabel>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5c518]">
+                      <ReviewPlatformLogo id={platform.id} className="h-5 w-5" />
+                    </span>
+                    {platform.label} link
+                  </span>
+                </FieldLabel>
                 <input
                   type="url"
                   value={current}

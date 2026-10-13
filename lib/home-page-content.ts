@@ -1,6 +1,6 @@
 import { SITE, SOCIAL_LINKS } from '@/lib/collections';
 import { parseCmsPageExtras, type PageFaq } from '@/lib/cms-page-model';
-import { extractEmbeddedContent } from '@/lib/embedded-content';
+import { embedContent, extractEmbeddedContent } from '@/lib/embedded-content';
 import { pickString } from '@/lib/data';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import type { RecordRow } from '@/lib/types';
@@ -34,7 +34,19 @@ export const SOCIAL_NETWORKS = [
   { id: 'other', label: 'Other' },
 ] as const;
 
-export type ReviewPlatformId = 'tripadvisor' | 'google' | 'safaribookings';
+export type ReviewPlatformId =
+  | 'tripadvisor'
+  | 'google'
+  | 'safaribookings'
+  | 'trustpilot'
+  | 'travelstride'
+  | 'safaripicked'
+  | 'tourradar'
+  | 'getyourguide'
+  | 'viator'
+  | 'facebook'
+  | 'booking'
+  | 'trip';
 
 export type ReviewPlatformLink = {
   id: ReviewPlatformId;
@@ -43,8 +55,17 @@ export type ReviewPlatformLink = {
 
 export const REVIEW_PLATFORM_FIELDS: { id: ReviewPlatformId; label: string; placeholder: string }[] = [
   { id: 'tripadvisor', label: 'Tripadvisor', placeholder: 'https://www.tripadvisor.com/Attraction_Review-...' },
-  { id: 'google', label: 'Google', placeholder: 'https://www.google.com/maps/search/?api=1&query=Eton+Safaris' },
+  { id: 'google', label: 'Google', placeholder: 'https://www.google.com/maps/place/...' },
   { id: 'safaribookings', label: 'SafariBookings', placeholder: 'https://www.safaribookings.com/p...' },
+  { id: 'trustpilot', label: 'Trustpilot', placeholder: 'https://www.trustpilot.com/review/...' },
+  { id: 'travelstride', label: 'Travelstride', placeholder: 'https://www.travelstride.com/operators/...' },
+  { id: 'safaripicked', label: 'SafariPicked', placeholder: 'https://www.safaripicked.com/...' },
+  { id: 'tourradar', label: 'TourRadar', placeholder: 'https://www.tourradar.com/o/...' },
+  { id: 'getyourguide', label: 'GetYourGuide', placeholder: 'https://www.getyourguide.com/...' },
+  { id: 'viator', label: 'Viator', placeholder: 'https://www.viator.com/...' },
+  { id: 'facebook', label: 'Facebook', placeholder: 'https://www.facebook.com/.../reviews' },
+  { id: 'booking', label: 'Booking.com', placeholder: 'https://www.booking.com/hotel/...' },
+  { id: 'trip', label: 'Trip.com', placeholder: 'https://www.trip.com/...' },
 ];
 
 export type HomePageContent = {
@@ -222,6 +243,18 @@ export function parseReviewPlatforms(value: unknown): ReviewPlatformLink[] {
 
 export function linkedReviewPlatforms(content: Pick<HomePageContent, 'reviewPlatforms'>): ReviewPlatformLink[] {
   return (content.reviewPlatforms || []).filter((item) => /^https?:\/\//i.test(item.url));
+}
+
+/** Keep the rest of the Home page and replace only the review-platform links. */
+export function homeContentWithReviewPlatforms(record: RecordRow, links: ReviewPlatformLink[]): string {
+  const html = pickString(record, ['content', 'description', 'body', 'summary', 'excerpt']);
+  const embedded = extractEmbeddedContent(html);
+  const packed = homePageFieldPack({ ...parseHomePageContent(record), reviewPlatforms: links });
+  return embedContent(html, {
+    blocks: embedded.blocks,
+    itineraries: embedded.itineraries,
+    fields: { ...(embedded.fields || {}), ...packed },
+  });
 }
 
 export function publicSocials(content: Pick<HomePageContent, 'socials'>): SocialLink[] {
