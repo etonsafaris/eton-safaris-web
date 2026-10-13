@@ -7,8 +7,10 @@ import {
   newContactEmail,
   newContactPhone,
   newSocialLink,
+  REVIEW_PLATFORM_FIELDS,
   type ContactEmail,
   type ContactPhone,
+  type ReviewPlatformLink,
   type SocialLink,
 } from '@/lib/home-page-content';
 
@@ -22,22 +24,26 @@ export default function HomePageFields({
   emails,
   phones,
   socials,
+  reviewPlatforms,
   onFooterAbout,
   onContactAddress,
   onEmails,
   onPhones,
   onSocials,
+  onReviewPlatforms,
 }: {
   footerAbout: string;
   contactAddress: string;
   emails: ContactEmail[];
   phones: ContactPhone[];
   socials: SocialLink[];
+  reviewPlatforms: ReviewPlatformLink[];
   onFooterAbout: (value: string) => void;
   onContactAddress: (value: string) => void;
   onEmails: (value: ContactEmail[]) => void;
   onPhones: (value: ContactPhone[]) => void;
   onSocials: (value: SocialLink[]) => void;
+  onReviewPlatforms: (value: ReviewPlatformLink[]) => void;
 }) {
   function updateEmail(id: string, address: string) {
     onEmails(emails.map((email) => (email.id === id ? { ...email, address } : email)));
@@ -223,6 +229,34 @@ export default function HomePageFields({
               Add phone number
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-[#e5e7eb] bg-[#f8faf9] p-6">
+        <h2 className="font-serif text-2xl font-bold italic text-[#374151]">Review platforms</h2>
+        <p className="mt-1 text-sm text-[#6b7280]">
+          Paste the page where guests read your Tripadvisor, Google, or SafariBookings reviews. A badge appears on the public testimonials section only after a link is saved, and a click opens that page.
+        </p>
+        <div className="mt-5 space-y-4">
+          {REVIEW_PLATFORM_FIELDS.map((platform) => {
+            const current = reviewPlatforms.find((item) => item.id === platform.id)?.url || '';
+            return (
+              <div key={platform.id}>
+                <FieldLabel>{platform.label} link</FieldLabel>
+                <input
+                  type="url"
+                  value={current}
+                  onChange={(event) => {
+                    const url = event.target.value;
+                    const rest = reviewPlatforms.filter((item) => item.id !== platform.id);
+                    onReviewPlatforms(url.trim() ? [...rest, { id: platform.id, url }] : rest);
+                  }}
+                  className="w-full rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm outline-none focus:border-[#66bb9a]"
+                  placeholder={platform.placeholder}
+                />
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

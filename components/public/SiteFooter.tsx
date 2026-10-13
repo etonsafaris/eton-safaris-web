@@ -6,7 +6,7 @@ import { MapPin, Send } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { PUBLIC_SITE_LABELS, SITE } from '@/lib/collections';
+import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import PublicContactLines from '@/components/public/PublicContactLines';
 import {
   publicEmails,
@@ -76,7 +76,7 @@ export default function SiteFooter({ initialHome = null }: { initialHome?: HomeP
           <BrandLogo light size={72} />
           <h4 className="site-footer-title">About Us</h4>
           <p className="mt-1 text-base leading-relaxed text-white">
-            {home.footerAbout}
+            {home.ready ? home.footerAbout : ''}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {socialItems.map((link) => (
@@ -126,9 +126,11 @@ export default function SiteFooter({ initialHome = null }: { initialHome?: HomeP
         <div>
           <h4 className="site-footer-title">Contact Info</h4>
           <div className="mt-1 space-y-3 text-base text-white">
-            <p className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white" /> {home.contactAddress || SITE.address}
-            </p>
+            {home.ready && home.contactAddress ? (
+              <p className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white" /> {home.contactAddress}
+              </p>
+            ) : null}
             <PublicContactLines
               phones={phoneItems}
               emails={emailItems}

@@ -34,6 +34,19 @@ export const SOCIAL_NETWORKS = [
   { id: 'other', label: 'Other' },
 ] as const;
 
+export type ReviewPlatformId = 'tripadvisor' | 'google' | 'safaribookings';
+
+export type ReviewPlatformLink = {
+  id: ReviewPlatformId;
+  url: string;
+};
+
+export const REVIEW_PLATFORM_FIELDS: { id: ReviewPlatformId; label: string; placeholder: string }[] = [
+  { id: 'tripadvisor', label: 'Tripadvisor', placeholder: 'https://www.tripadvisor.com/Attraction_Review-...' },
+  { id: 'google', label: 'Google', placeholder: 'https://www.google.com/maps/search/?api=1&query=Eton+Safaris' },
+  { id: 'safaribookings', label: 'SafariBookings', placeholder: 'https://www.safaribookings.com/p...' },
+];
+
 export type HomePageContent = {
   footerAbout: string;
   contactAddress: string;
@@ -42,6 +55,7 @@ export type HomePageContent = {
   contactPhone: string;
   phones: ContactPhone[];
   socials: SocialLink[];
+  reviewPlatforms: ReviewPlatformLink[];
   faqs: PageFaq[];
   seoTitle: string;
   metaDescription: string;
@@ -56,6 +70,7 @@ export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   contactPhone: SITE.phoneDisplay,
   phones: [{ id: 'primary', number: SITE.phoneDisplay, call: true, whatsapp: true }],
   socials: Object.entries(SOCIAL_LINKS).map(([network, url]) => ({ id: network, network, url })),
+  reviewPlatforms: [],
   faqs: bestFaqsFor('home'),
   seoTitle: '',
   metaDescription: '',
@@ -182,6 +197,33 @@ export function publicEmails(content: Pick<HomePageContent, 'emails' | 'contactE
   return parseContactEmails(null, content.contactEmail);
 }
 
+export function parseReviewPlatforms(value: unknown): ReviewPlatformLink[] {
+  let source: unknown = value;
+  if (typeof source === 'string' && source.trim()) {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = null;
+    }
+  }
+  const allowed = new Set(REVIEW_PLATFORM_FIELDS.map((item) => item.id));
+  const rows = Array.isArray(source) ? source : [];
+  return rows
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const row = item as Record<string, unknown>;
+      const id = String(row.id || '').trim().toLowerCase() as ReviewPlatformId;
+      const url = String(row.url || row.href || '').trim();
+      if (!allowed.has(id) || !/^https?:\/\//i.test(url)) return null;
+      return { id, url };
+    })
+    .filter((item): item is ReviewPlatformLink => Boolean(item));
+}
+
+export function linkedReviewPlatforms(content: Pick<HomePageContent, 'reviewPlatforms'>): ReviewPlatformLink[] {
+  return (content.reviewPlatforms || []).filter((item) => /^https?:\/\//i.test(item.url));
+}
+
 export function publicSocials(content: Pick<HomePageContent, 'socials'>): SocialLink[] {
   const links = (content.socials || []).filter((link) => link.url.trim());
   return links.length ? links : DEFAULT_HOME_PAGE_CONTENT.socials.map((link) => ({ ...link }));
@@ -203,12 +245,9 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
     pickString(record || {}, ['content', 'description', 'body', 'summary', 'excerpt'])
   );
   const fields = embedded.fields || {};
-  const cmsFooterAbout = pickString(record || {}, ['footer_about'], fields.footer_about);
-  const cmsAddress = pickString(
-    record || {},
-    ['contact_address', 'footer_address'],
-    fields.contact_address || fields.footer_address
-  );
+  const savedFooter = savedHomeFooter(record);
+  const cmsFooterAbout = savedFooter.footerAbout;
+  const cmsAddress = savedFooter.contactAddress;
   const cmsEmail = pickString(record || {}, ['contact_email', 'footer_email'], fields.contact_email || fields.footer_email);
   const cmsPhone = pickString(
     record || {},
@@ -218,23 +257,62 @@ export function parseHomePageContent(record: RecordRow | null | undefined): Home
   const phones = parseContactPhones(fields.contact_phones || record?.contact_phones, cmsPhone);
   const emails = parseContactEmails(fields.contact_emails || record?.contact_emails, cmsEmail);
   const socials = parseSocialLinks(fields.social_links || record?.social_links);
+  const reviewPlatforms = parseReviewPlatforms(fields.review_platforms || record?.review_platforms);
 
   return {
     footerAbout: cmsFooterAbout || DEFAULT_HOME_PAGE_CONTENT.footerAbout,
-    contactAddress: cmsAddress || DEFAULT_HOME_PAGE_CONTENT.contactAddress,
+    contactAddress: cmsAddress,
     contactEmail: emails[0]?.address || cmsEmail || DEFAULT_HOME_PAGE_CONTENT.contactEmail,
     emails,
     contactPhone: phones[0]?.number || cmsPhone || DEFAULT_HOME_PAGE_CONTENT.contactPhone,
     phones,
     socials,
+    reviewPlatforms,
     faqs: limitFaqs(extras.faqs, bestFaqsFor('home')),
     seoTitle: pickString(record || {}, ['seo_title', 'og_title']),
     metaDescription: pickString(record || {}, ['meta_description', 'og_description']),
   };
 }
 
+function embeddedHomeFields(record: RecordRow | null | undefined): Record<string, string> {
+  const embedded = extractEmbeddedContent(
+    pickString(record || {}, ['content', 'description', 'body', 'summary', 'excerpt'])
+  );
+  return embedded.fields || {};
+}
+
+function firstSavedText(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    const text = String(value || '').trim();
+    if (text) return text;
+  }
+  return '';
+}
+
+/** The editor writes the latest footer into the page body. Prefer that over an older column. */
+export function savedHomeFooter(record: RecordRow | null | undefined): { footerAbout: string; contactAddress: string } {
+  const fields = embeddedHomeFields(record);
+  return {
+    footerAbout: firstSavedText(fields.footer_about, pickString(record || {}, ['footer_about'])),
+    contactAddress: firstSavedText(
+      fields.contact_address,
+      fields.footer_address,
+      pickString(record || {}, ['contact_address', 'footer_address'])
+    ),
+  };
+}
+
+export function homeFieldPresent(record: RecordRow | null | undefined, key: string): boolean {
+  if (!record) return false;
+  if (Object.prototype.hasOwnProperty.call(record, key) && String(record[key] ?? '').trim()) return true;
+  return Object.prototype.hasOwnProperty.call(embeddedHomeFields(record), key);
+}
+
 export function homePageFieldPack(
-  content: Pick<HomePageContent, 'footerAbout' | 'contactAddress' | 'contactEmail' | 'emails' | 'contactPhone' | 'phones' | 'socials'>
+  content: Pick<
+    HomePageContent,
+    'footerAbout' | 'contactAddress' | 'contactEmail' | 'emails' | 'contactPhone' | 'phones' | 'socials' | 'reviewPlatforms'
+  >
 ): Record<string, string> {
   const phones = (content.phones || []).filter((phone) => phone.number.trim());
   const emails = (content.emails || []).filter((email) => email.address.trim());
@@ -247,6 +325,9 @@ export function homePageFieldPack(
     contact_phone: phones[0]?.number || content.contactPhone,
     contact_phones: JSON.stringify(phones),
     social_links: JSON.stringify((content.socials || []).filter((link) => link.url.trim())),
+    review_platforms: JSON.stringify(
+      (content.reviewPlatforms || []).filter((item) => /^https?:\/\//i.test(item.url))
+    ),
     status: 'published',
   };
 }

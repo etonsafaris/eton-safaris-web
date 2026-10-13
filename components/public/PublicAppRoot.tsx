@@ -23,12 +23,15 @@ function isStaffRoute(pathname: string) {
 export default function PublicAppRoot({
   children,
   initialHome = null,
+  staffHost = false,
 }: {
   children: ReactNode;
   initialHome?: HomePageContent | null;
+  /** admin.etonsafaris.com rewrites `/` to the panel, so the browser path stays `/`. */
+  staffHost?: boolean;
 }) {
   const pathname = usePathname() || '/';
-  if (isStaffRoute(pathname)) return <>{children}</>;
+  if (staffHost || isStaffRoute(pathname)) return <>{children}</>;
   return (
     <HomePageContentProvider initial={initialHome}>
       <PublicErrorBoundary>

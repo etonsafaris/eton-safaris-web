@@ -840,6 +840,40 @@ export async function loadSafariUpdatesListingResilient(options?: { limit?: numb
   }
 }
 
+async function loadOtherAccommodations(item: RecordRow): Promise<RecordRow[]> {
+  const country = pickStoredString(item, ['country']);
+  const currentId = String(item.id || '');
+  const currentSlug = publicRecordSlug(item);
+  async function load(withCountry: boolean) {
+    const page = await withTimeout(
+      fetchCollectionPage('accommodations', [], {
+        limit: 12,
+        filters: withCountry && country ? { country } : undefined,
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    return (page.rows || [])
+      .filter((row) => isPubliclyVisibleRecord(row))
+      .filter((row) => {
+        const id = String(row.id || '');
+        const slug = publicRecordSlug(row);
+        if (currentId && id === currentId) return false;
+        if (currentSlug && slug === currentSlug) return false;
+        return Boolean(slug);
+      })
+      .slice(0, 8);
+  }
+  try {
+    const sameCountry = country ? await load(true) : [];
+    if (sameCountry.length) return sameCountry;
+    return await load(false);
+  } catch (error) {
+    console.warn('[Public] Other accommodations failed:', error);
+    return [];
+  }
+}
+
 async function loadAccommodationDetailLive(slug: string, synced = false) {
   try {
     const item = synced
@@ -858,9 +892,10 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
           [] as RecordRow[]
         )
       : [];
+    const others = published ? await loadOtherAccommodations(published) : [];
     return toClientProps({
       item: published,
-      others: [] as RecordRow[],
+      others,
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {
@@ -880,7 +915,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
   if (!normalized) return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   try {
     return await cachedPublic(
-      ['accommodation-detail-sync-v9-seo-only', normalized],
+      ['accommodation-detail-sync-v10-other-stays', normalized],
       ['collection:accommodations', `accommodation:${normalized}`],
       async () => {
         const loaded = await loadAccommodationDetailLive(normalized, true);

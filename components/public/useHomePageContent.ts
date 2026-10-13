@@ -8,9 +8,45 @@ import type { RecordRow } from '@/lib/types';
 import {
   DEFAULT_HOME_PAGE_CONTENT,
   HOME_PAGE_SLUG,
+  homeFieldPresent,
   parseHomePageContent,
+  savedHomeFooter,
   type HomePageContent,
+  type ReviewPlatformLink,
 } from '@/lib/home-page-content';
+
+const FOOTER_STORE = 'eton-saved-home-footer';
+
+type StoredFooter = {
+  footerAbout: string;
+  contactAddress: string;
+  reviewPlatforms: ReviewPlatformLink[];
+};
+
+function readStoredFooter(): StoredFooter {
+  if (typeof sessionStorage === 'undefined') {
+    return { footerAbout: '', contactAddress: '', reviewPlatforms: [] };
+  }
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(FOOTER_STORE) || '') as StoredFooter;
+    return {
+      footerAbout: String(parsed?.footerAbout || ''),
+      contactAddress: String(parsed?.contactAddress || ''),
+      reviewPlatforms: Array.isArray(parsed?.reviewPlatforms) ? parsed.reviewPlatforms : [],
+    };
+  } catch {
+    return { footerAbout: '', contactAddress: '', reviewPlatforms: [] };
+  }
+}
+
+function writeStoredFooter(value: StoredFooter) {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    sessionStorage.setItem(FOOTER_STORE, JSON.stringify(value));
+  } catch {
+    /* private mode */
+  }
+}
 
 const HomePageContentContext = createContext<HomePageContent | null>(null);
 
@@ -66,6 +102,11 @@ export function useHomePageContent(initial?: HomePageContent | null) {
   const prevLive = useRef(live);
   const [content, setContent] = useState<HomePageContent>(seed ?? DEFAULT_HOME_PAGE_CONTENT);
   const [ready, setReady] = useState(Boolean(seed));
+  const keptFooter = useRef<{ footerAbout: string; contactAddress: string }>({
+    footerAbout: seed?.footerAbout && seed.footerAbout !== DEFAULT_HOME_PAGE_CONTENT.footerAbout ? seed.footerAbout : '',
+    contactAddress:
+      seed?.contactAddress && seed.contactAddress !== DEFAULT_HOME_PAGE_CONTENT.contactAddress ? seed.contactAddress : '',
+  });
 
   useEffect(() => {
     const isLiveUpdate = live !== prevLive.current;
@@ -78,26 +119,55 @@ export function useHomePageContent(initial?: HomePageContent | null) {
       .then(async (row) => {
         if (cancelled) return;
         if (row && isPublishedRecord(row)) {
-          const savedBody = String(
-            row.content ||
-              row.description ||
-              row.body ||
-              row.footer_about ||
-              row.contact_address ||
-              row.contact_email ||
-              row.contact_emails ||
-              ''
-          );
-          if (savedBody.trim() || !seed) setContent(parseHomePageContent(row));
-        } else if (!seed) {
-          setContent(DEFAULT_HOME_PAGE_CONTENT);
+          const saved = savedHomeFooter(row);
+          const stored = readStoredFooter();
+          if (saved.footerAbout) keptFooter.current.footerAbout = saved.footerAbout;
+          if (saved.contactAddress) keptFooter.current.contactAddress = saved.contactAddress;
+          const parsed = parseHomePageContent(row);
+          const footerAbout = saved.footerAbout || keptFooter.current.footerAbout || stored.footerAbout || parsed.footerAbout;
+          const contactAddress = saved.contactAddress || keptFooter.current.contactAddress || stored.contactAddress;
+          const reviewPlatforms = homeFieldPresent(row, 'review_platforms')
+            ? parsed.reviewPlatforms
+            : stored.reviewPlatforms.length
+              ? stored.reviewPlatforms
+              : parsed.reviewPlatforms;
+          if (footerAbout || contactAddress || reviewPlatforms.length) {
+            writeStoredFooter({ footerAbout, contactAddress, reviewPlatforms });
+          }
+          setContent({
+            ...parsed,
+            footerAbout,
+            contactAddress,
+            reviewPlatforms,
+          });
+        } else if (!seed && !keptFooter.current.contactAddress && !keptFooter.current.footerAbout) {
+          const stored = readStoredFooter();
+          setContent({
+            ...DEFAULT_HOME_PAGE_CONTENT,
+            footerAbout: stored.footerAbout || DEFAULT_HOME_PAGE_CONTENT.footerAbout,
+            contactAddress: stored.contactAddress,
+            reviewPlatforms: stored.reviewPlatforms,
+          });
         }
         setReady(true);
       })
       .catch((error) => {
         console.error('[CMS] Home page content load failed:', error);
         if (!cancelled) {
-          setContent(seed ?? DEFAULT_HOME_PAGE_CONTENT);
+          const stored = readStoredFooter();
+          setContent((current) => {
+            const base = seed ?? current;
+            const contactAddress =
+              keptFooter.current.contactAddress ||
+              stored.contactAddress ||
+              (base.contactAddress !== DEFAULT_HOME_PAGE_CONTENT.contactAddress ? base.contactAddress : '');
+            return {
+              ...base,
+              footerAbout: keptFooter.current.footerAbout || stored.footerAbout || base.footerAbout,
+              contactAddress,
+              reviewPlatforms: base.reviewPlatforms.length ? base.reviewPlatforms : stored.reviewPlatforms,
+            };
+          });
           setReady(true);
         }
       });

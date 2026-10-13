@@ -4,7 +4,6 @@ import { Home } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import PublicContactLines from '@/components/public/PublicContactLines';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
-import { SITE } from '@/lib/collections';
 import { publicEmails, publicPhones } from '@/lib/home-page-content';
 
 type PaymentPortalShellProps = {
@@ -94,7 +93,7 @@ export default function PaymentPortalShell({ step, children }: PaymentPortalShel
           <div className="mt-4 flex flex-col gap-3">
             <p className="inline-flex items-center gap-2">
               <Home className="h-4 w-4 text-[#8f2742]" />
-              {home.contactAddress || SITE.address}
+              {home.ready ? home.contactAddress : ''}
             </p>
             <PublicContactLines
               phones={phones}

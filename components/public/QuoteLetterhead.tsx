@@ -65,7 +65,7 @@ export function QuoteContactFooter() {
         </a>
         <div className="inline-flex items-start gap-2">
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D56A]" />
-          <span>{home.contactAddress || SITE.address}</span>
+          <span>{home.ready ? home.contactAddress : ''}</span>
         </div>
       </div>
     </footer>

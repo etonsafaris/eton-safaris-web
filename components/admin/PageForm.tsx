@@ -36,6 +36,7 @@ import {
   parseHomePageContent,
   type ContactEmail,
   type ContactPhone,
+  type ReviewPlatformLink,
   type SocialLink,
 } from '@/lib/home-page-content';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
@@ -132,6 +133,7 @@ function PageFormInner({ pageId }: PageFormProps) {
   const [emails, setEmails] = useState<ContactEmail[]>(DEFAULT_HOME_PAGE_CONTENT.emails);
   const [phones, setPhones] = useState<ContactPhone[]>(DEFAULT_HOME_PAGE_CONTENT.phones);
   const [socials, setSocials] = useState<SocialLink[]>(DEFAULT_HOME_PAGE_CONTENT.socials);
+  const [reviewPlatforms, setReviewPlatforms] = useState<ReviewPlatformLink[]>([]);
 
   useEffect(() => {
     if (!pageId) return;
@@ -167,6 +169,7 @@ function PageFormInner({ pageId }: PageFormProps) {
         setEmails(home.emails);
         setPhones(home.phones);
         setSocials(home.socials);
+        setReviewPlatforms(home.reviewPlatforms);
         setBlocks([]);
       } else {
         const canonical =
@@ -233,6 +236,7 @@ function PageFormInner({ pageId }: PageFormProps) {
             contactPhone: phones.find((phone) => phone.number.trim())?.number || '',
             phones,
             socials,
+            reviewPlatforms,
           })
         : null;
     const extras = cmsPageFieldPack({
@@ -256,6 +260,14 @@ function PageFormInner({ pageId }: PageFormProps) {
       {
         title: layout === 'home' ? 'Home Page' : title,
         slug,
+        ...(homePack
+          ? {
+              footer_about: homePack.footer_about,
+              contact_address: homePack.contact_address,
+              contact_email: homePack.contact_email,
+              contact_phone: homePack.contact_phone,
+            }
+          : {}),
         image_url: featuredImage.startsWith('blob:') ? '' : featuredImage,
         excerpt: extras.excerpt,
         layout: extras.layout,
@@ -346,6 +358,7 @@ function PageFormInner({ pageId }: PageFormProps) {
                   setEmails(DEFAULT_HOME_PAGE_CONTENT.emails.map((email) => ({ ...email })));
                   setPhones(DEFAULT_HOME_PAGE_CONTENT.phones.map((phone) => ({ ...phone })));
                   setSocials(DEFAULT_HOME_PAGE_CONTENT.socials.map((link) => ({ ...link })));
+                  setReviewPlatforms([]);
                 }
                 if (next === 'community') {
                   setBlocks((current) => (current.length ? current : mergeCommunityInitiativeBlocks([])));
@@ -380,6 +393,8 @@ function PageFormInner({ pageId }: PageFormProps) {
               onEmails={setEmails}
               onPhones={setPhones}
               onSocials={setSocials}
+              reviewPlatforms={reviewPlatforms}
+              onReviewPlatforms={setReviewPlatforms}
             />
             <div className="mt-8">
               <FaqEditor

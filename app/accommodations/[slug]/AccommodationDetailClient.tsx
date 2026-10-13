@@ -10,6 +10,7 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
@@ -17,6 +18,7 @@ import {
   isPublishedRecord,
   pickStoredString,
   pickString,
+  publicRecordSlug,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -29,7 +31,7 @@ import type { RecordRow } from '@/lib/types';
 export default function AccommodationDetailClient({
   embedded = false,
   initialItem = null,
-  initialOthers: _initialOthers = [],
+  initialOthers = [],
   initialTours = [],
 }: {
   embedded?: boolean;
@@ -42,13 +44,15 @@ export default function AccommodationDetailClient({
   const slug = params?.slug || '';
   const [item, setItem] = useState<RecordRow | null>(initialItem);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const live = useCmsLive();
   const serverGate = useServerRecordGate(initialItem);
 
   useEffect(() => {
     setItem(initialItem);
     setTours(initialTours);
-  }, [initialItem, initialTours]);
+    if (initialOthers.length) setOthers(initialOthers);
+  }, [initialItem, initialOthers, initialTours]);
 
   useEffect(() => {
     if (serverGate.current && live === 0) return;
@@ -79,6 +83,48 @@ export default function AccommodationDetailClient({
     }
     void load();
   }, [slug, live, router, serverGate]);
+
+  useEffect(() => {
+    if (others.length) return;
+    const country = item ? pickStoredString(item, ['country']) : '';
+    let cancelled = false;
+    const currentId = String(item?.id || '');
+    const currentSlug = item ? publicRecordSlug(item) : slug;
+    const keep = (rows: RecordRow[]) =>
+      rows
+        .filter((row) => isPublishedRecord(row))
+        .filter((row) => {
+          const id = String(row.id || '');
+          const staySlug = publicRecordSlug(row);
+          if (currentId && id === currentId) return false;
+          if (currentSlug && staySlug === currentSlug) return false;
+          return Boolean(staySlug);
+        })
+        .slice(0, 8);
+    fetchCollectionPage('accommodations', [], {
+      limit: 12,
+      filters: country ? { country } : undefined,
+    })
+      .then(async (page) => {
+        if (cancelled) return;
+        let rows = keep(page.rows || []);
+        if (!rows.length && country) {
+          const broader = await fetchCollectionPage('accommodations', [], { limit: 12 });
+          if (!cancelled) rows = keep(broader.rows || []);
+        }
+        if (rows.length) setOthers(rows);
+      })
+      .catch((error) => console.error('[Accommodation detail] Other stays failed:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [item, others.length, slug]);
+
+  const otherCards = others.map((row) => ({
+    href: `/accommodations/${publicRecordSlug(row)}`,
+    image: getRecordImage(row),
+    title: getRecordTitle(row),
+  }));
 
   const nationalParkLabel = accommodationNationalParkDisplay(item);
 
@@ -117,7 +163,8 @@ export default function AccommodationDetailClient({
         hideMeta
         country={pickString(item, ['country'])}
         sidebarTitle="Other Accommodations"
-        sidebarItems={[]}
+        sidebarItems={otherCards}
+        sidebarAlways
         below={
           <AmazingSafaris
             tours={tours}

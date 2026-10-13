@@ -5,7 +5,6 @@ import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SpeakToExpertCard from '@/components/public/SpeakToExpertCard';
 import PublicContactLines from '@/components/public/PublicContactLines';
-import { SITE } from '@/lib/collections';
 import SocialBrandIcon from '@/components/public/SocialBrandIcon';
 import { useHomePageContent } from '@/components/public/useHomePageContent';
 import { publicEmails, publicPhones, publicSocials } from '@/lib/home-page-content';
@@ -87,7 +86,7 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
   const socialItems = publicSocials(home);
   const phoneItems = publicPhones(home);
   const emailItems = publicEmails(home);
-  const mapAddress = home.contactAddress || SITE.address;
+  const mapAddress = home.ready ? home.contactAddress : '';
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress)}&z=15&output=embed`;
 
   return (
@@ -226,7 +225,7 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Address</h5>
                   <p className="pl-2.5 text-base text-[#343434]">
-                    {home.contactAddress || 'Wakiso District, Central Region, Uganda'}
+                    {home.ready ? home.contactAddress : ''}
                   </p>
                 </div>
               </div>

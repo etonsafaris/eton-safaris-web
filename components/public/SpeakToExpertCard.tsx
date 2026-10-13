@@ -84,7 +84,7 @@ export default function SpeakToExpertCard({
       <div className="mb-4 flex flex-col gap-2 text-left">
         <div className="flex items-start gap-2 text-xs text-[#444]">
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage" />
-          <span>{home.contactAddress || 'Wakiso District, Uganda'}</span>
+          <span>{home.ready ? home.contactAddress : ''}</span>
         </div>
         <PublicContactLines
           phones={phones}
