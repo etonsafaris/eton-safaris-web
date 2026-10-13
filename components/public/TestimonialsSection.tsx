@@ -39,18 +39,26 @@ export default function TestimonialsSection() {
   const home = useHomePageContent();
   const platforms = linkedReviewPlatforms(home);
   const [reviews, setReviews] = useState<RecordRow[]>([]);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
-    fetchCollectionRecords('reviews')
-      .then((rows) => {
+    function realRows(rows: RecordRow[]) {
+      return rows.filter((review) => review.is_sample !== true && String(review.is_sample) !== 'true');
+    }
+    Promise.all([
+      fetchCollectionRecords('reviews'),
+      fetchCollectionRecords('external_client_review', [], { columns: 'id,is_sample' }).catch(() => [] as RecordRow[]),
+    ])
+      .then(([siteReviews, externalReviews]) => {
         // Website reviews with a guest name first so name + country of residence are visible.
-        const sorted = rows.slice().sort((a, b) => {
+        const sorted = siteReviews.slice().sort((a, b) => {
           const aWeb = isWebsiteReview(a) ? 0 : 1;
           const bWeb = isWebsiteReview(b) ? 0 : 1;
           if (aWeb !== bWeb) return aWeb - bWeb;
           return 0;
         });
         setReviews(sorted);
+        setReviewCount(realRows(siteReviews).length + realRows(externalReviews).length);
       })
       .catch((error) => console.error('[Supabase] Failed to load testimonials:', error));
   }, [live]);
@@ -146,7 +154,7 @@ export default function TestimonialsSection() {
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-3 text-white hover:text-white"
-                  aria-label={`${label} 4.9 out of 5, based on 100+ reviews`}
+                  aria-label={`${label} 4.9 out of 5, based on ${reviewCount} review${reviewCount === 1 ? '' : 's'}`}
                 >
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f5c518]">
                     <ReviewPlatformLogo id={platform.id} className="h-8 w-8" />
@@ -161,7 +169,7 @@ export default function TestimonialsSection() {
                       </span>
                     </span>
                     <span className="mt-1 block text-sm underline decoration-white underline-offset-2">
-                      Based on 100+ reviews
+                      Based on {reviewCount} review{reviewCount === 1 ? '' : 's'}
                     </span>
                   </span>
                 </a>

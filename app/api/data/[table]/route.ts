@@ -22,6 +22,7 @@ const TABLES = new Set([
   'pages',
   'landing_pages',
   'reviews',
+  'external_client_review',
   'bookings',
   'pesapal_payments',
 ]);
