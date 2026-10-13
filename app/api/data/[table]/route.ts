@@ -38,6 +38,8 @@ const HEAVY_TABLES = new Set([
 ]);
 
 const identifier = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+/** Successful ORDER BY per table, so the next read does not probe missing columns. */
+const publicOrderCache = new Map<string, string>();
 
 function missingSelectColumn(message?: string) {
   const text = String(message || '');
@@ -76,40 +78,26 @@ export async function GET(
     : Math.min(Number(url.searchParams.get('limit') || defaultLimit), maxLimit);
   const offset = range ? Number(range[1]) : 0;
 
-  let columns = requested
-    ? requested === '*'
-      ? '*'
-      : requested
+  const keyedRow = ['eq.id', 'eq.slug', 'eq.seo_slug'].some((key) => url.searchParams.has(key));
+  // One row: SELECT * returns only real columns. Guessing a column list retries the database once per missing name.
+  let columns = keyedRow
+    ? '*'
+    : requested && requested !== '*'
+      ? requested
           .split(',')
           .map((column) => column.trim())
           .filter((column) => identifier.test(column))
           .join(', ')
-    : listColumns || '*';
-  columns = columns
-    .split(',')
-    .map((column) => column.trim())
-    .filter((column) => column && column !== 'seo_schema' && column !== '*')
-    .join(', ');
-  if (!columns) columns = listColumns || 'id';
-  if (!columns) return NextResponse.json({ error: 'Invalid select columns' }, { status: 400 });
-  const keyedRow = ['eq.id', 'eq.slug', 'eq.seo_slug'].some((key) => url.searchParams.has(key));
-  if (keyedRow) {
-    const pageBody =
-      table === 'pages' || table === 'landing_pages'
-        ? 'content,description,body,excerpt,page_blocks,blocks,layout,image_url,cover_image,featured_image,social_image_url,hero_title,subtitle,faqs,status,video_url,destinations,cta_label,cta_href,footer_about,contact_address,contact_email,contact_emails,contact_phone,contact_phones,social_links,published_at'
-        : 'description,content,excerpt,description_title,highlights,price_includes,price_excludes,journey_details,journey_map_url,itinerary,itineraries,tagline,headline,hero_title,cover_image,featured_image';
-    const have = new Set(
-      columns
-        .split(',')
-        .map((column) => column.trim())
-        .filter(Boolean)
-    );
-    const extra = pageBody
+      : listColumns || '*';
+  if (columns !== '*') {
+    columns = columns
       .split(',')
       .map((column) => column.trim())
-      .filter((column) => column && !have.has(column));
-    if (extra.length) columns = `${columns},${extra.join(',')}`;
+      .filter((column) => column && column !== 'seo_schema')
+      .join(', ');
   }
+  if (!columns) columns = listColumns || 'id';
+  if (!columns) return NextResponse.json({ error: 'Invalid select columns' }, { status: 400 });
 
   const params: unknown[] = [];
   const conditions: string[] = [];
@@ -122,6 +110,8 @@ export async function GET(
 
   const order = url.searchParams.get('order');
   const orderClauses: string[] = [];
+  const rememberedOrder = publicOrderCache.get(table);
+  if (rememberedOrder) orderClauses.push(rememberedOrder);
   if (order) {
     const match = /^([a-zA-Z_][a-zA-Z0-9_]*)(?:\.(asc|desc))?$/.exec(order);
     if (match && identifier.test(match[1])) {
@@ -129,8 +119,6 @@ export async function GET(
     }
   }
   for (const clause of [
-    ' ORDER BY published_at DESC',
-    ' ORDER BY publish_date DESC',
     ' ORDER BY created_date DESC',
     ' ORDER BY created_at DESC',
     ' ORDER BY id DESC',
@@ -152,6 +140,7 @@ export async function GET(
               `SELECT ${columns} FROM ${table}${whereSql}${orderSql} OFFSET ${offset} LIMIT ${limit}`,
               params
             );
+            publicOrderCache.set(table, orderSql);
             lastError = null;
             break;
           } catch (error) {
@@ -197,9 +186,10 @@ export async function GET(
         { data: result.rows, total },
         {
           headers: {
-            'Cache-Control': singleRow
-              ? 'private, no-store'
-              : 'public, s-maxage=120, stale-while-revalidate=300',
+            'Cache-Control':
+              singleRow && table !== 'pages' && table !== 'landing_pages' && table !== 'countries'
+                ? 'private, no-store'
+                : 'public, s-maxage=120, stale-while-revalidate=300',
           },
         }
       );

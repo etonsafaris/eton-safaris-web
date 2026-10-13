@@ -211,6 +211,8 @@ function orderSqlCandidates(table: string): string[] {
   return ['"created_date"', '"created_at"', '"published_at"', '"publish_date"', '"id"'];
 }
 
+const listShapeCache = new Map<string, { columns: string; orderSql: string }>();
+
 async function runListQuery(
   client: PoolClient,
   table: string,
@@ -224,16 +226,25 @@ async function runListQuery(
   const quoted = quoteTable(table);
   const off = params.length + 1;
   const lim = params.length + 2;
+  const dataRes = await client.query(
+    `SELECT ${columns}, COUNT(*) OVER()::int AS __total FROM ${quoted}${whereSql} ORDER BY ${orderSql} DESC NULLS LAST OFFSET $${off} LIMIT $${lim}`,
+    [...params, offset, limit]
+  );
+  const raw = dataRes.rows as RecordRow[];
+  if (raw.length) {
+    const total = Number(raw[0].__total || raw.length);
+    const rows = raw.map((row) => {
+      const next = { ...row };
+      delete next.__total;
+      return next;
+    });
+    return { rows, total };
+  }
   const countRes = await client.query<{ total: number }>(
     `SELECT COUNT(*)::int AS total FROM ${quoted}${whereSql}`,
     params
   );
-  const total = Number(countRes.rows[0]?.total || 0);
-  const dataRes = await client.query(
-    `SELECT ${columns} FROM ${quoted}${whereSql} ORDER BY ${orderSql} DESC NULLS LAST OFFSET $${off} LIMIT $${lim}`,
-    [...params, offset, limit]
-  );
-  return { rows: dataRes.rows as RecordRow[], total };
+  return { rows: [] as RecordRow[], total: Number(countRes.rows[0]?.total || 0) };
 }
 
 /**
@@ -253,8 +264,13 @@ export async function queryAdminTablePage(
     Math.max(1, options.limit ?? ADMIN_PAGE_SIZE_DEFAULT)
   );
   const offset = Math.max(0, options.offset ?? 0);
-  let columns = options.columns || adminListColumnsFor(table) || '*';
-  const orderColumns = orderSqlCandidates(table);
+  const requestedColumns = options.columns || adminListColumnsFor(table) || '*';
+  const shapeKey = `${table}|${requestedColumns}`;
+  const remembered = listShapeCache.get(shapeKey);
+  let columns = remembered?.columns || requestedColumns;
+  const orderColumns = remembered
+    ? [remembered.orderSql, ...orderSqlCandidates(table).filter((sql) => sql !== remembered.orderSql)]
+    : orderSqlCandidates(table);
   let activeFilters = options.filters;
   let where = buildWhere(activeFilters, table);
 
@@ -265,7 +281,7 @@ export async function queryAdminTablePage(
           let droppedColumn = false;
           for (const orderSql of orderColumns) {
             try {
-              return await runListQuery(
+              const page = await runListQuery(
                 client,
                 table,
                 columns,
@@ -275,6 +291,8 @@ export async function queryAdminTablePage(
                 offset,
                 limit
               );
+              listShapeCache.set(shapeKey, { columns, orderSql });
+              return page;
             } catch (error) {
               const detail = error instanceof Error ? error.message : String(error);
               if (activeFilters?.postType && /post_type/i.test(detail) && /does not exist/i.test(detail)) {

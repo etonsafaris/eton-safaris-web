@@ -1,3 +1,6 @@
+const path = require('path');
+const webpack = require('webpack');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -32,6 +35,15 @@ const nextConfig = {
         'pg-native': false,
         postgres: false,
       };
+      // The public site imports record helpers from lib/data. That file also
+      // re-exports the database loader. Keep the database module off the browser
+      // bundle so the homepage does not evaluate server-only webpack modules.
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          /(?:^|[\\/])data-server(?:\.tsx?)?$/,
+          path.join(__dirname, 'lib', 'data-server-browser.ts')
+        )
+      );
     }
     return config;
   },

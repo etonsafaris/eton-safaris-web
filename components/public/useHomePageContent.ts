@@ -25,7 +25,19 @@ export function HomePageContentProvider({
   return createElement(HomePageContentContext.Provider, { value: initial ?? null }, children);
 }
 
+const HOME_PAGE_INFLIGHT = '__etonHomePageRecord';
+
 async function fetchHomePageRecord(): Promise<RecordRow | null> {
+  const slot = globalThis as typeof globalThis & { [HOME_PAGE_INFLIGHT]?: Promise<RecordRow | null> | null };
+  if (slot[HOME_PAGE_INFLIGHT]) return slot[HOME_PAGE_INFLIGHT];
+  const pending = loadHomePageRecord().finally(() => {
+    if (slot[HOME_PAGE_INFLIGHT] === pending) slot[HOME_PAGE_INFLIGHT] = null;
+  });
+  slot[HOME_PAGE_INFLIGHT] = pending;
+  return pending;
+}
+
+async function loadHomePageRecord(): Promise<RecordRow | null> {
   const params = new URLSearchParams({
     'eq.slug': HOME_PAGE_SLUG,
     limit: '1',

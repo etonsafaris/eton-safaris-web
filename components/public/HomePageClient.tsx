@@ -237,19 +237,29 @@ export default function HomePageClient({
   return (
     <>
       {current?.image ? (
-        <section className="relative h-[500px] overflow-hidden bg-[#141612] md:h-[600px]">
-          <HomePageImage
-            key={current.image}
-            src={current.image}
-            alt={current?.title ? String(current.title) : 'Eton Safaris destination'}
-            variant="hero"
-            priority={true}
-            quality={85}
-            sizes="100vw"
-            width={1440}
-            height={900}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+        <section
+          className="relative h-[500px] overflow-hidden bg-white md:h-[600px]"
+          style={{
+            backgroundImage: `url("${current.image}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {heroSlides.map((item, index) =>
+            item.image ? (
+              <img
+                key={item.href || item.image}
+                src={item.image}
+                alt=""
+                width={1440}
+                height={900}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                loading="eager"
+                className={`absolute inset-0 h-full w-full object-cover ${index === slide ? 'z-10 opacity-100' : 'opacity-0'}`}
+              />
+            ) : null
+          )}
           <div className="pointer-events-none absolute inset-0 bg-black/20" />
           <button
             type="button"
