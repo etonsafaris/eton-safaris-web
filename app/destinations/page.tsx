@@ -1,6 +1,7 @@
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadDestinationsIndexCountries } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -18,6 +19,7 @@ export default async function DestinationsIndexPage() {
   try {
     countries = await loadDestinationsIndexCountries();
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Destinations index failed:', error);
   }
   return (

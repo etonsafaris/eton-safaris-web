@@ -1,12 +1,10 @@
 import { Metadata } from 'next';
-import { unstable_noStore as noStore } from 'next/cache';
 import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { countrySlugFromLanding, destinationPublicPath, publicSlugFromInput } from '@/lib/cms-routes';
-import { isCountryPageShellCountry } from '@/lib/country-heroes';
-import { isDedicatedLandingCountry } from '@/lib/cms-routes';
+import { countrySlugFromLanding, destinationPublicPath, isDedicatedLandingCountry, publicSlugFromInput } from '@/lib/cms-routes';
 import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
@@ -34,6 +32,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   try {
     return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Destination metadata failed:', slug, error);
     return { title: `${slug} | Eton Safaris`, robots: { index: false, follow: false } };
   }
@@ -47,13 +46,13 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   try {
     data = await loadCountryPageDataResilient(slug);
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Destination page load failed:', slug, error);
     permanentRedirect('/destinations');
   }
   if (!data?.country) permanentRedirect('/destinations');
 
   const country = data.country;
-  if (isCountryPageShellCountry(country) || !data.tours?.length) noStore();
   return (
     <>
       <PublicShellServer>

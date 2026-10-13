@@ -4,7 +4,7 @@ import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadStaticTourParams, loadTourDetailSynced } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
-import { safePublicDetailLoad } from '@/lib/safe-public-load';
+import { rethrowDynamicServerError, safePublicDetailLoad } from '@/lib/safe-public-load';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     return await publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Tour metadata failed:', params.slug, error);
     return { title: 'Tour | Eton Safaris', robots: { index: false, follow: false } };
   }

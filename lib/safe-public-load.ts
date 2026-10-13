@@ -1,5 +1,17 @@
 import type { RecordRow } from '@/lib/types';
 
+/** Next turns a caught static-render bailout into a 500. Let that error through. */
+export function rethrowDynamicServerError(error: unknown): void {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'digest' in error &&
+    (error as { digest?: unknown }).digest === 'DYNAMIC_SERVER_USAGE'
+  ) {
+    throw error;
+  }
+}
+
 export function logPublicLoadWarning(scope: string, error: unknown, detail?: string) {
   const msg = error instanceof Error ? error.message : String(error);
   console.warn(`[Public] ${scope}${detail ? ` (${detail})` : ''}:`, msg);
@@ -14,6 +26,7 @@ export async function safePublicLoad<T>(
   try {
     return await loader();
   } catch (error) {
+    rethrowDynamicServerError(error);
     logPublicLoadWarning(scope, error, detail);
     return fallback;
   }
@@ -28,6 +41,7 @@ export async function safePublicDetailLoad<T>(
   try {
     return await loader();
   } catch (error) {
+    rethrowDynamicServerError(error);
     logPublicLoadWarning(scope, error, detail);
     return null;
   }

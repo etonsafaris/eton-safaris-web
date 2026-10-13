@@ -58,7 +58,7 @@ import {
 import { fallbackHomeCountryRows, orderHomeCountryRows, sanitizeCountryRowForDisplay } from '@/lib/home-page-fallback';
 import { resolveCountryPageCategories } from '@/lib/country-page-categories';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
-import { EMPTY_SAFARI_UPDATE_DETAIL } from '@/lib/safe-public-load';
+import { EMPTY_SAFARI_UPDATE_DETAIL, rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
 import { STATIC_PARAM_COLUMNS, staticBuildParamLimit } from '@/lib/static-build';
@@ -258,6 +258,7 @@ export async function loadHomePageData() {
       categories,
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadHomePageData failed:', error);
     return toClientProps({
       countries: [] as RecordRow[],
@@ -312,6 +313,7 @@ export async function loadHomePageBundleResilient() {
   try {
     return await loadHomePageBundle();
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Home bundle failed:', error);
     try {
       const data = await loadHomePageData();
@@ -321,7 +323,8 @@ export async function loadHomePageBundleResilient() {
         content: null,
         destinations: mergePublicDestinations(data.countries ?? []),
       };
-    } catch {
+    } catch (retryError) {
+      rethrowDynamicServerError(retryError);
       return instantHomeFallbackBundle();
     }
   }
@@ -399,6 +402,7 @@ export async function loadToursPageData(options?: { limit?: number; offset?: num
       }
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Tours listing cache skipped:', error);
     return loadToursPageDataLive(limit, offset);
   }
@@ -467,11 +471,13 @@ export async function loadCountryPageData(slug: string) {
       }
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadCountryPageData cache skipped:', slug, error);
     try {
       const live = await loadCountryPageDataInner(normalized);
       if (live?.country && !isCountryPageShellCountry(live.country)) return live;
     } catch (retryError) {
+      rethrowDynamicServerError(retryError);
       console.warn('[Public] loadCountryPageData retry failed:', slug, retryError);
     }
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
@@ -485,6 +491,7 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
     const data = await loadCountryPageData(normalized);
     return withCountryPageFallback(data, normalized);
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadCountryPageDataResilient failed:', normalized, error);
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
   }
@@ -595,6 +602,7 @@ async function loadTourDetailLive(slug: string, synced = false) {
       related: (sameCategory.length ? sameCategory : sameCountry).slice(0, 12),
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadTourDetail failed:', slug, error);
     return { tour: null, related: [] as RecordRow[] };
   }
@@ -623,6 +631,7 @@ export async function loadTourDetailSynced(slug: string) {
       PUBLIC_DETAIL_REVALIDATE_SECONDS
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Tour detail cache skipped:', normalized, error);
     return loadTourDetailLive(normalized, true);
   }
@@ -651,6 +660,7 @@ async function loadSafariUpdatesPageDataLive(limit: number, offset: number) {
     );
     return toClientProps({ posts: page.rows, total: page.total });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Safari updates listing failed:', error);
     return { posts: [] as RecordRow[], total: 0 };
   }
@@ -670,6 +680,7 @@ export async function loadSafariUpdatesPageData(options?: { limit?: number; offs
       }
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Safari updates cache skipped:', error);
     return loadSafariUpdatesPageDataLive(limit, offset);
   }
@@ -711,6 +722,7 @@ async function loadParkDetailLive(slug: string) {
       stays: [] as RecordRow[],
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadParkDetail failed:', slug, error);
     return { park: null, others: [] as RecordRow[], tours: [] as RecordRow[], stays: [] as RecordRow[] };
   }
@@ -790,6 +802,7 @@ async function loadSafariUpdateDetailLive(slug: string) {
       })
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadSafariUpdateDetail failed:', slug, error);
     return { post: null, related: [] as RecordRow[], tours: [] as RecordRow[] };
   }
@@ -808,6 +821,7 @@ export async function loadSafariUpdateDetail(slug: string) {
       }
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Safari update detail cache skipped:', normalized, error);
     return loadSafariUpdateDetailLive(normalized);
   }
@@ -821,6 +835,7 @@ export async function loadSafariUpdateDetailResilient(slug: string) {
     if (detail.post) return withRecentSafariUpdates(detail);
     return detail;
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadSafariUpdateDetailResilient failed:', normalized, error);
     return EMPTY_SAFARI_UPDATE_DETAIL;
   }
@@ -835,6 +850,7 @@ export async function loadSafariUpdatesListingResilient(options?: { limit?: numb
     loaded = await loadSafariUpdatesPageDataLive(limit, offset);
     return loaded;
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Safari updates listing resilient load failed:', error);
     return { posts: [] as RecordRow[], total: 0 };
   }
@@ -869,6 +885,7 @@ async function loadOtherAccommodations(item: RecordRow): Promise<RecordRow[]> {
     if (sameCountry.length) return sameCountry;
     return await load(false);
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Other accommodations failed:', error);
     return [];
   }
@@ -899,6 +916,7 @@ async function loadAccommodationDetailLive(slug: string, synced = false) {
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadAccommodationDetail failed:', slug, error);
     return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   }
@@ -925,6 +943,7 @@ export async function loadAccommodationDetailSynced(slug: string) {
       PUBLIC_DETAIL_REVALIDATE_SECONDS
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Accommodation detail cache skipped:', normalized, error);
     return loadAccommodationDetailLive(normalized, true);
   }
@@ -954,6 +973,7 @@ export async function loadExploreDetail(slug: string) {
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadExploreDetail failed:', slug, error);
     return { place: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   }
@@ -1003,6 +1023,7 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
       tours: filteredTours.length ? filteredTours : pool,
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] loadCategoryPageData failed:', bare, categorySlug, error);
     return {
       country: {

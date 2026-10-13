@@ -16,6 +16,7 @@ import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } fr
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
 import { loadCmsPageResilient, loadCountryPageDataResilient } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 type PageProps = {
   params: { slug: string };
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const slug = resolved.countrySlug || resolved.canonical;
     try {
       return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
-    } catch {
+    } catch (error) {
+      rethrowDynamicServerError(error);
       return { title: 'Destination | Eton Safaris' };
     }
   }
@@ -63,7 +65,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       path,
       image: (row && getRecordImage(row)) || seeded?.image_url,
     });
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return { title: seeded?.seo_title || 'Page', description: seeded?.meta_description };
   }
 }
@@ -89,6 +92,7 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
     try {
       initialPage = await loadCmsPageResilient(resolved.canonical);
     } catch (error) {
+      rethrowDynamicServerError(error);
       console.warn('[Public] CMS page load failed:', resolved.canonical, error);
       initialPage = null;
     }

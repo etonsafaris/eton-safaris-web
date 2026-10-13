@@ -4,7 +4,7 @@ import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadAccommodationDetailSynced, loadStaticAccommodationParams } from '@/lib/load-public';
 import { publicRecordMetadata } from '@/lib/seo-public';
-import { safePublicDetailLoad } from '@/lib/safe-public-load';
+import { rethrowDynamicServerError, safePublicDetailLoad } from '@/lib/safe-public-load';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       contentType: 'stay',
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Accommodation metadata failed:', slug, error);
     return { title: 'Accommodation | Eton Safaris', robots: { index: false, follow: false } };
   }

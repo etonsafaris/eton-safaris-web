@@ -3,7 +3,7 @@ import { permanentRedirect } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
-import { EMPTY_PARK_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
+import { EMPTY_PARK_DETAIL, rethrowDynamicServerError, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       contentType: 'park',
     });
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Park metadata failed:', params.slug, error);
     return { title: 'National Park | Eton Safaris', robots: { index: false, follow: false } };
   }

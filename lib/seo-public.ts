@@ -17,6 +17,7 @@ import {
   type IndexableContentKind,
 } from '@/lib/public-indexing';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { landingConversionCopy } from '@/lib/landing-page-copy';
 import { mergeFaqs } from '@/lib/default-faqs';
 import type { RecordRow } from '@/lib/types';
@@ -250,7 +251,8 @@ export async function publicRecordMetadata(
       image:
         (table === 'countries' ? countryHeroImage(slug, record) : getRecordImage(record)) || undefined,
     });
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return metadataFromSeo(seoValuesFromRecord({}), {
       title: SITE.name,
       description: SITE.about.slice(0, 160),

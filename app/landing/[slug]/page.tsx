@@ -4,6 +4,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, destinationPublicPath, landingCmsSlug } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
 import { loadCountryPageDataResilient } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 /**
  * Admin-only preview (guests are redirected to /destinations/{country} in middleware).
@@ -17,6 +18,7 @@ export default async function LandingAdminPreviewPage({ params }: { params: { sl
   try {
     data = await loadCountryPageDataResilient(slug);
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.error('[Landing preview] Failed to load country:', error);
     permanentRedirect(destinationPublicPath(slug));
   }

@@ -2,6 +2,7 @@ import PageHero from '@/components/public/PageHero';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { loadSafariUpdatesListingResilient } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { getRecordImage, recordPublishedAt } from '@/lib/data';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { Metadata } from 'next';
@@ -35,6 +36,7 @@ export default async function SafariUpdatesPage({
     posts = loaded.posts ?? [];
     total = loaded.total ?? 0;
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Safari updates listing failed:', error);
   }
   const latest = posts?.[0];

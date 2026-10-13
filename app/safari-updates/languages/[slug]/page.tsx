@@ -5,7 +5,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { isLanguagePost, safariUpdatePublicPath } from '@/lib/data';
 import { loadSafariUpdateDetailResilient } from '@/lib/load-public';
 import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
-import { EMPTY_SAFARI_UPDATE_DETAIL, safePublicLoad } from '@/lib/safe-public-load';
+import { EMPTY_SAFARI_UPDATE_DETAIL, rethrowDynamicServerError, safePublicLoad } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 export const revalidate = 900;
@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       { contentType: 'article' }
     );
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Language post metadata failed:', params.slug, error);
     return { title: 'Safari Update | Eton Safaris', robots: { index: false, follow: false } };
   }
@@ -29,7 +30,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 /** Language posts: Google landing URL, same as Dav /safari-updates/languages/{slug}. */
 export default async function LanguagePostPage({ params }: PageProps) {
-  const loadedPost = await resolveSafariUpdatePost(params.slug).catch(() => null);
+  const loadedPost = await resolveSafariUpdatePost(params.slug).catch((error) => {
+    rethrowDynamicServerError(error);
+    return null;
+  });
   if (loadedPost && !isLanguagePost(loadedPost)) {
     permanentRedirect(`/safari-updates/${params.slug}`);
   }

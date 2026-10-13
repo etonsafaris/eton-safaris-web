@@ -9,6 +9,7 @@ import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } fr
 import { loadCategoryPageData, loadStaticCategoryParams } from '@/lib/load-public';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo } from '@/lib/seo-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 type PageProps = {
   params: { slug: string; category: string };
@@ -46,7 +47,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       path,
       image: (row && getRecordImage(row)) || undefined,
     });
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return { title: params.category };
   }
 }

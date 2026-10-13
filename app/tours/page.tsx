@@ -1,6 +1,7 @@
 import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
 import { loadToursPageData } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
 const PAGE_SIZE = 24;
@@ -48,6 +49,7 @@ export default async function ToursPage({
     categories = loaded.categories ?? [];
     countries = loaded.countries ?? [];
   } catch (error) {
+    rethrowDynamicServerError(error);
     console.warn('[Public] Tours listing failed:', error);
   }
   return (
