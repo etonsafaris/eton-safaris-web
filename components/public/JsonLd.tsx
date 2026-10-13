@@ -1,3 +1,4 @@
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { jsonLdFromRecord, findPublicRecord } from '@/lib/seo-public';
 import { indexableContentKindForTable, shouldIndexPublicRecord } from '@/lib/public-indexing';
 import type { SeoSchemaType } from '@/lib/seo';
@@ -27,7 +28,8 @@ export default async function JsonLd({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}
       />
     );
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return null;
   }
 }

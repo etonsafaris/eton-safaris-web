@@ -10,6 +10,7 @@ import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage } from '@/lib/data';
 import { publicCountryLabel, recordMatchesCountrySlug } from '@/lib/country-utils';
 import { seoValuesFromRecord } from '@/lib/seo';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { metadataFromSeo } from '@/lib/seo-public';
 
 type LayoutProps = {
@@ -51,7 +52,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       }),
       robots: { index: false, follow: false },
     };
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return {
       title: seeded?.seo_title || 'Safari',
       description: seeded?.meta_description,

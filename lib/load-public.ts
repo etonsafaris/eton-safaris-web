@@ -272,7 +272,8 @@ export async function loadHomePageData() {
 async function loadHomePageContentCached() {
   try {
     return await loadHomePageContent();
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return null;
   }
 }
@@ -395,16 +396,12 @@ export async function loadToursPageData(options?: { limit?: number; offset?: num
     return await cachedPublic(
       ['tours-page-data-v7-paged', String(limit), String(offset)],
       ['collection:tours'],
-      async () => {
-        const loaded = await loadToursPageDataLive(limit, offset);
-        if (offset === 0 && !loaded.tours.length) throw new Error('Public tours listing returned no packages');
-        return loaded;
-      }
+      async () => loadToursPageDataLive(limit, offset)
     );
   } catch (error) {
     rethrowDynamicServerError(error);
     console.warn('[Public] Tours listing cache skipped:', error);
-    return loadToursPageDataLive(limit, offset);
+    return { tours: [] as RecordRow[], total: 0, categories: [] as RecordRow[], countries: [] as RecordRow[] };
   }
 }
 
@@ -465,21 +462,14 @@ export async function loadCountryPageData(slug: string) {
       async () => {
         const data = await loadCountryPageDataInner(normalized);
         if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
-          throw new Error('Country page empty');
+          return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
         }
         return data;
       }
     );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] loadCountryPageData cache skipped:', slug, error);
-    try {
-      const live = await loadCountryPageDataInner(normalized);
-      if (live?.country && !isCountryPageShellCountry(live.country)) return live;
-    } catch (retryError) {
-      rethrowDynamicServerError(retryError);
-      console.warn('[Public] loadCountryPageData retry failed:', slug, retryError);
-    }
+    console.warn('[Public] loadCountryPageData failed:', slug, error);
     return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
   }
 }
@@ -623,17 +613,13 @@ export async function loadTourDetailSynced(slug: string) {
     return await cachedPublic(
       ['tour-detail-sync-v2', normalized],
       ['collection:tours', `tour:${normalized}`],
-      async () => {
-        const loaded = await loadTourDetailLive(normalized, true);
-        if (!loaded.tour) throw new Error('Tour detail empty');
-        return loaded;
-      },
+      () => loadTourDetailLive(normalized, true),
       PUBLIC_DETAIL_REVALIDATE_SECONDS
     );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] Tour detail cache skipped:', normalized, error);
-    return loadTourDetailLive(normalized, true);
+    console.warn('[Public] Tour detail failed:', normalized, error);
+    return { tour: null, related: [] as RecordRow[] };
   }
 }
 
@@ -673,16 +659,12 @@ export async function loadSafariUpdatesPageData(options?: { limit?: number; offs
     return await cachedPublic(
       ['safari-updates-page-v4-skip-empty', String(limit), String(offset)],
       ['collection:safari_updates'],
-      async () => {
-        const loaded = await loadSafariUpdatesPageDataLive(limit, offset);
-        if (offset === 0 && !loaded.posts.length) throw new Error('Safari updates listing returned no posts');
-        return loaded;
-      }
+      () => loadSafariUpdatesPageDataLive(limit, offset)
     );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] Safari updates cache skipped:', error);
-    return loadSafariUpdatesPageDataLive(limit, offset);
+    console.warn('[Public] Safari updates listing failed:', error);
+    return { posts: [] as RecordRow[], total: 0 };
   }
 }
 
@@ -814,16 +796,12 @@ export async function loadSafariUpdateDetail(slug: string) {
     return await cachedPublic(
       ['safari-update-detail-v6-one-read', normalized],
       ['collection:safari_updates', `safari_update:${normalized}`],
-      async () => {
-        const loaded = await loadSafariUpdateDetailLive(normalized);
-        if (!loaded.post) throw new Error('Safari update detail empty');
-        return loaded;
-      }
+      () => loadSafariUpdateDetailLive(normalized)
     );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] Safari update detail cache skipped:', normalized, error);
-    return loadSafariUpdateDetailLive(normalized);
+    console.warn('[Public] Safari update detail failed:', normalized, error);
+    return { post: null, related: [] as RecordRow[], tours: [] as RecordRow[] };
   }
 }
 
@@ -935,17 +913,13 @@ export async function loadAccommodationDetailSynced(slug: string) {
     return await cachedPublic(
       ['accommodation-detail-sync-v10-other-stays', normalized],
       ['collection:accommodations', `accommodation:${normalized}`],
-      async () => {
-        const loaded = await loadAccommodationDetailLive(normalized, true);
-        if (!loaded.item) throw new Error('Accommodation detail empty');
-        return loaded;
-      },
+      () => loadAccommodationDetailLive(normalized, true),
       PUBLIC_DETAIL_REVALIDATE_SECONDS
     );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] Accommodation detail cache skipped:', normalized, error);
-    return loadAccommodationDetailLive(normalized, true);
+    console.warn('[Public] Accommodation detail failed:', normalized, error);
+    return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
   }
 }
 

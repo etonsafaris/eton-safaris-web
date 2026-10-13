@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
 import './globals.css';
-import SiteMonitoring from '@/components/monitoring/SiteMonitoring';
-import CmsLiveHost from '@/components/public/CmsLiveHost';
-import PublicAppRoot from '@/components/public/PublicAppRoot';
 import { SITE, SITE_LOGO, SOCIAL_LINKS } from '@/lib/collections';
 
 /**
@@ -140,8 +136,6 @@ const SITE_GRAPH = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const host = headers().get('host') || '';
-  const staffHost = /^admin\./i.test(host.split(':')[0] || '');
   return (
     <html lang="en" className={FONT_VARS}>
       <head>
@@ -149,11 +143,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-white font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_GRAPH) }} />
-        <PublicAppRoot staffHost={staffHost}>
-          <SiteMonitoring />
-          <CmsLiveHost />
-          {children}
-        </PublicAppRoot>
+        {children}
       </body>
     </html>
   );

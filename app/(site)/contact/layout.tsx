@@ -3,6 +3,7 @@ import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { matchCmsRecord, pageAliases } from '@/lib/cms-routes';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { metadataFromSeo } from '@/lib/seo-public';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,7 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
       path: '/contact-us',
       image: (row && getRecordImage(row)) || seeded?.image_url,
     });
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     return { title: seeded?.seo_title || 'Contact Us', description: seeded?.meta_description };
   }
 }

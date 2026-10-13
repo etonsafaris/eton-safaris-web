@@ -1,6 +1,7 @@
 import JsonLd from '@/components/public/JsonLd';
 import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { publicRecordMetadata } from '@/lib/seo-public';
 
 type LayoutProps = {
@@ -12,7 +13,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const slug = countrySlugFromLanding(params.slug);
   try {
     return await publicRecordMetadata('countries', slug, destinationPublicPath(slug));
-  } catch {
+  } catch (error) {
+    rethrowDynamicServerError(error);
     const label = countryLabelFromSlug(slug) || slug;
     return { title: `${label} Safaris | Eton Safaris` };
   }
