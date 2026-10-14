@@ -460,17 +460,8 @@ async function countryRowWithHero(slug: string, country: RecordRow | null): Prom
 export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
-    return await cachedPublic(
-      ['country-page-data-v19-full', normalized],
-      ['collection:countries', `country:${normalized}`],
-      async () => {
-        const data = await loadCountryPageDataInner(normalized);
-        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
-          throw new Error(`country-page-incomplete:${normalized}`);
-        }
-        return data;
-      }
-    );
+    const data = await loadCountryPageDataInner(normalized);
+    return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
   } catch (error) {
     rethrowDynamicServerError(error);
     console.warn('[Public] loadCountryPageData failed:', slug, error);
@@ -566,36 +557,9 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   );
 }
 
-/**
- * Public `/destinations/[slug]` — the saved country, its categories, and its tours.
- * A complete result is cached. An incomplete read is returned for this request only.
- */
+/** Public country page. One read, returned as soon as it arrives. */
 export async function loadDestinationCountryPage(slug: string): Promise<CountryPageData> {
-  const normalized = normalizeSlug(slug);
-  try {
-    return await cachedPublic(
-      ['country-page-data-v20-live', normalized],
-      ['collection:countries', `country:${normalized}`],
-      async () => {
-        const data = await loadCountryPageDataInner(normalized);
-        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
-          throw new Error(`country-page-incomplete:${normalized}`);
-        }
-        return data;
-      },
-      60
-    );
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    try {
-      const fresh = await loadCountryPageDataInner(normalized);
-      return withCountryPageFallback(fresh ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
-    } catch (innerError) {
-      rethrowDynamicServerError(innerError);
-      console.warn('[Public] Destination country page failed:', normalized, innerError);
-      return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
-    }
-  }
+  return loadCountryPageDataResilient(slug);
 }
 
 async function loadTourDetailLive(slug: string, synced = false) {

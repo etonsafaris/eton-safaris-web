@@ -1,12 +1,9 @@
 import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { getPublicRecordImage } from '@/lib/content-image';
-import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
-import { preloadPublicHero } from '@/lib/preload-public-hero';
-import { rethrowDynamicServerError } from '@/lib/safe-public-load';
+import { loadStaticAccommodationParams } from '@/lib/load-public';
 
-/** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
+/** The title paints immediately. The saved stay fills in behind it. */
 export const revalidate = 900;
 export const dynamicParams = true;
 
@@ -21,34 +18,13 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function AccommodationDetailPage({ params }: PageProps) {
+export default function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
-  let item = null;
-  let others: Awaited<ReturnType<typeof loadAccommodationDetail>>['others'] = [];
-  let tours: Awaited<ReturnType<typeof loadAccommodationDetail>>['tours'] = [];
-  try {
-    const loaded = await loadAccommodationDetail(slug);
-    item = loaded.item;
-    others = loaded.others ?? [];
-    tours = loaded.tours ?? [];
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] Accommodation detail failed:', slug, error);
-  }
-  const heroImage = getPublicRecordImage(item) || '';
-  preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <AccommodationDetailClient
-        key={slug}
-        embedded
-        initialItem={item}
-        initialOthers={others}
-        initialTours={tours}
-        initialHeroImage={heroImage}
-      />
+      <AccommodationDetailClient key={slug} embedded initialItem={null} initialOthers={[]} initialTours={[]} />
     </PublicShellServer>
   );
 }
