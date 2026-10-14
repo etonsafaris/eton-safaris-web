@@ -1,7 +1,8 @@
-import PageHero from '@/components/public/PageHero';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
+import { loadSafariUpdatesListingResilient } from '@/lib/load-public';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
 export { revalidate } from '@/lib/public-page-config';
@@ -17,21 +18,29 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SafariUpdatesPage({
+export default async function SafariUpdatesPage({
   searchParams,
 }: {
   searchParams?: { page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  let posts: Awaited<ReturnType<typeof loadSafariUpdatesListingResilient>>['posts'] = [];
+  let total = 0;
+  try {
+    const loaded = await loadSafariUpdatesListingResilient({
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    });
+    posts = loaded.posts ?? [];
+    total = loaded.total ?? 0;
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] Safari updates listing failed:', error);
+  }
 
   return (
     <PublicShellServer>
-      <PageHero
-        variant="update"
-        title={PUBLIC_SITE_LABELS.blogPosts}
-        subtitle="Safari news and travel notes"
-      />
-      <SafariUpdatesListingClient initialPosts={[]} initialTotal={0} page={page} pageSize={PAGE_SIZE} />
+      <SafariUpdatesListingClient initialPosts={posts} initialTotal={total} page={page} pageSize={PAGE_SIZE} showHero />
     </PublicShellServer>
   );
 }

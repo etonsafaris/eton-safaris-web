@@ -638,18 +638,14 @@ export async function loadParksPageData(options?: { limit?: number; offset?: num
 }
 
 async function loadSafariUpdatesPageDataLive(limit: number, offset: number) {
-  try {
-    const page = await withTimeout(
-      fetchPublicSafariUpdatesPage({ limit, offset }),
-      6000,
-      { rows: [] as RecordRow[], total: 0 }
-    );
-    return toClientProps({ posts: page.rows, total: page.total });
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] Safari updates listing failed:', error);
-    return { posts: [] as RecordRow[], total: 0 };
-  }
+  const page = await withTimeout(
+    fetchPublicSafariUpdatesPage({ limit, offset }),
+    6000,
+    { rows: [] as RecordRow[], total: 0 }
+  );
+  const posts = page.rows ?? [];
+  if (!posts.length) throw new Error('Safari updates listing empty');
+  return toClientProps({ posts, total: page.total });
 }
 
 export async function loadSafariUpdatesPageData(options?: { limit?: number; offset?: number }) {
@@ -657,7 +653,7 @@ export async function loadSafariUpdatesPageData(options?: { limit?: number; offs
   const offset = options?.offset ?? 0;
   try {
     return await cachedPublic(
-      ['safari-updates-page-v4-skip-empty', String(limit), String(offset)],
+      ['safari-updates-page-v5-real', String(limit), String(offset)],
       ['collection:safari_updates'],
       () => loadSafariUpdatesPageDataLive(limit, offset)
     );
