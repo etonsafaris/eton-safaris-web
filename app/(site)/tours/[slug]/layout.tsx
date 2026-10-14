@@ -1,10 +1,12 @@
-import type { Metadata } from 'next';
-import { publicRecordMetadata } from '@/lib/seo-public';
+import { titleFromPublicSlug } from '@/lib/cms-routes';
 
 export { revalidate } from '@/lib/public-page-config';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  return publicRecordMetadata('tours', params.slug, `/tours/${params.slug}`, { contentType: 'tour' });
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return {
+    title: titleFromPublicSlug(params.slug),
+    alternates: { canonical: `/tours/${params.slug}` },
+  };
 }
 
 export default function TourDetailLayout({ children }: { children: React.ReactNode }) {

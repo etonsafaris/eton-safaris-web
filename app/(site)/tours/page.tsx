@@ -1,7 +1,5 @@
 import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
-import { loadToursPageData } from '@/lib/load-public';
-import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
 const PAGE_SIZE = 24;
@@ -32,33 +30,19 @@ function param(value?: string | string[]) {
   return Array.isArray(value) ? value[0] || '' : value || '';
 }
 
-export default async function ToursPage({
+export default function ToursPage({
   searchParams,
 }: {
   searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string; page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
-  let tours: Awaited<ReturnType<typeof loadToursPageData>>['tours'] = [];
-  let total = 0;
-  let categories: Awaited<ReturnType<typeof loadToursPageData>>['categories'] = [];
-  let countries: Awaited<ReturnType<typeof loadToursPageData>>['countries'] = [];
-  try {
-    const loaded = await loadToursPageData({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
-    tours = loaded.tours ?? [];
-    total = loaded.total ?? 0;
-    categories = loaded.categories ?? [];
-    countries = loaded.countries ?? [];
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] Tours listing failed:', error);
-  }
   return (
     <PublicShellServer>
     <ToursPageClient
-      initialTours={tours}
-      initialCategories={categories}
-      initialCountries={countries}
-      initialTotal={total}
+      initialTours={[]}
+      initialCategories={[]}
+      initialCountries={[]}
+      initialTotal={0}
       page={page}
       pageSize={PAGE_SIZE}
       initialQuery={param(searchParams?.q)}

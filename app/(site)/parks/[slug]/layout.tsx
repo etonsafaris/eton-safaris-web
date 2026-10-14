@@ -1,13 +1,12 @@
-import type { Metadata } from 'next';
-import { publicRecordMetadata } from '@/lib/seo-public';
+import { titleFromPublicSlug } from '@/lib/cms-routes';
 
 export { revalidate } from '@/lib/public-page-config';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  return publicRecordMetadata('national_park', params.slug, `/parks/${params.slug}`, {
-    aliases: ['national_parks', 'parks'],
-    contentType: 'park',
-  });
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return {
+    title: titleFromPublicSlug(params.slug),
+    alternates: { canonical: `/parks/${params.slug}` },
+  };
 }
 
 export default function ParkDetailLayout({ children }: { children: React.ReactNode }) {

@@ -12,13 +12,12 @@ import CountrySectionHeading from '@/components/public/CountrySectionHeading';
 import PlaceCard from '@/components/public/PlaceCard';
 import { countryPlacePath } from '@/lib/cms-routes';
 import { countryExploreListingPath, countryParksListingPath } from '@/lib/listing-paths';
-import { isCountryPageShellCountry } from '@/lib/country-heroes';
+import { countryHeroImage, countryPageHeroTitle, isCountryPageShellCountry } from '@/lib/country-heroes';
 import { showExploreOnCountryPages, showParksOnCountryPages } from '@/lib/public-discovery-policy';
 import { categoryPublicSlug, countryCategoryPath, publicCountryLabel } from '@/lib/country-utils';
 import { useCmsPageReload } from '@/lib/use-cms-page-reload';
 import { resolveCountryDescriptionHtml } from '@/lib/country-page-copy';
 import { COUNTRY_SPECIALISTS_LINE } from '@/lib/country-landing-copy';
-import { countryHeroImage, countryPageHeroTitle } from '@/lib/country-heroes';
 import { parseCmsPageExtras } from '@/lib/cms-page-model';
 import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import {
@@ -36,6 +35,8 @@ import PageFaqList from '@/components/public/PageFaqList';
 import { fetchJsonSafe } from '@/lib/safe-client-fetch';
 import { bestTimeToVisit } from '@/lib/country-planning';
 import type { RecordRow } from '@/lib/types';
+
+const EMPTY_ROWS: RecordRow[] = [];
 
 type CountryPageContentProps = {
   slug: string;
@@ -61,26 +62,26 @@ export default function CountryPageContent({
   slug,
   country: countryProp,
   heroTitle,
-  initialCategories = [],
-  initialTours = [],
-  initialParks = [],
-  initialPlaces = [],
+  initialCategories = EMPTY_ROWS,
+  initialTours = EMPTY_ROWS,
+  initialParks = EMPTY_ROWS,
+  initialPlaces = EMPTY_ROWS,
 }: CountryPageContentProps) {
   const [country, setCountry] = useState<RecordRow | null>(countryProp);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  const [ready, setReady] = useState(true);
   /** A name-only shell means the country row did not load. Refetch instead of keeping the blank page. */
   const hasServerContent = Boolean(slug && countryProp && !isCountryPageShellCountry(countryProp));
+  const [ready, setReady] = useState(hasServerContent);
 
   useEffect(() => {
-    setCountry(countryProp);
-    setCategories(initialCategories);
-    setTours(initialTours);
-    setParks(initialParks);
-    setPlaces(initialPlaces);
+    setCountry((current) => (current?.id && !countryProp?.id ? current : countryProp));
+    if (initialCategories.length) setCategories(initialCategories);
+    if (initialTours.length) setTours(initialTours);
+    if (initialParks.length) setParks(initialParks);
+    if (initialPlaces.length) setPlaces(initialPlaces);
   }, [countryProp, initialCategories, initialTours, initialParks, initialPlaces]);
 
   useCmsPageReload(async () => {
@@ -274,7 +275,9 @@ export default function CountryPageContent({
         <AmazingSafaris
           tours={tours}
           title={`Explore These Amazing Safaris in ${title}`}
-          emptyMessage={ready ? 'No tour package found. Try another search.' : undefined}
+          emptyMessage={
+            tours.length ? undefined : ready ? 'No tour package found. Try another search.' : 'Loading tours…'
+          }
         />
       </section>
     </>

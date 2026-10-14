@@ -33,6 +33,8 @@ import { bestFaqsFor, limitFaqs } from '@/lib/best-faqs';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
+const EMPTY_ROWS: RecordRow[] = [];
+
 type CategoryPageContentProps = {
   slug: string;
   country: RecordRow | null;
@@ -74,8 +76,8 @@ export default function CategoryPageContent({
   slug,
   country,
   categorySlug,
-  initialCategories = [],
-  initialTours = [],
+  initialCategories = EMPTY_ROWS,
+  initialTours = EMPTY_ROWS,
   initialCategory = null,
   serverPreloaded = false,
 }: CategoryPageContentProps) {
@@ -93,7 +95,6 @@ export default function CategoryPageContent({
 
   useEffect(() => {
     if (serverPreloaded && live === 0) return undefined;
-    if (live === 0) return undefined;
     let mounted = true;
     async function load() {
       try {
@@ -112,7 +113,9 @@ export default function CategoryPageContent({
           setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
         }
       } catch (error) {
-        console.error('[Supabase] Failed to load category page data:', error);
+        console.error('[Public] Failed to load category page data:', error);
+      } finally {
+        if (mounted) setReady(true);
       }
     }
     void load();

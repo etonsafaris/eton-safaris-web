@@ -1,11 +1,11 @@
-import { Metadata } from 'next';
 import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { countrySlugFromLanding, destinationPublicPath, isDedicatedLandingCountry, publicSlugFromInput } from '@/lib/cms-routes';
-import { loadCountryPageDataResilient, loadStaticDestinationParams } from '@/lib/load-public';
-import { rethrowDynamicServerError } from '@/lib/safe-public-load';
-import { publicRecordMetadata } from '@/lib/seo-public';
+import { countrySlugFromLanding, isDedicatedLandingCountry, publicSlugFromInput } from '@/lib/cms-routes';
+import { countryHeroTitle } from '@/lib/country-landing-copy';
+import { countryLabelFromSlug } from '@/lib/country-utils';
+import { loadStaticDestinationParams } from '@/lib/load-public';
+import type { RecordRow } from '@/lib/types';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -20,52 +20,21 @@ export async function generateStaticParams() {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const slug = countrySlugFromLanding(params.slug);
-  if (!slug) {
-    return {
-      title: 'Destination Not Found | Eton Safaris',
-      robots: { index: false, follow: false },
-    };
-  }
-
-  try {
-    return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] Destination metadata failed:', slug, error);
-    return { title: `${slug} | Eton Safaris`, robots: { index: false, follow: false } };
-  }
-}
-
-export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
+export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
   if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
 
-  let data;
-  try {
-    data = await loadCountryPageDataResilient(slug);
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] Destination page load failed:', slug, error);
-    permanentRedirect('/destinations');
-  }
-  if (!data?.country) permanentRedirect('/destinations');
+  const name = countryLabelFromSlug(slug) || slug;
+  const country = {
+    name,
+    title: countryHeroTitle(slug, name),
+    slug,
+    status: 'published',
+  } as RecordRow;
 
-  const country = data.country;
   return (
-    <>
-      <PublicShellServer>
-        <CountryPageContent
-          key={slug}
-          slug={slug}
-          country={country}
-          initialCategories={Array.isArray(data.categories) ? data.categories : []}
-          initialTours={Array.isArray(data.tours) ? data.tours : []}
-          initialParks={Array.isArray(data.parks) ? data.parks : []}
-          initialPlaces={Array.isArray(data.places) ? data.places : []}
-        />
-      </PublicShellServer>
-    </>
+    <PublicShellServer>
+      <CountryPageContent key={slug} slug={slug} country={country} />
+    </PublicShellServer>
   );
 }

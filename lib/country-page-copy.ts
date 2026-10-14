@@ -19,8 +19,8 @@ function toProseHtml(value: string) {
 /** Country body: substantial CMS copy when present, else curated fallback (Rwanda, Uganda, …). */
 export function resolveCountryDescriptionHtml(slug: string, country?: RecordRow | null) {
   const cmsRaw = country ? visibleRecordHtml(country, ['description', 'content', 'about']) : '';
-  const cmsHtml = toProseHtml(cmsRaw);
+  const cmsHtml = stripParkListFromCountryHtml(toProseHtml(cmsRaw));
   const fallbackHtml = countryArticleHtml(slug);
-  const chosen = isSubstantialCountryArticle(cmsHtml) ? cmsHtml : fallbackHtml || cmsHtml;
-  return stripParkListFromCountryHtml(chosen);
+  if (isSubstantialCountryArticle(cmsHtml)) return cmsHtml;
+  return fallbackHtml || cmsHtml;
 }

@@ -54,6 +54,17 @@ export function countrySlugFromLanding(slug: string): string {
   return publicSlugFromInput(slug).replace(/-safaris$/, '');
 }
 
+/** Instant page title from a URL slug. Does not read the database. */
+export function titleFromPublicSlug(slug: string): string {
+  const cleaned = String(slug || '')
+    .replace(/-safaris$/, '')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return 'Eton Safaris';
+  return cleaned.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 /** Accepts a CMS slug, /path, or full URL and returns a single URL segment. */
 export function publicSlugFromInput(raw: string): string {
   let value = String(raw || '').trim();

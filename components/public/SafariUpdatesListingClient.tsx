@@ -40,20 +40,17 @@ export default function SafariUpdatesListingClient({
     if (posts.length || attemptedRef.current) return undefined;
     attemptedRef.current = true;
     let cancelled = false;
-    const timer = window.setTimeout(() => {
-      const offset = (page - 1) * pageSize;
-      fetch(`/api/public/safari-updates?limit=${pageSize}&offset=${offset}`, { credentials: 'same-origin' })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((body: { posts?: RecordRow[]; total?: number } | null) => {
-          if (cancelled || !body?.posts?.length) return;
-          setPosts(body.posts);
-          setTotal(body.total ?? body.posts.length);
-        })
-        .catch(() => undefined);
-    }, 350);
+    const offset = (page - 1) * pageSize;
+    fetch(`/api/public/safari-updates?limit=${pageSize}&offset=${offset}`, { credentials: 'same-origin' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { posts?: RecordRow[]; total?: number } | null) => {
+        if (cancelled || !body?.posts?.length) return;
+        setPosts(body.posts);
+        setTotal(body.total ?? body.posts.length);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
   }, [page, pageSize, posts.length]);
 
