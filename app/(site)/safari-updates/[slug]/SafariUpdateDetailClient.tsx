@@ -11,6 +11,7 @@ import {
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
+  parseBlocksFromRecord,
   pickStoredString,
   recordPublishedAt,
   safariUpdatePublicPath,
@@ -27,6 +28,14 @@ import type { RecordRow } from '@/lib/types';
 
 function isReadableSafariPost(row: RecordRow | null | undefined) {
   return Boolean(row && isPublishedRecord(row));
+}
+
+/** Listing cards omit the article and post blocks. Those only exist on the full saved row. */
+function postHasSavedBody(row: RecordRow | null | undefined) {
+  if (!row) return false;
+  const html = visibleRecordHtml(row, ['content', 'description', 'body', 'html', 'post_content', 'article']);
+  if (html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) return true;
+  return parseBlocksFromRecord(row).length > 0;
 }
 
 export default function SafariUpdateDetailClient({
@@ -52,12 +61,11 @@ export default function SafariUpdateDetailClient({
   const [post, setPost] = useState<RecordRow | null>(seedPost);
   const [related, setRelated] = useState<RecordRow[]>(initialRelated);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
-  const [recovering, setRecovering] = useState(!seedPost);
   const live = useCmsLive();
-  const recoveryAttempted = useRef(false);
+  const fullLoadAttempts = useRef(0);
 
   useEffect(() => {
-    recoveryAttempted.current = false;
+    fullLoadAttempts.current = 0;
   }, [slug]);
 
   useEffect(() => {
@@ -66,48 +74,22 @@ export default function SafariUpdateDetailClient({
       : isReadableSafariPost(prefill)
         ? prefill
         : null;
-    setPost(nextSeed);
+    setPost((current) => {
+      if (postHasSavedBody(current) && !postHasSavedBody(nextSeed)) return current;
+      return nextSeed;
+    });
     setRelated(initialRelated);
     setTours(initialTours);
-    setRecovering(!nextSeed);
   }, [initialPost, initialRelated, initialTours, prefill]);
 
   useEffect(() => {
     if (!slug) return undefined;
-    if (isReadableSafariPost(post) && live === 0) return undefined;
+    if (postHasSavedBody(post) && live === 0) return undefined;
+    if (fullLoadAttempts.current >= 2) return undefined;
+    fullLoadAttempts.current += 1;
 
     let cancelled = false;
-    async function recover() {
-      if (!isReadableSafariPost(post)) {
-        if (!recoveryAttempted.current) {
-          recoveryAttempted.current = true;
-          setRecovering(true);
-          try {
-            const response = await fetch(`/api/public/safari-update?slug=${encodeURIComponent(slug)}`, {
-              credentials: 'same-origin',
-            });
-            const body = (await response.json().catch(() => ({}))) as {
-              post?: RecordRow | null;
-              related?: RecordRow[];
-              tours?: RecordRow[];
-            };
-            if (cancelled) return;
-            if (isReadableSafariPost(body.post)) {
-              setPost(body.post ?? null);
-              if (body.related?.length) setRelated(body.related);
-              if (body.tours?.length) setTours(body.tours);
-            }
-          } catch (error) {
-            console.error('[Safari update detail] Recovery failed:', error);
-          } finally {
-            if (!cancelled) setRecovering(false);
-          }
-        }
-        return;
-      }
-
-      if (live === 0) return;
-
+    async function loadFullPost() {
       try {
         const response = await fetch(`/api/public/safari-update?slug=${encodeURIComponent(slug)}`, {
           credentials: 'same-origin',
@@ -122,11 +104,11 @@ export default function SafariUpdateDetailClient({
         if (body.related?.length) setRelated(body.related);
         if (body.tours?.length) setTours(body.tours);
       } catch (error) {
-        console.error('[Safari update detail] Live refresh failed:', error);
+        console.error('[Safari update detail] Full post load failed:', error);
       }
     }
 
-    void recover();
+    void loadFullPost();
     return () => {
       cancelled = true;
     };
