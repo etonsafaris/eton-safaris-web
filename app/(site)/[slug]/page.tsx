@@ -15,7 +15,9 @@ import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
 import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
+import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { loadCmsPageResilient, loadCountryPageDataResilient } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 type PageProps = {
@@ -96,6 +98,9 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
       console.warn('[Public] CMS page load failed:', resolved.canonical, error);
       initialPage = null;
     }
+  }
+  if (!isCountryAlias && initialPage) {
+    preloadPublicHero(hydratePublicCmsPage(initialPage, resolved.canonical).image);
   }
 
   return (

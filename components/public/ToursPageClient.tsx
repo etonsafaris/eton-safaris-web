@@ -29,6 +29,7 @@ export default function ToursPageClient({
   initialDestination = '',
   initialDays = '',
   initialDepart = '',
+  initialHeroImage = '',
 }: {
   initialTours: RecordRow[];
   initialCategories: RecordRow[];
@@ -41,6 +42,7 @@ export default function ToursPageClient({
   initialDestination?: string;
   initialDays?: string;
   initialDepart?: string;
+  initialHeroImage?: string;
 }) {
   const q = initialQuery;
   const category = initialCategory;
@@ -114,7 +116,7 @@ export default function ToursPageClient({
             ? `${filtered.length.toLocaleString()} package${filtered.length === 1 ? '' : 's'}${q ? ` for “${q}”` : ''}${destination ? ` in ${destination}` : ''}${category ? ` · ${category}` : ''}${days ? ` · ${days} days` : ''}${depart ? ` · departing ${depart}` : ''}`
             : `${(initialTotal || tours.length || filtered.length).toLocaleString()} safari packages available`
         }
-        image={filtered[0] ? getRecordImage(filtered[0]) : undefined}
+        image={(filtered[0] ? getRecordImage(filtered[0]) : '') || initialHeroImage || undefined}
       />
       <div className="bg-[#f3f3f3] pb-4 pt-2">
         <TourSearchBar

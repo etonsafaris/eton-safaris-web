@@ -57,7 +57,7 @@ import {
 } from '@/lib/country-heroes';
 import { fallbackHomeCountryRows, orderHomeCountryRows, sanitizeCountryRowForDisplay } from '@/lib/home-page-fallback';
 import { resolveCountryPageCategories } from '@/lib/country-page-categories';
-import { resolveSafariUpdatePost } from '@/lib/safari-update-load';
+import { getPublicRecordImage } from '@/lib/content-image';
 import { EMPTY_SAFARI_UPDATE_DETAIL, rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
@@ -715,82 +715,48 @@ export async function loadParkDetail(slug: string) {
   );
 }
 
-async function recentPublicSafariUpdates(excludeId?: string, limit = 8): Promise<RecordRow[]> {
-  try {
-    const page = await withTimeout(
-      fetchPublicSafariUpdatesPage({ limit: 24, offset: 0 }),
-      8000,
-      { rows: [] as RecordRow[], total: 0 }
-    );
-    return (page.rows ?? [])
-      .filter((row) => row && String(row.id ?? '') !== String(excludeId || ''))
-      .slice(0, limit);
-  } catch {
-    return [];
-  }
-}
-
-async function withRecentSafariUpdates<T extends { post: RecordRow | null; related: RecordRow[] }>(
-  detail: T
-): Promise<T> {
-  if (!detail.post || (detail.related?.length ?? 0) > 0) return detail;
-  const related = await recentPublicSafariUpdates(detail.post.id != null ? String(detail.post.id) : '');
-  return related.length ? { ...detail, related } : detail;
-}
-
 async function loadSafariUpdateDetailLive(slug: string) {
-  try {
-    const [resolved, updatePage] = await Promise.all([
-      withTimeout(resolveSafariUpdatePost(slug), 12000, null),
-      withTimeout(
-        fetchPublicSafariUpdatesPage({ limit: 20, offset: 0 }),
-        6000,
-        { rows: [] as RecordRow[], total: 0 }
-      ),
-    ]);
-    const published =
-      resolved && isPublishedRecord(resolved) ? resolved : null;
-    const related = published
-      ? (updatePage?.rows ?? [])
-          .filter((row) => String(row?.id) !== String(published.id || ''))
-          .slice(0, 20)
-      : [];
-    const country = published ? pickStoredString(published, ['country', 'category']) : '';
-    const countryKey = country ? canonicalCountrySlug(country) || normalizeSlug(country) : '';
-    const toursRaw = published
-      ? await withTimeout(
-          resolvePublicTours({
-            country,
-            limit: 24,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
-    const tours = countryKey
-      ? (toursRaw ?? []).filter((row) => matchesCountry(row, countryKey))
-      : toursRaw ?? [];
-    const tourPool = tours.length ? tours : (toursRaw ?? []).slice(0, 12);
-    return toClientProps(
-      await withRecentSafariUpdates({
-        post: published,
-        related,
-        tours: tourPool.slice(0, 12),
-      })
-    );
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] loadSafariUpdateDetail failed:', slug, error);
-    return { post: null, related: [] as RecordRow[], tours: [] as RecordRow[] };
-  }
+  const row = await fetchRecordByPublicSlug('safari_updates', slug);
+  const published = row && isPublishedRecord(row) ? row : null;
+  if (!published) throw new Error(`safari-update-miss:${slug}`);
+
+  const country = pickStoredString(published, ['country', 'category']);
+  const countryKey = country ? canonicalCountrySlug(country) || normalizeSlug(country) : '';
+  const [updatePage, toursRaw] = await Promise.all([
+    withTimeout(
+      fetchPublicSafariUpdatesPage({ limit: 12, offset: 0 }),
+      4000,
+      { rows: [] as RecordRow[], total: 0 }
+    ),
+    withTimeout(
+      resolvePublicTours({
+        country,
+        limit: 12,
+        excludeId: published.id != null ? String(published.id) : undefined,
+      }),
+      4000,
+      [] as RecordRow[]
+    ),
+  ]);
+  const related = (updatePage?.rows ?? [])
+    .filter((item) => String(item?.id) !== String(published.id || ''))
+    .slice(0, 8);
+  const tours = countryKey
+    ? (toursRaw ?? []).filter((item) => matchesCountry(item, countryKey))
+    : toursRaw ?? [];
+  const tourPool = tours.length ? tours : (toursRaw ?? []).slice(0, 12);
+  return toClientProps({
+    post: published,
+    related,
+    tours: tourPool.slice(0, 12),
+  });
 }
 
 export async function loadSafariUpdateDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['safari-update-detail-v6-one-read', normalized],
+      ['safari-update-detail-v7-article', normalized],
       ['collection:safari_updates', `safari_update:${normalized}`],
       () => loadSafariUpdateDetailLive(normalized)
     );
@@ -806,12 +772,79 @@ export async function loadSafariUpdateDetailResilient(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     const detail = await loadSafariUpdateDetail(normalized);
-    if (detail.post) return withRecentSafariUpdates(detail);
-    return detail;
+    if (detail.post) return detail;
   } catch (error) {
     rethrowDynamicServerError(error);
     console.warn('[Public] loadSafariUpdateDetailResilient failed:', normalized, error);
-    return EMPTY_SAFARI_UPDATE_DETAIL;
+  }
+  try {
+    const post = await loadSafariUpdateArticle(normalized);
+    if (post) return { post, related: [] as RecordRow[], tours: [] as RecordRow[] };
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  return EMPTY_SAFARI_UPDATE_DETAIL;
+}
+
+/** One saved row, including the article and post blocks. An empty miss is not cached. */
+export async function loadSafariUpdateArticle(slug: string): Promise<RecordRow | null> {
+  const normalized = normalizeSlug(slug);
+  if (!normalized) return null;
+  try {
+    return await cachedPublic(
+      ['safari-update-article-v1', normalized],
+      ['collection:safari_updates', `safari_update:${normalized}`],
+      async () => {
+        const row = await fetchRecordByPublicSlug('safari_updates', normalized);
+        if (!row || !isPublishedRecord(row)) throw new Error(`safari-update-miss:${normalized}`);
+        return toClientProps(row);
+      }
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    return null;
+  }
+}
+
+/** The featured image saved for a public page, ready for the first HTML. */
+export async function loadPublicHeroImage(table: string, slug: string, aliases: string[] = []): Promise<string> {
+  const normalized = normalizeSlug(slug);
+  if (!normalized || !/^[a-z_][a-z0-9_]*$/i.test(table)) return '';
+  const narrow = 'id,slug,seo_slug,name,title,image_url,social_image_url';
+  try {
+    const row = await withTimeout(
+      fetchRecordByPublicSlug(table, normalized, aliases, narrow),
+      2500,
+      null
+    );
+    const image = getPublicRecordImage(row);
+    if (image) return image;
+  } catch {
+    /* a missing column falls through to the full row */
+  }
+  try {
+    const row = await withTimeout(fetchRecordByPublicSlug(table, normalized, aliases), 2500, null);
+    return getPublicRecordImage(row) || '';
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    return '';
+  }
+}
+
+/** First saved photo for a listing hero, so the image tag is in the first HTML. */
+export async function loadFirstListingHero(table: string): Promise<string> {
+  if (!/^[a-z_][a-z0-9_]*$/i.test(table)) return '';
+  try {
+    const page = await withTimeout(
+      fetchCollectionPage(table, [], { limit: 4, offset: 0 }),
+      2500,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    const row = (page.rows ?? []).find((item) => item && isPublishedRecord(item) && getPublicRecordImage(item));
+    return getPublicRecordImage(row) || '';
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    return '';
   }
 }
 

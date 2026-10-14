@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
@@ -41,11 +41,13 @@ function postHasSavedBody(row: RecordRow | null | undefined) {
 export default function SafariUpdateDetailClient({
   embedded = false,
   initialPost = null,
+  initialHeroImage = '',
   initialRelated = [],
   initialTours = [],
 }: {
   embedded?: boolean;
   initialPost?: RecordRow | null;
+  initialHeroImage?: string;
   initialRelated?: RecordRow[];
   initialTours?: RecordRow[];
 }) {
@@ -62,11 +64,6 @@ export default function SafariUpdateDetailClient({
   const [related, setRelated] = useState<RecordRow[]>(initialRelated);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const live = useCmsLive();
-  const fullLoadAttempts = useRef(0);
-
-  useEffect(() => {
-    fullLoadAttempts.current = 0;
-  }, [slug]);
 
   useEffect(() => {
     const nextSeed = isReadableSafariPost(initialPost)
@@ -78,16 +75,12 @@ export default function SafariUpdateDetailClient({
       if (postHasSavedBody(current) && !postHasSavedBody(nextSeed)) return current;
       return nextSeed;
     });
-    setRelated(initialRelated);
-    setTours(initialTours);
+    if (initialRelated.length) setRelated(initialRelated);
+    if (initialTours.length) setTours(initialTours);
   }, [initialPost, initialRelated, initialTours, prefill]);
 
   useEffect(() => {
     if (!slug) return undefined;
-    if (postHasSavedBody(post) && live === 0) return undefined;
-    if (fullLoadAttempts.current >= 2) return undefined;
-    fullLoadAttempts.current += 1;
-
     let cancelled = false;
     async function loadFullPost() {
       try {
@@ -99,8 +92,10 @@ export default function SafariUpdateDetailClient({
           related?: RecordRow[];
           tours?: RecordRow[];
         };
-        if (cancelled || !isReadableSafariPost(body.post)) return;
-        setPost(body.post ?? null);
+        if (cancelled) return;
+        if (postHasSavedBody(body.post)) {
+          setPost((current) => (postHasSavedBody(current) ? current : body.post ?? current));
+        }
         if (body.related?.length) setRelated(body.related);
         if (body.tours?.length) setTours(body.tours);
       } catch (error) {
@@ -112,7 +107,7 @@ export default function SafariUpdateDetailClient({
     return () => {
       cancelled = true;
     };
-  }, [slug, live, post]);
+  }, [slug, live]);
 
   useEffect(() => {
     if (!slug || related.length > 0) return undefined;
@@ -132,7 +127,7 @@ export default function SafariUpdateDetailClient({
   }, [slug, related.length, post?.id]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
-  const heroImage = post ? getRecordImage(post) || undefined : undefined;
+  const heroImage = (post ? getRecordImage(post) : '') || initialHeroImage || undefined;
   const published = useEnsurePublishedAt('safari_updates', post, '', (stamp) => {
     setPost((row) => (row ? { ...row, published_at: stamp } : row));
   });

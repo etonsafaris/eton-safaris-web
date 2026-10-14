@@ -42,6 +42,7 @@ type CountryPageContentProps = {
   slug: string;
   country: RecordRow | null;
   heroTitle?: string;
+  heroImage?: string;
   initialCategories?: RecordRow[];
   initialTours?: RecordRow[];
   initialParks?: RecordRow[];
@@ -62,6 +63,7 @@ export default function CountryPageContent({
   slug,
   country: countryProp,
   heroTitle,
+  heroImage = '',
   initialCategories = EMPTY_ROWS,
   initialTours = EMPTY_ROWS,
   initialParks = EMPTY_ROWS,
@@ -143,7 +145,7 @@ export default function CountryPageContent({
     <>
       <PageHero
         title={bannerTitle}
-        image={countryHeroImage(slug, country)}
+        image={countryHeroImage(slug, country) || heroImage || undefined}
         variant="country"
         bestTime={visitTime}
         country={title}

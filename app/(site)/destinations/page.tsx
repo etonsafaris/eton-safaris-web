@@ -1,6 +1,11 @@
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { countryHeroImage } from '@/lib/country-heroes';
+import { publicCountrySlug } from '@/lib/country-utils';
+import { pickString } from '@/lib/data-server';
 import { loadDestinationsIndexCountries } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { destinationListingRows } from '@/lib/public-destinations';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
@@ -22,6 +27,8 @@ export default async function DestinationsIndexPage() {
     rethrowDynamicServerError(error);
     console.warn('[Public] Destinations index failed:', error);
   }
+  const first = destinationListingRows(countries)[0];
+  preloadPublicHero(countryHeroImage(publicCountrySlug(first || {}) || pickString(first || {}, ['name']), first));
   return (
     <PublicShellServer>
       <DestinationsIndexClient initialCountries={countries} />

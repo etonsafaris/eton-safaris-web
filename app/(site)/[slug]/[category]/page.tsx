@@ -4,7 +4,9 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, resolvePublicSlug, titleFromPublicSlug } from '@/lib/cms-routes';
 import { countryHeroTitle } from '@/lib/country-landing-copy';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadStaticCategoryParams } from '@/lib/load-public';
+import { loadPublicHeroImage, loadStaticCategoryParams } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
 type PageProps = {
@@ -31,7 +33,7 @@ export function generateMetadata({ params }: PageProps) {
   return { title: `${titleFromPublicSlug(params.category)} in ${countryName}` };
 }
 
-export default function CountryCategoryPage({ params }: PageProps) {
+export default async function CountryCategoryPage({ params }: PageProps) {
   if (isReservedPublicSlug(params.slug)) permanentRedirect('/destinations');
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
@@ -41,10 +43,19 @@ export default function CountryCategoryPage({ params }: PageProps) {
     title: countryHeroTitle(countrySlug, countryName),
     slug: countrySlug,
   } as RecordRow;
+  let heroImage = '';
+  try {
+    heroImage =
+      (await loadPublicHeroImage('categories', params.category)) ||
+      (await loadPublicHeroImage('countries', countrySlug));
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <CategoryPageContent slug={countrySlug} country={country} categorySlug={params.category} />
+      <CategoryPageContent slug={countrySlug} country={country} categorySlug={params.category} heroImage={heroImage} />
     </PublicShellServer>
   );
 }

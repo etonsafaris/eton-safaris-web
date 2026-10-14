@@ -1,7 +1,9 @@
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
+import { getPublicRecordImage } from '@/lib/content-image';
 import { loadSafariUpdatesListingResilient } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
@@ -37,6 +39,7 @@ export default async function SafariUpdatesPage({
     rethrowDynamicServerError(error);
     console.warn('[Public] Safari updates listing failed:', error);
   }
+  preloadPublicHero(posts[0] ? getPublicRecordImage(posts[0]) : '');
 
   return (
     <PublicShellServer>

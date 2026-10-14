@@ -1,5 +1,8 @@
 import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
+import { loadFirstListingHero } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import { Metadata } from 'next';
 
 const PAGE_SIZE = 24;
@@ -30,12 +33,19 @@ function param(value?: string | string[]) {
   return Array.isArray(value) ? value[0] || '' : value || '';
 }
 
-export default function ToursPage({
+export default async function ToursPage({
   searchParams,
 }: {
   searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string; page?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  let heroImage = '';
+  try {
+    heroImage = await loadFirstListingHero('tours');
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  preloadPublicHero(heroImage);
   return (
     <PublicShellServer>
     <ToursPageClient
@@ -50,6 +60,7 @@ export default function ToursPage({
       initialDestination={param(searchParams?.destination)}
       initialDays={param(searchParams?.days)}
       initialDepart={param(searchParams?.depart)}
+      initialHeroImage={heroImage}
     />
     </PublicShellServer>
   );

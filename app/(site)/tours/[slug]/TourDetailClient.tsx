@@ -48,10 +48,12 @@ export default function TourDetailClient({
   embedded = false,
   initialTour = null,
   initialRelated = [],
+  initialHeroImage = '',
 }: {
   embedded?: boolean;
   initialTour?: RecordRow | null;
   initialRelated?: RecordRow[];
+  initialHeroImage?: string;
 }) {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
@@ -235,7 +237,7 @@ export default function TourDetailClient({
   if (!tour) {
     return (
       <DetailPageShell embedded={embedded}>
-        <PageHero variant="tour" title={titleFromPublicSlug(slug)} />
+        <PageHero variant="tour" title={titleFromPublicSlug(slug)} image={initialHeroImage || undefined} />
         {ready ? (
           <p className="px-4 py-10 text-center text-gray-500">
             This tour could not be loaded right now. Refresh the page or browse all tours.
@@ -250,7 +252,7 @@ export default function TourDetailClient({
       <PageHero
         variant="tour"
         title={getRecordTitle(tour)}
-        image={getRecordImage(tour)}
+        image={getRecordImage(tour) || initialHeroImage || undefined}
         backHref={countrySlug ? destinationPublicPath(countrySlug) : '/'}
         backLabel={countryName ? `Back to ${countryName}` : 'Back to Home'}
         duration={pickNumber(tour, ['duration_days']) > 0 ? `${pickNumber(tour, ['duration_days'])} Days` : undefined}

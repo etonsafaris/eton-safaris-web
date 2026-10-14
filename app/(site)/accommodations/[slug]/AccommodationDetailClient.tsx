@@ -34,11 +34,13 @@ export default function AccommodationDetailClient({
   initialItem = null,
   initialOthers = [],
   initialTours = [],
+  initialHeroImage = '',
 }: {
   embedded?: boolean;
   initialItem?: RecordRow | null;
   initialOthers?: RecordRow[];
   initialTours?: RecordRow[];
+  initialHeroImage?: string;
 }) {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
@@ -136,7 +138,7 @@ export default function AccommodationDetailClient({
   if (!item) {
     return (
       <DetailPageShell embedded={embedded}>
-        <PageHero variant="park" title={titleFromPublicSlug(slug)} />
+        <PageHero variant="park" title={titleFromPublicSlug(slug)} image={initialHeroImage || undefined} />
       </DetailPageShell>
     );
   }
@@ -149,7 +151,7 @@ export default function AccommodationDetailClient({
         location={pickString(item, ['location']) || undefined}
         country={pickString(item, ['country']) || undefined}
         published={published || undefined}
-        image={getRecordImage(item)}
+        image={getRecordImage(item) || initialHeroImage || undefined}
         metaItems={[
           {
             label: 'National Park',

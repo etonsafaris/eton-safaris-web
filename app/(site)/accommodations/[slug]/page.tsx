@@ -1,7 +1,9 @@
 import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadStaticAccommodationParams } from '@/lib/load-public';
+import { loadPublicHeroImage, loadStaticAccommodationParams } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -18,13 +20,27 @@ export async function generateStaticParams() {
   }
 }
 
-export default function AccommodationDetailPage({ params }: PageProps) {
+export default async function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
+  let heroImage = '';
+  try {
+    heroImage = await loadPublicHeroImage('accommodations', slug);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <AccommodationDetailClient key={slug} embedded initialItem={null} initialOthers={[]} initialTours={[]} />
+      <AccommodationDetailClient
+        key={slug}
+        embedded
+        initialItem={null}
+        initialOthers={[]}
+        initialTours={[]}
+        initialHeroImage={heroImage}
+      />
     </PublicShellServer>
   );
 }

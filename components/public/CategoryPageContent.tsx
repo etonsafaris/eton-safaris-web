@@ -43,6 +43,7 @@ type CategoryPageContentProps = {
   initialTours?: RecordRow[];
   initialCategory?: RecordRow | null;
   serverPreloaded?: boolean;
+  heroImage?: string;
 };
 
 function toProseHtml(value: string) {
@@ -80,6 +81,7 @@ export default function CategoryPageContent({
   initialTours = EMPTY_ROWS,
   initialCategory = null,
   serverPreloaded = false,
+  heroImage: savedHeroImage = '',
 }: CategoryPageContentProps) {
   const live = useCmsLive();
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
@@ -136,7 +138,9 @@ export default function CategoryPageContent({
     : titleFromSlug(categorySlug) || 'Safari Category';
   const countryTitle = publicCountryLabel(country, slug);
   const heroImage =
-    (selectedCategory && getRecordImage(selectedCategory)) || countryHeroImage(slug, country);
+    (selectedCategory && getRecordImage(selectedCategory)) ||
+    savedHeroImage ||
+    countryHeroImage(slug, country);
   const descriptionHtml = toProseHtml(
     selectedCategory ? visibleRecordHtml(selectedCategory, ['description', 'content', 'about', 'summary']) : ''
   );

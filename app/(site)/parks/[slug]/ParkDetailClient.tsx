@@ -31,11 +31,13 @@ export default function ParkDetailClient({
   initialPark = null,
   initialOthers: _initialOthers = [],
   initialTours = [],
+  initialHeroImage = '',
 }: {
   embedded?: boolean;
   initialPark?: RecordRow | null;
   initialOthers?: RecordRow[];
   initialTours?: RecordRow[];
+  initialHeroImage?: string;
 }) {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
@@ -87,7 +89,7 @@ export default function ParkDetailClient({
   if (!park) {
     return (
       <DetailPageShell embedded={embedded}>
-        <PageHero variant="park" title={titleFromPublicSlug(slug)} />
+        <PageHero variant="park" title={titleFromPublicSlug(slug)} image={initialHeroImage || undefined} />
       </DetailPageShell>
     );
   }
@@ -103,7 +105,7 @@ export default function ParkDetailClient({
         location={pickString(park, ['location']) || undefined}
         country={countryLabel || undefined}
         published={published || undefined}
-        image={getRecordImage(park)}
+        image={getRecordImage(park) || initialHeroImage || undefined}
       />
       <ContentDetailLayout
         hideMeta

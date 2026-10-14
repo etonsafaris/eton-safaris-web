@@ -1,7 +1,9 @@
 import { permanentRedirect } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadStaticTourParams } from '@/lib/load-public';
+import { loadPublicHeroImage, loadStaticTourParams } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
 export const revalidate = 900;
@@ -18,13 +20,20 @@ export async function generateStaticParams() {
   }
 }
 
-export default function TourDetailPage({ params }: PageProps) {
+export default async function TourDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
+  let heroImage = '';
+  try {
+    heroImage = await loadPublicHeroImage('tours', slug);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <TourDetailClient key={slug} embedded initialTour={null} initialRelated={[]} />
+      <TourDetailClient key={slug} embedded initialTour={null} initialRelated={[]} initialHeroImage={heroImage} />
     </PublicShellServer>
   );
 }

@@ -4,7 +4,9 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, isDedicatedLandingCountry, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryHeroTitle } from '@/lib/country-landing-copy';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadStaticDestinationParams } from '@/lib/load-public';
+import { loadPublicHeroImage, loadStaticDestinationParams } from '@/lib/load-public';
+import { preloadPublicHero } from '@/lib/preload-public-hero';
+import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
 /** Edge ISR + on-demand revalidate from admin; slugs pre-built at deploy. */
@@ -20,7 +22,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
+export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
   if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
 
@@ -31,10 +33,17 @@ export default function DestinationCountryPage({ params }: { params: { slug: str
     slug,
     status: 'published',
   } as RecordRow;
+  let heroImage = '';
+  try {
+    heroImage = await loadPublicHeroImage('countries', slug);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+  }
+  preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <CountryPageContent key={slug} slug={slug} country={country} />
+      <CountryPageContent key={slug} slug={slug} country={country} heroImage={heroImage} />
     </PublicShellServer>
   );
 }
