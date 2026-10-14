@@ -5,7 +5,7 @@ import { Calendar, CalendarRange, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
 
 type ForestItem = {
   label: string;
@@ -89,27 +89,18 @@ export default function PageHero({
 
   const heroImage = (
     <section
-      className={`relative w-full overflow-hidden bg-[#1f3d2b] ${
+      className={`relative w-full overflow-hidden bg-[#e4efe6] ${
         fullViewportHero && showForestBar
           ? 'min-h-0 flex-1'
           : 'h-[min(58svh,560px)] min-h-[320px]'
       }`}
+      style={{
+        backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
-      {src ? (
-        <ResponsiveImage
-          src={src}
-          alt={title ?? ''}
-          variant="hero"
-          priority={true}
-          quality={85}
-          width={1440}
-          height={900}
-          className="absolute inset-0 h-full w-full object-cover"
-          useErrorFallback={true}
-        />
-      ) : (
-        <div className="h-full bg-[#1f3d2b]" />
-      )}
+      <FastCoverImage src={src} alt={title ?? ''} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/20" />
       {isAbout || isPolicy || (!isTour && !isCountry && !isPark && !isUpdate) ? (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">

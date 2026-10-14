@@ -67,7 +67,10 @@ export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const image = resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) || '';
+    const image =
+      slug === 'uganda'
+        ? '/images/official-default-safari.jpg'
+        : resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) || '';
     return {
       title: copy.title,
       subtitle: copy.subtitle,

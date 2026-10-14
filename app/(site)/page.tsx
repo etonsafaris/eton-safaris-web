@@ -27,15 +27,12 @@ export function generateMetadata(): Metadata {
 export default function HomePage() {
   const initialHeroSlides = safeHeroSlides(fallbackHomeHeroSlides()).map((slide) => ({
     ...slide,
-    image: heroImageSrc(slide.image, 70),
+    image: heroImageSrc(slide.image, 58),
   }));
-  initialHeroSlides.forEach((slide, index) => {
-    if (!slide.image) return;
-    preload(slide.image, {
-      as: 'image',
-      fetchPriority: index === 0 ? 'high' : 'auto',
-    });
-  });
+  const firstHero = initialHeroSlides[0]?.image;
+  if (firstHero) {
+    preload(firstHero, { as: 'image', fetchPriority: 'high' });
+  }
 
   return (
     <>

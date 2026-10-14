@@ -12,7 +12,7 @@ import { submitWebsiteInquiry } from '@/lib/submit-inquiry';
 import Honeypot, { isSpamHoneypot } from '@/components/public/Honeypot';
 import MathCaptcha from '@/components/public/MathCaptcha';
 import PageFaqList from '@/components/public/PageFaqList';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
 import { bestFaqsFor } from '@/lib/best-faqs';
 
 export default function ContactPageClient({ heroImage = '' }: { heroImage?: string }) {
@@ -91,18 +91,15 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
 
   return (
     <PublicShellServer>
-      <section className="relative flex h-[min(58svh,560px)] min-h-[320px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
-        {heroImage ? (
-          <ResponsiveImage
-            src={heroImage}
-            alt="Contact Us"
-            variant="hero"
-            priority
-            width={1440}
-            height={900}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : null}
+      <section
+        className="relative flex h-[min(58svh,560px)] min-h-[320px] flex-col items-center justify-center overflow-hidden bg-[#e4efe6] text-white"
+        style={{
+          backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <FastCoverImage src={heroImage} alt="Contact Us" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/25" />
         <h1
           className="relative z-10 mx-auto max-w-[75%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"

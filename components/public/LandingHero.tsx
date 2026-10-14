@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 import PageFavicon from '@/components/public/PageFavicon';
-import ResponsiveImage from '@/components/public/ResponsiveImage';
+import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
 import type { ReviewSourceBadge } from '@/lib/review-links';
 
 export default function LandingHero({
@@ -22,25 +22,20 @@ export default function LandingHero({
   const badges = sources.length ? sources : [];
 
   return (
-    <section className="relative min-h-[560px] overflow-hidden md:min-h-[680px]">
+    <section
+      className="relative min-h-[560px] overflow-hidden bg-[#e4efe6] md:min-h-[680px]"
+      style={{
+        backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       <PageFavicon title={title} />
-      {image ? (
-        <ResponsiveImage
-          src={image}
-          alt=""
-          variant="hero"
-          priority={true}
-          quality={85}
-          useErrorFallback={true}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-forest" />
-      )}
+      <FastCoverImage src={image} alt="" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/50 to-black/80" />
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent" />
       <div className="relative z-10 flex min-h-[560px] flex-col items-center justify-center px-4 pb-36 pt-16 text-center md:min-h-[680px] md:pb-40">
-        <div className="max-w-5xl rounded-2xl bg-black/35 px-5 py-6 backdrop-blur-[2px] md:px-10 md:py-8">
+        <div className="max-w-5xl rounded-2xl bg-black/35 px-5 py-6 md:px-10 md:py-8">
           <h1
             className="text-3xl font-extrabold leading-tight tracking-tight text-white md:text-5xl"
             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.95), 0 6px 18px rgba(0,0,0,0.75)' }}

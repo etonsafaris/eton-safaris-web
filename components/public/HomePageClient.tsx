@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
+import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
 import HomePageImage from '@/components/public/HomePageImage';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
@@ -37,6 +38,7 @@ import {
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
+import { heroImageSrc } from '@/lib/responsive-image';
 import { countryCardRemoteFallback } from '@/lib/country-hero-fallback';
 import { stripPublicMoney } from '@/lib/public-money';
 import { selectHomePopularTours } from '@/lib/home-featured-tours';
@@ -99,22 +101,13 @@ export default function HomePageClient({
   }, [recoveredHeroSlides, initialHeroSlides]);
 
   useEffect(() => {
-    if (!heroSlides.length) return;
-    const nextIndex = (slide + 1) % heroSlides.length;
-    for (const index of [slide, nextIndex]) {
-      const url = resolvePublicHeroCarouselImage(heroSlides[index]?.image);
-      if (!url) continue;
-      const img = new window.Image();
-      img.decoding = 'async';
-      if (index === slide && 'fetchPriority' in img) {
-        try {
-          (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = index === 0 ? 'high' : 'low';
-        } catch {
-          // ignore
-        }
-      }
-      img.src = url;
-    }
+    if (heroSlides.length < 2) return undefined;
+    const next = heroSlides[(slide + 1) % heroSlides.length]?.image;
+    if (!next) return undefined;
+    const img = new window.Image();
+    img.decoding = 'async';
+    img.src = heroImageSrc(next, 58);
+    return undefined;
   }, [heroSlides, slide]);
 
   useEffect(() => {
@@ -236,31 +229,16 @@ export default function HomePageClient({
 
   return (
     <>
-      {current?.image ? (
-        <section
-          className="relative h-[500px] overflow-hidden bg-white md:h-[600px]"
-          style={{
-            backgroundImage: `url("${current.image}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {heroSlides.map((item, index) =>
-            item.image ? (
-              <img
-                key={item.href || item.image}
-                src={item.image}
-                alt=""
-                width={1440}
-                height={900}
-                decoding="async"
-                fetchPriority={index === 0 ? 'high' : 'auto'}
-                loading="eager"
-                className={`absolute inset-0 h-full w-full object-cover ${index === slide ? 'z-10 opacity-100' : 'opacity-0'}`}
-              />
-            ) : null
-          )}
-          <div className="pointer-events-none absolute inset-0 bg-black/20" />
+      <section
+        className="relative h-[500px] overflow-hidden bg-[#e4efe6] md:h-[600px]"
+        style={{
+          backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <FastCoverImage src={current?.image} alt="" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
           <button
             type="button"
             onClick={() => goHero(slide - 1)}
@@ -278,7 +256,7 @@ export default function HomePageClient({
             <ChevronRight />
           </button>
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4">
-            <div className="w-full max-w-2xl rounded-[3rem] border border-white/20 bg-black/15 px-8 py-6 text-center shadow-2xl backdrop-blur-sm md:px-12 md:py-8">
+            <div className="w-full max-w-2xl rounded-[3rem] border border-white/25 bg-black/35 px-8 py-6 text-center shadow-2xl md:px-12 md:py-8">
               <h1
                 className="mb-2 font-serif text-2xl font-bold leading-tight text-white md:text-4xl"
                 style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
@@ -293,7 +271,7 @@ export default function HomePageClient({
               </p>
               <Link
                 href={current?.href ?? '/destinations'}
-                className="pointer-events-auto inline-block rounded-full bg-moss/90 px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white backdrop-blur-sm hover:bg-moss"
+                className="pointer-events-auto inline-block rounded-full bg-moss px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a]"
               >
                 {current?.cta ?? 'Explore'}
               </Link>
@@ -310,12 +288,11 @@ export default function HomePageClient({
               />
             ))}
           </div>
-        </section>
-      ) : null}
+      </section>
 
       <TourSearchBar tours={tours ?? []} categories={categories ?? []} destinations={destinationOptions ?? []} />
 
-      <section className="cv-auto py-16">
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Popular Tours" title="Explore Our Most Popular Tours" />
           <div className="mt-10">
@@ -329,7 +306,7 @@ export default function HomePageClient({
         </div>
       </section>
 
-      <section className="cv-auto py-16">
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Find tours by" title="Destination" />
           <div className="mt-10">
@@ -351,7 +328,7 @@ export default function HomePageClient({
         </div>
       </section>
 
-      <section className="cv-auto py-16">
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4">
           <SectionHeading label="Stay up to date with" title={PUBLIC_SITE_LABELS.blogPosts} />
           <div className="mt-10">

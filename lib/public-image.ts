@@ -192,7 +192,7 @@ export function resolvePublicHeroCarouselImage(src?: string | null): string | nu
   if (typeof src !== 'string') return null;
   const trimmed = src.trim();
   if (!trimmed) return null;
-  if (isBundledHeroAsset(trimmed)) {
+  if (isBundledHeroAsset(trimmed) || isFastPublicHero(trimmed)) {
     const path = imagePathname(trimmed);
     return path.startsWith('/') ? path : trimmed;
   }
@@ -208,6 +208,11 @@ function imagePathname(src: string) {
   } catch {
     return src.split('?')[0];
   }
+}
+
+/** Same-origin safari photo used so the first hero paint is a picture, not a dark frame. */
+function isFastPublicHero(value: string) {
+  return /^\/images\/(?:official-default-safari|default-safari)\.jpg$/i.test(imagePathname(value));
 }
 
 /** Static safari art shipped under `public/heroes` — safe for the home carousel. */
