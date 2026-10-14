@@ -53,9 +53,7 @@ function ListingBlock({ loading, items }: { loading: boolean; items: DiscoverySe
       <div className="mx-auto max-w-[1200px]">
         <h2 className="font-serif text-2xl font-medium text-[#343434]">Parks, lodges &amp; places</h2>
         <p className="mt-1 text-sm text-gray-600">Matching your search — not shown on our main menu until you look for them.</p>
-        {loading ? (
-          <p className="mt-6 text-sm text-gray-500">Searching…</p>
-        ) : (
+        {loading ? null : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(items ?? [])?.map((item) => (
               <li key={`${item.kind}-${item.href}`}>

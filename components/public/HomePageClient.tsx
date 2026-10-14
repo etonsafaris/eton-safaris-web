@@ -323,7 +323,7 @@ export default function HomePageClient({
               instant
               items={tourItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage={pending ? 'Loading...' : 'Popular East Africa tours are loading. Refresh in a moment or browse all tours.'}
+              emptyMessage={pending ? undefined : 'Popular East Africa tours are loading. Refresh in a moment or browse all tours.'}
             />
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function HomePageClient({
               instant
               items={destinationItems}
               itemsPerView={{ sm: 1, md: 2, lg: 3 }}
-              emptyMessage={pending ? 'Loading...' : 'No records found in this collection.'}
+              emptyMessage={pending ? undefined : 'No records found in this collection.'}
             />
           </div>
           <div className="mt-10 text-center">
@@ -359,7 +359,7 @@ export default function HomePageClient({
               instant
               items={blogItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage={pending ? 'Loading...' : 'No records found in this collection.'}
+              emptyMessage={pending ? undefined : 'No records found in this collection.'}
             />
           </div>
           <div className="mt-8 text-center">

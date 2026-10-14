@@ -64,6 +64,14 @@ export function countryHeroTitle(slug: string, fallbackName: string) {
   return COUNTRY_HERO_TITLES[slug] || `${fallbackName} Safari Tours`;
 }
 
+/** Search snippet that leads with the country headline, not a tour card. */
+export function countryMetaDescription(slug: string, fallbackName: string) {
+  const headline = countryHeroTitle(slug, fallbackName);
+  const article = countryArticleHtml(slug).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const text = article ? `${headline}. ${article}` : `${headline} with Eton Safaris.`;
+  return text.length > 160 ? `${text.slice(0, 157).trim()}…` : text;
+}
+
 export function countryArticleHtml(slug: string) {
   return stripParkListFromCountryHtml(COUNTRY_ARTICLE_HTML[slug] || '');
 }

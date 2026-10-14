@@ -96,6 +96,7 @@ export default function Carousel({
   const slideWidth = useMemo(() => `${100 / perView}%`, [perView]);
 
   if (safeItems.length === 0) {
+    if (!emptyMessage) return null;
     return (
       <div className="rounded-xl border border-gray-200 bg-white py-12 text-center text-gray-500">
         {emptyMessage}

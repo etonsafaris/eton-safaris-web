@@ -1,10 +1,11 @@
 export default function PublicPageLoader({
-  label = 'Loading...',
+  label = '',
   className = '',
 }: {
   label?: string;
   className?: string;
 }) {
+  if (!label) return null;
   return (
     <div className={`mx-auto max-w-6xl px-4 py-16 ${className}`} role="status" aria-live="polite">
       <p className="text-sm text-gray-500">{label}</p>

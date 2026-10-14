@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { useCmsLive } from '@/lib/cms-live';
-import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
 import PublicShell from '@/components/public/PublicShell';
 import CountryPageContent from '@/components/public/CountryPageContent';
@@ -149,24 +148,10 @@ export default function CmsSlugClient({
   const showCountry = resolved?.kind === 'country' || forceCountry;
 
   if (!resolved) {
-    if (!rawSlug) {
-      return (
-        <PublicShell>
-          <PublicPageLoader label="Loading page" />
-        </PublicShell>
-      );
-    }
+    if (!rawSlug) return null;
     return (
       <PublicShell>
         <PublicRecordUnavailable />
-      </PublicShell>
-    );
-  }
-
-  if (!ready) {
-    return (
-      <PublicShell>
-        <PublicPageLoader label="Loading page" />
       </PublicShell>
     );
   }

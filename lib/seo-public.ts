@@ -120,6 +120,34 @@ export async function findPublicRecord(table: string, slug: string, aliases: str
   return (await fetchRecordByPublicSlug(table, slug, aliases).catch(() => null)) || null;
 }
 
+/** Google uses this name above the result. Never leave the bare domain as the site name. */
+function preferBrandSiteName(data: unknown): unknown {
+  const visit = (node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    const record = node as Record<string, unknown>;
+    const type = record['@type'];
+    const types = (Array.isArray(type) ? type : [type]).map((item) => String(item || ''));
+    if (types.includes('WebSite')) {
+      record.name = SITE.name;
+      record.alternateName = ['etonsafaris.com', 'www.etonsafaris.com'];
+      record.url = `${SITE.url.replace(/\/$/, '')}/`;
+    } else if (
+      (types.includes('Organization') || types.includes('TravelAgency')) &&
+      typeof record.name === 'string' &&
+      /etonsafaris\.com/i.test(record.name)
+    ) {
+      record.name = SITE.name;
+    }
+    if (record['@graph']) visit(record['@graph']);
+  };
+  visit(data);
+  return data;
+}
+
 export function jsonLdFromRecord(
   record: RecordRow | Record<string, unknown> | null,
   options: {
@@ -165,7 +193,7 @@ export function jsonLdFromRecord(
   const custom = values.seo_schema.trim();
   if (custom) {
     try {
-      return JSON.parse(custom) as unknown;
+      return preferBrandSiteName(JSON.parse(custom));
     } catch {
       // fall through to generated graph
     }

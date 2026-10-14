@@ -50,6 +50,7 @@ export default function ToursPageClient({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [countries, setCountries] = useState<RecordRow[]>(initialCountries);
+  const [settled, setSettled] = useState(initialTours.length > 0);
 
   useEffect(() => {
     setTours(initialTours);
@@ -71,7 +72,8 @@ export default function ToursPageClient({
         if (categoryRows.length) setCategories(categoryRows);
         if (countryRows.length) setCountries(countryRows.filter(isPublishedRecord));
       })
-      .catch((error) => console.error(error));
+      .catch((error) => console.error(error))
+      .finally(() => setSettled(true));
   }, initialTours.length > 0);
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function ToursPageClient({
         <Link href="/tours/compare" className="inline-flex text-sm font-semibold text-[#00A651] hover:underline">
           Compare packages →
         </Link>
-        {(filtered?.length ?? 0) === 0 ? (
+        {settled && (filtered?.length ?? 0) === 0 ? (
           <p className="mt-16 text-center text-gray-500">No tour package found. Try another search.</p>
         ) : (
           <div className="mt-8">

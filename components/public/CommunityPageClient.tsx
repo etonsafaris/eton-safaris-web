@@ -14,7 +14,6 @@ const SLUG = 'community-support';
 export default function CommunityPageClient({ initialPage = null }: { initialPage?: RecordRow | null }) {
   const live = useCmsLive();
   const [page, setPage] = useState<RecordRow | null>(initialPage);
-  const [ready, setReady] = useState(true);
 
   useEffect(() => {
     setPage(initialPage);
@@ -33,15 +32,10 @@ export default function CommunityPageClient({ initialPage = null }: { initialPag
         const full = id ? await fetchCollectionRecordById('pages', id) : match;
         setPage(full && isPublishedRecord(full) ? full : match);
       })
-      .catch((error) => console.error('[CMS] Community page load failed:', error))
-      .finally(() => setReady(true));
+      .catch((error) => console.error('[CMS] Community page load failed:', error));
   }, [live]);
 
   const view = hydratePublicCmsPage(page, SLUG);
-
-  if (!ready && !page && !view.content) {
-    return <div className="py-24 text-center text-gray-500">Loading…</div>;
-  }
 
   return (
     <CmsPageView

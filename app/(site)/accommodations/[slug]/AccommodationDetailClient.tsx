@@ -24,6 +24,7 @@ import {
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
+import { titleFromPublicSlug } from '@/lib/cms-routes';
 import { useCmsLive } from '@/lib/cms-live';
 import { accommodationNationalParkDisplay } from '@/lib/accommodation-park';
 import type { RecordRow } from '@/lib/types';
@@ -135,7 +136,7 @@ export default function AccommodationDetailClient({
   if (!item) {
     return (
       <DetailPageShell embedded={embedded}>
-        <p className="px-4 py-20 text-center text-gray-500">No records found in this collection.</p>
+        <PageHero variant="park" title={titleFromPublicSlug(slug)} />
       </DetailPageShell>
     );
   }

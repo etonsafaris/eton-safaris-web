@@ -20,6 +20,7 @@ import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
+import { titleFromPublicSlug } from '@/lib/cms-routes';
 import { useCmsLive } from '@/lib/cms-live';
 import { readPublicReadPrefill } from '@/lib/public-read-prefill';
 import type { RecordRow } from '@/lib/types';
@@ -158,7 +159,7 @@ export default function SafariUpdateDetailClient({
     <DetailPageShell embedded={embedded}>
       <PageHero
         variant="update"
-        title={post ? getRecordTitle(post) : 'Safari Update'}
+        title={post ? getRecordTitle(post) : titleFromPublicSlug(slug)}
         image={heroImage}
         country={undefined}
         published={published || undefined}
@@ -188,13 +189,7 @@ export default function SafariUpdateDetailClient({
           </section>
         }
       >
-        {recovering && !post ? (
-          <p className="text-gray-500">Loading safari update…</p>
-        ) : !post ? (
-          <p className="text-gray-500">
-            This post is taking longer than usual to load. Please refresh the page or open Safari Updates from the menu.
-          </p>
-        ) : (
+        {post ? (
           <>
             {pickStoredString(post, ['description_title']) ? (
               <h2 className="content-subheading">{pickStoredString(post, ['description_title'])}</h2>
@@ -209,7 +204,7 @@ export default function SafariUpdateDetailClient({
             />
             <ContentBlocks record={post} />
           </>
-        )}
+        ) : null}
       </ContentDetailLayout>
     </DetailPageShell>
   );

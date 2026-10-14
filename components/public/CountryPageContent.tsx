@@ -167,7 +167,7 @@ export default function CountryPageContent({
               itemWidth={200}
               gap={20}
               autoPlayMs={4500}
-              emptyMessage="No records found in this collection."
+              emptyMessage={ready && categoryItems.length === 0 ? 'No records found in this collection.' : undefined}
             />
           </div>
         </div>
@@ -275,9 +275,7 @@ export default function CountryPageContent({
         <AmazingSafaris
           tours={tours}
           title={`Explore These Amazing Safaris in ${title}`}
-          emptyMessage={
-            tours.length ? undefined : ready ? 'No tour package found. Try another search.' : 'Loading tours…'
-          }
+          emptyMessage={ready && tours.length === 0 ? 'No tour package found. Try another search.' : undefined}
         />
       </section>
     </>

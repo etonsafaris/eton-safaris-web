@@ -1,8 +1,10 @@
 import { Suspense } from 'react';
 import JsonLd from '@/components/public/JsonLd';
+import { SITE } from '@/lib/collections';
 import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
-import { countryHeroTitle } from '@/lib/country-landing-copy';
+import { countryHeroTitle, countryMetaDescription } from '@/lib/country-landing-copy';
 import { countryLabelFromSlug } from '@/lib/country-utils';
+import { publicCanonicalUrl } from '@/lib/seo-canonical';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -12,8 +14,17 @@ type LayoutProps = {
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug);
   const label = countryLabelFromSlug(slug) || slug;
+  const headline = countryHeroTitle(slug, label);
+  const description = countryMetaDescription(slug, label);
   return {
-    title: countryHeroTitle(slug, label),
+    title: headline,
+    description,
+    openGraph: {
+      title: headline,
+      description,
+      siteName: SITE.name,
+      url: publicCanonicalUrl(destinationPublicPath(slug)),
+    },
     alternates: { canonical: destinationPublicPath(slug) },
   };
 }

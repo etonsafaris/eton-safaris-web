@@ -22,7 +22,7 @@ import {
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
-import { destinationPublicPath } from '@/lib/cms-routes';
+import { destinationPublicPath, titleFromPublicSlug } from '@/lib/cms-routes';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
@@ -235,11 +235,12 @@ export default function TourDetailClient({
   if (!tour) {
     return (
       <DetailPageShell embedded={embedded}>
-        <p className="px-4 py-20 text-center text-gray-500">
-          {ready
-            ? 'This tour could not be loaded right now. Refresh the page or browse all tours.'
-            : 'Loading tour…'}
-        </p>
+        <PageHero variant="tour" title={titleFromPublicSlug(slug)} />
+        {ready ? (
+          <p className="px-4 py-10 text-center text-gray-500">
+            This tour could not be loaded right now. Refresh the page or browse all tours.
+          </p>
+        ) : null}
       </DetailPageShell>
     );
   }

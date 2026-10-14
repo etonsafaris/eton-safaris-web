@@ -56,9 +56,7 @@ export default function SafariUpdatesListingClient({
 
   return (
     <ListingSection>
-      {posts.length === 0 ? (
-        <p className="text-center text-gray-500">Loading safari updates…</p>
-      ) : (
+      {posts.length === 0 ? null : (
         <>
           <ListingGrid>
             {posts.map((post, index) => (

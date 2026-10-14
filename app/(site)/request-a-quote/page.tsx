@@ -37,7 +37,7 @@ export default function RequestQuotePage() {
       <section className="bg-[#f5f5f5] px-4 py-10 md:px-[50px]">
         <div className="mx-auto flex max-w-[1200px] flex-col items-start lg:flex-row">
           <div className="m-2.5 w-full lg:w-[68%]">
-            <Suspense fallback={<div className="rounded bg-white p-10 text-center text-gray-500">Loading quote form…</div>}>
+            <Suspense fallback={null}>
               <QuoteRequestForm />
             </Suspense>
           </div>

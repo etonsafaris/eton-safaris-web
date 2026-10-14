@@ -22,6 +22,7 @@ import {
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
+import { titleFromPublicSlug } from '@/lib/cms-routes';
 import { useCmsLive } from '@/lib/cms-live';
 import type { RecordRow } from '@/lib/types';
 
@@ -41,14 +42,12 @@ export default function ParkDetailClient({
   const slug = params?.slug || '';
   const [park, setPark] = useState<RecordRow | null>(initialPark);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
-  const [ready, setReady] = useState(Boolean(initialPark));
   const live = useCmsLive();
   const serverGate = useServerRecordGate(initialPark);
 
   useEffect(() => {
     setPark(initialPark);
     setTours(initialTours);
-    setReady(Boolean(initialPark));
   }, [initialPark, initialTours]);
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export default function ParkDetailClient({
           const country = pickStoredString(published, ['country']);
           const tourRows = await resolvePublicTours({ country, limit: 12 });
           if (tourRows.length) setTours(tourRows);
-          setReady(true);
           return;
         }
         if (!serverGate.current) triggerNotFound();
@@ -77,8 +75,6 @@ export default function ParkDetailClient({
           setTours([]);
           triggerNotFound();
         }
-      } finally {
-        setReady(true);
       }
     }
     load();
@@ -91,9 +87,7 @@ export default function ParkDetailClient({
   if (!park) {
     return (
       <DetailPageShell embedded={embedded}>
-        <p className="px-4 py-20 text-center text-gray-500">
-          {ready ? 'No records found in this collection.' : 'Loading park…'}
-        </p>
+        <PageHero variant="park" title={titleFromPublicSlug(slug)} />
       </DetailPageShell>
     );
   }

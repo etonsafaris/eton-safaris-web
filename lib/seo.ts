@@ -865,7 +865,8 @@ export function buildDefaultJsonLd(
     {
       '@type': 'WebSite',
       name: context.siteName,
-      url: context.siteUrl,
+      alternateName: ['etonsafaris.com', 'www.etonsafaris.com'],
+      url: `${context.siteUrl.replace(/\/$/, '')}/`,
     },
     {
       '@type': 'BreadcrumbList',

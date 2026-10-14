@@ -35,6 +35,11 @@ export const metadata: Metadata = {
     'Eton Safaris',
   ],
   applicationName: SITE.name,
+  appleWebApp: {
+    capable: true,
+    title: SITE.name,
+    statusBarStyle: 'default',
+  },
   formatDetection: {
     telephone: true,
     email: true,
@@ -125,7 +130,9 @@ const SITE_GRAPH = {
     {
       '@type': 'WebSite',
       name: SITE.name,
-      url: SITE.url,
+      alternateName: ['etonsafaris.com', 'www.etonsafaris.com'],
+      url: `${SITE.url.replace(/\/$/, '')}/`,
+      publisher: { '@type': 'Organization', name: SITE.name, url: `${SITE.url.replace(/\/$/, '')}/` },
       potentialAction: {
         '@type': 'SearchAction',
         target: `${SITE.url}/tours?q={search_term_string}`,
