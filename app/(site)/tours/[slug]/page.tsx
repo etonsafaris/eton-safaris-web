@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -6,7 +7,7 @@ import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
-/** Itinerary and related tours are in the first response. */
+/** The route paints immediately. The saved tour and the tours below stream in. */
 export const revalidate = 900;
 export const dynamicParams = true;
 
@@ -21,9 +22,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function TourDetailPage({ params }: PageProps) {
-  const slug = params?.slug?.trim() ?? '';
-  if (!slug) permanentRedirect('/tours');
+async function TourDetailReady({ slug }: { slug: string }) {
   let tour = null;
   let related: Awaited<ReturnType<typeof loadTourDetail>>['related'] = [];
   try {
@@ -36,16 +35,26 @@ export default async function TourDetailPage({ params }: PageProps) {
   }
   const heroImage = getPublicRecordImage(tour) || '';
   preloadPublicHero(heroImage);
+  return (
+    <TourDetailClient
+      key={slug}
+      embedded
+      initialTour={tour}
+      initialRelated={related}
+      initialHeroImage={heroImage}
+    />
+  );
+}
+
+export default function TourDetailPage({ params }: PageProps) {
+  const slug = params?.slug?.trim() ?? '';
+  if (!slug) permanentRedirect('/tours');
 
   return (
     <PublicShellServer>
-      <TourDetailClient
-        key={slug}
-        embedded
-        initialTour={tour}
-        initialRelated={related}
-        initialHeroImage={heroImage}
-      />
+      <Suspense fallback={<TourDetailClient key={slug} embedded initialTour={null} initialRelated={[]} />}>
+        <TourDetailReady slug={slug} />
+      </Suspense>
     </PublicShellServer>
   );
 }

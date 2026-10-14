@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
@@ -20,12 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function SafariUpdatesPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string };
-}) {
-  const page = Math.max(1, Number(searchParams?.page) || 1);
+async function SafariUpdatesReady({ page }: { page: number }) {
   let posts: Awaited<ReturnType<typeof loadSafariUpdatesListingResilient>>['posts'] = [];
   let total = 0;
   try {
@@ -40,10 +36,20 @@ export default async function SafariUpdatesPage({
     console.warn('[Public] Safari updates listing failed:', error);
   }
   preloadPublicHero(posts[0] ? getPublicRecordImage(posts[0]) : '');
+  return <SafariUpdatesListingClient initialPosts={posts} initialTotal={total} page={page} pageSize={PAGE_SIZE} showHero />;
+}
 
+export default function SafariUpdatesPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
   return (
     <PublicShellServer>
-      <SafariUpdatesListingClient initialPosts={posts} initialTotal={total} page={page} pageSize={PAGE_SIZE} showHero />
+      <Suspense fallback={<SafariUpdatesListingClient initialPosts={[]} initialTotal={0} page={page} pageSize={PAGE_SIZE} showHero />}>
+        <SafariUpdatesReady page={page} />
+      </Suspense>
     </PublicShellServer>
   );
 }

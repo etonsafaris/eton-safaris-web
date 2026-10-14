@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { getPublicRecordImage } from '@/lib/content-image';
 import { loadSafariUpdateDetailResilient, loadStaticSafariUpdateParams } from '@/lib/load-public';
@@ -19,8 +20,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function SafariUpdateDetailPage({ params }: PageProps) {
-  const slug = params?.slug?.trim() ?? '';
+async function SafariUpdateReady({ slug }: { slug: string }) {
   let post = null;
   let related: Awaited<ReturnType<typeof loadSafariUpdateDetailResilient>>['related'] = [];
   let tours: Awaited<ReturnType<typeof loadSafariUpdateDetailResilient>>['tours'] = [];
@@ -35,17 +35,25 @@ export default async function SafariUpdateDetailPage({ params }: PageProps) {
   }
   const heroImage = getPublicRecordImage(post) || '';
   preloadPublicHero(heroImage);
+  return (
+    <SafariUpdateDetailClient
+      key={slug}
+      embedded
+      initialPost={post}
+      initialHeroImage={heroImage}
+      initialRelated={related}
+      initialTours={tours}
+    />
+  );
+}
 
+export default function SafariUpdateDetailPage({ params }: PageProps) {
+  const slug = params?.slug?.trim() ?? '';
   return (
     <PublicShellServer>
-      <SafariUpdateDetailClient
-        key={slug}
-        embedded
-        initialPost={post}
-        initialHeroImage={heroImage}
-        initialRelated={related}
-        initialTours={tours}
-      />
+      <Suspense fallback={<SafariUpdateDetailClient key={slug} embedded initialPost={null} initialRelated={[]} initialTours={[]} />}>
+        <SafariUpdateReady slug={slug} />
+      </Suspense>
     </PublicShellServer>
   );
 }

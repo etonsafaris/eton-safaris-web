@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -23,10 +24,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function DestinationCountryPage({ params }: { params: { slug: string } }) {
-  const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
-  if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
-
+async function DestinationReady({ slug }: { slug: string }) {
   const name = countryLabelFromSlug(slug) || slug;
   let data = {
     country: {
@@ -57,17 +55,35 @@ export default async function DestinationCountryPage({ params }: { params: { slu
   preloadPublicHero(countryHeroImage(slug, country));
 
   return (
+    <CountryPageContent
+      key={slug}
+      slug={slug}
+      country={country}
+      heroImage={countryHeroImage(slug, country) || ''}
+      initialCategories={data.categories ?? []}
+      initialTours={data.tours ?? []}
+      initialParks={data.parks ?? []}
+      initialPlaces={data.places ?? []}
+    />
+  );
+}
+
+export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
+  const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
+  if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
+  const name = countryLabelFromSlug(slug) || slug;
+  const shell = {
+    name,
+    title: countryHeroTitle(slug, name),
+    slug,
+    status: 'published',
+  } as RecordRow;
+
+  return (
     <PublicShellServer>
-      <CountryPageContent
-        key={slug}
-        slug={slug}
-        country={country}
-        heroImage={countryHeroImage(slug, country) || ''}
-        initialCategories={data.categories ?? []}
-        initialTours={data.tours ?? []}
-        initialParks={data.parks ?? []}
-        initialPlaces={data.places ?? []}
-      />
+      <Suspense fallback={<CountryPageContent key={slug} slug={slug} country={shell} />}>
+        <DestinationReady slug={slug} />
+      </Suspense>
     </PublicShellServer>
   );
 }

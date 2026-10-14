@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
 import { getPublicRecordImage } from '@/lib/content-image';
@@ -35,12 +36,13 @@ function param(value?: string | string[]) {
   return Array.isArray(value) ? value[0] || '' : value || '';
 }
 
-export default async function ToursPage({
+async function ToursListingReady({
+  page,
   searchParams,
 }: {
+  page: number;
   searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string; page?: string };
 }) {
-  const page = Math.max(1, Number(searchParams?.page) || 1);
   let tours: RecordRow[] = [];
   let categories: RecordRow[] = [];
   let countries: RecordRow[] = [];
@@ -57,23 +59,51 @@ export default async function ToursPage({
   }
   const heroImage = getPublicRecordImage(tours[0]) || '';
   preloadPublicHero(heroImage);
+  return (
+    <ToursPageClient
+      initialTours={tours}
+      initialCategories={categories}
+      initialCountries={countries}
+      initialTotal={total}
+      page={page}
+      pageSize={PAGE_SIZE}
+      initialQuery={param(searchParams?.q)}
+      initialCategory={param(searchParams?.category)}
+      initialDestination={param(searchParams?.destination)}
+      initialDays={param(searchParams?.days)}
+      initialDepart={param(searchParams?.depart)}
+      initialHeroImage={heroImage}
+    />
+  );
+}
 
+export default function ToursPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string; category?: string; destination?: string; days?: string; depart?: string; page?: string };
+}) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
   return (
     <PublicShellServer>
-      <ToursPageClient
-        initialTours={tours}
-        initialCategories={categories}
-        initialCountries={countries}
-        initialTotal={total}
-        page={page}
-        pageSize={PAGE_SIZE}
-        initialQuery={param(searchParams?.q)}
-        initialCategory={param(searchParams?.category)}
-        initialDestination={param(searchParams?.destination)}
-        initialDays={param(searchParams?.days)}
-        initialDepart={param(searchParams?.depart)}
-        initialHeroImage={heroImage}
-      />
+      <Suspense
+        fallback={
+          <ToursPageClient
+            initialTours={[]}
+            initialCategories={[]}
+            initialCountries={[]}
+            initialTotal={0}
+            page={page}
+            pageSize={PAGE_SIZE}
+            initialQuery={param(searchParams?.q)}
+            initialCategory={param(searchParams?.category)}
+            initialDestination={param(searchParams?.destination)}
+            initialDays={param(searchParams?.days)}
+            initialDepart={param(searchParams?.depart)}
+          />
+        }
+      >
+        <ToursListingReady page={page} searchParams={searchParams} />
+      </Suspense>
     </PublicShellServer>
   );
 }

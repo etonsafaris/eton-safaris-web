@@ -114,6 +114,26 @@ export default function TourDetailClient({
     void load();
   }, [slug, live, router, serverGate]);
 
+  useEffect(() => {
+    if (!tour || related.length > 0) return undefined;
+    let cancelled = false;
+    const country = pickString(tour, ['country']);
+    resolvePublicTours({
+      country,
+      limit: 24,
+      excludeId: tour.id != null ? String(tour.id) : undefined,
+    })
+      .then((rows) => {
+        if (cancelled || !rows.length) return;
+        const others = rows.filter((row) => String(row.id || '') !== String(tour.id || ''));
+        if (others.length) setRelated(others.slice(0, 12));
+      })
+      .catch((error) => console.error('[Tour detail] More tours failed:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [tour, related.length]);
+
   const itineraries = useMemo(() => parseItinerariesFromRecord(tour), [tour]);
   const highlights = useMemo(
     () => splitContentList(pickStoredString(tour || {}, ['highlights'])).map(stripPublicMoney).filter(Boolean),
@@ -526,7 +546,8 @@ export default function TourDetailClient({
       </section>
       <AmazingSafaris
         tours={related}
-        emptyMessage="More safari packages will appear here."
+        title="More Safari Tours"
+        emptyMessage={related.length ? undefined : 'More safari packages will appear here.'}
       />
       {reviewSubmitted ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

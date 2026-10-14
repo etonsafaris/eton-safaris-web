@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -20,9 +21,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function AccommodationDetailPage({ params }: PageProps) {
-  const slug = params?.slug?.trim() ?? '';
-  if (!slug) permanentRedirect('/tours');
+async function AccommodationReady({ slug }: { slug: string }) {
   let item = null;
   let others: Awaited<ReturnType<typeof loadAccommodationDetail>>['others'] = [];
   let tours: Awaited<ReturnType<typeof loadAccommodationDetail>>['tours'] = [];
@@ -37,17 +36,27 @@ export default async function AccommodationDetailPage({ params }: PageProps) {
   }
   const heroImage = getPublicRecordImage(item) || '';
   preloadPublicHero(heroImage);
+  return (
+    <AccommodationDetailClient
+      key={slug}
+      embedded
+      initialItem={item}
+      initialOthers={others}
+      initialTours={tours}
+      initialHeroImage={heroImage}
+    />
+  );
+}
+
+export default function AccommodationDetailPage({ params }: PageProps) {
+  const slug = params?.slug?.trim() ?? '';
+  if (!slug) permanentRedirect('/tours');
 
   return (
     <PublicShellServer>
-      <AccommodationDetailClient
-        key={slug}
-        embedded
-        initialItem={item}
-        initialOthers={others}
-        initialTours={tours}
-        initialHeroImage={heroImage}
-      />
+      <Suspense fallback={<AccommodationDetailClient key={slug} embedded initialItem={null} initialOthers={[]} initialTours={[]} />}>
+        <AccommodationReady slug={slug} />
+      </Suspense>
     </PublicShellServer>
   );
 }

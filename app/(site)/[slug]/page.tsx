@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CmsSlugClient from '@/components/public/CmsSlugClient';
 import JsonLd from '@/components/public/JsonLd';
@@ -73,8 +74,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function PublicCmsSlugPage({ params }: PageProps) {
-  if (isReservedPublicSlug(params.slug)) permanentRedirect('/');
+async function CmsSlugReady({ params }: PageProps) {
   const resolved = resolvePublicSlugLenient(params.slug);
   if (!resolved) {
     return (
@@ -123,5 +123,23 @@ export default async function PublicCmsSlugPage({ params }: PageProps) {
         initialPlaces={countryData?.places || []}
       />
     </>
+  );
+}
+
+export default function PublicCmsSlugPage({ params }: PageProps) {
+  if (isReservedPublicSlug(params.slug)) permanentRedirect('/');
+  const resolved = resolvePublicSlugLenient(params.slug);
+  if (!resolved) {
+    return (
+      <PublicShellServer>
+        <PublicRecordUnavailable />
+      </PublicShellServer>
+    );
+  }
+
+  return (
+    <Suspense fallback={<CmsSlugClient key={params.slug} />}>
+      <CmsSlugReady params={params} />
+    </Suspense>
   );
 }

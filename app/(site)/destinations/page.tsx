@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countryHeroImage } from '@/lib/country-heroes';
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function DestinationsIndexPage() {
+async function DestinationsReady() {
   let countries: Awaited<ReturnType<typeof loadDestinationsIndexCountries>> = [];
   try {
     countries = await loadDestinationsIndexCountries();
@@ -29,9 +30,15 @@ export default async function DestinationsIndexPage() {
   }
   const first = destinationListingRows(countries)[0];
   preloadPublicHero(countryHeroImage(publicCountrySlug(first || {}) || pickString(first || {}, ['name']), first));
+  return <DestinationsIndexClient initialCountries={countries} />;
+}
+
+export default function DestinationsIndexPage() {
   return (
     <PublicShellServer>
-      <DestinationsIndexClient initialCountries={countries} />
+      <Suspense fallback={<DestinationsIndexClient initialCountries={[]} />}>
+        <DestinationsReady />
+      </Suspense>
     </PublicShellServer>
   );
 }

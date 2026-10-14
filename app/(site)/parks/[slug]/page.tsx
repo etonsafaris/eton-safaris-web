@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -20,9 +21,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function ParkDetailPage({ params }: PageProps) {
-  const slug = params?.slug?.trim() ?? '';
-  if (!slug) permanentRedirect('/tours');
+async function ParkDetailReady({ slug }: { slug: string }) {
   let park = null;
   let tours: Awaited<ReturnType<typeof loadParkDetail>>['tours'] = [];
   try {
@@ -35,17 +34,27 @@ export default async function ParkDetailPage({ params }: PageProps) {
   }
   const heroImage = getPublicRecordImage(park) || '';
   preloadPublicHero(heroImage);
+  return (
+    <ParkDetailClient
+      key={slug}
+      embedded
+      initialPark={park}
+      initialOthers={[]}
+      initialTours={tours}
+      initialHeroImage={heroImage}
+    />
+  );
+}
+
+export default function ParkDetailPage({ params }: PageProps) {
+  const slug = params?.slug?.trim() ?? '';
+  if (!slug) permanentRedirect('/tours');
 
   return (
     <PublicShellServer>
-      <ParkDetailClient
-        key={slug}
-        embedded
-        initialPark={park}
-        initialOthers={[]}
-        initialTours={tours}
-        initialHeroImage={heroImage}
-      />
+      <Suspense fallback={<ParkDetailClient key={slug} embedded initialPark={null} initialOthers={[]} initialTours={[]} />}>
+        <ParkDetailReady slug={slug} />
+      </Suspense>
     </PublicShellServer>
   );
 }

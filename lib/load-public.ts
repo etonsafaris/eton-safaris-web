@@ -588,17 +588,18 @@ async function loadTourDetailLive(slug: string, synced = false) {
   const relatedPool = await withTimeout(
     resolvePublicTours({
       country,
-      limit: 8,
+      limit: 24,
       excludeId: tour.id != null ? String(tour.id) : undefined,
     }),
-    2500,
+    4000,
     [] as RecordRow[]
   );
   const sameCountry = (relatedPool ?? []).filter((row) => row && String(row.id) !== String(tour.id || ''));
   const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
+  const related = (sameCategory.length >= 8 ? sameCategory : sameCountry).slice(0, 12);
   return toClientProps({
     tour,
-    related: (sameCategory.length ? sameCategory : sameCountry).slice(0, 12),
+    related,
   });
 }
 
@@ -606,7 +607,7 @@ export async function loadTourDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['tour-detail-v2-full', normalized],
+      ['tour-detail-v3-more', normalized],
       ['collection:tours', `tour:${normalized}`],
       () => loadTourDetailLive(normalized)
     );

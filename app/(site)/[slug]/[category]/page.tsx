@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -35,10 +36,7 @@ export function generateMetadata({ params }: PageProps) {
   return { title: `${titleFromPublicSlug(params.category)} in ${countryName}` };
 }
 
-export default async function CountryCategoryPage({ params }: PageProps) {
-  if (isReservedPublicSlug(params.slug)) permanentRedirect('/destinations');
-  const resolved = resolvePublicSlug(params.slug);
-  const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
+async function CategoryReady({ countrySlug, categorySlug }: { countrySlug: string; categorySlug: string }) {
   const countryName = countryLabelFromSlug(countrySlug) || titleFromPublicSlug(countrySlug);
   let country = {
     name: countryName,
@@ -49,30 +47,56 @@ export default async function CountryCategoryPage({ params }: PageProps) {
   let tours: RecordRow[] = [];
   let category: RecordRow | null = null;
   try {
-    const loaded = await loadCategoryPageData(countrySlug, params.category);
+    const loaded = await loadCategoryPageData(countrySlug, categorySlug);
     if (loaded.country) country = loaded.country;
     categories = loaded.categories ?? [];
     tours = loaded.tours ?? [];
     category = loaded.category ?? null;
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] Category page failed:', countrySlug, params.category, error);
+    console.warn('[Public] Category page failed:', countrySlug, categorySlug, error);
   }
   const heroImage = getPublicRecordImage(category) || countryHeroImage(countrySlug, country) || '';
   preloadPublicHero(heroImage);
+  return (
+    <CategoryPageContent
+      slug={countrySlug}
+      country={country}
+      categorySlug={categorySlug}
+      heroImage={heroImage}
+      initialCategories={categories}
+      initialTours={tours}
+      initialCategory={category}
+      serverPreloaded={Boolean(category || categories.length || tours.length)}
+    />
+  );
+}
+
+export default function CountryCategoryPage({ params }: PageProps) {
+  if (isReservedPublicSlug(params.slug)) permanentRedirect('/destinations');
+  const resolved = resolvePublicSlug(params.slug);
+  const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
+  const countryName = countryLabelFromSlug(countrySlug) || titleFromPublicSlug(countrySlug);
+  const shell = {
+    name: countryName,
+    title: countryHeroTitle(countrySlug, countryName),
+    slug: countrySlug,
+  } as RecordRow;
 
   return (
     <PublicShellServer>
-      <CategoryPageContent
-        slug={countrySlug}
-        country={country}
-        categorySlug={params.category}
-        heroImage={heroImage}
-        initialCategories={categories}
-        initialTours={tours}
-        initialCategory={category}
-        serverPreloaded={Boolean(category || categories.length || tours.length)}
-      />
+      <Suspense
+        fallback={
+          <CategoryPageContent
+            slug={countrySlug}
+            country={shell}
+            categorySlug={params.category}
+            heroImage={countryHeroImage(countrySlug, shell) || ''}
+          />
+        }
+      >
+        <CategoryReady countrySlug={countrySlug} categorySlug={params.category} />
+      </Suspense>
     </PublicShellServer>
   );
 }
