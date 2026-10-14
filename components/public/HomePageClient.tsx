@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Carousel from '@/components/public/Carousel';
-import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
+import { FastCoverImage } from '@/components/public/FastCoverImage';
 import HomePageImage from '@/components/public/HomePageImage';
 import TourSearchBar from '@/components/public/TourSearchBar';
 import SectionHeading from '@/components/public/SectionHeading';
@@ -229,14 +229,7 @@ export default function HomePageClient({
 
   return (
     <>
-      <section
-        className="relative h-[500px] overflow-hidden bg-[#e4efe6] md:h-[600px]"
-        style={{
-          backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <section className="relative h-[500px] overflow-hidden bg-[#e4efe6] md:h-[600px]">
         <FastCoverImage src={current?.image} alt="" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
           <button

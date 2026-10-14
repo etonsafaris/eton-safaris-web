@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 import PageFavicon from '@/components/public/PageFavicon';
-import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
+import { FastCoverImage } from '@/components/public/FastCoverImage';
 import type { ReviewSourceBadge } from '@/lib/review-links';
 
 export default function LandingHero({
@@ -22,14 +22,7 @@ export default function LandingHero({
   const badges = sources.length ? sources : [];
 
   return (
-    <section
-      className="relative min-h-[560px] overflow-hidden bg-[#e4efe6] md:min-h-[680px]"
-      style={{
-        backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
+    <section className="relative min-h-[560px] overflow-hidden bg-[#e4efe6] md:min-h-[680px]">
       <PageFavicon title={title} />
       <FastCoverImage src={image} alt="" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/50 to-black/80" />

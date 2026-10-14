@@ -1,7 +1,6 @@
 import { NAV_COUNTRIES } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroImage } from '@/lib/country-heroes';
-import { countryHeroRemoteFallback } from '@/lib/country-hero-fallback';
 import { recordMatchesCountrySlug } from '@/lib/country-match';
 import { resolvePublicHeroCarouselImage } from '@/lib/public-image';
 import type { RecordRow } from '@/lib/types';
@@ -37,7 +36,7 @@ const HERO_COPY: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-/** Home carousel: admin country covers first, then verified hero art when a cover is missing. */
+/** Home carousel: the featured image saved on each country. No stock stand-in. */
 export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[] {
   return NAV_COUNTRIES.map(({ slug, name }) => {
     const dbCountry = countries.find((row) => recordMatchesCountrySlug(row, slug));
@@ -45,32 +44,7 @@ export function buildHomeHeroSlides(countries: RecordRow[] = []): HomeHeroSlide[
       title: `Discover ${name}`,
       subtitle: `Discover unforgettable safari experiences in ${name}.`,
     };
-    const fromCms = countryHeroImage(slug, dbCountry);
-    const image =
-      resolvePublicHeroCarouselImage(fromCms) ||
-      resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) ||
-      '';
-    return {
-      title: copy.title,
-      subtitle: copy.subtitle,
-      cta: `Explore ${name}`,
-      href: destinationPublicPath(slug),
-      image,
-    };
-  }).filter((slide) => Boolean(slide.image && resolvePublicHeroCarouselImage(slide.image)));
-}
-
-/** Dav-style default carousel when CMS covers are not set yet. */
-export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
-  return NAV_COUNTRIES.map(({ slug, name }) => {
-    const copy = HERO_COPY[slug] || {
-      title: `Discover ${name}`,
-      subtitle: `Discover unforgettable safari experiences in ${name}.`,
-    };
-    const image =
-      slug === 'uganda'
-        ? '/images/official-default-safari.jpg'
-        : resolvePublicHeroCarouselImage(countryHeroRemoteFallback(slug)) || '';
+    const image = resolvePublicHeroCarouselImage(countryHeroImage(slug, dbCountry)) || '';
     return {
       title: copy.title,
       subtitle: copy.subtitle,
@@ -79,4 +53,9 @@ export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
       image,
     };
   }).filter((slide) => Boolean(slide.image));
+}
+
+/** Kept for callers. Real covers come from the country records, never from stock art. */
+export function fallbackHomeHeroSlides(): HomeHeroSlide[] {
+  return [];
 }

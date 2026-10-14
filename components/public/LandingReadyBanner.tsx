@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
+import { FastCoverImage } from '@/components/public/FastCoverImage';
 import { LANDING_READY_IMAGES } from '@/lib/landing-page-copy';
 
 export default function LandingReadyBanner({
@@ -38,14 +38,7 @@ export default function LandingReadyBanner({
         ) : null}
         <h2 className="public-article-body text-[26px] italic text-[#00A651] md:text-[32px]">{heading}</h2>
       </div>
-      <div
-        className="relative mt-6 min-h-[320px] overflow-hidden bg-[#e4efe6] md:min-h-[420px]"
-        style={{
-          backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <div className="relative mt-6 min-h-[320px] overflow-hidden bg-[#e4efe6] md:min-h-[420px]">
         <FastCoverImage src={current} alt="" />
         <div className="absolute inset-0 bg-black/25" />
         <div className="relative z-10 flex min-h-[320px] items-center justify-center md:min-h-[420px]">

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HomePageContent } from '@/lib/home-page-content';
 import type { HomeHeroSlide } from '@/lib/home-hero-slides';
+import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { mergeHomePagePayload } from '@/lib/home-page-fallback';
-import { normalizeHomePagePayload, type HomePagePayload } from '@/lib/home-page-payload';
+import { normalizeHomePagePayload, safeHeroSlides, type HomePagePayload } from '@/lib/home-page-payload';
 import type { PublicDestination } from '@/lib/public-destinations';
 import { selectHomePopularTours } from '@/lib/home-featured-tours';
 import { fetchJsonSafe } from '@/lib/safe-client-fetch';
@@ -53,7 +54,12 @@ export function useHomePageRecovery(options: {
         const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
         const incoming = normalizeHomePagePayload(body?.data);
         if (cancelled || incoming.tours.length === 0) return;
+        const merged = mergeHomePagePayload(incoming);
+        const fromApi = safeHeroSlides(body?.heroSlides);
+        const fromCountries = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+        const slides = fromApi.length ? fromApi : fromCountries;
         setData((current) => mergeHomePagePayload(incoming, current));
+        if (slides.length) setHeroSlides(slides);
       } finally {
         if (!cancelled) setPending(false);
       }

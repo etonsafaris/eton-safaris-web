@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { COUNTRY_IMAGE_DIMENSIONS } from '@/lib/official-country-assets';
 import {
   publicImagePlaceholderArt,
-  resolvePublicHeroCarouselImage,
+  resolvePublicCmsImage,
   resolvePublicRecordImageSrc,
 } from '@/lib/public-image';
 import { cardImageSrc, countryDestinationCardSrc, heroImageSrc } from '@/lib/responsive-image';
@@ -38,7 +38,7 @@ export default function ResponsiveImage({
 }: ResponsiveImageProps) {
   const resolvedSrc = useMemo(() => {
     if (variant === 'hero') {
-      return resolvePublicHeroCarouselImage(src) || resolvePublicRecordImageSrc(src) || String(src || '').trim();
+      return resolvePublicCmsImage(src) || '';
     }
     return resolvePublicRecordImageSrc(src) || '';
   }, [src, variant]);
@@ -46,7 +46,8 @@ export default function ResponsiveImage({
   useEffect(() => {
     setErrorArt(false);
   }, [resolvedSrc]);
-  const displaySrc = errorArt && useErrorFallback ? publicImagePlaceholderArt() : resolvedSrc;
+  const displaySrc =
+    variant === 'hero' ? (errorArt ? '' : resolvedSrc) : errorArt && useErrorFallback ? publicImagePlaceholderArt() : resolvedSrc;
 
   if (!displaySrc) return null;
 

@@ -1,8 +1,10 @@
 import { preload } from 'react-dom';
 import HomePageClient from '@/components/public/HomePageClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { fallbackHomeHeroSlides } from '@/lib/home-hero-slides';
+import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
+import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
 import { safeHeroSlides } from '@/lib/home-page-payload';
+import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { heroImageSrc } from '@/lib/responsive-image';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { Metadata } from 'next';
@@ -24,8 +26,10 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function HomePage() {
-  const initialHeroSlides = safeHeroSlides(fallbackHomeHeroSlides()).map((slide) => ({
+export default async function HomePage() {
+  const bundle = await loadHomePageBundleResilient();
+  const state = prepareHomePageRenderState(bundle);
+  const initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(state.data.countries)).map((slide) => ({
     ...slide,
     image: heroImageSrc(slide.image, 58),
   }));
@@ -35,17 +39,16 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      <PublicShellServer>
-        <HomePageClient
-          initialHeroSlides={initialHeroSlides}
-          initialCountries={[]}
-          initialTours={[]}
-          initialUpdates={[]}
-          initialCategories={[]}
-          needsClientRefresh
-        />
-      </PublicShellServer>
-    </>
+    <PublicShellServer>
+      <HomePageClient
+        initialHeroSlides={initialHeroSlides}
+        initialCountries={state.data.countries}
+        initialTours={state.data.tours}
+        initialUpdates={state.data.updates}
+        initialCategories={state.data.categories}
+        initialHomeContent={state.homeContent}
+        needsClientRefresh={state.needsClientRefresh || initialHeroSlides.length === 0}
+      />
+    </PublicShellServer>
   );
 }

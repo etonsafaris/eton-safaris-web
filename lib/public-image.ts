@@ -172,33 +172,12 @@ export function resolvePublicImage(src?: string | null, fallback = '') {
   return resolvePublicCmsImage(src) || fallback;
 }
 
-function isVerifiedUnsplashHeroUrl(value: string): boolean {
-  if (!/images\.unsplash\.com/i.test(value)) return false;
-  try {
-    const pathname = new URL(value).pathname;
-    return /\/photo-\d+-[a-f0-9]+/i.test(pathname);
-  } catch {
-    return /photo-\d+-[a-f0-9]+/i.test(value);
-  }
-}
-
 /**
- * Home hero carousel only: admin CMS media, bundled `/heroes/*`, or verified Unsplash IDs.
- * Tour/category cards should keep using {@link resolvePublicCmsImage}.
+ * Hero frames: the image saved for that page in admin.
+ * Unsplash, bundled `/heroes`, and the generic safari photo are not page heroes.
  */
 export function resolvePublicHeroCarouselImage(src?: string | null): string | null {
-  const cms = resolvePublicCmsImage(src);
-  if (cms) return cms;
-  if (typeof src !== 'string') return null;
-  const trimmed = src.trim();
-  if (!trimmed) return null;
-  if (isBundledHeroAsset(trimmed) || isFastPublicHero(trimmed)) {
-    const path = imagePathname(trimmed);
-    return path.startsWith('/') ? path : trimmed;
-  }
-  const https = String(trimmed).replace(/^http:\/\//i, 'https://');
-  if (isVerifiedUnsplashHeroUrl(https)) return https;
-  return null;
+  return resolvePublicCmsImage(src);
 }
 
 function imagePathname(src: string) {
@@ -210,12 +189,7 @@ function imagePathname(src: string) {
   }
 }
 
-/** Same-origin safari photo used so the first hero paint is a picture, not a dark frame. */
-function isFastPublicHero(value: string) {
-  return /^\/images\/(?:official-default-safari|default-safari)\.jpg$/i.test(imagePathname(value));
-}
-
-/** Static safari art shipped under `public/heroes` — safe for the home carousel. */
+/** Static safari art shipped under `public/heroes`. Not used for public heroes. */
 export function isBundledHeroAsset(value: unknown): value is string {
   if (!isDeployableImageUrl(value)) return false;
   const pathname = imagePathname(value.trim());

@@ -5,7 +5,7 @@ import { Calendar, CalendarRange, Clock, MapPin, Users } from 'lucide-react';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import PageBreadcrumbs from '@/components/public/PageBreadcrumbs';
 import PageFavicon from '@/components/public/PageFavicon';
-import { FAST_HERO_UNDERLAY, FastCoverImage } from '@/components/public/FastCoverImage';
+import { FastCoverImage } from '@/components/public/FastCoverImage';
 
 type ForestItem = {
   label: string;
@@ -94,11 +94,6 @@ export default function PageHero({
           ? 'min-h-0 flex-1'
           : 'h-[min(58svh,560px)] min-h-[320px]'
       }`}
-      style={{
-        backgroundImage: `url("${FAST_HERO_UNDERLAY}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
     >
       <FastCoverImage src={src} alt={title ?? ''} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/20" />

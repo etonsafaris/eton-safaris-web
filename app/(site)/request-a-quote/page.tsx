@@ -18,15 +18,8 @@ export default function RequestQuotePage() {
   const emails = publicEmails(home);
   return (
     <PublicShellServer>
-      <section
-        className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#e4efe6] text-white"
-        style={{
-          backgroundImage: 'url("/images/official-default-safari.jpg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/25 to-black/15" />
+      <section className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden bg-[#141612] text-white">
+        <div className="absolute inset-0 bg-black/40" />
         <h1
           className="relative z-10 mx-auto max-w-[90%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"
           style={{ textShadow: '0 0 20px #000' }}

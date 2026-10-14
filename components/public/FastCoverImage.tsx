@@ -1,18 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { resolvePublicCmsImage } from '@/lib/public-image';
 import { heroImageSrc } from '@/lib/responsive-image';
 
-/** Same-origin photo so a hero frame is never a black box while the real image downloads. */
-export const FAST_HERO_UNDERLAY = '/images/official-default-safari.jpg';
+function realHeroSrc(src: string | null | undefined) {
+  const saved = resolvePublicCmsImage(src);
+  return saved ? heroImageSrc(saved, 58) : '';
+}
 
-/** Keep the last decoded hero URL. A new src replaces it only after that file has loaded. */
+/** Keep the last decoded hero. A new photo replaces it only after that file has loaded. */
 export function useStableHeroSrc(src: string | null | undefined) {
-  const next = String(src || '').trim() ? heroImageSrc(String(src).trim(), 58) : '';
+  const next = realHeroSrc(src);
   const [shown, setShown] = useState(next);
 
   useEffect(() => {
-    if (!next || next === shown) return undefined;
+    if (!next) {
+      setShown('');
+      return undefined;
+    }
+    if (next === shown) return undefined;
+    if (!shown) {
+      setShown(next);
+      return undefined;
+    }
     let cancelled = false;
     const img = new window.Image();
     img.decoding = 'async';
@@ -28,16 +39,16 @@ export function useStableHeroSrc(src: string | null | undefined) {
   return shown;
 }
 
+/** Renders only the image saved for this page. Stock and Unsplash URLs are ignored. */
 export function FastCoverImage({ src, alt = '' }: { src?: string | null; alt?: string }) {
   const shown = useStableHeroSrc(src);
-  const paint = shown || FAST_HERO_UNDERLAY;
-  const preloadHref = String(src || '').trim() ? heroImageSrc(String(src).trim(), 58) : '';
+  if (!shown) return null;
 
   return (
     <>
-      {preloadHref ? <link rel="preload" as="image" href={preloadHref} fetchPriority="high" /> : null}
+      <link rel="preload" as="image" href={shown} fetchPriority="high" />
       <img
-        src={paint}
+        src={shown}
         alt={alt}
         width={1200}
         height={750}
