@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import ContentBlocks from '@/components/public/ContentBlocks';
@@ -10,7 +10,6 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import {
   getRecordImage,
   getRecordTitle,
-  isPublishedRecord,
   parseBlocksFromRecord,
   pickStoredString,
   recordPublishedAt,
@@ -23,19 +22,14 @@ import PublicHtml from '@/components/public/PublicHtml';
 import { formatPublishedDate } from '@/components/public/PostMetaBar';
 import { titleFromPublicSlug } from '@/lib/cms-routes';
 import { useCmsLive } from '@/lib/cms-live';
-import { readPublicReadPrefill } from '@/lib/public-read-prefill';
 import type { RecordRow } from '@/lib/types';
 
-function isReadableSafariPost(row: RecordRow | null | undefined) {
-  return Boolean(row && isPublishedRecord(row));
-}
-
-/** Listing cards omit the article and post blocks. Those only exist on the full saved row. */
+/** Listing cards only carry a short excerpt. The article and admin blocks live on the full saved row. */
 function postHasSavedBody(row: RecordRow | null | undefined) {
   if (!row) return false;
-  const html = visibleRecordHtml(row, ['content', 'description', 'body', 'html', 'post_content', 'article']);
-  if (html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) return true;
-  return parseBlocksFromRecord(row).length > 0;
+  if (parseBlocksFromRecord(row).length > 0) return true;
+  const html = visibleRecordHtml(row, ['content', 'body', 'html', 'post_content', 'article']);
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length >= 220;
 }
 
 export default function SafariUpdateDetailClient({
@@ -53,12 +47,7 @@ export default function SafariUpdateDetailClient({
 }) {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || '';
-  const prefill = useMemo(() => readPublicReadPrefill('safari_updates', slug), [slug]);
-  const seedPost = isReadableSafariPost(initialPost)
-    ? initialPost
-    : isReadableSafariPost(prefill)
-      ? prefill
-      : null;
+  const seedPost = postHasSavedBody(initialPost) ? initialPost : null;
 
   const [post, setPost] = useState<RecordRow | null>(seedPost);
   const [related, setRelated] = useState<RecordRow[]>(initialRelated);
@@ -66,18 +55,14 @@ export default function SafariUpdateDetailClient({
   const live = useCmsLive();
 
   useEffect(() => {
-    const nextSeed = isReadableSafariPost(initialPost)
-      ? initialPost
-      : isReadableSafariPost(prefill)
-        ? prefill
-        : null;
     setPost((current) => {
-      if (postHasSavedBody(current) && !postHasSavedBody(nextSeed)) return current;
-      return nextSeed;
+      if (postHasSavedBody(current) && !postHasSavedBody(initialPost)) return current;
+      if (postHasSavedBody(initialPost)) return initialPost;
+      return current;
     });
     if (initialRelated.length) setRelated(initialRelated);
     if (initialTours.length) setTours(initialTours);
-  }, [initialPost, initialRelated, initialTours, prefill]);
+  }, [initialPost, initialRelated, initialTours]);
 
   useEffect(() => {
     if (!slug) return undefined;
@@ -176,7 +161,7 @@ export default function SafariUpdateDetailClient({
             <PublicHtml
               className="public-prose max-w-none text-black"
               html={publicBodyHtml(
-                visibleRecordHtml(post, ['content', 'description', 'body', 'html', 'post_content', 'article'])
+                visibleRecordHtml(post, ['content', 'body', 'html', 'post_content', 'article'])
               )}
             />
             <ContentBlocks record={post} />

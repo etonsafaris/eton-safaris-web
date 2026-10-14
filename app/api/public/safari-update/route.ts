@@ -1,5 +1,5 @@
 import { CMS_PUBLIC_HTTP_CACHE_CONTROL, CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
-import { loadSafariUpdateDetailResilient } from '@/lib/load-public';
+import { loadSafariUpdateArticle } from '@/lib/load-public';
 import { normalizeSlug } from '@/lib/country-utils';
 import { NextResponse } from 'next/server';
 
@@ -13,10 +13,13 @@ export async function GET(request: Request) {
   if (!slug) {
     return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
   }
-  const detail = await loadSafariUpdateDetailResilient(slug);
-  return NextResponse.json(detail, {
-    headers: {
-      'Cache-Control': CMS_PUBLIC_HTTP_CACHE_CONTROL,
-    },
-  });
+  const post = await loadSafariUpdateArticle(slug);
+  return NextResponse.json(
+    { post, related: [], tours: [] },
+    {
+      headers: {
+        'Cache-Control': CMS_PUBLIC_HTTP_CACHE_CONTROL,
+      },
+    }
+  );
 }
