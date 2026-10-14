@@ -15,6 +15,7 @@ import {
   recordPublishedAt,
   safariUpdatePublicPath,
   visibleRecordHtml,
+  resolvePublicTours,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
@@ -110,6 +111,24 @@ export default function SafariUpdateDetailClient({
       cancelled = true;
     };
   }, [slug, related.length, post?.id]);
+
+  useEffect(() => {
+    if (!post || tours.length > 0) return undefined;
+    const countryName = pickStoredString(post, ['country', 'category']);
+    let cancelled = false;
+    resolvePublicTours({
+      country: countryName,
+      limit: 12,
+      excludeId: post.id != null ? String(post.id) : undefined,
+    })
+      .then((rows) => {
+        if (!cancelled && rows.length) setTours(rows.slice(0, 12));
+      })
+      .catch((error) => console.error('[Safari update detail] Tours failed:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [post, tours.length]);
 
   const country = post ? pickStoredString(post, ['country']) : '';
   const heroImage = (post ? getRecordImage(post) : '') || initialHeroImage || undefined;

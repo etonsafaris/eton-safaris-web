@@ -460,12 +460,28 @@ async function countryRowWithHero(slug: string, country: RecordRow | null): Prom
 export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
-    const data = await loadCountryPageDataInner(normalized);
-    return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
+    return await cachedPublic(
+      ['country-page-data-v22-once', normalized],
+      ['collection:countries', `country:${normalized}`],
+      async () => {
+        const data = await loadCountryPageDataInner(normalized);
+        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
+          throw new Error(`country-page-incomplete:${normalized}`);
+        }
+        return withCountryPageFallback(data, normalized);
+      },
+      120
+    );
   } catch (error) {
     rethrowDynamicServerError(error);
-    console.warn('[Public] loadCountryPageData failed:', slug, error);
-    return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
+    try {
+      const fresh = await loadCountryPageDataInner(normalized);
+      return withCountryPageFallback(fresh ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
+    } catch (innerError) {
+      rethrowDynamicServerError(innerError);
+      console.warn('[Public] loadCountryPageData failed:', slug, innerError);
+      return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
+    }
   }
 }
 
@@ -711,28 +727,28 @@ export async function loadParkDetail(slug: string) {
 }
 
 async function loadSafariUpdateDetailLive(slug: string) {
-  const [row, updatePage] = await Promise.all([
-    fetchRecordByPublicSlug('safari_updates', slug),
-    withTimeout(
-      fetchPublicSafariUpdatesPage({ limit: 12, offset: 0 }),
-      2500,
-      { rows: [] as RecordRow[], total: 0 }
-    ),
-  ]);
+  const row = await fetchRecordByPublicSlug('safari_updates', slug);
   const published = row && isPublishedRecord(row) ? row : null;
   if (!published) throw new Error(`safari-update-miss:${slug}`);
 
   const country = pickStoredString(published, ['country', 'category']);
   const countryKey = country ? canonicalCountrySlug(country) || normalizeSlug(country) : '';
-  const toursRaw = await withTimeout(
-    resolvePublicTours({
-      country,
-      limit: 12,
-      excludeId: published.id != null ? String(published.id) : undefined,
-    }),
-    2500,
-    [] as RecordRow[]
-  );
+  const [updatePage, toursRaw] = await Promise.all([
+    withTimeout(
+      fetchPublicSafariUpdatesPage({ limit: 12, offset: 0 }),
+      4000,
+      { rows: [] as RecordRow[], total: 0 }
+    ),
+    withTimeout(
+      resolvePublicTours({
+        country,
+        limit: 12,
+        excludeId: published.id != null ? String(published.id) : undefined,
+      }),
+      4000,
+      [] as RecordRow[]
+    ),
+  ]);
   const related = (updatePage?.rows ?? [])
     .filter((item) => String(item?.id) !== String(published.id || ''))
     .slice(0, 8);
@@ -751,7 +767,7 @@ export async function loadSafariUpdateDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['safari-update-detail-v8-full', normalized],
+      ['safari-update-detail-v9-tours', normalized],
       ['collection:safari_updates', `safari_update:${normalized}`],
       () => loadSafariUpdateDetailLive(normalized)
     );
