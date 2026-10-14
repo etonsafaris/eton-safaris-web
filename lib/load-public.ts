@@ -394,9 +394,13 @@ export async function loadToursPageData(options?: { limit?: number; offset?: num
   const offset = options?.offset ?? 0;
   try {
     return await cachedPublic(
-      ['tours-page-data-v7-paged', String(limit), String(offset)],
+      ['tours-page-data-v8-full', String(limit), String(offset)],
       ['collection:tours'],
-      async () => loadToursPageDataLive(limit, offset)
+      async () => {
+        const data = await loadToursPageDataLive(limit, offset);
+        if (!data.tours?.length) throw new Error('Tours listing empty');
+        return data;
+      }
     );
   } catch (error) {
     rethrowDynamicServerError(error);
@@ -457,12 +461,12 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v18-fast', normalized],
+      ['country-page-data-v19-full', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
         if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
-          return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
+          throw new Error(`country-page-incomplete:${normalized}`);
         }
         return data;
       }
@@ -495,17 +499,17 @@ async function loadCountryPageDataInner(
 ): Promise<CountryPageData | null> {
   const countryLabel = countryLabelFromSlug(slug) || slug;
   const [countryMeta, categoryPage, tours] = await Promise.all([
-    withTimeout(fetchPublicRecordResilient('countries', slug), 7000, null),
+    withTimeout(fetchPublicRecordResilient('countries', slug), 5000, null),
     withTimeout(
       fetchCollectionPage('categories', [], {
         columns: listColumns('categories'),
         limit: 24,
         filters: { country: countryLabel },
       }),
-      7000,
+      5000,
       { rows: [] as RecordRow[], total: 0 }
     ),
-    withTimeout(resolvePublicTours({ country: countryLabel, limit: 24 }), 7000, [] as RecordRow[]),
+    withTimeout(resolvePublicTours({ country: countryLabel, limit: 24 }), 5000, [] as RecordRow[]),
   ]);
   const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
   if (options?.requirePublishedCountry) {
@@ -563,46 +567,74 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
 }
 
 /**
- * Public `/destinations/[slug]` — resilient load (never 404 for known destinations when DB is slow).
- * Uses published CMS data when available; falls back to shell + tours/categories like `/uganda-safaris`.
+ * Public `/destinations/[slug]` — the saved country, its categories, and its tours.
+ * A complete result is cached. An incomplete read is returned for this request only.
  */
 export async function loadDestinationCountryPage(slug: string): Promise<CountryPageData> {
-  return loadCountryPageDataResilient(slug);
+  const normalized = normalizeSlug(slug);
+  try {
+    return await cachedPublic(
+      ['country-page-data-v20-live', normalized],
+      ['collection:countries', `country:${normalized}`],
+      async () => {
+        const data = await loadCountryPageDataInner(normalized);
+        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
+          throw new Error(`country-page-incomplete:${normalized}`);
+        }
+        return data;
+      },
+      60
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    try {
+      const fresh = await loadCountryPageDataInner(normalized);
+      return withCountryPageFallback(fresh ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
+    } catch (innerError) {
+      rethrowDynamicServerError(innerError);
+      console.warn('[Public] Destination country page failed:', normalized, innerError);
+      return withCountryPageFallback(EMPTY_COUNTRY_PAGE_DATA, normalized);
+    }
+  }
 }
 
 async function loadTourDetailLive(slug: string, synced = false) {
-  try {
-    const tour = synced
-      ? await withTimeout(fetchSyncedPublicRecord('tours', slug), 10000, null)
-      : await fetchPublicRecordResilient('tours', slug);
-    if (!tour || !isPubliclyVisibleRecord(tour)) {
-      return { tour: null, related: [] as RecordRow[] };
-    }
-    const country = tour ? pickString(tour, ['country']) : '';
-    const category = tour ? pickString(tour, ['category']) : '';
-    const relatedPool = await resolvePublicTours({
+  const tour = synced
+    ? await withTimeout(fetchSyncedPublicRecord('tours', slug), 8000, null)
+    : await fetchPublicRecordResilient('tours', slug);
+  if (!tour || !isPubliclyVisibleRecord(tour)) throw new Error(`tour-miss:${slug}`);
+  const country = pickString(tour, ['country']);
+  const category = pickString(tour, ['category']);
+  const relatedPool = await withTimeout(
+    resolvePublicTours({
       country,
       limit: 8,
-      excludeId: tour?.id != null ? String(tour.id) : undefined,
-    }).catch(() => [] as RecordRow[]);
-    const sameCountry = (relatedPool ?? []).filter((row) => row && String(row.id) !== String(tour?.id || ''));
-    const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
-    return toClientProps({
-      tour,
-      related: (sameCategory.length ? sameCategory : sameCountry).slice(0, 12),
-    });
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] loadTourDetail failed:', slug, error);
-    return { tour: null, related: [] as RecordRow[] };
-  }
+      excludeId: tour.id != null ? String(tour.id) : undefined,
+    }),
+    2500,
+    [] as RecordRow[]
+  );
+  const sameCountry = (relatedPool ?? []).filter((row) => row && String(row.id) !== String(tour.id || ''));
+  const sameCategory = category ? sameCountry.filter((row) => matchesCategoryValue(row, category)) : [];
+  return toClientProps({
+    tour,
+    related: (sameCategory.length ? sameCategory : sameCountry).slice(0, 12),
+  });
 }
 
 export async function loadTourDetail(slug: string) {
   const normalized = normalizeSlug(slug);
-  return cachedPublic(['tour-detail-v1', normalized], ['collection:tours', `tour:${normalized}`], () =>
-    loadTourDetailLive(normalized)
-  );
+  try {
+    return await cachedPublic(
+      ['tour-detail-v2-full', normalized],
+      ['collection:tours', `tour:${normalized}`],
+      () => loadTourDetailLive(normalized)
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] loadTourDetail failed:', normalized, error);
+    return { tour: null, related: [] as RecordRow[] };
+  }
 }
 
 /** Tour detail route — same Aiven row as admin; 60s ISR; null tour when hidden/deleted. */
@@ -679,65 +711,64 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
 }
 
 async function loadParkDetailLive(slug: string) {
-  try {
-    const park = await fetchPublicRecordResilient('national_park', slug, ['national_parks', 'parks']);
-    const published = park && isPublishedRecord(park) ? park : null;
-    const country = published ? pickStoredString(published, ['country']) : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
-            country,
-            limit: 12,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
-    return toClientProps({
-      park: published,
-      others: [] as RecordRow[],
-      tours: (tours ?? []).slice(0, 12),
-      stays: [] as RecordRow[],
-    });
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] loadParkDetail failed:', slug, error);
-    return { park: null, others: [] as RecordRow[], tours: [] as RecordRow[], stays: [] as RecordRow[] };
-  }
+  const park = await fetchPublicRecordResilient('national_park', slug, ['national_parks', 'parks']);
+  const published = park && isPublishedRecord(park) ? park : null;
+  if (!published) throw new Error(`park-miss:${slug}`);
+  const country = pickStoredString(published, ['country']);
+  const tours = await withTimeout(
+    resolvePublicTours({
+      country,
+      limit: 12,
+    }),
+    2500,
+    [] as RecordRow[]
+  );
+  return toClientProps({
+    park: published,
+    others: [] as RecordRow[],
+    tours: (tours ?? []).slice(0, 12),
+    stays: [] as RecordRow[],
+  });
 }
 
 export async function loadParkDetail(slug: string) {
   const normalized = normalizeSlug(slug);
-  return cachedPublic(
-    ['park-detail-v6-seo-only', normalized],
-    ['collection:national_park', `park:${normalized}`],
-    () => loadParkDetailLive(normalized)
-  );
+  try {
+    return await cachedPublic(
+      ['park-detail-v7-full', normalized],
+      ['collection:national_park', `park:${normalized}`],
+      () => loadParkDetailLive(normalized)
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] loadParkDetail failed:', normalized, error);
+    return { park: null, others: [] as RecordRow[], tours: [] as RecordRow[], stays: [] as RecordRow[] };
+  }
 }
 
 async function loadSafariUpdateDetailLive(slug: string) {
-  const row = await fetchRecordByPublicSlug('safari_updates', slug);
+  const [row, updatePage] = await Promise.all([
+    fetchRecordByPublicSlug('safari_updates', slug),
+    withTimeout(
+      fetchPublicSafariUpdatesPage({ limit: 12, offset: 0 }),
+      2500,
+      { rows: [] as RecordRow[], total: 0 }
+    ),
+  ]);
   const published = row && isPublishedRecord(row) ? row : null;
   if (!published) throw new Error(`safari-update-miss:${slug}`);
 
   const country = pickStoredString(published, ['country', 'category']);
   const countryKey = country ? canonicalCountrySlug(country) || normalizeSlug(country) : '';
-  const [updatePage, toursRaw] = await Promise.all([
-    withTimeout(
-      fetchPublicSafariUpdatesPage({ limit: 12, offset: 0 }),
-      4000,
-      { rows: [] as RecordRow[], total: 0 }
-    ),
-    withTimeout(
-      resolvePublicTours({
-        country,
-        limit: 12,
-        excludeId: published.id != null ? String(published.id) : undefined,
-      }),
-      4000,
-      [] as RecordRow[]
-    ),
-  ]);
+  const toursRaw = await withTimeout(
+    resolvePublicTours({
+      country,
+      limit: 12,
+      excludeId: published.id != null ? String(published.id) : undefined,
+    }),
+    2500,
+    [] as RecordRow[]
+  );
   const related = (updatePage?.rows ?? [])
     .filter((item) => String(item?.id) !== String(published.id || ''))
     .slice(0, 8);
@@ -756,7 +787,7 @@ export async function loadSafariUpdateDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['safari-update-detail-v7-article', normalized],
+      ['safari-update-detail-v8-full', normalized],
       ['collection:safari_updates', `safari_update:${normalized}`],
       () => loadSafariUpdateDetailLive(normalized)
     );
@@ -899,39 +930,44 @@ async function loadOtherAccommodations(item: RecordRow): Promise<RecordRow[]> {
 }
 
 async function loadAccommodationDetailLive(slug: string, synced = false) {
-  try {
-    const item = synced
-      ? await withTimeout(fetchSyncedPublicRecord('accommodations', slug), 10000, null)
-      : await fetchPublicRecordResilient('accommodations', slug);
-    const published = item && isPubliclyVisibleRecord(item) ? item : null;
-    const country = published ? pickStoredString(published, ['country']) : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
-            country,
-            limit: 12,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
-    const others = published ? await loadOtherAccommodations(published) : [];
-    return toClientProps({
-      item: published,
-      others,
-      tours: (tours ?? []).slice(0, 12),
-    });
-  } catch (error) {
-    rethrowDynamicServerError(error);
-    console.warn('[Public] loadAccommodationDetail failed:', slug, error);
-    return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
-  }
+  const item = synced
+    ? await withTimeout(fetchSyncedPublicRecord('accommodations', slug), 8000, null)
+    : await fetchPublicRecordResilient('accommodations', slug);
+  const published = item && isPubliclyVisibleRecord(item) ? item : null;
+  if (!published) throw new Error(`stay-miss:${slug}`);
+  const country = pickStoredString(published, ['country']);
+  const [tours, others] = await Promise.all([
+    withTimeout(
+      resolvePublicTours({
+        country,
+        limit: 12,
+        excludeId: published.id != null ? String(published.id) : undefined,
+      }),
+      2500,
+      [] as RecordRow[]
+    ),
+    withTimeout(loadOtherAccommodations(published), 2500, [] as RecordRow[]),
+  ]);
+  return toClientProps({
+    item: published,
+    others,
+    tours: (tours ?? []).slice(0, 12),
+  });
 }
 
 export async function loadAccommodationDetail(slug: string) {
   const normalized = normalizeSlug(slug);
-  return loadAccommodationDetailLive(normalized);
+  try {
+    return await cachedPublic(
+      ['stay-detail-v1-full', normalized],
+      ['collection:accommodations', `stay:${normalized}`],
+      () => loadAccommodationDetailLive(normalized)
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] loadAccommodationDetail failed:', normalized, error);
+    return { item: null, others: [] as RecordRow[], tours: [] as RecordRow[] };
+  }
 }
 
 /** Stay detail route — admin-synced visibility; 60s ISR. */
@@ -991,17 +1027,17 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
   const fallbackName = countryLabelFromSlug(bare);
   try {
     const [categoriesPage, countryRow, tourRows] = await Promise.all([
-      withTimeout(
-        fetchCollectionPage('categories', [], {
-          columns: listColumns('categories'),
-          limit: 120,
-          offset: 0,
-        }),
-        8000,
-        { rows: [] as RecordRow[], total: 0 }
-      ),
-      fetchPublicRecordResilient('countries', bare),
-      withTimeout(resolvePublicTours({ country: fallbackName || bare, limit: 48 }), 10000, [] as RecordRow[]),
+        withTimeout(
+          fetchCollectionPage('categories', [], {
+            columns: listColumns('categories'),
+            limit: 120,
+            offset: 0,
+          }),
+          5000,
+          { rows: [] as RecordRow[], total: 0 }
+        ),
+        fetchPublicRecordResilient('countries', bare),
+        withTimeout(resolvePublicTours({ country: fallbackName || bare, limit: 48 }), 5000, [] as RecordRow[]),
     ]);
     const categories = (categoriesPage?.rows ?? [])
       .filter(isPublishedRecord)

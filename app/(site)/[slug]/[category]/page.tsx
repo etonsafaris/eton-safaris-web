@@ -3,8 +3,10 @@ import CategoryPageContent from '@/components/public/CategoryPageContent';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, resolvePublicSlug, titleFromPublicSlug } from '@/lib/cms-routes';
 import { countryHeroTitle } from '@/lib/country-landing-copy';
+import { countryHeroImage } from '@/lib/country-heroes';
 import { countryLabelFromSlug } from '@/lib/country-utils';
-import { loadPublicHeroImage, loadStaticCategoryParams } from '@/lib/load-public';
+import { getPublicRecordImage } from '@/lib/content-image';
+import { loadCategoryPageData, loadStaticCategoryParams } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
@@ -38,24 +40,41 @@ export default async function CountryCategoryPage({ params }: PageProps) {
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
   const countryName = countryLabelFromSlug(countrySlug) || titleFromPublicSlug(countrySlug);
-  const country = {
+  let country = {
     name: countryName,
     title: countryHeroTitle(countrySlug, countryName),
     slug: countrySlug,
   } as RecordRow;
-  let heroImage = '';
+  let categories: RecordRow[] = [];
+  let tours: RecordRow[] = [];
+  let category: RecordRow | null = null;
   try {
-    heroImage =
-      (await loadPublicHeroImage('categories', params.category)) ||
-      (await loadPublicHeroImage('countries', countrySlug));
+    const loaded = await loadCategoryPageData(countrySlug, params.category);
+    if (loaded.country) country = loaded.country;
+    categories = loaded.categories ?? [];
+    tours = loaded.tours ?? [];
+    category = loaded.category ?? null;
   } catch (error) {
     rethrowDynamicServerError(error);
+    console.warn('[Public] Category page failed:', countrySlug, params.category, error);
   }
+  const heroImage =
+    getPublicRecordImage(category) || countryHeroImage(countrySlug, country) || '';
   preloadPublicHero(heroImage);
+  const serverPreloaded = Boolean(category || categories.length || tours.length);
 
   return (
     <PublicShellServer>
-      <CategoryPageContent slug={countrySlug} country={country} categorySlug={params.category} heroImage={heroImage} />
+      <CategoryPageContent
+        slug={countrySlug}
+        country={country}
+        categorySlug={params.category}
+        heroImage={heroImage}
+        initialCategories={categories}
+        initialTours={tours}
+        initialCategory={category}
+        serverPreloaded={serverPreloaded}
+      />
     </PublicShellServer>
   );
 }

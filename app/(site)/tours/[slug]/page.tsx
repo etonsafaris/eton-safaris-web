@@ -1,7 +1,8 @@
 import { permanentRedirect } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadPublicHeroImage, loadStaticTourParams } from '@/lib/load-public';
+import { getPublicRecordImage } from '@/lib/content-image';
+import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
@@ -23,17 +24,28 @@ export async function generateStaticParams() {
 export default async function TourDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
-  let heroImage = '';
+  let tour = null;
+  let related: Awaited<ReturnType<typeof loadTourDetail>>['related'] = [];
   try {
-    heroImage = await loadPublicHeroImage('tours', slug);
+    const loaded = await loadTourDetail(slug);
+    tour = loaded.tour;
+    related = loaded.related ?? [];
   } catch (error) {
     rethrowDynamicServerError(error);
+    console.warn('[Public] Tour detail failed:', slug, error);
   }
+  const heroImage = getPublicRecordImage(tour) || '';
   preloadPublicHero(heroImage);
 
   return (
     <PublicShellServer>
-      <TourDetailClient key={slug} embedded initialTour={null} initialRelated={[]} initialHeroImage={heroImage} />
+      <TourDetailClient
+        key={slug}
+        embedded
+        initialTour={tour}
+        initialRelated={related}
+        initialHeroImage={heroImage}
+      />
     </PublicShellServer>
   );
 }

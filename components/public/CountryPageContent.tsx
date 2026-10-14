@@ -75,7 +75,9 @@ export default function CountryPageContent({
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
   /** A name-only shell means the country row did not load. Refetch instead of keeping the blank page. */
-  const hasServerContent = Boolean(slug && countryProp && !isCountryPageShellCountry(countryProp));
+  const hasServerContent = Boolean(
+    slug && countryProp && !isCountryPageShellCountry(countryProp) && initialTours.length > 0
+  );
   const [ready, setReady] = useState(hasServerContent);
 
   useEffect(() => {

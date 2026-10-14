@@ -1,7 +1,8 @@
 import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadPublicHeroImage, loadStaticAccommodationParams } from '@/lib/load-public';
+import { getPublicRecordImage } from '@/lib/content-image';
+import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
@@ -23,12 +24,19 @@ export async function generateStaticParams() {
 export default async function AccommodationDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
-  let heroImage = '';
+  let item = null;
+  let others: Awaited<ReturnType<typeof loadAccommodationDetail>>['others'] = [];
+  let tours: Awaited<ReturnType<typeof loadAccommodationDetail>>['tours'] = [];
   try {
-    heroImage = await loadPublicHeroImage('accommodations', slug);
+    const loaded = await loadAccommodationDetail(slug);
+    item = loaded.item;
+    others = loaded.others ?? [];
+    tours = loaded.tours ?? [];
   } catch (error) {
     rethrowDynamicServerError(error);
+    console.warn('[Public] Accommodation detail failed:', slug, error);
   }
+  const heroImage = getPublicRecordImage(item) || '';
   preloadPublicHero(heroImage);
 
   return (
@@ -36,9 +44,9 @@ export default async function AccommodationDetailPage({ params }: PageProps) {
       <AccommodationDetailClient
         key={slug}
         embedded
-        initialItem={null}
-        initialOthers={[]}
-        initialTours={[]}
+        initialItem={item}
+        initialOthers={others}
+        initialTours={tours}
         initialHeroImage={heroImage}
       />
     </PublicShellServer>

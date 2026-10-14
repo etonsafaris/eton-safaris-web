@@ -1,7 +1,8 @@
 import { permanentRedirect } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
 import PublicShellServer from '@/components/public/PublicShellServer';
-import { loadPublicHeroImage, loadStaticParkParams } from '@/lib/load-public';
+import { getPublicRecordImage } from '@/lib/content-image';
+import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
@@ -22,12 +23,17 @@ export async function generateStaticParams() {
 export default async function ParkDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   if (!slug) permanentRedirect('/tours');
-  let heroImage = '';
+  let park = null;
+  let tours: Awaited<ReturnType<typeof loadParkDetail>>['tours'] = [];
   try {
-    heroImage = await loadPublicHeroImage('national_park', slug, ['national_parks', 'parks']);
+    const loaded = await loadParkDetail(slug);
+    park = loaded.park;
+    tours = loaded.tours ?? [];
   } catch (error) {
     rethrowDynamicServerError(error);
+    console.warn('[Public] Park detail failed:', slug, error);
   }
+  const heroImage = getPublicRecordImage(park) || '';
   preloadPublicHero(heroImage);
 
   return (
@@ -35,9 +41,9 @@ export default async function ParkDetailPage({ params }: PageProps) {
       <ParkDetailClient
         key={slug}
         embedded
-        initialPark={null}
+        initialPark={park}
         initialOthers={[]}
-        initialTours={[]}
+        initialTours={tours}
         initialHeroImage={heroImage}
       />
     </PublicShellServer>
