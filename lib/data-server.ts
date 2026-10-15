@@ -705,6 +705,9 @@ export async function fetchCollectionPage(
           params.push(`%${parkFilter}%`);
           paramIndex++;
         }
+        if (table === 'tours' || aliases.includes('tours') || name === 'tours') {
+          whereClauses.push(publicStandardTourSql());
+        }
 
         const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
         const orderClause = orderBy ? `ORDER BY ${orderBy} ${ascending ? 'ASC' : 'DESC'}` : '';
@@ -881,6 +884,11 @@ export async function fetchPublicSafariUpdatesPage(options?: {
 
 const TOUR_SELECT_CACHE_KEY = 'tours::list';
 
+/** Public lists. Google Only tours stay off these queries and keep their own page. */
+export function publicStandardTourSql(): string {
+  return `COALESCE(post_type::text, '') NOT ILIKE '%google%'`;
+}
+
 function publishedTourRows(rows: RecordRow[], limit: number) {
   return rows.filter((row) => isPublishedRecord(row) && !isGoogleOnlyTour(row)).slice(0, limit);
 }
@@ -906,7 +914,7 @@ export async function fetchEastAfricaHomeTours(limit = 48): Promise<RecordRow[]>
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
-        text: `SELECT ${cols} FROM tours WHERE (${eastAfricaOr}) ORDER BY
+        text: `SELECT ${cols} FROM tours WHERE (${eastAfricaOr}) AND ${publicStandardTourSql()} ORDER BY
           (CASE WHEN is_featured = true OR is_popular = true OR show_on_landing = true THEN 0 ELSE 1 END),
           created_date DESC NULLS LAST
         LIMIT ${capped}`,
@@ -944,7 +952,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   try {
     const featured = await queryWithColumnFallback(
       (cols) => ({
-        text: `SELECT ${cols} FROM tours WHERE is_featured = true OR is_popular = true OR show_on_landing = true LIMIT ${capped}`,
+        text: `SELECT ${cols} FROM tours WHERE (is_featured = true OR is_popular = true OR show_on_landing = true) AND ${publicStandardTourSql()} LIMIT ${capped}`,
       }),
       columns,
       TOUR_SELECT_CACHE_KEY
@@ -958,7 +966,7 @@ export async function fetchFeaturedTours(limit = 24): Promise<RecordRow[]> {
   try {
     const recent = await queryWithColumnFallback(
       (cols) => ({
-        text: `SELECT ${cols} FROM tours ORDER BY created_date DESC LIMIT ${capped}`,
+        text: `SELECT ${cols} FROM tours WHERE ${publicStandardTourSql()} ORDER BY created_date DESC LIMIT ${capped}`,
       }),
       resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
       TOUR_SELECT_CACHE_KEY
@@ -1179,7 +1187,7 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
-        text: `SELECT ${cols} FROM tours WHERE country ILIKE $1 LIMIT ${capped}`,
+        text: `SELECT ${cols} FROM tours WHERE country ILIKE $1 AND ${publicStandardTourSql()} ORDER BY created_date DESC NULLS LAST LIMIT ${capped}`,
         values: [`%${label}%`],
       }),
       resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
@@ -1225,6 +1233,7 @@ export async function searchTours(options: {
       params.push(`%${category}%`);
       paramIndex++;
     }
+    whereClauses.push(publicStandardTourSql());
 
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
     const rows = await queryWithColumnFallback(

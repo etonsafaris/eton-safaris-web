@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { publicListColumnsFor } from '@/lib/data-server';
+import { publicListColumnsFor, publicStandardTourSql } from '@/lib/data-server';
 import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { withPgClient } from '@/lib/supabase/pool';
 export const dynamic = 'force-dynamic';
@@ -127,6 +127,9 @@ export async function GET(
     '',
   ]) {
     if (!orderClauses.includes(clause)) orderClauses.push(clause);
+  }
+  if (table === 'tours' && url.searchParams.get('scope') === 'public' && !keyedRow) {
+    conditions.push(publicStandardTourSql());
   }
   const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
 

@@ -98,6 +98,7 @@ export async function fetchCollectionPage(
   if (filters.country) params.set('ilike.country', `%${filters.country}%`);
   if (filters.park) params.set('ilike.national_park_name', `%${filters.park}%`);
   if (filters.category) params.set('ilike.category', `%${filters.category}%`);
+  if (table === 'tours') params.set('scope', 'public');
   const response = await fetch(dataUrl(table, params), { cache: 'no-store', credentials: 'same-origin' });
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[]; total?: number; message?: string };
   if (!response.ok) {
@@ -137,6 +138,7 @@ export async function fetchRecordByPublicSlug(table: string, slug: string, alias
 
 async function fetchTourRows(params: URLSearchParams) {
   params.set('select', TOUR_LIST_SELECT);
+  params.set('scope', 'public');
   const response = await fetch(dataUrl('tours', params), { cache: 'default' });
   if (!response.ok) return [] as RecordRow[];
   const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
@@ -268,7 +270,7 @@ export async function searchTours(options: {
   }
   if (options.category) params.set('ilike.category', `%${options.category}%`);
   const rows = await fetchTourRows(params);
-  return rows;
+  return rows.filter((row) => !isGoogleOnlyTour(row));
 }
 
 export async function fetchCollectionRecordById(table: string, id: string | number, aliases: string[] = []) {

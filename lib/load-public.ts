@@ -35,6 +35,7 @@ import {
   findRecordBySlug,
   getRecordTitle,
   isGoogleOnlyTour,
+  publicStandardTourSql,
   isPubliclyVisibleRecord,
   isPublishedRecord,
   pickStoredString,
@@ -290,7 +291,7 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached 15 min so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v20-slim'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v21-standard25'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
@@ -364,7 +365,7 @@ async function loadToursPageDataLive(limit = 24, offset = 0) {
         4000,
         [] as RecordRow[]
       ),
-      countPublicTable('tours'),
+      countPublicTable('tours', `WHERE ${publicStandardTourSql()}`),
     ]);
     let tours = tourPage.rows.filter((row) => isPublishedRecord(row) && !isGoogleOnlyTour(row));
     if (!tours.length && offset === 0) {
@@ -395,7 +396,7 @@ export async function loadToursPageData(options?: { limit?: number; offset?: num
   const offset = options?.offset ?? 0;
   try {
     return await cachedPublic(
-      ['tours-page-data-v9-google', String(limit), String(offset)],
+      ['tours-page-data-v10-standard25', String(limit), String(offset)],
       ['collection:tours'],
       async () => {
         const data = await loadToursPageDataLive(limit, offset);
@@ -462,7 +463,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v23-google', normalized],
+      ['country-page-data-v24-standard25', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
@@ -517,7 +518,7 @@ async function loadCountryPageDataInner(
       5000,
       { rows: [] as RecordRow[], total: 0 }
     ),
-    withTimeout(resolvePublicTours({ country: countryLabel, limit: 24 }), 5000, [] as RecordRow[]),
+    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), 5000, [] as RecordRow[]),
   ]);
   const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
   if (options?.requirePublishedCountry) {
@@ -556,7 +557,7 @@ async function loadCountryPageDataInner(
   return {
     country: displayCountry,
     categories,
-    tours: toursForPage.filter((row) => isPubliclyVisibleRecord(row) && !isGoogleOnlyTour(row)),
+    tours: toursForPage.filter((row) => isPubliclyVisibleRecord(row) && !isGoogleOnlyTour(row)).slice(0, 25),
     parks,
     places,
   };
@@ -567,7 +568,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v9-fast', normalized],
+    ['country-page-sync-v10-standard25', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
