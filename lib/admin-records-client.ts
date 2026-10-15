@@ -108,7 +108,7 @@ export async function fetchAdminTablePage(
     country?: string;
     park?: string;
     category?: string;
-    postType?: 'standard' | 'language';
+    postType?: 'standard' | 'language' | 'google';
     q?: string;
     bustCache?: boolean;
   }
@@ -141,7 +141,7 @@ async function fetchAdminTablePageLive(
     country?: string;
     park?: string;
     category?: string;
-    postType?: 'standard' | 'language';
+    postType?: 'standard' | 'language' | 'google';
     q?: string;
     bustCache?: boolean;
   } | undefined,
@@ -244,7 +244,7 @@ export function prefetchAdminTablePage(
     country?: string;
     park?: string;
     category?: string;
-    postType?: 'standard' | 'language';
+    postType?: 'standard' | 'language' | 'google';
     q?: string;
   }
 ) {

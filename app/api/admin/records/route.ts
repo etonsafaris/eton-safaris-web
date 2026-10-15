@@ -132,7 +132,10 @@ export async function GET(request: Request) {
     country: url.searchParams.get('country')?.trim() || undefined,
     park: url.searchParams.get('park')?.trim() || undefined,
     category: url.searchParams.get('category')?.trim() || undefined,
-    postType: postTypeParam === 'language' || postTypeParam === 'standard' ? postTypeParam : undefined,
+    postType:
+      postTypeParam === 'language' || postTypeParam === 'standard' || postTypeParam === 'google'
+        ? postTypeParam
+        : undefined,
     q: url.searchParams.get('q')?.trim() || undefined,
   };
 

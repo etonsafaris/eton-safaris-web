@@ -52,8 +52,8 @@ export type AdminListFilters = {
   country?: string;
   park?: string;
   category?: string;
-  /** Safari Updates: standard posts or language posts. */
-  postType?: 'standard' | 'language';
+  /** Safari Updates use standard or language. Tours use standard or google. */
+  postType?: 'standard' | 'language' | 'google';
   /** Server-side search (Dav-style: filter in SQL, not in the browser). */
   q?: string;
 };

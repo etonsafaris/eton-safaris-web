@@ -403,7 +403,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         const language = isLanguagePost(record);
         if (postKind === 'language' ? !language : language) return false;
       }
-      if (isTours && !usesRemotePaging) {
+      if (isTours) {
         const googleOnly = isGoogleOnlyTour(record);
         if (tourKind === 'google' ? !googleOnly : googleOnly) return false;
       }
