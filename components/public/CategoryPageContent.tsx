@@ -171,9 +171,9 @@ export default function CategoryPageContent({
   );
 
   const filteredTours = useMemo(() => {
-    if (serverPreloaded && initialTours.length) return initialTours;
-    return ready ? filterToursByCategory(tours, selectedCategory, categorySlug) : [];
-  }, [ready, tours, selectedCategory, categorySlug, serverPreloaded, initialTours]);
+    const source = tours.length ? tours : initialTours;
+    return filterToursByCategory(source, selectedCategory, categorySlug);
+  }, [tours, initialTours, selectedCategory, categorySlug]);
 
   return (
     <>

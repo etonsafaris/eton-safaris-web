@@ -7,6 +7,15 @@ import { internalPathFromHref } from '@/lib/internal-link';
 import { isBlockedExternalHost, scrubLegacyMediaFromHtml } from '@/lib/legacy-media-url';
 import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-path-utils';
 
+const FILE_HREF = /\.(pdf|docx?|xlsx?|pptx?|zip|csv|txt)(?:$|[?#])/i;
+
+function isDirectFileHref(href: string) {
+  const value = href.trim();
+  if (!value) return false;
+  if (FILE_HREF.test(value.split('#')[0])) return true;
+  return /\/downloads\//i.test(value);
+}
+
 type PublicHtmlProps = {
   html: string;
   className?: string;
@@ -15,17 +24,22 @@ type PublicHtmlProps = {
 
 async function resolvePathForNavigation(path: string): Promise<string> {
   const trimmed = path.trim();
-  if (!trimmed || isPrefixedPublicPath(trimmed)) {
+  if (!trimmed || isPrefixedPublicPath(trimmed) || isDirectFileHref(trimmed)) {
     return normalizePrefixedPublicPath(trimmed || '/');
   }
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 1200);
   try {
     const response = await fetch(`/api/public/resolve-path?path=${encodeURIComponent(trimmed)}`, {
       credentials: 'same-origin',
+      signal: controller.signal,
     });
     const body = (await response.json().catch(() => ({}))) as { path?: string };
     return body.path || normalizePrefixedPublicPath(trimmed);
   } catch {
     return normalizePrefixedPublicPath(trimmed);
+  } finally {
+    window.clearTimeout(timer);
   }
 }
 
@@ -59,7 +73,7 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
       if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
 
       const href = anchor.getAttribute('href');
-      if (!href) return;
+      if (!href || isDirectFileHref(href)) return;
 
       try {
         const parsed = new URL(href, window.location.origin);
@@ -73,12 +87,16 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
 
       const pageOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
       const internal = internalPathFromHref(href, { pageOrigin });
-      if (!internal) return;
+      if (!internal || isDirectFileHref(internal)) return;
 
       event.preventDefault();
+      if (isPrefixedPublicPath(internal)) {
+        router.push(normalizePrefixedPublicPath(internal));
+        return;
+      }
       void navigateInternal(internal);
     },
-    [navigateInternal]
+    [navigateInternal, router]
   );
 
   useEffect(() => {
@@ -92,7 +110,7 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
       const href = anchor.getAttribute('href');
       if (!href) return;
       const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
-      if (!internal || !isPrefixedPublicPath(internal)) return;
+      if (!internal || isDirectFileHref(internal) || !isPrefixedPublicPath(internal)) return;
       const base = normalizePrefixedPublicPath(internal).split('#')[0];
       if (!base || prefetched.has(base)) return;
       prefetched.add(base);
@@ -133,9 +151,9 @@ export function PublicContentLink({
   }
 
   const internal = internalPathFromHref(href);
-  if (!internal) {
+  if (!internal || isDirectFileHref(href) || isDirectFileHref(internal)) {
     return (
-      <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+      <a href={href} className={className}>
         {children}
       </a>
     );

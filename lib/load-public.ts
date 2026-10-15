@@ -32,6 +32,7 @@ import {
   fetchRecordByPublicSlug,
   fetchSyncedPublicRecord,
   resolvePublicTours,
+  fetchStandardToursForCategory,
   findRecordBySlug,
   getRecordTitle,
   isGoogleOnlyTour,
@@ -1020,15 +1021,43 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
           { rows: [] as RecordRow[], total: 0 }
         ),
         fetchPublicRecordResilient('countries', bare),
-        withTimeout(resolvePublicTours({ country: fallbackName || bare, limit: 48 }), 5000, [] as RecordRow[]),
+        withTimeout(
+          fetchStandardToursForCategory(
+            fallbackName || bare,
+            categorySlug.replace(/-/g, ' '),
+            48
+          ),
+          5000,
+          [] as RecordRow[]
+        ),
     ]);
     const categories = (categoriesPage?.rows ?? [])
       .filter(isPublishedRecord)
       .filter((row) => categoryMatchesCountry(row, bare));
     const category = findCategoryBySlug(categories, categorySlug, bare);
-    const countryTours = (tourRows ?? []).filter((row) => matchesCountry(row, bare));
-    const pool = countryTours.length ? countryTours : tourRows ?? [];
-    const filteredTours = filterToursByCategory(pool, category, categorySlug);
+    const categoryName = category ? pickString(category, ['name', 'title']) : '';
+    let matched = (tourRows ?? []).filter((row) => matchesCountry(row, bare));
+    if (categoryName && categoryName.replace(/-/g, ' ').trim().toLowerCase() !== categorySlug.replace(/-/g, ' ').trim().toLowerCase()) {
+      const byName = await withTimeout(
+        fetchStandardToursForCategory(fallbackName || bare, categoryName, 48),
+        4000,
+        [] as RecordRow[]
+      );
+      if (byName.length) matched = byName.filter((row) => matchesCountry(row, bare));
+    }
+    if (!matched.length) {
+      const countryTours = await withTimeout(
+        resolvePublicTours({ country: fallbackName || bare, limit: 48 }),
+        4000,
+        [] as RecordRow[]
+      );
+      matched = filterToursByCategory(
+        (countryTours ?? []).filter((row) => matchesCountry(row, bare)),
+        category,
+        categorySlug
+      );
+    }
+    const filteredTours = filterToursByCategory(matched, category, categorySlug);
     const countryName = publicCountryLabel(countryRow, bare) || fallbackName;
     const country: RecordRow =
       countryRow && isPublishedRecord(countryRow)
@@ -1042,7 +1071,7 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
       country,
       category,
       categories,
-      tours: filteredTours.length ? filteredTours : pool,
+      tours: filteredTours,
     });
   } catch (error) {
     rethrowDynamicServerError(error);

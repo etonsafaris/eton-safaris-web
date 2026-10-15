@@ -1200,6 +1200,43 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   }
 }
 
+/** Standard tours for one country category. Does not return the rest of that country. */
+export async function fetchStandardToursForCategory(
+  countryLabel: string,
+  categoryLabel: string,
+  limit = 48
+): Promise<RecordRow[]> {
+  const label = String(countryLabel || '').trim();
+  const category = String(categoryLabel || '').trim();
+  if (!label || !category) return [];
+  const capped = Math.max(1, Math.min(limit, 48));
+  const words = category.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+  const slug = words.toLowerCase().replace(/\s+/g, '-');
+  try {
+    const rows = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours
+          WHERE country ILIKE $1
+            AND (
+              category ILIKE $2
+              OR category ILIKE $3
+              OR replace(lower(COALESCE(category::text, '')), ' ', '-') ILIKE $4
+            )
+            AND ${publicStandardTourSql()}
+          ORDER BY created_date DESC NULLS LAST
+          LIMIT ${capped}`,
+        values: [`%${label}%`, `%${words}%`, `%${category}%`, `%${slug}%`],
+      }),
+      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      TOUR_SELECT_CACHE_KEY
+    );
+    return publishedTourRows(rows, capped);
+  } catch (error: any) {
+    console.error('[Aiven] fetchStandardToursForCategory failed:', error.message);
+    return [];
+  }
+}
+
 /** Typeahead / filtered tour lists — never download the full tours table. */
 export async function searchTours(options: {
   query?: string;

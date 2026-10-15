@@ -1,8 +1,4 @@
-import {
-  fetchRecordByPublicSlug,
-  isPublishedRecord,
-  publicRecordSlug,
-} from '@/lib/data-server';
+import { db } from '@/lib/supabase/pool';
 import {
   isPrefixedPublicPath,
   normalizePrefixedPublicPath,
@@ -10,13 +6,32 @@ import {
   splitPublicPath,
 } from '@/lib/public-path-utils';
 
-const SLUG_LOOKUPS: Array<{ table: string; prefix: string; aliases?: string[] }> = [
+const SLUG_LOOKUPS = [
   { table: 'tours', prefix: '/tours' },
-  { table: 'national_park', prefix: '/parks', aliases: ['national_parks', 'parks'] },
+  { table: 'national_park', prefix: '/parks' },
   { table: 'accommodations', prefix: '/accommodations' },
   { table: 'explore', prefix: '/explore' },
   { table: 'safari_updates', prefix: '/safari-updates' },
-];
+] as const;
+
+async function pathForSlug(slug: string): Promise<string> {
+  for (const item of SLUG_LOOKUPS) {
+    for (const sql of [
+      `SELECT slug FROM ${item.table} WHERE slug = $1 OR seo_slug = $1 LIMIT 1`,
+      `SELECT slug FROM ${item.table} WHERE slug = $1 LIMIT 1`,
+    ]) {
+      try {
+        const found = await db.query<{ slug?: string }>(sql, [slug]);
+        const rowSlug = String(found.rows[0]?.slug || '').trim();
+        if (rowSlug) return `${item.prefix}/${rowSlug}`;
+        break;
+      } catch {
+        /* try the simpler slug lookup, then the next table */
+      }
+    }
+  }
+  return '';
+}
 
 /** Resolve a public path on the server (one DB round-trip chain max per slug). */
 export async function resolvePublicPathServer(path: string): Promise<string> {
@@ -34,13 +49,8 @@ export async function resolvePublicPathServer(path: string): Promise<string> {
   }
 
   const slug = decodeURIComponent(segments[0]);
-  for (const item of SLUG_LOOKUPS) {
-    const row = await fetchRecordByPublicSlug(item.table, slug, item.aliases || []);
-    if (row && isPublishedRecord(row)) {
-      const publicSlug = publicRecordSlug(row) || slug;
-      return `${item.prefix}/${publicSlug}${search}${hash}`;
-    }
-  }
+  const match = await pathForSlug(slug);
+  if (match) return `${match}${search}${hash}`;
 
   return normalizePrefixedPublicPath(trimmed);
 }
