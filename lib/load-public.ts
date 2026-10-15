@@ -34,6 +34,7 @@ import {
   resolvePublicTours,
   findRecordBySlug,
   getRecordTitle,
+  isGoogleOnlyTour,
   isPubliclyVisibleRecord,
   isPublishedRecord,
   pickStoredString,
@@ -365,7 +366,7 @@ async function loadToursPageDataLive(limit = 24, offset = 0) {
       ),
       countPublicTable('tours'),
     ]);
-    let tours = tourPage.rows.filter(isPublishedRecord);
+    let tours = tourPage.rows.filter((row) => isPublishedRecord(row) && !isGoogleOnlyTour(row));
     if (!tours.length && offset === 0) {
       tours = await withTimeout(resolvePublicTours({ limit }), 6000, [] as RecordRow[]).catch(
         () => [] as RecordRow[]
@@ -394,7 +395,7 @@ export async function loadToursPageData(options?: { limit?: number; offset?: num
   const offset = options?.offset ?? 0;
   try {
     return await cachedPublic(
-      ['tours-page-data-v8-full', String(limit), String(offset)],
+      ['tours-page-data-v9-google', String(limit), String(offset)],
       ['collection:tours'],
       async () => {
         const data = await loadToursPageDataLive(limit, offset);
@@ -461,7 +462,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v22-once', normalized],
+      ['country-page-data-v23-google', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
@@ -555,7 +556,7 @@ async function loadCountryPageDataInner(
   return {
     country: displayCountry,
     categories,
-    tours: toursForPage.filter(isPubliclyVisibleRecord),
+    tours: toursForPage.filter((row) => isPubliclyVisibleRecord(row) && !isGoogleOnlyTour(row)),
     parks,
     places,
   };

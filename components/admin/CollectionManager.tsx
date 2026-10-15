@@ -31,6 +31,7 @@ import {
   recordPublishedAt,
   publishStampForSave,
   slugify,
+  isGoogleOnlyTour,
   isLanguagePost,
   clearCollectionCache,
 } from '@/lib/data';
@@ -133,6 +134,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
   const [parkRows, setParkRows] = useState<RecordRow[]>([]);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [postKind, setPostKind] = useState<'standard' | 'language'>('standard');
+  const [tourKind, setTourKind] = useState<'standard' | 'google'>('standard');
   const [seoSaved, setSeoSaved] = useState(false);
   const [guestLogsAgent, setGuestLogsAgent] = useState<RecordRow | null>(null);
   const [guestLogs, setGuestLogs] = useState<RecordRow[]>([]);
@@ -237,7 +239,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             country: listCountry,
             park: listPark,
             category: isTours ? listCategory : categoryFilter || undefined,
-            postType: isSafariUpdates ? postKind : undefined,
+            postType: isSafariUpdates ? postKind : isTours ? tourKind : undefined,
             q: remoteQuery,
           })
         : '';
@@ -270,7 +272,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
           country: listCountry,
           park: listPark,
           category: isTours ? listCategory : categoryFilter || undefined,
-          postType: isSafariUpdates ? postKind : undefined,
+          postType: isSafariUpdates ? postKind : isTours ? tourKind : undefined,
           q: remoteQuery,
         });
         data = result.rows ?? [];
@@ -282,7 +284,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
             country: listCountry,
             park: listPark,
             category: isTours ? listCategory : categoryFilter || undefined,
-            postType: isSafariUpdates ? postKind : undefined,
+            postType: isSafariUpdates ? postKind : isTours ? tourKind : undefined,
             q: remoteQuery,
           });
         }
@@ -376,6 +378,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     isTours ? activeCategory : categoryFilter,
     usesRemotePaging ? debouncedQuery : '',
     isSafariUpdates ? postKind : '',
+    isTours ? tourKind : '',
   ]);
 
   useEffect(() => {
@@ -399,6 +402,10 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       if (isSafariUpdates && !usesRemotePaging) {
         const language = isLanguagePost(record);
         if (postKind === 'language' ? !language : language) return false;
+      }
+      if (isTours && !usesRemotePaging) {
+        const googleOnly = isGoogleOnlyTour(record);
+        if (tourKind === 'google' ? !googleOnly : googleOnly) return false;
       }
       if (isCountryScoped && activeCountry && !usesRemotePaging) {
         if (!matchesCountry(record, activeCountry)) return false;
@@ -438,6 +445,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
     parkFilter,
     categoryFilter,
     postKind,
+    tourKind,
     isSafariUpdates,
     isTours,
     isAccommodations,
@@ -457,6 +465,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
         isAccommodations ? activePark : parkFilter,
         isTours ? activeCategory : categoryFilter,
         postKind,
+        tourKind,
       ].join('\0'),
     [
       config.table,
@@ -471,6 +480,7 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
       activeCategory,
       categoryFilter,
       postKind,
+      tourKind,
     ]
   );
   const previousListFilterKey = useRef<string | null>(null);
@@ -1340,6 +1350,22 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
                 ...categoryOptions.map((category) => ({ value: category, label: category })),
               ]}
               placeholder={activeCountry ? 'Filter by category' : 'Select country first'}
+            />
+          </div>
+        )}
+        {isTours && (
+          <div className="w-full sm:w-52">
+            <SearchableSelect
+              value={tourKind}
+              onChange={(value) => {
+                setTourKind(value === 'google' ? 'google' : 'standard');
+                resetPage();
+              }}
+              options={[
+                { value: 'standard', label: 'Standard Tours' },
+                { value: 'google', label: 'Google Only' },
+              ]}
+              placeholder="Tour type"
             />
           </div>
         )}

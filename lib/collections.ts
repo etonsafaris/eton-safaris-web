@@ -77,6 +77,22 @@ export const MAIN_COLLECTIONS: CollectionConfig[] = [
     ],
   },
   {
+    id: 'gallery',
+    label: 'Gallery',
+    table: 'gallery',
+    icon: 'images',
+    subtitle: 'Photos for the public gallery. Each picture keeps its caption on the page.',
+    view: 'grid',
+    publicPath: '/gallery',
+    addLabel: 'Add Photo',
+    fields: [
+      { name: 'title', label: 'Photo title', type: 'text', required: true, placeholder: 'Rwenzori hike' },
+      { name: 'caption', label: 'Caption', type: 'textarea', placeholder: 'What is happening in this photo' },
+      { name: 'image_url', label: 'Photo', type: 'url', required: true, placeholder: 'Upload the photo' },
+      { name: 'sort_order', label: 'Order', type: 'number', placeholder: '1' },
+    ],
+  },
+  {
     id: 'countries',
     label: 'Countries',
     table: 'countries',

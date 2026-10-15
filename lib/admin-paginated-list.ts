@@ -67,6 +67,7 @@ function searchColumnsFor(table: string): string[] {
     national_park: ['name', 'slug', 'seo_slug', 'country', 'location'],
     accommodations: ['name', 'slug', 'seo_slug', 'country', 'location'],
     explore: ['title', 'slug', 'seo_slug', 'country', 'location'],
+    gallery: ['title', 'caption', 'alt_text'],
     pages: ['title', 'post_title', 'slug', 'seo_slug'],
     landing_pages: ['title', 'post_title', 'slug', 'seo_slug', 'country'],
     keywords: ['keywords', 'keyword', 'country', 'category'],
@@ -193,6 +194,11 @@ function buildWhere(filters: AdminListFilters | undefined, table: string) {
     clauses.push(`COALESCE(post_type::text, '') ILIKE '%language%'`);
   } else if (table === 'safari_updates' && filters?.postType === 'standard') {
     clauses.push(`COALESCE(post_type::text, '') NOT ILIKE '%language%'`);
+  }
+  if (table === 'tours' && filters?.postType === 'google') {
+    clauses.push(`COALESCE(post_type::text, '') ILIKE '%google%'`);
+  } else if (table === 'tours' && filters?.postType === 'standard') {
+    clauses.push(`COALESCE(post_type::text, '') NOT ILIKE '%google%'`);
   }
   const sql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
   return { sql, params };

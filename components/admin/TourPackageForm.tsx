@@ -30,7 +30,7 @@ import { buildSavePayload } from '@/lib/supabase-payload';
 import { hasAdminEditPrefill, readAdminEditPrefill } from '@/lib/admin-edit-prefill';
 import { fetchAdminTablePage, loadAdminEditRecord, saveWithColumnFallback } from '@/lib/admin-records-client';
 import { notifyAdminItemSaved } from '@/lib/admin-item-notify';
-import { getRecordTitle, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
+import { getRecordTitle, isGoogleOnlyTour, publishStampForSave, recordPublishedAt, slugify } from '@/lib/data';
 import { publicCountryLabel } from '@/lib/country-utils';
 import { adjustEditingIndexAfterMove, moveArrayItem } from '@/lib/reorder';
 import { embedContent, extractEmbeddedContent, stripEmbeddedContent } from '@/lib/embedded-content';
@@ -95,6 +95,8 @@ function tourFormFromListRow(tour: RecordRow): TourFormState {
     featured: tour.featured !== false && tour.is_featured !== false,
   };
 }
+
+const TOUR_TYPES = ['Standard Tours', 'Google Only'] as const;
 
 const EMPTY_ITINERARY: ItineraryEntry = {
   day: '',
@@ -220,6 +222,12 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
     return prefill ? recordPublishedAt(prefill) : '';
   });
   const [faqs, setFaqs] = useState<PageFaq[]>([]);
+  const [tourType, setTourType] = useState<(typeof TOUR_TYPES)[number]>(() => {
+    if (!tourId) return 'Standard Tours';
+    const prefill = readAdminEditPrefill('tours', tourId);
+    return prefill && isGoogleOnlyTour(prefill) ? 'Google Only' : 'Standard Tours';
+  });
+  const [tourTypeOpen, setTourTypeOpen] = useState(false);
 
   useEffect(() => {
     fetchAdminTablePage('countries', { page: 1, limit: 50 }).then((countryPage) => {
@@ -268,6 +276,7 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         return;
       }
       setSchemaColumns(Object.keys(tour));
+      setTourType(isGoogleOnlyTour(tour) ? 'Google Only' : 'Standard Tours');
       const embedded = extractEmbeddedContent(String(tour.description || tour.content || ''));
       setPublishedAt(recordPublishedAt(tour));
       setForm({
@@ -428,10 +437,11 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         itineraries: JSON.stringify(itineraries),
         group_size: 'Flexible',
         published_at: stamp,
+        post_type: tourType === 'Google Only' ? 'google' : 'standard',
       },
       {
         seo: { ...seo, slug: tourSlug || seo.slug },
-        knownColumns: schemaColumns,
+        knownColumns: schemaColumns ? Array.from(new Set([...schemaColumns, 'post_type'])) : undefined,
       }
     );
 
@@ -463,15 +473,49 @@ function TourPackageFormInner({ tourId }: TourPackageFormProps) {
         Back to Tours
       </Link>
 
-      <div className="mt-4">
-        <h1 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">
-          {isEdit ? 'Edit Tour Package' : 'Create New Tour Package'}
-        </h1>
-        <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">
-          {isEdit
-            ? 'Update the saved tour details below, then click Save.'
-            : 'Fill in the details below to add a new safari experience.'}
-        </p>
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-[#111827] dark:text-white">
+            {isEdit ? 'Edit Tour Package' : 'Create New Tour Package'}
+          </h1>
+          <p className="mt-1 text-sm text-[#6b7280] dark:text-gray-400">
+            {isEdit
+              ? 'Update the saved tour details below, then click Save.'
+              : 'Fill in the details below to add a new safari experience.'}
+          </p>
+        </div>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setTourTypeOpen((open) => !open)}
+            className="flex min-w-[180px] items-center justify-between gap-2 rounded-lg border border-[#00A651] px-4 py-2 text-sm font-medium text-[#111827] outline-none hover:bg-[#f0fdf4] dark:text-white"
+          >
+            {tourType}
+            <ChevronDown className={`h-4 w-4 text-[#6b7280] transition ${tourTypeOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {tourTypeOpen ? (
+            <div className="absolute right-0 z-20 mt-1 w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#161b22]">
+              {TOUR_TYPES.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    setTourType(option);
+                    setTourTypeOpen(false);
+                  }}
+                  className={`block w-full px-4 py-2 text-left text-sm hover:bg-[#f0fdf4] dark:hover:bg-white/5 ${
+                    option === tourType ? 'font-semibold text-[#00A651]' : 'text-[#111827] dark:text-white'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <p className="mt-2 max-w-[220px] text-xs text-[#6b7280]">
+            Google Only stays off the website lists. The tour page stays open for Google.
+          </p>
+        </div>
       </div>
 
       {loadingTour ? <p className="mt-8 text-sm text-gray-500">Loading saved tour…</p> : null}

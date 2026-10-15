@@ -10,6 +10,7 @@ const WARM_ROUTES = [
   '/tours',
   '/destinations',
   '/safari-updates',
+  '/gallery',
   '/contact-us',
   '/community-support',
   ...NAV_COUNTRIES.map(({ slug }) => destinationPublicPath(slug)),

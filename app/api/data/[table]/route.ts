@@ -13,6 +13,7 @@ const TABLES = new Set([
   'parks',
   'accommodations',
   'explore',
+  'gallery',
   'countries',
   'categories',
   'keywords',

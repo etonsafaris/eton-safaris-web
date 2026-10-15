@@ -164,7 +164,10 @@ export async function resolvePublicTours(options?: { country?: string; limit?: n
   const capped = Math.max(1, Math.min(options?.limit ?? 12, 48));
   const excludeId = options?.excludeId != null ? String(options.excludeId) : '';
   const keep = (rows: RecordRow[]) =>
-    rows.filter((row) => !excludeId || String(row.id) !== excludeId).slice(0, capped);
+    rows
+      .filter((row) => !isGoogleOnlyTour(row))
+      .filter((row) => !excludeId || String(row.id) !== excludeId)
+      .slice(0, capped);
   const country = String(options?.country || '').trim();
   if (country) {
     const byCountry = keep(await fetchToursForCountryLabel(country, capped));
@@ -415,6 +418,12 @@ export function publishStampForSave(value: string, isEdit: boolean): string {
 
 export function isLanguagePost(record: RecordRow): boolean {
   return pickString(record, ['post_type', 'type']).toLowerCase().includes('language');
+}
+
+/** Posted for Google, kept off tour lists, country pages, and the homepage. */
+export function isGoogleOnlyTour(record: RecordRow | null | undefined): boolean {
+  if (!record) return false;
+  return pickString(record, ['post_type', 'type']).toLowerCase().includes('google');
 }
 
 /** Dav-style path: language posts are sitemap URLs, not blog-listing URLs. */

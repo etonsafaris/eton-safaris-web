@@ -93,6 +93,9 @@ export default function SiteHeader() {
         <Link href="/safari-updates" prefetch className={navClass(pathname.startsWith('/safari-updates'))}>
           {PUBLIC_SITE_LABELS.blogPosts}
         </Link>
+        <Link href="/gallery" prefetch className={navClass(pathname.startsWith('/gallery'))}>
+          Gallery
+        </Link>
         <Link href="/community" prefetch className={navClass(pathname.startsWith('/community'))}>
           Community
         </Link>
@@ -139,6 +142,9 @@ export default function SiteHeader() {
           ))}
           <Link href="/safari-updates" className="block py-1" onClick={() => setOpen(false)}>
             {PUBLIC_SITE_LABELS.blogPosts}
+          </Link>
+          <Link href="/gallery" className="block py-1" onClick={() => setOpen(false)}>
+            Gallery
           </Link>
           <Link href="/community" className="block py-1" onClick={() => setOpen(false)}>
             Community

@@ -218,6 +218,77 @@ export function isLanguagePost(record: RecordRow): boolean {
   return String(record.post_type || record.type || '').toLowerCase().includes('language');
 }
 
+/** Tours saved as Google Only: own page and sitemap, not website listings. */
+export function isGoogleOnlyTour(record: RecordRow | null | undefined): boolean {
+  if (!record) return false;
+  return String(record.post_type || record.type || '').toLowerCase().includes('google');
+}
+
+let tourPostTypeColumn: Promise<void> | null = null;
+let galleryTableReady: Promise<void> | null = null;
+
+const GALLERY_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS gallery (
+  id bigserial PRIMARY KEY,
+  title text,
+  caption text,
+  image_url text,
+  alt_text text,
+  slug text,
+  status text DEFAULT 'published',
+  sort_order integer,
+  published_at timestamptz,
+  created_date timestamptz DEFAULT now(),
+  updated_date timestamptz DEFAULT now()
+)`;
+
+/** Public gallery photos. Created on first admin save or first public visit. */
+export function ensureGalleryTable(): Promise<void> {
+  if (!galleryTableReady) {
+    galleryTableReady = db
+      .query(GALLERY_TABLE_SQL)
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        galleryTableReady = null;
+        console.warn('[Aiven] gallery table:', error instanceof Error ? error.message : error);
+      });
+  }
+  return galleryTableReady;
+}
+
+export async function fetchGalleryPhotos(): Promise<RecordRow[]> {
+  await ensureGalleryTable();
+  try {
+    const res = await db.query(
+      `SELECT id, title, caption, image_url, alt_text, sort_order, status, created_date
+       FROM gallery
+       ORDER BY sort_order ASC NULLS LAST, created_date ASC NULLS LAST
+       LIMIT 400`
+    );
+    return (res.rows as RecordRow[]).filter((row) => {
+      if (!isPublishedRecord(row)) return false;
+      return Boolean(String(row.image_url || '').trim());
+    });
+  } catch (error) {
+    console.warn('[Aiven] Gallery photos failed:', error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
+/** Tours need post_type so Google Only can be stored like Safari Updates language posts. */
+export function ensureTourPostTypeColumn(): Promise<void> {
+  if (!tourPostTypeColumn) {
+    tourPostTypeColumn = db
+      .query('ALTER TABLE tours ADD COLUMN IF NOT EXISTS post_type text')
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        tourPostTypeColumn = null;
+        console.warn('[Aiven] tours.post_type column:', error instanceof Error ? error.message : error);
+      });
+  }
+  return tourPostTypeColumn;
+}
+
 export function recordBodyHtml(record: RecordRow | null | undefined): string {
   if (!record) return '';
   for (const key of ['description', 'content', 'body', 'html', 'text', 'overview', 'about', 'summary', 'excerpt']) {
@@ -269,6 +340,7 @@ async function queryWithColumnFallback(
   initialColumns: string,
   cacheKey?: string
 ): Promise<RecordRow[]> {
+  if (cacheKey?.startsWith('tours')) await ensureTourPostTypeColumn();
   let columns = (cacheKey && resolvedSelects.get(cacheKey)) || initialColumns;
   for (let attempt = 0; attempt < 8; attempt += 1) {
     try {
@@ -405,7 +477,7 @@ export async function fetchAllRecords(
 const SEO_INDEX_LIST_COLUMNS = 'meta_description';
 
 export const TOUR_LIST_COLUMNS =
-  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
+  `id,title,slug,seo_slug,country,category,duration_days,duration_nights,duration_label,price,image_url,social_image_url,is_featured,is_popular,show_on_landing,star_rating,review_count,post_type,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`;
 
 /** Shared list columns for admin grids and public listings (no description HTML). */
 export const ADMIN_LIST_COLUMNS: Record<string, string> = {
@@ -420,6 +492,8 @@ export const ADMIN_LIST_COLUMNS: Record<string, string> = {
     `id,name,seo_slug,location,country,image_url,social_image_url,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   explore:
     `id,title,seo_slug,location,country,image_url,social_image_url,description_title,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
+  gallery:
+    'id,title,caption,image_url,alt_text,sort_order,status,created_date,updated_date',
   safari_updates:
     `id,title,slug,seo_slug,excerpt,category,image_url,social_image_url,post_type,publish_date,created_date,updated_date,${SEO_INDEX_LIST_COLUMNS}`,
   countries:
@@ -590,6 +664,7 @@ export async function fetchCollectionPage(
     filters?: { country?: string; park?: string; category?: string };
   }
 ): Promise<{ rows: RecordRow[]; total: number }> {
+  if (table === 'tours') await ensureTourPostTypeColumn();
   const columns = options?.columns || publicListColumnsFor(table, aliases) || '*';
   const limit = Math.max(1, Math.min(options?.limit ?? 48, 200));
   const offset = Math.max(0, options?.offset ?? 0);
@@ -807,7 +882,7 @@ export async function fetchPublicSafariUpdatesPage(options?: {
 const TOUR_SELECT_CACHE_KEY = 'tours::list';
 
 function publishedTourRows(rows: RecordRow[], limit: number) {
-  return rows.filter(isPublishedRecord).slice(0, limit);
+  return rows.filter((row) => isPublishedRecord(row) && !isGoogleOnlyTour(row)).slice(0, limit);
 }
 
 function prepareHomeTourList(rows: RecordRow[], limit: number) {

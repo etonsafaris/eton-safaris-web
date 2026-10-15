@@ -40,6 +40,7 @@ export const CONTENT_TABLES = new Set([
   'national_park',
   'accommodations',
   'explore',
+  'gallery',
   'pages',
   'landing_pages',
   'keywords',
@@ -58,6 +59,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'itinerary',
     'group_size',
     'published_at',
+    'post_type',
   ],
   safari_updates: ['post_blocks', 'post_type', 'country', 'published_at', 'created_date', 'updated_date'],
   national_park: ['park_blocks', 'published_at'],
@@ -71,6 +73,7 @@ const TABLE_EXTRA_COLUMNS: Record<string, string[]> = {
     'published_at',
   ],
   explore: ['place_blocks', 'published_at'],
+  gallery: ['caption', 'alt_text', 'sort_order', 'status', 'published_at', 'created_date', 'updated_date'],
   countries: ['published_at', 'faqs', 'post_blocks', 'best_time_to_visit', 'best_time', 'status'],
   categories: ['published_at', 'faqs', 'post_blocks'],
   pages: [

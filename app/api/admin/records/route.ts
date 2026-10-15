@@ -12,7 +12,7 @@ import { bustAdminCountsCache } from '@/lib/admin-counts-server-cache';
 import { revalidatePublicCms } from '@/lib/revalidate-public-cms';
 import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
-import { adminListColumnsFor } from '@/lib/data-server';
+import { adminListColumnsFor, ensureGalleryTable, ensureTourPostTypeColumn } from '@/lib/data-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { saveWithColumnFallback } from '@/lib/supabase-save';
 import { bearerTokenFromRequest, createWriteClient, hasServiceRoleKey, isRlsError, rlsHelpMessage } from '@/lib/supabase/request-client';
@@ -32,6 +32,7 @@ const ALLOWED_TABLES = new Set([
   'accommodations',
   'safari_updates',
   'explore',
+  'gallery',
   'countries',
   'categories',
   'pages',
@@ -100,6 +101,8 @@ export async function GET(request: Request) {
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: 'Unknown table' }, { status: 400 });
   }
+  if (table === 'tours') await ensureTourPostTypeColumn();
+  if (table === 'gallery') await ensureGalleryTable();
 
   const recordId = url.searchParams.get('id')?.trim() || '';
   if (recordId) {
@@ -208,6 +211,8 @@ export async function POST(request: Request) {
     if (!body.payload || typeof body.payload !== 'object' || Array.isArray(body.payload)) {
       return NextResponse.json({ error: 'A record payload is required' }, { status: 400 });
     }
+    if (table === 'tours') await ensureTourPostTypeColumn();
+  if (table === 'gallery') await ensureGalleryTable();
     const result = await saveWithColumnFallback(table, body.payload, body.id);
     if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
     bustAdminCountsCache();

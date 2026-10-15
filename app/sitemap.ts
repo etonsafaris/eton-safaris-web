@@ -114,6 +114,7 @@ async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/tours', now, 0.9),
     entry('/tours/compare', now, 0.7),
     entry('/safari-updates', now, 0.8),
+    entry('/gallery', now, 0.6),
     entry('/safari-updates/rss.xml', now, 0.4, 'daily'),
     entry('/community-support', now, 0.8),
     entry('/contact-us', now, 0.8),

@@ -19,6 +19,7 @@ function publicPathForSavedRow(table: string, payload?: Record<string, unknown> 
   if ((table === 'national_park' || table === 'parks') && slug) return `/parks/${slug}`;
   if (table === 'accommodations' && slug) return `/accommodations/${slug}`;
   if (table === 'explore' && slug) return `/explore/${slug}`;
+  if (table === 'gallery') return '/gallery';
   if (table === 'countries' && slug) return `/destinations/${slug}`;
   return null;
 }

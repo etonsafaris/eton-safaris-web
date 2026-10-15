@@ -1,6 +1,7 @@
 import {
   getRecordImage,
   getRecordTitle,
+  isGoogleOnlyTour,
   isPublishedRecord,
   pickNumber,
   pickPlainText,
@@ -101,7 +102,7 @@ export function searchPublishedTours(
   const cat = decodeURIComponent(category).trim().toLowerCase().replace(/-/g, ' ');
 
   return tours
-    .filter(isPublishedRecord)
+    .filter((tour) => isPublishedRecord(tour) && !isGoogleOnlyTour(tour))
     .filter((tour) => {
       if (dest && dest !== 'all destinations') {
         const country = pickString(tour, ['country', 'destination']).toLowerCase();
