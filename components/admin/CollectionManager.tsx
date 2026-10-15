@@ -576,7 +576,10 @@ function CollectionManagerInner({ config }: { config: CollectionConfig }) {
 
   function publicHref(record: RecordRow): string | null {
     let path: string | null = null;
-    if (config.id === 'categories') {
+    if (config.id === 'gallery') {
+      const photoId = record.id != null ? String(record.id) : '';
+      path = photoId ? `/gallery#photo-${photoId}` : '/gallery';
+    } else if (config.id === 'categories') {
       const country = pickString(record, ['country']);
       const countryKey = canonicalCountrySlug(country) || publicCountrySlug({ name: country, slug: country });
       // Path uses current category name via categoryPublicSlug (not a stale rename slug).

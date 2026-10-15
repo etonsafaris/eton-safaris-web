@@ -32,11 +32,14 @@ export default async function GalleryPage() {
             {photos.map((photo, index) => {
               const src = pickString(photo, ['image_url']);
               const title = pickString(photo, ['title', 'alt_text']);
-              const caption = pickString(photo, ['caption']) || title;
+              const caption = pickString(photo, ['caption']);
+              const showCaption = caption && caption !== title;
+              const photoId = photo.id != null ? `photo-${photo.id}` : `photo-${index}`;
               return (
-                <figure key={String(photo.id ?? index)} className="public-gallery-item">
+                <figure id={photoId} key={photoId} className="public-gallery-item">
                   <img src={src} alt={title || caption || 'Safari photo'} loading="lazy" />
-                  {caption ? <figcaption className="public-gallery-caption">{caption}</figcaption> : null}
+                  {title ? <p className="public-gallery-title">{title}</p> : null}
+                  {showCaption ? <figcaption className="public-gallery-caption">{caption}</figcaption> : null}
                 </figure>
               );
             })}
