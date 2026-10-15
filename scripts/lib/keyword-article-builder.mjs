@@ -90,10 +90,10 @@ function uniqueDocumentTitle(keyword, usedTitles, ctx, rng) {
   if (usedTitles.has(title.toLowerCase())) {
     const extras = ['Field Notes', 'Traveller Brief', 'Park by Park', 'Month by Month', 'On the Ground'];
     title = stripHyphens(`${titleCase(keyword)}: ${extras[Math.floor(rng() * extras.length)]} in ${ctx.country}`);
-    let n = 2;
-    while (usedTitles.has(title.toLowerCase())) {
+  let n = 2;
+  while (usedTitles.has(title.toLowerCase())) {
       title = stripHyphens(`${titleCase(keyword)}: ${extras[n % extras.length]} ${n} for ${ctx.country}`);
-      n += 1;
+    n += 1;
     }
   }
   usedTitles.add(title.toLowerCase());
@@ -465,11 +465,11 @@ export function buildKeywordArticleDocument({
     children.push(
       paragraphFromParts(
         [
-          {
+        {
             text: stripHyphens(tour.title),
-            link: true,
-            url: tourUrl(tour.slug),
-          },
+          link: true,
+          url: tourUrl(tour.slug),
+        },
         ],
         80
       )
