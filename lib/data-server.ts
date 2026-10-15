@@ -1200,6 +1200,33 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   }
 }
 
+/** Published tours in one country, standard tours first. Category pages filter this list. */
+export async function fetchCountryToursForCategories(countryLabel: string, limit = 200): Promise<RecordRow[]> {
+  const label = String(countryLabel || '').trim();
+  if (!label) return [];
+  const capped = Math.max(1, Math.min(limit, 200));
+  try {
+    const rows = await queryWithColumnFallback(
+      (cols) => ({
+        text: `SELECT ${cols} FROM tours
+          WHERE country ILIKE $1
+            AND COALESCE(category::text, '') <> ''
+          ORDER BY
+            CASE WHEN COALESCE(post_type::text, '') ILIKE '%google%' THEN 1 ELSE 0 END,
+            created_date DESC NULLS LAST
+          LIMIT ${capped}`,
+        values: [`%${label}%`],
+      }),
+      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
+      TOUR_SELECT_CACHE_KEY
+    );
+    return rows.filter((row) => isPublishedRecord(row));
+  } catch (error: any) {
+    console.error('[Aiven] fetchCountryToursForCategories failed:', error.message);
+    return [];
+  }
+}
+
 /** Standard tours for one country category. Does not return the rest of that country. */
 export async function fetchStandardToursForCategory(
   countryLabel: string,

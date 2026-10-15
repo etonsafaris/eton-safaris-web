@@ -7,20 +7,20 @@ import PageFaqList from '@/components/public/PageFaqList';
 import PageHero from '@/components/public/PageHero';
 import {
   categoryMatchesCountry,
+  countryLabelFromSlug,
   filterToursByCategory,
   findCategoryBySlug,
-  matchesCountry,
   publicCountryLabel,
 } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
-  resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickRecordId,
   pickString,
   recordPublishedAt,
+  TOUR_LIST_COLUMNS,
   visibleRecordHtml,
 } from '@/lib/data';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
@@ -96,24 +96,28 @@ export default function CategoryPageContent({
   }, [initialCategories, initialTours]);
 
   useEffect(() => {
-    if (serverPreloaded && live === 0) return undefined;
+    if (serverPreloaded && initialTours.length > 0 && live === 0) return undefined;
     let mounted = true;
     async function load() {
       try {
-        const [allCategories, countryTours] = await Promise.all([
+        const label = countryLabelFromSlug(slug) || slug.replace(/-/g, ' ');
+        const params = new URLSearchParams({
+          limit: '200',
+          select: TOUR_LIST_COLUMNS,
+          'ilike.country': `%${label}%`,
+        });
+        const [allCategories, response] = await Promise.all([
           fetchCollectionRecords('categories'),
-          resolvePublicTours({ country: slug, limit: 48 }),
+          fetch(`/api/data/tours?${params.toString()}`, { cache: 'no-store' }),
         ]);
         if (!mounted) return;
+        const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
         const nextCategories = allCategories
           .filter(isPublishedRecord)
           .filter((category) => categoryMatchesCountry(category, slug));
-        const matched = countryTours.filter((tour) => matchesCountry(tour, slug));
-        const nextTours = matched.length ? matched : countryTours;
+        const nextTours = filterToursByCategory(body.data || [], null, categorySlug);
         setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
-        if (nextTours.length) {
-          setTours((current) => (sameRecordList(current, nextTours) ? current : nextTours));
-        }
+        if (nextTours.length) setTours(nextTours);
       } catch (error) {
         console.error('[Public] Failed to load category page data:', error);
       } finally {
@@ -124,7 +128,7 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug, live, serverPreloaded]);
+  }, [slug, categorySlug, live, serverPreloaded, initialTours.length]);
 
   const selectedCategory = useMemo(
     () =>
@@ -172,7 +176,8 @@ export default function CategoryPageContent({
 
   const filteredTours = useMemo(() => {
     const source = tours.length ? tours : initialTours;
-    return filterToursByCategory(source, selectedCategory, categorySlug);
+    const matched = filterToursByCategory(source, selectedCategory, categorySlug);
+    return matched.length ? matched : source;
   }, [tours, initialTours, selectedCategory, categorySlug]);
 
   return (
