@@ -9,15 +9,18 @@ import { publicCountryLabel } from '@/lib/country-utils';
 import { bestTimeForCountryLabel } from '@/lib/country-planning';
 import { countryHeroImage } from '@/lib/country-heroes';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   resolvePublicTours,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickStoredString,
+  publicRecordSlug,
   recordPublishedAt,
   visibleRecordHtml,
 } from '@/lib/data';
+import { countryPlacePath } from '@/lib/cms-routes';
 import { useEnsurePublishedAt } from '@/lib/use-ensure-published-at';
 import { publicBodyHtml } from '@/lib/embedded-content';
 import PublicHtml from '@/components/public/PublicHtml';
@@ -51,19 +54,21 @@ export default function PlacePageContent({
   slug: countrySlugProp = '',
   country = null,
   place: initialPlace = null,
-  initialOthers: _initialOthers = [],
+  initialOthers = [],
   initialTours = [],
 }: PlacePageContentProps) {
   const live = useCmsLive();
   const [place, setPlace] = useState<RecordRow | null>(initialPlace);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const [ready, setReady] = useState(Boolean(initialPlace));
 
   useEffect(() => {
     setPlace(initialPlace);
     setTours(initialTours);
+    if (initialOthers.length) setOthers(initialOthers);
     setReady(Boolean(initialPlace));
-  }, [initialPlace, initialTours]);
+  }, [initialPlace, initialOthers, initialTours]);
 
   useEffect(() => {
     let mounted = true;
@@ -90,6 +95,44 @@ export default function PlacePageContent({
       mounted = false;
     };
   }, [placeSlug, countrySlugProp, initialPlace, live]);
+
+  useEffect(() => {
+    if (others.length) return;
+    const country =
+      countrySlugProp ||
+      (place ? pickStoredString(place, ['country', 'country_slug', 'destination', 'nation']) : '');
+    let cancelled = false;
+    const currentId = String(place?.id || '');
+    const currentSlug = place ? publicRecordSlug(place) : placeSlug;
+    const keep = (rows: RecordRow[]) =>
+      rows
+        .filter((row) => isPublishedRecord(row))
+        .filter((row) => {
+          const id = String(row.id || '');
+          const slug = publicRecordSlug(row);
+          if (currentId && id === currentId) return false;
+          if (currentSlug && slug === currentSlug) return false;
+          return Boolean(slug);
+        })
+        .slice(0, 8);
+    fetchCollectionPage('explore', [], {
+      limit: 12,
+      filters: country ? { country } : undefined,
+    })
+      .then(async (page) => {
+        if (cancelled) return;
+        let rows = keep(page.rows || []);
+        if (!rows.length && country) {
+          const broader = await fetchCollectionPage('explore', [], { limit: 12 });
+          if (!cancelled) rows = keep(broader.rows || []);
+        }
+        if (rows.length) setOthers(rows);
+      })
+      .catch((error) => console.error('[Place detail] Other places failed:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [place, others.length, placeSlug, countrySlugProp]);
 
   const placeTitle = place ? getRecordTitle(place) : placeSlug.replace(/-/g, ' ');
   const countryTitle =
@@ -154,7 +197,20 @@ export default function PlacePageContent({
               <RelatedSidebar
                 title="Other Places"
                 countryName={countryTitle}
-                items={[]}
+                alwaysShow
+                items={others.map((row) => {
+                  const slug = publicRecordSlug(row);
+                  const href = countrySlugProp
+                    ? countryPlacePath(countrySlugProp, row)
+                    : slug
+                      ? `/explore/${slug}`
+                      : '/explore';
+                  return {
+                    href,
+                    image: getRecordImage(row),
+                    title: getRecordTitle(row),
+                  };
+                })}
               />
             </div>
           </div>

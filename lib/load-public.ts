@@ -696,22 +696,60 @@ export async function loadExplorePageData(options?: { limit?: number; offset?: n
   );
 }
 
+async function loadOtherParks(park: RecordRow): Promise<RecordRow[]> {
+  const country = pickStoredString(park, ['country']);
+  const currentId = String(park.id || '');
+  const currentSlug = publicRecordSlug(park);
+  async function load(withCountry: boolean) {
+    const page = await withTimeout(
+      fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+        limit: 12,
+        filters: withCountry && country ? { country } : undefined,
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    return (page.rows || [])
+      .filter((row) => isPubliclyVisibleRecord(row))
+      .filter((row) => {
+        const id = String(row.id || '');
+        const slug = publicRecordSlug(row);
+        if (currentId && id === currentId) return false;
+        if (currentSlug && slug === currentSlug) return false;
+        return Boolean(slug);
+      })
+      .slice(0, 8);
+  }
+  try {
+    const sameCountry = country ? await load(true) : [];
+    if (sameCountry.length) return sameCountry;
+    return await load(false);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] Other parks failed:', error);
+    return [];
+  }
+}
+
 async function loadParkDetailLive(slug: string) {
   const park = await fetchPublicRecordResilient('national_park', slug, ['national_parks', 'parks']);
   const published = park && isPublishedRecord(park) ? park : null;
   if (!published) throw new Error(`park-miss:${slug}`);
   const country = pickStoredString(published, ['country']);
-  const tours = await withTimeout(
-    resolvePublicTours({
-      country,
-      limit: 12,
-    }),
-    2500,
-    [] as RecordRow[]
-  );
+  const [tours, others] = await Promise.all([
+    withTimeout(
+      resolvePublicTours({
+        country,
+        limit: 12,
+      }),
+      2500,
+      [] as RecordRow[]
+    ),
+    withTimeout(loadOtherParks(published), 2500, [] as RecordRow[]),
+  ]);
   return toClientProps({
     park: published,
-    others: [] as RecordRow[],
+    others,
     tours: (tours ?? []).slice(0, 12),
     stays: [] as RecordRow[],
   });
@@ -721,7 +759,7 @@ export async function loadParkDetail(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['park-detail-v7-full', normalized],
+      ['park-detail-v8-others', normalized],
       ['collection:national_park', `park:${normalized}`],
       () => loadParkDetailLive(normalized)
     );
@@ -974,6 +1012,41 @@ export async function loadAccommodationDetailSynced(slug: string) {
   }
 }
 
+async function loadOtherPlaces(place: RecordRow): Promise<RecordRow[]> {
+  const country = pickStoredString(place, ['country', 'country_slug', 'destination', 'nation']);
+  const currentId = String(place.id || '');
+  const currentSlug = publicRecordSlug(place);
+  async function load(withCountry: boolean) {
+    const page = await withTimeout(
+      fetchCollectionPage('explore', [], {
+        limit: 12,
+        filters: withCountry && country ? { country } : undefined,
+      }),
+      8000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    return (page.rows || [])
+      .filter((row) => isPubliclyVisibleRecord(row))
+      .filter((row) => {
+        const id = String(row.id || '');
+        const slug = publicRecordSlug(row);
+        if (currentId && id === currentId) return false;
+        if (currentSlug && slug === currentSlug) return false;
+        return Boolean(slug);
+      })
+      .slice(0, 8);
+  }
+  try {
+    const sameCountry = country ? await load(true) : [];
+    if (sameCountry.length) return sameCountry;
+    return await load(false);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] Other places failed:', error);
+    return [];
+  }
+}
+
 export async function loadExploreDetail(slug: string) {
   try {
     const place = await fetchPublicRecordResilient('explore', slug);
@@ -981,20 +1054,23 @@ export async function loadExploreDetail(slug: string) {
     const countryKey = published
       ? pickStoredString(published, ['country', 'country_slug', 'destination', 'nation'])
       : '';
-    const tours = published
-      ? await withTimeout(
-          resolvePublicTours({
-            country: countryKey,
-            limit: 12,
-            excludeId: published.id != null ? String(published.id) : undefined,
-          }),
-          8000,
-          [] as RecordRow[]
-        )
-      : [];
+    const [tours, others] = published
+      ? await Promise.all([
+          withTimeout(
+            resolvePublicTours({
+              country: countryKey,
+              limit: 12,
+              excludeId: published.id != null ? String(published.id) : undefined,
+            }),
+            8000,
+            [] as RecordRow[]
+          ),
+          withTimeout(loadOtherPlaces(published), 2500, [] as RecordRow[]),
+        ])
+      : [[], []];
     return toClientProps({
       place: published,
-      others: [] as RecordRow[],
+      others,
       tours: (tours ?? []).slice(0, 12),
     });
   } catch (error) {

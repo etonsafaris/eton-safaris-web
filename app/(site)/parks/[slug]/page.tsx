@@ -24,10 +24,12 @@ export async function generateStaticParams() {
 async function ParkDetailReady({ slug }: { slug: string }) {
   let park = null;
   let tours: Awaited<ReturnType<typeof loadParkDetail>>['tours'] = [];
+  let others: Awaited<ReturnType<typeof loadParkDetail>>['others'] = [];
   try {
     const loaded = await loadParkDetail(slug);
     park = loaded.park;
     tours = loaded.tours ?? [];
+    others = loaded.others ?? [];
   } catch (error) {
     rethrowDynamicServerError(error);
     console.warn('[Public] Park detail failed:', slug, error);
@@ -39,7 +41,7 @@ async function ParkDetailReady({ slug }: { slug: string }) {
       key={slug}
       embedded
       initialPark={park}
-      initialOthers={[]}
+      initialOthers={others}
       initialTours={tours}
       initialHeroImage={heroImage}
     />

@@ -10,12 +10,14 @@ import DetailPageShell from '@/components/public/DetailPageShell';
 import { triggerNotFound } from '@/lib/client-not-found';
 import { useServerRecordGate } from '@/lib/use-server-record-gate';
 import {
+  fetchCollectionPage,
   fetchRecordByPublicSlug,
   getRecordImage,
   getRecordTitle,
   isPublishedRecord,
   pickStoredString,
   pickString,
+  publicRecordSlug,
   resolvePublicTours,
   visibleRecordHtml,
 } from '@/lib/data';
@@ -29,7 +31,7 @@ import type { RecordRow } from '@/lib/types';
 export default function ParkDetailClient({
   embedded = false,
   initialPark = null,
-  initialOthers: _initialOthers = [],
+  initialOthers = [],
   initialTours = [],
   initialHeroImage = '',
 }: {
@@ -44,13 +46,15 @@ export default function ParkDetailClient({
   const slug = params?.slug || '';
   const [park, setPark] = useState<RecordRow | null>(initialPark);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
+  const [others, setOthers] = useState<RecordRow[]>(initialOthers);
   const live = useCmsLive();
   const serverGate = useServerRecordGate(initialPark);
 
   useEffect(() => {
     setPark(initialPark);
     setTours(initialTours);
-  }, [initialPark, initialTours]);
+    if (initialOthers.length) setOthers(initialOthers);
+  }, [initialPark, initialOthers, initialTours]);
 
   useEffect(() => {
     if (serverGate.current && live === 0) return;
@@ -82,6 +86,44 @@ export default function ParkDetailClient({
     load();
   }, [slug, live, router, serverGate]);
 
+  useEffect(() => {
+    if (others.length) return;
+    const country = park ? pickStoredString(park, ['country']) : '';
+    let cancelled = false;
+    const currentId = String(park?.id || '');
+    const currentSlug = park ? publicRecordSlug(park) : slug;
+    const keep = (rows: RecordRow[]) =>
+      rows
+        .filter((row) => isPublishedRecord(row))
+        .filter((row) => {
+          const id = String(row.id || '');
+          const parkSlug = publicRecordSlug(row);
+          if (currentId && id === currentId) return false;
+          if (currentSlug && parkSlug === currentSlug) return false;
+          return Boolean(parkSlug);
+        })
+        .slice(0, 8);
+    fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+      limit: 12,
+      filters: country ? { country } : undefined,
+    })
+      .then(async (page) => {
+        if (cancelled) return;
+        let rows = keep(page.rows || []);
+        if (!rows.length && country) {
+          const broader = await fetchCollectionPage('national_park', ['national_parks', 'parks'], {
+            limit: 12,
+          });
+          if (!cancelled) rows = keep(broader.rows || []);
+        }
+        if (rows.length) setOthers(rows);
+      })
+      .catch((error) => console.error('[Park detail] Other parks failed:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [park, others.length, slug]);
+
   const published = useEnsurePublishedAt('national_park', park, '', (stamp) => {
     setPark((row) => (row ? { ...row, published_at: stamp } : row));
   });
@@ -96,6 +138,11 @@ export default function ParkDetailClient({
 
   const parkName = getRecordTitle(park);
   const countryLabel = pickString(park, ['country']);
+  const otherCards = others.map((row) => ({
+    href: `/parks/${publicRecordSlug(row)}`,
+    image: getRecordImage(row),
+    title: getRecordTitle(row),
+  }));
 
   return (
     <DetailPageShell embedded={embedded}>
@@ -111,7 +158,8 @@ export default function ParkDetailClient({
         hideMeta
         country={countryLabel}
         sidebarTitle="Other National Parks"
-        sidebarItems={[]}
+        sidebarItems={otherCards}
+        sidebarAlways
         below={
           <AmazingSafaris
             tours={tours}
