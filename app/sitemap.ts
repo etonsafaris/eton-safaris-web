@@ -19,7 +19,6 @@ import {
 import { coreSitemapEntries, sitemapEntry } from '@/lib/sitemap-core';
 import type { RecordRow } from '@/lib/types';
 import { isNextProductionBuild } from '@/lib/build-phase';
-import { unstable_cache } from 'next/cache';
 
 /** Never block Google or the public site — sitemap must always return 200 quickly. */
 export const dynamic = 'force-dynamic';
@@ -181,13 +180,6 @@ async function buildSitemapLive(): Promise<MetadataRoute.Sitemap> {
   return dedupeSitemap([...hubs, ...destinationEntries, ...dynamicEntries]);
 }
 
-async function getCachedFullSitemap(): Promise<MetadataRoute.Sitemap> {
-  return unstable_cache(buildSitemapLive, ['public-sitemap-v7-fast-safe'], {
-    revalidate: 3600,
-    tags: ['cms-public', 'sitemap'],
-  })();
-}
-
 function withBudget<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(fallback), ms);
@@ -205,15 +197,16 @@ function withBudget<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T>
 
 /**
  * Sitemap must never 500 and must never stall the public site.
- * Prefer a full cached build; if DB/cache is slow or broken, serve core URLs.
+ * Avoid unstable_cache here — it was a common source of intermittent 500s on Vercel.
+ * Prefer a timed live build; if DB is slow or broken, serve core URLs.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const core = coreSitemapEntries();
   if (isNextProductionBuild()) return core;
 
   try {
-    const full = await withBudget(getCachedFullSitemap(), SITEMAP_TOTAL_MS, core);
-    return full?.length ? full : core;
+    const full = await withBudget(buildSitemapLive(), SITEMAP_TOTAL_MS, core);
+    return Array.isArray(full) && full.length ? full : core;
   } catch (error) {
     console.error('[sitemap] Serving core URLs after failure:', error);
     return core;
