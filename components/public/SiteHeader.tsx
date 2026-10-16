@@ -53,7 +53,7 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="hidden items-center lg:flex">
-        <Link href="/" prefetch className={navClass(homeActive)}>
+        <Link href="/" prefetch={true} className={navClass(homeActive)}>
           Home
         </Link>
         {primary.length > 0 ? (

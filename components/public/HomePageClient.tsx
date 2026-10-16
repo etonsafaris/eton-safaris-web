@@ -92,20 +92,22 @@ export default function HomePageClient({
     [initialCategories, initialCountries, initialTours, initialUpdates, cached]
   );
 
-  const skipRefresh =
-    !needsClientRefresh ||
-    (initialPayload.tours.length > 0 && seededHeroSlides.length > 0);
+  const hasFullPaint =
+    initialPayload.tours.length > 0 &&
+    initialPayload.countries.length > 0 &&
+    seededHeroSlides.length > 0;
 
   const { data: liveData, heroSlides: recoveredHeroSlides, pending } = useHomePageRecovery({
     initialData: initialPayload,
     initialHeroSlides: seededHeroSlides,
-    needsClientRefresh: !skipRefresh && needsClientRefresh,
+    // Never refetch when SSR or snapshot already painted every section.
+    needsClientRefresh: Boolean(needsClientRefresh && !hasFullPaint),
   });
 
-  const countries = liveData.countries;
-  const tours = liveData.tours;
-  const updates = liveData.updates;
-  const categories = liveData.categories;
+  const countries = liveData.countries.length ? liveData.countries : initialPayload.countries;
+  const tours = liveData.tours.length ? liveData.tours : initialPayload.tours;
+  const updates = liveData.updates.length ? liveData.updates : initialPayload.updates;
+  const categories = liveData.categories.length ? liveData.categories : initialPayload.categories;
 
   const heroSlides = useMemo(() => {
     const fromRecovery = (recoveredHeroSlides ?? []).filter((item) =>
@@ -116,16 +118,16 @@ export default function HomePageClient({
   }, [recoveredHeroSlides, seededHeroSlides]);
 
   useEffect(() => {
-    if (!tours.length || !heroSlides.length) return;
+    if (!tours.length) return;
     writeHomeViewSnapshot({
-      heroSlides,
+      heroSlides: heroSlides.length ? heroSlides : seededHeroSlides,
       countries,
       tours,
       updates,
       categories,
       homeContent,
     });
-  }, [heroSlides, countries, tours, updates, categories, homeContent]);
+  }, [heroSlides, seededHeroSlides, countries, tours, updates, categories, homeContent]);
 
   useEffect(() => {
     if (heroSlides.length < 2) return undefined;
@@ -332,7 +334,11 @@ export default function HomePageClient({
               instant
               items={tourItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage={pending ? undefined : 'Popular East Africa tours are loading. Refresh in a moment or browse all tours.'}
+              emptyMessage={
+                pending || tours.length > 0
+                  ? undefined
+                  : 'Popular East Africa tours are loading. Refresh in a moment or browse all tours.'
+              }
             />
           </div>
         </div>
@@ -346,7 +352,6 @@ export default function HomePageClient({
               instant
               items={destinationItems}
               itemsPerView={{ sm: 1, md: 2, lg: 3 }}
-              emptyMessage={pending ? undefined : 'No records found in this collection.'}
             />
           </div>
           <div className="mt-10 text-center">
@@ -368,7 +373,6 @@ export default function HomePageClient({
               instant
               items={blogItems}
               itemsPerView={{ sm: 1, md: 2, lg: 4 }}
-              emptyMessage={pending ? undefined : 'No records found in this collection.'}
             />
           </div>
           <div className="mt-8 text-center">

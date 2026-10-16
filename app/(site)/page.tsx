@@ -33,10 +33,8 @@ export function generateMetadata(): Metadata {
 
 function HomeScreen({
   state,
-  refresh,
 }: {
   state: ReturnType<typeof prepareHomePageRenderState>;
-  refresh?: boolean;
 }) {
   const initialHeroSlides = safeHeroSlides(buildHomeHeroSlides(state.data.countries)).map((slide) => ({
     ...slide,
@@ -47,6 +45,11 @@ function HomeScreen({
     preload(firstHero, { as: 'image', fetchPriority: 'high' });
   }
 
+  const complete =
+    state.data.tours.length > 0 &&
+    state.data.countries.length > 0 &&
+    initialHeroSlides.length > 0;
+
   return (
     <HomePageClient
       initialHeroSlides={initialHeroSlides}
@@ -55,7 +58,7 @@ function HomeScreen({
       initialUpdates={state.data.updates}
       initialCategories={state.data.categories}
       initialHomeContent={state.homeContent}
-      needsClientRefresh={refresh || state.needsClientRefresh || initialHeroSlides.length === 0}
+      needsClientRefresh={!complete || state.needsClientRefresh}
     />
   );
 }

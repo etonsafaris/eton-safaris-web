@@ -25,24 +25,34 @@ export function useHomePageRecovery(options: {
   const { initialData, initialHeroSlides, needsClientRefresh } = options;
   const [data, setData] = useState(initialData);
   const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
-  const [pending, setPending] = useState(needsClientRefresh || initialData.tours.length === 0);
+  const [pending, setPending] = useState(
+    Boolean(needsClientRefresh && initialData.tours.length === 0)
+  );
   const attemptedRef = useRef(false);
 
   useEffect(() => {
-    setData(initialData);
-    setHeroSlides(initialHeroSlides);
+    setData((current) => {
+      const next = initialData;
+      if (!next.tours.length && current.tours.length) return current;
+      return next;
+    });
+    setHeroSlides((current) => (initialHeroSlides.length ? initialHeroSlides : current));
+    if (initialData.tours.length > 0) setPending(false);
   }, [initialData, initialHeroSlides]);
 
   useEffect(() => {
+    if (!needsClientRefresh || initialData.tours.length > 0 || attemptedRef.current) {
+      if (initialData.tours.length > 0) setPending(false);
+      return undefined;
+    }
     const popularToursMissing =
       data.tours.length > 0 && selectHomePopularTours(data.tours, 1).length === 0;
     const sparse =
-      needsClientRefresh ||
       data.tours.length === 0 ||
       (heroSlides.length === 0 && data.countries.length === 0) ||
       popularToursMissing;
-    if (!sparse || attemptedRef.current) {
-      if (!sparse) setPending(false);
+    if (!sparse) {
+      setPending(false);
       return undefined;
     }
     attemptedRef.current = true;
@@ -54,9 +64,8 @@ export function useHomePageRecovery(options: {
         const body = await fetchJsonSafe<HomeBundleResponse>('/api/public/home-bundle');
         const incoming = normalizeHomePagePayload(body?.data);
         if (cancelled || incoming.tours.length === 0) return;
-        const merged = mergeHomePagePayload(incoming);
         const fromApi = safeHeroSlides(body?.heroSlides);
-        const fromCountries = safeHeroSlides(buildHomeHeroSlides(merged.countries));
+        const fromCountries = safeHeroSlides(buildHomeHeroSlides(incoming.countries));
         const slides = fromApi.length ? fromApi : fromCountries;
         setData((current) => mergeHomePagePayload(incoming, current));
         if (slides.length) setHeroSlides(slides);
@@ -68,7 +77,7 @@ export function useHomePageRecovery(options: {
     return () => {
       cancelled = true;
     };
-  }, [needsClientRefresh, data.tours.length]);
+  }, [needsClientRefresh, initialData.tours.length, data.tours.length, data.countries.length, heroSlides.length]);
 
   return { data, heroSlides, pending };
 }

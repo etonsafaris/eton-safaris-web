@@ -287,7 +287,7 @@ async function loadHomePageBundleLive() {
 
 /** One homepage pass: cached so origin does not hit Aiven on every visitor. */
 export async function loadHomePageBundle() {
-  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v22-fast'], {
+  return unstable_cache(loadHomePageBundleLive, ['home-page-bundle-v23-instant'], {
     revalidate: CMS_PUBLIC_REVALIDATE_SECONDS,
     tags: [CMS_PUBLIC_CACHE_TAG, 'home-page'],
   })();
