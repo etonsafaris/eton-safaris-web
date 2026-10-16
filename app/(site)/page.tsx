@@ -1,19 +1,22 @@
 import { Suspense } from 'react';
 import { preload } from 'react-dom';
 import HomePageClient from '@/components/public/HomePageClient';
+import HomeInstantFallback from '@/components/public/HomeInstantFallback';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
-import { fallbackHomeCountryRows, prepareHomePageRenderState } from '@/lib/home-page-fallback';
+import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
 import { safeHeroSlides } from '@/lib/home-page-payload';
 import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { heroImageSrc } from '@/lib/responsive-image';
-import { mergePublicDestinations } from '@/lib/public-destinations';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
+import { CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
 import { Metadata } from 'next';
 
 const HOME_TITLE = 'Eton Safaris | Africa & Beyond';
 const HOME_DESCRIPTION =
   'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.';
+
+export const revalidate = CMS_PUBLIC_REVALIDATE_SECONDS;
 
 export function generateMetadata(): Metadata {
   return {
@@ -57,16 +60,6 @@ function HomeScreen({
   );
 }
 
-function HomeShell() {
-  const countries = fallbackHomeCountryRows();
-  const state = prepareHomePageRenderState({
-    data: { countries, tours: [], updates: [], categories: [] },
-    content: null,
-    destinations: mergePublicDestinations(countries),
-  });
-  return <HomeScreen state={state} refresh />;
-}
-
 async function HomeReady() {
   const bundle = await loadHomePageBundleResilient();
   return <HomeScreen state={prepareHomePageRenderState(bundle)} />;
@@ -75,7 +68,7 @@ async function HomeReady() {
 export default function HomePage() {
   return (
     <PublicShellServer>
-      <Suspense fallback={<HomeShell />}>
+      <Suspense fallback={<HomeInstantFallback />}>
         <HomeReady />
       </Suspense>
     </PublicShellServer>

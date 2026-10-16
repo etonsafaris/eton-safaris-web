@@ -1230,14 +1230,19 @@ export async function fetchCountryToursForCategories(countryLabel: string, limit
 export async function fetchStandardToursForCategory(
   countryLabel: string,
   categoryLabel: string,
-  limit = 48
+  limit = 25
 ): Promise<RecordRow[]> {
   const label = String(countryLabel || '').trim();
   const category = String(categoryLabel || '').trim();
   if (!label || !category) return [];
-  const capped = Math.max(1, Math.min(limit, 48));
+  const capped = Math.max(1, Math.min(limit, 25));
   const words = category.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   const slug = words.toLowerCase().replace(/\s+/g, '-');
+  const countrySlug = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const keyParts = slug
+    .split('-')
+    .filter((part) => part.length > 3 && part !== countrySlug && !countrySlug.includes(part));
+  const keyword = keyParts.slice(0, 2).join('%');
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
@@ -1247,11 +1252,18 @@ export async function fetchStandardToursForCategory(
               category ILIKE $2
               OR category ILIKE $3
               OR replace(lower(COALESCE(category::text, '')), ' ', '-') ILIKE $4
+              OR ($5 <> '' AND replace(lower(COALESCE(category::text, '')), ' ', '-') ILIKE $5)
             )
             AND ${publicStandardTourSql()}
           ORDER BY created_date DESC NULLS LAST
           LIMIT ${capped}`,
-        values: [`%${label}%`, `%${words}%`, `%${category}%`, `%${slug}%`],
+        values: [
+          `%${label}%`,
+          `%${words}%`,
+          `%${category}%`,
+          `%${slug}%`,
+          keyword ? `%${keyword}%` : '',
+        ],
       }),
       resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
       TOUR_SELECT_CACHE_KEY

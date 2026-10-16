@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import CategoryThumbnail from '@/components/public/CategoryThumbnail';
 import { getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
@@ -54,9 +55,9 @@ export default function SafariCategoryCard({
 
   if (href) {
     return (
-      <a href={href} className={className} style={{ boxShadow: CARD_SHADOW }}>
+      <Link href={href} prefetch className={className} style={{ boxShadow: CARD_SHADOW }}>
         {inner}
-      </a>
+      </Link>
     );
   }
 

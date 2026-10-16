@@ -4,6 +4,7 @@ import PublicShellServer from '@/components/public/PublicShellServer';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { publicCountrySlug } from '@/lib/country-utils';
 import { pickString } from '@/lib/data-server';
+import { fallbackHomeCountryRows } from '@/lib/home-page-fallback';
 import { loadDestinationsIndexCountries } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { destinationListingRows } from '@/lib/public-destinations';
@@ -28,15 +29,16 @@ async function DestinationsReady() {
     rethrowDynamicServerError(error);
     console.warn('[Public] Destinations index failed:', error);
   }
-  const first = destinationListingRows(countries)[0];
+  const rows = countries.length ? countries : fallbackHomeCountryRows();
+  const first = destinationListingRows(rows)[0];
   preloadPublicHero(countryHeroImage(publicCountrySlug(first || {}) || pickString(first || {}, ['name']), first));
-  return <DestinationsIndexClient initialCountries={countries} />;
+  return <DestinationsIndexClient initialCountries={rows} />;
 }
 
 export default function DestinationsIndexPage() {
   return (
     <PublicShellServer>
-      <Suspense fallback={<DestinationsIndexClient initialCountries={[]} />}>
+      <Suspense fallback={<DestinationsIndexClient initialCountries={fallbackHomeCountryRows()} />}>
         <DestinationsReady />
       </Suspense>
     </PublicShellServer>

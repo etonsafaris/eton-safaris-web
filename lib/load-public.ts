@@ -33,6 +33,7 @@ import {
   fetchSyncedPublicRecord,
   resolvePublicTours,
   fetchCountryToursForCategories,
+  fetchStandardToursForCategory,
   findRecordBySlug,
   getRecordTitle,
   isGoogleOnlyTour,
@@ -54,10 +55,7 @@ import {
   withCountryPageFallback,
   type CountryPageData,
 } from '@/lib/country-page-fallback';
-import {
-  enrichCountryRecordForPublicPage,
-  isCountryPageShellCountry,
-} from '@/lib/country-heroes';
+import { enrichCountryRecordForPublicPage } from '@/lib/country-heroes';
 import { fallbackHomeCountryRows, orderHomeCountryRows, sanitizeCountryRowForDisplay } from '@/lib/home-page-fallback';
 import { resolveCountryPageCategories } from '@/lib/country-page-categories';
 import { getPublicRecordImage } from '@/lib/content-image';
@@ -418,62 +416,18 @@ export async function loadDestinationsIndexCountries() {
   );
 }
 
-const COUNTRY_HERO_FIELDS = [
-  'id',
-  'tagline',
-  'headline',
-  'hero_title',
-  'image_url',
-  'social_image_url',
-  'cover_image',
-  'featured_image',
-  'description_title',
-] as const;
-
-function fillEmptyCountryFields(base: RecordRow, extra: RecordRow): RecordRow {
-  const next: RecordRow = { ...extra, ...base };
-  for (const key of COUNTRY_HERO_FIELDS) {
-    const current = String(base[key] ?? '').trim();
-    const incoming = extra[key];
-    if (!current && incoming != null && String(incoming).trim()) {
-      next[key] = incoming;
-    }
-  }
-  return next;
-}
-
-/** Country pages must keep the admin headline and featured image even if the detail query times out. */
-async function countryRowWithHero(slug: string, country: RecordRow | null): Promise<RecordRow | null> {
-  let row = country;
-  if (isCountryPageShellCountry(row)) {
-    const rows = await withTimeout(
-      fetchCollectionRecords('countries', [], {
-        columns: listColumns('countries'),
-        maxRows: 48,
-      }).then((data) => data.filter(isPublishedRecord)),
-      6000,
-      [] as RecordRow[]
-    );
-    const match = rows.find((item) => recordMatchesCountrySlug(item, slug));
-    if (match) row = row ? fillEmptyCountryFields(row, match) : match;
-  }
-  return enrichCountryRecordForPublicPage(slug, row);
-}
-
 export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v25-standard25', normalized],
-      ['collection:countries', `country:${normalized}`],
+      ['country-page-data-v26-fast', normalized],
+      ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
-        if (!data?.country || isCountryPageShellCountry(data.country) || !data.tours?.length) {
-          throw new Error(`country-page-incomplete:${normalized}`);
-        }
-        return withCountryPageFallback(data, normalized);
+        // Cache whatever we got — do not force a second live round-trip on sparse tours.
+        return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
       },
-      120
+      180
     );
   } catch (error) {
     rethrowDynamicServerError(error);
@@ -508,51 +462,76 @@ async function loadCountryPageDataInner(
   options?: CountryPageLoadOptions
 ): Promise<CountryPageData | null> {
   const countryLabel = countryLabelFromSlug(slug) || slug;
-  const [countryMeta, categoryPage, tours] = await Promise.all([
-    withTimeout(fetchPublicRecordResilient('countries', slug), 5000, null),
+  const [countryMeta, categoryPage, tourRows] = await Promise.all([
+    withTimeout(fetchPublicRecordResilient('countries', slug), 3500, null),
     withTimeout(
       fetchCollectionPage('categories', [], {
         columns: listColumns('categories'),
-        limit: 24,
+        limit: 32,
         filters: { country: countryLabel },
       }),
-      5000,
+      3500,
       { rows: [] as RecordRow[], total: 0 }
     ),
-    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), 5000, [] as RecordRow[]).then(
-      (rows) => (rows ?? []).filter((row) => !isGoogleOnlyTour(row)).slice(0, 25)
-    ),
+    withTimeout(fetchCountryToursForCategories(countryLabel, 25), 4000, [] as RecordRow[]),
   ]);
-  const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
+
+  let categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
+  if (!categoriesRaw.length) {
+    const allCats = await withTimeout(
+      fetchCollectionPage('categories', [], {
+        columns: listColumns('categories'),
+        limit: 80,
+        offset: 0,
+      }),
+      3000,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    categoriesRaw = (allCats.rows ?? []).filter(isPublishedRecord);
+  }
+
   if (options?.requirePublishedCountry) {
     if (!countryMeta || !isPubliclyVisibleRecord(countryMeta)) return null;
   }
 
   const country: RecordRow | null = countryMeta;
-
   if (options?.requirePublishedCountry && (!country || !isPubliclyVisibleRecord(country))) {
     return null;
   }
+
   const countryCategories = categoriesRaw.filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') || countryLabelFromSlug(slug) || slug;
   const parks: RecordRow[] = [];
   const places: RecordRow[] = [];
+
+  let tours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row));
+  if (!tours.length) {
+    tours = await withTimeout(
+      resolvePublicTours({ country: countryLabel, limit: 25 }),
+      3500,
+      [] as RecordRow[]
+    ).then((rows) =>
+      (rows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row)).slice(0, 25)
+    );
+  }
   const matchedTours = tours.filter((row) => matchesCountry(row, slug));
-  const toursForPage = matchedTours.length ? matchedTours : tours;
+  const toursForPage = (matchedTours.length ? matchedTours : tours).slice(0, 25);
   const categories = resolveCountryPageCategories(slug, countryCategories, toursForPage);
+
   const fallbackCountry: RecordRow = {
     name: countryName,
     title: countryName,
     slug,
   };
+  // Prefer the single country row — avoid scanning the full countries table on every click.
   const displayCountry =
     country && isPubliclyVisibleRecord(country)
-      ? await countryRowWithHero(slug, country)
+      ? enrichCountryRecordForPublicPage(slug, country)
       : options?.requirePublishedCountry
         ? null
         : countryName
-          ? await countryRowWithHero(slug, fallbackCountry)
+          ? enrichCountryRecordForPublicPage(slug, fallbackCountry)
           : null;
 
   if (options?.requirePublishedCountry && !displayCountry) return null;
@@ -560,7 +539,7 @@ async function loadCountryPageDataInner(
   return {
     country: displayCountry,
     categories,
-    tours: toursForPage.filter((row) => isPubliclyVisibleRecord(row) && !isGoogleOnlyTour(row)).slice(0, 25),
+    tours: toursForPage,
     parks,
     places,
   };
@@ -571,8 +550,8 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v11-standard25', normalized],
-    ['collection:countries', `country:${normalized}`],
+    ['country-page-sync-v12-fast', normalized],
+    ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
   );
@@ -1080,41 +1059,72 @@ export async function loadExploreDetail(slug: string) {
   }
 }
 
-/** Fast category page payload — avoids loading full country parks/explore on every category click. */
-export async function loadCategoryPageData(countrySlug: string, categorySlug: string) {
+async function loadCategoryPageDataLive(countrySlug: string, categorySlug: string) {
   const bare =
     canonicalCountrySlug(countrySlug) ||
     countrySlugFromLanding(countrySlug) ||
     normalizeSlug(countrySlug).replace(/-safaris$/, '');
   const fallbackName = countryLabelFromSlug(bare);
+  const countryLabel = fallbackName || bare;
+  const slugWords = categorySlug.replace(/-/g, ' ');
+
   try {
-    const [categoriesPage, countryRow, tourRows] = await Promise.all([
-        withTimeout(
-          fetchCollectionPage('categories', [], {
-            columns: listColumns('categories'),
-            limit: 120,
-            offset: 0,
-          }),
-          5000,
-          { rows: [] as RecordRow[], total: 0 }
-        ),
-        fetchPublicRecordResilient('countries', bare),
-        withTimeout(fetchCountryToursForCategories(fallbackName || bare, 25), 6000, [] as RecordRow[]),
+    const [categoriesPage, countryRow, directTours] = await Promise.all([
+      withTimeout(
+        fetchCollectionPage('categories', [], {
+          columns: listColumns('categories'),
+          limit: 40,
+          offset: 0,
+          filters: { country: countryLabel },
+        }),
+        3500,
+        { rows: [] as RecordRow[], total: 0 }
+      ),
+      withTimeout(fetchPublicRecordResilient('countries', bare), 3000, null),
+      withTimeout(fetchStandardToursForCategory(countryLabel, slugWords, 25), 4000, [] as RecordRow[]),
     ]);
-    const categories = (categoriesPage?.rows ?? [])
+
+    let categories = (categoriesPage?.rows ?? [])
       .filter(isPublishedRecord)
       .filter((row) => categoryMatchesCountry(row, bare));
+    if (!categories.length) {
+      const allCats = await withTimeout(
+        fetchCollectionPage('categories', [], {
+          columns: listColumns('categories'),
+          limit: 80,
+          offset: 0,
+        }),
+        3000,
+        { rows: [] as RecordRow[], total: 0 }
+      );
+      categories = (allCats?.rows ?? [])
+        .filter(isPublishedRecord)
+        .filter((row) => categoryMatchesCountry(row, bare));
+    }
     const category = findCategoryBySlug(categories, categorySlug, bare);
     const categoryName = category ? pickString(category, ['name', 'title']) : '';
-    const standardTours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row));
-    let filteredTours = filterToursByCategory(standardTours, category, categorySlug);
-    if (!filteredTours.length && categoryName) {
-      filteredTours = filterToursByCategory(standardTours, null, categoryName);
+
+    let tours = (directTours ?? []).filter((row) => !isGoogleOnlyTour(row));
+    if (!tours.length && categoryName && categoryName.toLowerCase() !== slugWords.toLowerCase()) {
+      tours = await withTimeout(
+        fetchStandardToursForCategory(countryLabel, categoryName, 25),
+        3500,
+        [] as RecordRow[]
+      ).then((rows) => (rows ?? []).filter((row) => !isGoogleOnlyTour(row)));
     }
-    if (!filteredTours.length) {
-      filteredTours = filterToursByCategory(standardTours, null, categorySlug);
+    if (!tours.length) {
+      // Prefer category-name SQL again, then soft-filter the country Standard pool.
+      const countryPool = await withTimeout(
+        fetchCountryToursForCategories(countryLabel, 25),
+        3500,
+        [] as RecordRow[]
+      );
+      tours = filterToursByCategory(countryPool ?? [], null, categoryName || categorySlug);
+      if (!tours.length && category) {
+        tours = filterToursByCategory(countryPool ?? [], category, categorySlug);
+      }
     }
-    filteredTours = filteredTours.slice(0, 25);
+
     const countryName = publicCountryLabel(countryRow, bare) || fallbackName;
     const country: RecordRow =
       countryRow && isPublishedRecord(countryRow)
@@ -1124,11 +1134,12 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
             title: countryName,
             slug: bare,
           } as RecordRow);
+
     return toClientProps({
       country,
       category,
       categories,
-      tours: filteredTours,
+      tours: tours.slice(0, 25),
     });
   } catch (error) {
     rethrowDynamicServerError(error);
@@ -1143,6 +1154,26 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
       categories: [] as RecordRow[],
       tours: [] as RecordRow[],
     };
+  }
+}
+
+/** Fast category page payload — one country category and its Standard Tours only. */
+export async function loadCategoryPageData(countrySlug: string, categorySlug: string) {
+  const bare =
+    canonicalCountrySlug(countrySlug) ||
+    countrySlugFromLanding(countrySlug) ||
+    normalizeSlug(countrySlug).replace(/-safaris$/, '');
+  const cat = normalizeSlug(categorySlug);
+  try {
+    return await cachedPublic(
+      ['category-page-v2-fast', bare, cat],
+      ['collection:categories', 'collection:tours', `category:${bare}:${cat}`],
+      () => loadCategoryPageDataLive(countrySlug, categorySlug),
+      120
+    );
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    return loadCategoryPageDataLive(countrySlug, categorySlug);
   }
 }
 

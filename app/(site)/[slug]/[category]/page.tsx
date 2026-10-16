@@ -67,7 +67,7 @@ async function CategoryReady({ countrySlug, categorySlug }: { countrySlug: strin
       initialCategories={categories}
       initialTours={tours}
       initialCategory={category}
-      serverPreloaded={Boolean(category || tours.length > 0)}
+      serverPreloaded={tours.length > 0}
     />
   );
 }

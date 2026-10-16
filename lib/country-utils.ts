@@ -191,6 +191,12 @@ export function recordCategoryTokens(record: RecordRow): string[] {
   return Array.from(new Set(tokens));
 }
 
+function categoryWordStem(part: string): string {
+  if (part.length > 4 && part.endsWith('ies')) return `${part.slice(0, -3)}y`;
+  if (part.length > 4 && part.endsWith('s') && !part.endsWith('ss')) return part.slice(0, -1);
+  return part;
+}
+
 export function matchesCategoryValue(record: RecordRow, value: string): boolean {
   const target = normalizeSlug(value.replace(/-/g, ' '));
   const slugTarget = normalizeSlug(value);
@@ -201,11 +207,19 @@ export function matchesCategoryValue(record: RecordRow, value: string): boolean 
   }
   // Soft match: significant overlapping words (e.g. gorilla-trekking vs uganda-gorilla-trekking-safaris)
   const targetParts = slugTarget.split('-').filter((part) => part.length > 3);
-  if (targetParts.length < 2) return false;
+  if (!targetParts.length) return false;
+  const needed = Math.min(2, targetParts.length);
   return tokens.some((token) => {
-    const tokenParts = new Set(token.split('-').filter((part) => part.length > 3));
-    const hits = targetParts.filter((part) => tokenParts.has(part)).length;
-    return hits >= Math.min(2, targetParts.length);
+    const tokenParts = new Set(
+      token
+        .split('-')
+        .filter((part) => part.length > 3)
+        .flatMap((part) => [part, categoryWordStem(part)])
+    );
+    const hits = targetParts.filter(
+      (part) => tokenParts.has(part) || tokenParts.has(categoryWordStem(part))
+    ).length;
+    return hits >= needed;
   });
 }
 

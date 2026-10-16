@@ -74,9 +74,13 @@ export default function CountryPageContent({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  /** A name-only shell means the country row did not load. Refetch instead of keeping the blank page. */
+  /** Paint immediately when the server already sent country, categories, or tours. */
   const hasServerContent = Boolean(
-    slug && countryProp && !isCountryPageShellCountry(countryProp) && initialTours.length > 0
+    slug &&
+      countryProp &&
+      (!isCountryPageShellCountry(countryProp) ||
+        initialTours.length > 0 ||
+        initialCategories.length > 0)
   );
   const [ready, setReady] = useState(hasServerContent);
 

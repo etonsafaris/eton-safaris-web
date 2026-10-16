@@ -86,6 +86,8 @@ export default function PageHero({
     : [...customItems, { label: 'Published', value: publishedLabel }];
   const showForestBar = true;
   const fullViewportHero = isTour || isCountry || isUpdate || isPark;
+  const titleClass = src ? 'text-white' : 'text-[#1a3a2a]';
+  const titleShadow = src ? ({ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' } as const) : undefined;
 
   const heroImage = (
     <section
@@ -96,22 +98,33 @@ export default function PageHero({
       }`}
     >
       <FastCoverImage src={src} alt={title ?? ''} />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/20" />
+      {/* Dark wash only when a photo is present — empty heroes must not black out. */}
+      {src ? (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/20" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a3a2a]/20 via-transparent to-transparent" />
+      )}
       {isAbout || isPolicy || (!isTour && !isCountry && !isPark && !isUpdate) ? (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
           <div className="w-full max-w-[900px]">
             <h1
-              className={`text-white ${
+              className={`${titleClass} ${
                 isPolicy || isAbout
                   ? 'font-merry text-[34px] font-semibold italic leading-tight md:text-[46px]'
                   : 'font-serif text-3xl font-bold md:text-5xl'
               }`}
-              style={{ textShadow: '0 2px 16px rgba(0,0,0,0.75)' }}
+              style={src ? { textShadow: '0 2px 16px rgba(0,0,0,0.75)' } : undefined}
             >
               {title}
             </h1>
             {subtitle ? (
-              <p className="mt-2 text-sm font-semibold uppercase tracking-widest text-white/90 md:text-base">{subtitle}</p>
+              <p
+                className={`mt-2 text-sm font-semibold uppercase tracking-widest md:text-base ${
+                  src ? 'text-white/90' : 'text-[#334]'
+                }`}
+              >
+                {subtitle}
+              </p>
             ) : null}
           </div>
         </div>
@@ -120,8 +133,10 @@ export default function PageHero({
           {isTour && backHref ? (
             <Link
               href={backHref}
-              className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 text-sm text-white/80 hover:text-white md:left-8 md:top-6"
-              style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
+              className={`absolute left-4 top-4 z-10 inline-flex items-center gap-2 text-sm md:left-8 md:top-6 ${
+                src ? 'text-white/80 hover:text-white' : 'text-[#1a3a2a]/80 hover:text-[#1a3a2a]'
+              }`}
+              style={src ? { textShadow: '1px 1px 4px rgba(0,0,0,0.8)' } : undefined}
             >
               ← {backLabel || 'Back'}
             </Link>
@@ -135,14 +150,16 @@ export default function PageHero({
               {!isTour && backHref ? (
                 <Link
                   href={backHref}
-                  className="mb-3 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
-                  style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
+                  className={`mb-3 inline-flex items-center gap-2 text-sm ${
+                    src ? 'text-white/70 hover:text-white' : 'text-[#1a3a2a]/70 hover:text-[#1a3a2a]'
+                  }`}
+                  style={src ? { textShadow: '1px 1px 4px rgba(0,0,0,0.8)' } : undefined}
                 >
                   ← {backLabel || 'Back'}
                 </Link>
               ) : null}
               <h1
-                className={`mb-2 text-white ${
+                className={`mb-2 ${titleClass} ${
                   isTour
                     ? 'mx-auto font-serif text-2xl font-bold leading-snug sm:text-3xl md:text-4xl lg:text-[2.75rem] lg:leading-tight'
                     : isPolicy
@@ -151,7 +168,7 @@ export default function PageHero({
                         ? 'font-serif text-[32px] font-semibold italic leading-tight md:text-[40px]'
                         : 'font-serif text-3xl font-bold md:text-5xl'
                 }`}
-                style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+                style={titleShadow}
               >
                 {title}
               </h1>

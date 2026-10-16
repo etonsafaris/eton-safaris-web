@@ -42,6 +42,7 @@ import { heroImageSrc } from '@/lib/responsive-image';
 import { countryCardRemoteFallback } from '@/lib/country-hero-fallback';
 import { stripPublicMoney } from '@/lib/public-money';
 import { selectHomePopularTours } from '@/lib/home-featured-tours';
+import { readHomeViewSnapshot, writeHomeViewSnapshot } from '@/lib/home-view-cache';
 import type { RecordRow } from '@/lib/types';
 
 type HomePageClientProps = {
@@ -54,6 +55,10 @@ type HomePageClientProps = {
   needsClientRefresh?: boolean;
 };
 
+function seedFromSnapshot<T extends RecordRow[]>(incoming: T, cached: T | undefined): T {
+  return (incoming?.length ? incoming : cached?.length ? cached : incoming) as T;
+}
+
 export default function HomePageClient({
   initialHeroSlides,
   initialCountries,
@@ -63,8 +68,15 @@ export default function HomePageClient({
   initialHomeContent,
   needsClientRefresh = false,
 }: HomePageClientProps) {
+  const cached = useMemo(() => readHomeViewSnapshot(), []);
+  const seededHeroSlides = useMemo(() => {
+    const initial = safeHeroSlides(initialHeroSlides ?? []);
+    if (initial.length) return initial;
+    return safeHeroSlides(cached?.heroSlides ?? []);
+  }, [initialHeroSlides, cached]);
+
   const [slide, setSlide] = useState(0);
-  const liveHomeContent = useHomePageContent(initialHomeContent);
+  const liveHomeContent = useHomePageContent(initialHomeContent ?? cached?.homeContent ?? null);
   const homeContent = useMemo(
     () => resolveHomePageContent(liveHomeContent),
     [liveHomeContent]
@@ -72,18 +84,22 @@ export default function HomePageClient({
 
   const initialPayload = useMemo(
     () => ({
-      countries: initialCountries ?? [],
-      tours: initialTours ?? [],
-      updates: initialUpdates ?? [],
-      categories: initialCategories ?? [],
+      countries: seedFromSnapshot(initialCountries ?? [], cached?.countries),
+      tours: seedFromSnapshot(initialTours ?? [], cached?.tours),
+      updates: seedFromSnapshot(initialUpdates ?? [], cached?.updates),
+      categories: seedFromSnapshot(initialCategories ?? [], cached?.categories),
     }),
-    [initialCategories, initialCountries, initialTours, initialUpdates]
+    [initialCategories, initialCountries, initialTours, initialUpdates, cached]
   );
+
+  const skipRefresh =
+    !needsClientRefresh ||
+    (initialPayload.tours.length > 0 && seededHeroSlides.length > 0);
 
   const { data: liveData, heroSlides: recoveredHeroSlides, pending } = useHomePageRecovery({
     initialData: initialPayload,
-    initialHeroSlides: initialHeroSlides ?? [],
-    needsClientRefresh,
+    initialHeroSlides: seededHeroSlides,
+    needsClientRefresh: !skipRefresh && needsClientRefresh,
   });
 
   const countries = liveData.countries;
@@ -96,9 +112,20 @@ export default function HomePageClient({
       Boolean(resolvePublicHeroCarouselImage(item?.image))
     );
     if (fromRecovery.length) return fromRecovery;
-    const initial = safeHeroSlides(initialHeroSlides ?? []);
-    return initial;
-  }, [recoveredHeroSlides, initialHeroSlides]);
+    return seededHeroSlides;
+  }, [recoveredHeroSlides, seededHeroSlides]);
+
+  useEffect(() => {
+    if (!tours.length || !heroSlides.length) return;
+    writeHomeViewSnapshot({
+      heroSlides,
+      countries,
+      tours,
+      updates,
+      categories,
+      homeContent,
+    });
+  }, [heroSlides, countries, tours, updates, categories, homeContent]);
 
   useEffect(() => {
     if (heroSlides.length < 2) return undefined;
@@ -231,7 +258,9 @@ export default function HomePageClient({
     <>
       <section className="relative h-[500px] overflow-hidden bg-[#e4efe6] md:h-[600px]">
         <FastCoverImage src={current?.image} alt="" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
+        {current?.image ? (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
+        ) : null}
           <button
             type="button"
             onClick={() => goHero(slide - 1)}
@@ -249,18 +278,28 @@ export default function HomePageClient({
             <ChevronRight />
           </button>
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4">
-            <div className="w-full max-w-2xl rounded-[3rem] border border-white/25 bg-black/35 px-8 py-6 text-center shadow-2xl md:px-12 md:py-8">
+            <div
+              className={`w-full max-w-2xl rounded-[3rem] border px-8 py-6 text-center shadow-2xl md:px-12 md:py-8 ${
+                current?.image
+                  ? 'border-white/25 bg-black/35'
+                  : 'border-[#1a3a2a]/15 bg-white/90'
+              }`}
+            >
               <h1
-                className="mb-2 font-serif text-2xl font-bold leading-tight text-white md:text-4xl"
-                style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+                className={`mb-2 font-serif text-2xl font-bold leading-tight md:text-4xl ${
+                  current?.image ? 'text-white' : 'text-[#1a3a2a]'
+                }`}
+                style={current?.image ? { textShadow: '2px 2px 8px rgba(0,0,0,0.9)' } : undefined}
               >
-                {current?.title ?? ''}
+                {current?.title || 'Eton Safaris'}
               </h1>
               <p
-                className="mb-4 text-sm leading-snug text-white/90 md:text-base"
-                style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
+                className={`mb-4 text-sm leading-snug md:text-base ${
+                  current?.image ? 'text-white/90' : 'text-[#334]'
+                }`}
+                style={current?.image ? { textShadow: '1px 1px 4px rgba(0,0,0,0.8)' } : undefined}
               >
-                {current?.subtitle ?? ''}
+                {current?.subtitle || 'Crafted safaris across Africa.'}
               </p>
               <Link
                 href={current?.href ?? '/destinations'}

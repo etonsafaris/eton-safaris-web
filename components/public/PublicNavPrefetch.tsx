@@ -21,8 +21,8 @@ export default function PublicNavPrefetch() {
   const router = useRouter();
 
   useEffect(() => {
-    const run = () => {
-      for (const path of WARM_ROUTES) {
+    const warm = (paths: string[]) => {
+      for (const path of paths) {
         try {
           router.prefetch(path);
         } catch {
@@ -30,9 +30,12 @@ export default function PublicNavPrefetch() {
         }
       }
     };
-    const idle = window.requestIdleCallback?.(run, { timeout: 2500 });
+    // Home first so the header Home click feels instant.
+    warm(['/']);
+    const run = () => warm(WARM_ROUTES);
+    const idle = window.requestIdleCallback?.(run, { timeout: 1800 });
     if (idle == null) {
-      const timer = window.setTimeout(run, 1200);
+      const timer = window.setTimeout(run, 400);
       return () => window.clearTimeout(timer);
     }
     return () => window.cancelIdleCallback?.(idle);

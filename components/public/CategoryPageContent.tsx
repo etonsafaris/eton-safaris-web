@@ -8,7 +8,6 @@ import PageHero from '@/components/public/PageHero';
 import {
   categoryMatchesCountry,
   countryLabelFromSlug,
-  filterToursByCategory,
   findCategoryBySlug,
   publicCountryLabel,
 } from '@/lib/country-utils';
@@ -19,7 +18,6 @@ import {
   isGoogleOnlyTour,
   isPublishedRecord,
   pickRecordId,
-  pickString,
   recordPublishedAt,
   TOUR_LIST_COLUMNS,
   visibleRecordHtml,
@@ -104,7 +102,8 @@ export default function CategoryPageContent({
   );
 
   useEffect(() => {
-    if (serverPreloaded && live === 0) {
+    // Trust server payload when it already has tours; only backfill when empty or CMS live.
+    if (serverPreloaded && live === 0 && initialTours.length > 0) {
       setReady(true);
       return undefined;
     }
@@ -122,20 +121,25 @@ export default function CategoryPageContent({
           'ilike.country': `%${label}%`,
           'ilike.category': `%${categoryLabel}%`,
         });
+        const needsCategories = !initialCategories.length || live > 0;
         const [allCategories, response] = await Promise.all([
-          fetchCollectionRecords('categories'),
+          needsCategories
+            ? fetchCollectionRecords('categories')
+            : Promise.resolve(initialCategories),
           fetch(`/api/data/tours?${params.toString()}`, { cache: 'no-store' }),
         ]);
         if (!mounted) return;
         const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
-        const nextCategories = allCategories
-          .filter(isPublishedRecord)
-          .filter((category) => categoryMatchesCountry(category, slug));
-        const nextCategory =
-          findCategoryBySlug(nextCategories, categorySlug, slug) || initialCategory;
-        const standardOnly = (body.data || []).filter((row) => !isGoogleOnlyTour(row));
-        const nextTours = filterToursByCategory(standardOnly, nextCategory, categorySlug).slice(0, 25);
-        setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
+        if (needsCategories) {
+          const nextCategories = allCategories
+            .filter(isPublishedRecord)
+            .filter((category) => categoryMatchesCountry(category, slug));
+          setCategories((current) =>
+            sameRecordList(current, nextCategories) ? current : nextCategories
+          );
+        }
+        // API already filtered by country + category — do not re-filter away soft mismatches.
+        const nextTours = (body.data || []).filter((row) => !isGoogleOnlyTour(row)).slice(0, 25);
         if (nextTours.length) setTours(nextTours);
       } catch (error) {
         console.error('[Public] Failed to load category page data:', error);
@@ -147,7 +151,7 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug, categorySlug, live, serverPreloaded, initialCategory]);
+  }, [slug, categorySlug, live, serverPreloaded, initialCategory, initialCategories, initialTours.length]);
 
   const categoryTitle = selectedCategory
     ? getRecordTitle(selectedCategory)
@@ -186,10 +190,11 @@ export default function CategoryPageContent({
     }
   );
 
-  const filteredTours = useMemo(() => {
+  // Server and API already scope tours to this category — trust that list.
+  const displayTours = useMemo(() => {
     const source = tours.length ? tours : initialTours;
-    return filterToursByCategory(source, selectedCategory, categorySlug);
-  }, [tours, initialTours, selectedCategory, categorySlug]);
+    return source.slice(0, 25);
+  }, [tours, initialTours]);
 
   return (
     <>
@@ -227,7 +232,7 @@ export default function CategoryPageContent({
 
       <section id="tour-packages" className="bg-[#f3f6f5]">
         <AmazingSafaris
-          tours={filteredTours}
+          tours={displayTours}
           kicker="Explore exciting tours in the"
           title={`${categoryTitle} category`}
           emptyMessage={ready ? 'No tour package found. Try another search.' : undefined}
