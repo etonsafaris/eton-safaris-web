@@ -5,7 +5,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/cms-media/', '/api/media/', '/eton-safaris-gorilla.png'],
+        allow: [
+          '/',
+          '/cms-media/',
+          '/api/media/',
+          '/api/public/sitemap',
+          '/eton-safaris-gorilla.png',
+        ],
         disallow: [
           '/admin',
           '/landing',
@@ -25,7 +31,12 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://etonsafaris.com/sitemap.xml',
+    // Primary + crash-proof fallbacks so Google always has a working map.
+    sitemap: [
+      'https://etonsafaris.com/sitemap.xml',
+      'https://etonsafaris.com/api/public/sitemap',
+      'https://etonsafaris.com/sitemap-core.xml',
+    ],
     host: 'https://etonsafaris.com',
   };
 }

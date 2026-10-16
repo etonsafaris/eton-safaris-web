@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { CORE_PAGE_SLUGS, destinationPublicPath } from '@/lib/cms-routes';
+import { destinationPublicPath } from '@/lib/cms-routes';
 import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
 import {
   fetchCollectionRecords,
@@ -10,69 +10,74 @@ import {
   recordPublishedAt,
   safariUpdatePublicPath,
 } from '@/lib/data';
-import { publicCanonicalUrl } from '@/lib/seo-canonical';
 import { mergePublicDestinations, seededDestinations } from '@/lib/public-destinations';
 import {
   indexableContentKindForTable,
   shouldIndexPublicRecord,
   sitemapPriorityForRecord,
 } from '@/lib/public-indexing';
+import { coreSitemapEntries, sitemapEntry } from '@/lib/sitemap-core';
 import type { RecordRow } from '@/lib/types';
 import { isNextProductionBuild } from '@/lib/build-phase';
 import { unstable_cache } from 'next/cache';
 
+/** Never block Google or the public site — sitemap must always return 200 quickly. */
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
-export const maxDuration = 30;
+export const maxDuration = 15;
+
+const SITEMAP_FETCH_MS = 2500;
+const SITEMAP_TOTAL_MS = 4000;
+
+export { coreSitemapEntries } from '@/lib/sitemap-core';
 
 function sitemapColumns(table: string, aliases: string[] = []) {
   return (
     publicListColumnsFor(table, aliases) ||
-    'id,name,title,slug,seo_slug,country,status,published,is_published,created_date,updated_date,seo_schema,meta_description,robots_index,post_type'
+    'id,name,title,slug,seo_slug,country,status,published,is_published,created_date,updated_date,robots_index,post_type'
   );
 }
 
 function sitemapFetch(table: string, aliases: string[] = []) {
   const load = fetchCollectionRecords(table, aliases, {
     columns: sitemapColumns(table, aliases),
-    maxRows: 300,
+    maxRows: 200,
   }).catch(() => [] as RecordRow[]);
   return new Promise<RecordRow[]>((resolve) => {
-    const timer = setTimeout(() => resolve([]), 8000);
-    load.then((rows) => {
-      clearTimeout(timer);
-      resolve(rows);
-    });
+    const timer = setTimeout(() => resolve([]), SITEMAP_FETCH_MS);
+    load
+      .then((rows) => {
+        clearTimeout(timer);
+        resolve(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve([]);
+      });
   });
 }
 
-function entry(
-  path: string,
-  lastModified = new Date(),
-  priority = 0.6,
-  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'weekly'
-): MetadataRoute.Sitemap[number] {
-  return {
-    url: publicCanonicalUrl(path || '/'),
-    lastModified,
-    changeFrequency,
-    priority,
-  };
-}
-
 function recordPath(base: string, row: RecordRow) {
-  const slug = publicRecordSlug(row);
-  if (!slug) return null;
-  return `${base}/${slug.replace(/^\//, '')}`;
+  try {
+    const slug = publicRecordSlug(row);
+    if (!slug) return null;
+    return `${base}/${slug.replace(/^\//, '')}`;
+  } catch {
+    return null;
+  }
 }
 
 function recordDate(row: RecordRow) {
-  const raw =
-    pickString(row, ['updated_date', 'updated_at', 'modified_at']) ||
-    recordPublishedAt(row) ||
-    pickString(row, ['created_date', 'created_at']);
-  const date = raw ? new Date(raw) : new Date();
-  return Number.isNaN(date.getTime()) ? new Date() : date;
+  try {
+    const raw =
+      pickString(row, ['updated_date', 'updated_at', 'modified_at']) ||
+      recordPublishedAt(row) ||
+      pickString(row, ['created_date', 'created_at']);
+    const date = raw ? new Date(raw) : new Date();
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+  } catch {
+    return new Date();
+  }
 }
 
 function indexableRow(
@@ -82,126 +87,135 @@ function indexableRow(
   basePriority: number,
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'weekly'
 ) {
-  const kind = indexableContentKindForTable(table);
-  if (!kind || !shouldIndexPublicRecord(row, kind)) return null;
-  return entry(path, recordDate(row), sitemapPriorityForRecord(row, kind, basePriority), changeFrequency);
-}
-
-function coreSitemapEntries(now = new Date()): MetadataRoute.Sitemap {
-  const destinations = seededDestinations();
-  return [
-    entry('', now, 1, 'daily'),
-    entry('/tours', now, 0.9),
-    entry('/tours/compare', now, 0.7),
-    entry('/safari-updates', now, 0.8),
-    entry('/gallery', now, 0.6),
-    entry('/safari-updates/rss.xml', now, 0.4, 'daily'),
-    entry('/community-support', now, 0.8),
-    entry('/contact-us', now, 0.8),
-    entry('/request-a-quote', now, 0.9),
-    entry('/destinations', now, 0.7),
-    ...CORE_PAGE_SLUGS.map((slug) => entry(`/${slug}`, now, slug === 'about-us' ? 0.9 : 0.8)),
-    ...destinations.map((item) =>
-      entry(destinationPublicPath(item.slug), now, item.slug === 'uganda' ? 0.9 : 0.85)
-    ),
-  ];
+  try {
+    const kind = indexableContentKindForTable(table);
+    if (!kind || !shouldIndexPublicRecord(row, kind)) return null;
+    return sitemapEntry(
+      path,
+      recordDate(row),
+      sitemapPriorityForRecord(row, kind, basePriority),
+      changeFrequency
+    );
+  } catch {
+    return null;
+  }
 }
 
 function dedupeSitemap(items: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
   const seen = new Set<string>();
   return items.filter((item) => {
-    if (seen.has(item.url)) return false;
+    if (!item?.url || seen.has(item.url)) return false;
     seen.add(item.url);
     return true;
   });
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (isNextProductionBuild()) {
-    return coreSitemapEntries();
-  }
-  try {
-    return await unstable_cache(buildSitemap, ['public-sitemap-v6-resilient'], {
-      revalidate: 3600,
-      tags: ['cms-public'],
-    })();
-  } catch (error) {
-    console.error('[sitemap] Full build failed; serving core URLs:', error);
-    return coreSitemapEntries();
-  }
-}
-
-async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
+async function buildSitemapLive(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
+    sitemapFetch('tours'),
+    sitemapFetch('national_park', ['national_parks', 'parks']),
+    sitemapFetch('accommodations'),
+    sitemapFetch('safari_updates'),
+    sitemapFetch('explore'),
+    sitemapFetch('pages'),
+    sitemapFetch('categories'),
+    sitemapFetch('countries'),
+  ]);
+
+  let publicDestinations = seededDestinations();
   try {
-    const [tours, parks, stays, posts, places, pages, categories, countries] = await Promise.all([
-      sitemapFetch('tours'),
-      sitemapFetch('national_park', ['national_parks', 'parks']),
-      sitemapFetch('accommodations'),
-      sitemapFetch('safari_updates'),
-      sitemapFetch('explore'),
-      sitemapFetch('pages'),
-      sitemapFetch('categories'),
-      sitemapFetch('countries'),
-    ]);
-    const publicDestinations = mergePublicDestinations(countries);
+    publicDestinations = mergePublicDestinations(countries);
+  } catch {
+    /* keep seeded */
+  }
 
-    const staticEntries = [
-      entry('', now, 1, 'daily'),
-      entry('/tours', now, 0.9),
-      entry('/tours/compare', now, 0.7),
-      entry('/safari-updates', now, 0.8),
-      entry('/gallery', now, 0.6),
-      entry('/safari-updates/rss.xml', now, 0.4, 'daily'),
-      entry('/community-support', now, 0.8),
-      entry('/contact-us', now, 0.8),
-      entry('/request-a-quote', now, 0.9),
-      entry('/destinations', now, 0.7),
-      ...CORE_PAGE_SLUGS.map((slug) => entry(`/${slug}`, now, slug === 'about-us' ? 0.9 : 0.8)),
-      ...publicDestinations.map((item) =>
-        entry(destinationPublicPath(item.slug), now, item.slug === 'uganda' ? 0.9 : 0.85)
-      ),
-    ];
+  const hubs = coreSitemapEntries(now).filter((item) => !/\/destinations\/[^/]+$/.test(item.url));
+  const destinationEntries = publicDestinations.map((item) =>
+    sitemapEntry(destinationPublicPath(item.slug), now, item.slug === 'uganda' ? 0.9 : 0.85)
+  );
 
-    const dynamicEntries = [
-      ...tours.map((row) => {
-        // Google Only tours stay off public lists but remain indexable detail URLs.
-        const path = recordPath('/tours', row);
-        return path ? indexableRow('tours', row, path, 0.8) : null;
-      }),
-      ...parks.map((row) => {
-        const path = recordPath('/parks', row);
-        return path ? indexableRow('national_park', row, path, 0.7) : null;
-      }),
-      ...stays.map((row) => {
-        const path = recordPath('/accommodations', row);
-        return path ? indexableRow('accommodations', row, path, 0.6) : null;
-      }),
-      ...posts.map((row) => {
+  const dynamicEntries = [
+    ...tours.map((row) => {
+      const path = recordPath('/tours', row);
+      return path ? indexableRow('tours', row, path, 0.8) : null;
+    }),
+    ...parks.map((row) => {
+      const path = recordPath('/parks', row);
+      return path ? indexableRow('national_park', row, path, 0.7) : null;
+    }),
+    ...stays.map((row) => {
+      const path = recordPath('/accommodations', row);
+      return path ? indexableRow('accommodations', row, path, 0.6) : null;
+    }),
+    ...posts.map((row) => {
+      try {
         if (isLanguagePost(row)) return null;
         const path = safariUpdatePublicPath(row);
         return path && path !== '/safari-updates'
           ? indexableRow('safari_updates', row, path, 0.6, 'weekly')
           : null;
-      }),
-      ...places.map((row) => {
-        const path = recordPath('/explore', row);
-        return path ? indexableRow('explore', row, path, 0.6) : null;
-      }),
-      ...pages.map((row) => {
-        const slug = pickString(row, ['slug']);
-        return slug ? indexableRow('pages', row, `/${slug.replace(/^\//, '')}`, 0.8) : null;
-      }),
-      ...categories.map((row) => {
+      } catch {
+        return null;
+      }
+    }),
+    ...places.map((row) => {
+      const path = recordPath('/explore', row);
+      return path ? indexableRow('explore', row, path, 0.6) : null;
+    }),
+    ...pages.map((row) => {
+      const slug = pickString(row, ['slug']);
+      return slug ? indexableRow('pages', row, `/${slug.replace(/^\//, '')}`, 0.8) : null;
+    }),
+    ...categories.map((row) => {
+      try {
         const country = canonicalCountrySlug(pickString(row, ['country']));
         const path = country ? countryCategoryPath(country, row) : null;
         return path ? indexableRow('categories', row, path, 0.7) : null;
-      }),
-    ].filter((item): item is MetadataRoute.Sitemap[number] => Boolean(item));
+      } catch {
+        return null;
+      }
+    }),
+  ].filter((item): item is MetadataRoute.Sitemap[number] => Boolean(item));
 
-    return dedupeSitemap([...staticEntries, ...dynamicEntries]);
+  return dedupeSitemap([...hubs, ...destinationEntries, ...dynamicEntries]);
+}
+
+async function getCachedFullSitemap(): Promise<MetadataRoute.Sitemap> {
+  return unstable_cache(buildSitemapLive, ['public-sitemap-v7-fast-safe'], {
+    revalidate: 3600,
+    tags: ['cms-public', 'sitemap'],
+  })();
+}
+
+function withBudget<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(fallback);
+      });
+  });
+}
+
+/**
+ * Sitemap must never 500 and must never stall the public site.
+ * Prefer a full cached build; if DB/cache is slow or broken, serve core URLs.
+ */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const core = coreSitemapEntries();
+  if (isNextProductionBuild()) return core;
+
+  try {
+    const full = await withBudget(getCachedFullSitemap(), SITEMAP_TOTAL_MS, core);
+    return full?.length ? full : core;
   } catch (error) {
-    console.error('[sitemap] buildSitemap failed:', error);
-    return coreSitemapEntries(now);
+    console.error('[sitemap] Serving core URLs after failure:', error);
+    return core;
   }
 }
