@@ -175,7 +175,9 @@ export default function CountryPageContent({
               itemWidth={200}
               gap={20}
               autoPlayMs={4500}
-              emptyMessage={ready && categoryItems.length === 0 ? 'No records found in this collection.' : undefined}
+              emptyMessage={
+                ready && categoryItems.length === 0 ? 'Safari categories for this country are loading. Refresh in a moment.' : undefined
+              }
             />
           </div>
         </div>
@@ -283,7 +285,9 @@ export default function CountryPageContent({
         <AmazingSafaris
           tours={tours}
           title={`Explore These Amazing Safaris in ${title}`}
-          emptyMessage={ready && tours.length === 0 ? 'No tour package found. Try another search.' : undefined}
+          emptyMessage={
+            ready && tours.length === 0 ? 'Safari packages for this country are loading. Refresh in a moment.' : undefined
+          }
         />
       </section>
     </>

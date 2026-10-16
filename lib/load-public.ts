@@ -8,7 +8,6 @@ import { countrySlugFromLanding, landingSlugForCountry, matchCmsRecord, pageAlia
 import { normalizeSlug } from '@/lib/country-utils';
 import { unstable_cache } from 'next/cache';
 import {
-  categoryMatchesCountry,
   categoryPublicSlug,
   canonicalCountrySlug,
   countryLabelFromSlug,
@@ -417,7 +416,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v28-parallel', normalized],
+      ['country-page-data-v29-dest-restore', normalized],
       ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
@@ -458,33 +457,34 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
 
 type CountryPageLoadOptions = { requirePublishedCountry?: boolean };
 
+const COUNTRY_PAGE_QUERY_MS = 5000;
+
 async function loadCountryPageDataInner(
   slug: string,
   options?: CountryPageLoadOptions
 ): Promise<CountryPageData | null> {
   const countryLabel = countryLabelFromSlug(slug) || slug;
 
-  // Three parallel reads — never chain 8s fallbacks (that made every destination crawl).
-  const [countryMeta, tourRows, categoryPage] = await Promise.all([
-    withTimeout(fetchPublicRecordResilient('countries', slug), PUBLIC_QUERY_MS, null),
-    withTimeout(fetchToursForCountryLabel(countryLabel, 25), PUBLIC_QUERY_MS, [] as RecordRow[]),
+  const [countryMeta, categoryPage, tourRows] = await Promise.all([
+    withTimeout(fetchPublicRecordResilient('countries', slug), COUNTRY_PAGE_QUERY_MS, null),
     withTimeout(
       fetchCollectionPage('categories', [], {
         columns: listColumns('categories'),
-        limit: 40,
+        limit: 80,
         offset: 0,
         filters: { country: countryLabel },
       }),
-      PUBLIC_QUERY_MS,
+      COUNTRY_PAGE_QUERY_MS,
       { rows: [] as RecordRow[], total: 0 }
     ),
+    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), COUNTRY_PAGE_QUERY_MS, [] as RecordRow[]),
   ]);
 
   let tours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row));
   if (!tours.length) {
     tours = await withTimeout(
       fetchCountryToursForCategories(countryLabel, 25),
-      PUBLIC_QUERY_MS,
+      COUNTRY_PAGE_QUERY_MS,
       [] as RecordRow[]
     ).then((rows) => (rows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row)));
   }
@@ -496,15 +496,26 @@ async function loadCountryPageDataInner(
     return null;
   }
 
-  const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
+  let categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
+  if (!categoriesRaw.length) {
+    const allCategories = await withTimeout(
+      fetchCollectionPage('categories', [], {
+        columns: listColumns('categories'),
+        limit: 80,
+        offset: 0,
+      }),
+      COUNTRY_PAGE_QUERY_MS,
+      { rows: [] as RecordRow[], total: 0 }
+    );
+    categoriesRaw = (allCategories.rows ?? []).filter(isPublishedRecord);
+  }
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') || countryLabelFromSlug(slug) || slug;
   const parks: RecordRow[] = [];
   const places: RecordRow[] = [];
 
-  const matchedTours = tours.filter((row) => matchesCountry(row, slug));
+  const matchedTours = (tours ?? []).filter((row) => matchesCountry(row, slug));
   const toursForPage = (matchedTours.length ? matchedTours : tours).slice(0, 25);
-  // Derive category cards from tours when the country-filtered Categories query is empty.
   const categories = resolveCountryPageCategories(slug, categoriesRaw, toursForPage);
 
   const fallbackCountry: RecordRow = {
@@ -536,7 +547,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v14-parallel', normalized],
+    ['country-page-sync-v15-dest-restore', normalized],
     ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
