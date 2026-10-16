@@ -206,7 +206,7 @@ export default function CountryPageContent({
             <CountrySectionHeading>National Parks in {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
-                items={(parks ?? []).map((park, index) => {
+                items={(parks ?? [])?.map?.((park, index) => {
                   if (!park) return null;
                   const parkSlug = publicRecordSlug(park);
                   return (
@@ -245,7 +245,7 @@ export default function CountryPageContent({
             <CountrySectionHeading>Explore {title}</CountrySectionHeading>
             <div className="mt-8">
               <Carousel
-                items={(places ?? []).map((place, index) => {
+                items={(places ?? [])?.map?.((place, index) => {
                   if (!place) return null;
                   const placeSlug = publicRecordSlug(place);
                   const href = placeSlug ? countryPlacePath(slug, place) : '/explore';

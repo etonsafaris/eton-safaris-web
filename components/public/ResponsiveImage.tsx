@@ -51,7 +51,7 @@ export default function ResponsiveImage({
 
   if (!displaySrc) return null;
 
-  const resolvedQuality = variant === 'hero' ? (quality ?? 58) : quality;
+  const resolvedQuality = variant === 'hero' ? (quality ?? 85) : quality;
   const isHomeDestination =
     variant === 'card' && width === COUNTRY_IMAGE_DIMENSIONS.homeDestination.width;
   const optimizedSrc =

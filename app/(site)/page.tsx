@@ -9,14 +9,13 @@ import { safeHeroSlides } from '@/lib/home-page-payload';
 import { loadHomePageBundleResilient } from '@/lib/load-public';
 import { heroImageSrc } from '@/lib/responsive-image';
 import { publicCanonicalUrl } from '@/lib/seo-canonical';
-import { CMS_PUBLIC_REVALIDATE_SECONDS } from '@/lib/cms-public-cache';
 import { Metadata } from 'next';
+
+export const revalidate = 900;
 
 const HOME_TITLE = 'Eton Safaris | Africa & Beyond';
 const HOME_DESCRIPTION =
   'Premier gorilla trekking, wildlife safaris, and tailor-made luxury expeditions across Uganda, Kenya, Tanzania, Rwanda, and beyond.';
-
-export const revalidate = CMS_PUBLIC_REVALIDATE_SECONDS;
 
 export function generateMetadata(): Metadata {
   return {

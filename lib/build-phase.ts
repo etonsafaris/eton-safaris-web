@@ -8,12 +8,12 @@ export function skipParkStaysDuringBuild() {
 }
 
 /**
- * Skip `generateStaticParams` slug fan-out (set SKIP_BUILD_STATIC_PARAMS=1 on CI if build DB is unavailable).
- * On Vercel Pro, builds with DATABASE_URL should pre-render top slugs for sub-50ms navigations.
+ * Skip `generateStaticParams` only when the build has no Aiven URL, or when
+ * SKIP_BUILD_STATIC_PARAMS=1 is set. With DATABASE_URL present, slug lists
+ * are queried so Vercel can ISR-prerender public detail routes.
  */
 export function skipStaticGenerationDuringBuild() {
   if (process.env.SKIP_BUILD_STATIC_PARAMS === '1') return true;
   if (!process.env.DATABASE_URL?.trim()) return true;
-  if (isNextProductionBuild()) return true;
   return false;
 }

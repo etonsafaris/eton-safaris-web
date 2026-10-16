@@ -161,9 +161,9 @@ export default function HomePageClient({
 
   const tourItems = useMemo(
     () =>
-      (featuredTours ?? []).map((tour, index) => (
-        <TourCard key={String(tour?.id ?? index)} tour={tour} />
-      )),
+      (featuredTours ?? [])
+        ?.map?.((tour, index) => (tour ? <TourCard key={String(tour?.id ?? index)} tour={tour} /> : null))
+        ?.filter(Boolean) ?? [],
     [featuredTours]
   );
 
@@ -312,7 +312,7 @@ export default function HomePageClient({
             </div>
           </div>
           <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-            {(heroSlides ?? []).map((_, index) => (
+            {(heroSlides ?? [])?.map?.((_, index) => (
               <button
                 key={index}
                 type="button"

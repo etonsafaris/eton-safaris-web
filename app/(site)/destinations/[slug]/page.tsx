@@ -11,8 +11,7 @@ import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import type { RecordRow } from '@/lib/types';
 
-/** Cached destination payload — soft-nav stays warm after the first paint. */
-export const revalidate = 300;
+export const revalidate = 900;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
