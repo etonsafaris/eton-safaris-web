@@ -8,12 +8,13 @@ export function skipParkStaysDuringBuild() {
 }
 
 /**
- * Skip `generateStaticParams` only when the build has no Aiven URL, or when
- * SKIP_BUILD_STATIC_PARAMS=1 is set. With DATABASE_URL present, slug lists
- * are queried so Vercel can ISR-prerender public detail routes.
+ * Never fan-out thousands of slug pages during `next build`.
+ * That exhausted Aiven ("too many clients") and timed out Vercel (946 pages).
+ * Public routes stay ISR (`revalidate = 900`) and compile on first request.
  */
 export function skipStaticGenerationDuringBuild() {
   if (process.env.SKIP_BUILD_STATIC_PARAMS === '1') return true;
   if (!process.env.DATABASE_URL?.trim()) return true;
+  if (isNextProductionBuild()) return true;
   return false;
 }

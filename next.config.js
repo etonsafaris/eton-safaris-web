@@ -10,6 +10,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Standard Next.js output for Vercel (`vercel.json`).
+  // Keep SSG workers from hanging on Aiven during `next build`.
+  staticPageGenerationTimeout: 45,
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,

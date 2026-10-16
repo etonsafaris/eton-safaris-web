@@ -15,9 +15,10 @@ export const PUBLIC_PAGE_REVALIDATE_SECONDS = 900;
 const SLUG_QUERY_MS = 2000;
 
 export function staticBuildParamLimit() {
+  if (skipStaticGenerationDuringBuild()) return 0;
   const fromEnv = Number(process.env.BUILD_STATIC_PARAMS_LIMIT);
-  if (Number.isFinite(fromEnv) && fromEnv > 0) return Math.min(800, Math.floor(fromEnv));
-  return 200;
+  if (Number.isFinite(fromEnv) && fromEnv >= 0) return Math.min(64, Math.floor(fromEnv));
+  return 24;
 }
 
 function withBudget<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
