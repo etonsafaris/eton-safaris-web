@@ -1,35 +1,38 @@
 'use client';
 
 import Link from 'next/link';
+import parse, {
+  attributesToProps,
+  domToReact,
+  type DOMNode,
+  type Element,
+  type HTMLReactParserOptions,
+} from 'html-react-parser';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
+import { DOCUMENT_ANCHOR_CLASS, isDirectFileHref } from '@/lib/document-href';
 import { internalPathFromHref } from '@/lib/internal-link';
 import { isBlockedExternalHost, scrubLegacyMediaFromHtml } from '@/lib/legacy-media-url';
 import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-path-utils';
 
-const FILE_HREF = /\.(pdf|docx?|xlsx?|pptx?|zip|csv|txt)(?:$|[?#])/i;
-
-function isDirectFileHref(href: string) {
-  const value = href.trim();
-  if (!value) return false;
-  const pathOnly = value.split('#')[0].split('?')[0];
-  if (FILE_HREF.test(pathOnly)) return true;
-  if (/\/(?:api\/media|cms-media)\//i.test(value)) return true;
-  if (/\/downloads\//i.test(value)) return true;
-  return false;
+function mergeClassName(...parts: Array<string | undefined>) {
+  return parts.filter(Boolean).join(' ').trim();
 }
 
-/** Files and uploaded media must use a normal browser open, not the app router. */
-function prepareDocumentAnchors(root: HTMLElement) {
-  root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
-    const href = anchor.getAttribute('href');
-    if (!href || !isDirectFileHref(href)) return;
-    anchor.setAttribute('target', '_blank');
-    anchor.setAttribute('rel', 'noopener noreferrer');
-    if (!anchor.getAttribute('title')) {
-      anchor.setAttribute('title', 'Open document');
-    }
-  });
+function isElement(node: DOMNode): node is Element {
+  return Boolean(node && (node as Element).type === 'tag' && (node as Element).name);
+}
+
+function documentAnchorProps(attribs: Record<string, string> | undefined) {
+  const href = String(attribs?.href || '').trim();
+  const existing = mergeClassName(attribs?.class, attribs?.className, DOCUMENT_ANCHOR_CLASS);
+  return {
+    href,
+    target: '_blank' as const,
+    rel: 'noopener noreferrer',
+    className: existing || DOCUMENT_ANCHOR_CLASS,
+    title: attribs?.title || 'Open document',
+  };
 }
 
 type PublicHtmlProps = {
@@ -60,94 +63,97 @@ async function resolvePathForNavigation(path: string): Promise<string> {
 }
 
 export default function PublicHtml({ html, className, style }: PublicHtmlProps) {
-  const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const navigatingRef = useRef(false);
 
   const navigateInternal = useCallback(
     async (internalPath: string) => {
-      if (navigatingRef.current) return;
-      navigatingRef.current = true;
       try {
         const target = await resolvePathForNavigation(internalPath);
         router.push(target);
-      } finally {
-        window.setTimeout(() => {
-          navigatingRef.current = false;
-        }, 300);
+      } catch {
+        /* keep the current page if navigation fails */
       }
     },
     [router]
   );
 
   const onClick = useCallback(
-    (event: MouseEvent) => {
-      if (event.defaultPrevented) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const anchor = (event.target as HTMLElement | null)?.closest('a');
-      if (!anchor) return;
-      if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
-
-      const href = anchor.getAttribute('href');
-      if (!href) return;
-      // PDFs, Word files, and /api/media uploads: leave the click to the browser.
-      if (isDirectFileHref(href)) return;
-
+    (event: React.MouseEvent<HTMLDivElement>) => {
       try {
-        const parsed = new URL(href, window.location.origin);
-        if (isBlockedExternalHost(parsed.hostname)) {
-          event.preventDefault();
+        if (event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const anchor = (event.target as HTMLElement | null)?.closest?.('a');
+        if (!anchor) return;
+        if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+        const href = anchor.getAttribute('href');
+        if (!href || isDirectFileHref(href)) return;
+
+        try {
+          const parsed = new URL(href, window.location.origin);
+          if (isBlockedExternalHost(parsed.hostname)) {
+            event.preventDefault();
+            return;
+          }
+          if (isDirectFileHref(`${parsed.pathname}${parsed.search}${parsed.hash}`)) return;
+        } catch {
+          /* relative */
+        }
+
+        const pageOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+        const internal = internalPathFromHref(href, { pageOrigin });
+        if (!internal || isDirectFileHref(internal)) return;
+
+        event.preventDefault();
+        if (isPrefixedPublicPath(internal)) {
+          router.push(normalizePrefixedPublicPath(internal));
           return;
         }
-        if (isDirectFileHref(parsed.pathname + parsed.search + parsed.hash)) return;
+        void navigateInternal(internal);
       } catch {
-        /* relative */
+        /* leave native click */
       }
-
-      const pageOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
-      const internal = internalPathFromHref(href, { pageOrigin });
-      if (!internal || isDirectFileHref(internal)) return;
-
-      event.preventDefault();
-      if (isPrefixedPublicPath(internal)) {
-        router.push(normalizePrefixedPublicPath(internal));
-        return;
-      }
-      void navigateInternal(internal);
     },
     [navigateInternal, router]
   );
 
-  useEffect(() => {
-    const root = ref.current;
-    if (!root || !html.trim()) return undefined;
+  const parsed = useMemo(() => {
+    const safeHtml = scrubLegacyMediaFromHtml(html || '');
+    if (!safeHtml.trim()) return null;
 
-    root.addEventListener('click', onClick);
-    prepareDocumentAnchors(root);
+    const options: HTMLReactParserOptions = {
+      replace(domNode) {
+        try {
+          if (!isElement(domNode) || domNode.name !== 'a') return;
+          const href = String(domNode.attribs?.href || '').trim();
+          if (!href || !isDirectFileHref(href)) return;
 
-    const prefetched = new Set<string>();
-    root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
-      const href = anchor.getAttribute('href');
-      if (!href || isDirectFileHref(href)) return;
-      const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
-      if (!internal || isDirectFileHref(internal) || !isPrefixedPublicPath(internal)) return;
-      const base = normalizePrefixedPublicPath(internal).split('#')[0];
-      if (!base || prefetched.has(base)) return;
-      prefetched.add(base);
-      router.prefetch(base);
-    });
-
-    return () => {
-      root.removeEventListener('click', onClick);
+          const reactProps = attributesToProps(domNode.attribs || {});
+          const props = documentAnchorProps(domNode.attribs);
+          return (
+            <a {...reactProps} {...props}>
+              {domToReact((domNode.children || []) as DOMNode[], options)}
+            </a>
+          );
+        } catch {
+          return undefined;
+        }
+      },
     };
-  }, [html, onClick, router]);
 
-  const safeHtml = scrubLegacyMediaFromHtml(html);
-  if (!safeHtml.trim()) return null;
+    try {
+      return parse(safeHtml, options);
+    } catch (error) {
+      console.error('[PublicHtml] Parser fallback to raw HTML:', error);
+      return <div className="public-html-surface" dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+    }
+  }, [html]);
+
+  if (!parsed) return null;
 
   return (
-    <div ref={ref} className={className} style={style}>
-      <div className="public-html-surface" dangerouslySetInnerHTML={{ __html: safeHtml }} />
+    <div className={className} style={style} onClick={onClick}>
+      <div className="public-html-surface">{parsed}</div>
     </div>
   );
 }
@@ -173,7 +179,12 @@ export function PublicContentLink({
   const internal = internalPathFromHref(href);
   if (!internal || isDirectFileHref(href) || isDirectFileHref(internal)) {
     return (
-      <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+      <a
+        href={href}
+        className={mergeClassName(className, DOCUMENT_ANCHOR_CLASS)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {children}
       </a>
     );

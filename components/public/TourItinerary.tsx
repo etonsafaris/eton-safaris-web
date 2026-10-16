@@ -6,8 +6,9 @@ import PublicHtml from '@/components/public/PublicHtml';
 import { stripPublicMoney } from '@/lib/public-money';
 import type { ItineraryDay } from '@/lib/itinerary';
 
-export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
-  if (!days.length) return null;
+export default function TourItinerary({ days }: { days?: ItineraryDay[] | null }) {
+  const safeDays = Array.isArray(days) ? days.filter(Boolean) : [];
+  if (!safeDays.length) return null;
 
   return (
     <div id="itinerary" className="scroll-mt-24">
@@ -15,12 +16,13 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
         Itinerary in details
       </h2>
       <div className="space-y-4">
-        {days.map((day, index) => {
-          const dayNumber = Number.parseInt(String(day.day ?? ''), 10);
+        {safeDays.map((day, index) => {
+          try {
+          const dayNumber = Number.parseInt(String(day?.day ?? ''), 10);
           const displayDay = Number.isFinite(dayNumber) && dayNumber > 0 ? dayNumber : index + 1;
-          const title = stripPublicMoney(day.title || `Day ${displayDay}`);
-          const meals = stripPublicMoney(day.mealPlan || day.meal_plan || '');
-          const stay = stripPublicMoney(day.accommodationPlan || day.accommodation_plan || '');
+          const title = stripPublicMoney(day?.title || `Day ${displayDay}`);
+          const meals = stripPublicMoney(day?.mealPlan || day?.meal_plan || '');
+          const stay = stripPublicMoney(day?.accommodationPlan || day?.accommodation_plan || '');
           return (
             <details key={`${displayDay}-${title}-${index}`} className="group">
               <summary className="flex cursor-pointer list-none items-center gap-3 marker:content-none [&::-webkit-details-marker]:hidden">
@@ -37,7 +39,7 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
                 className="ml-0 mt-3 border-l-2 border-[#00A651]/30 pl-4 sm:ml-[68px]"
                 style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif', textAlign: 'justify' }}
               >
-                {day.description ? (
+                {day?.description ? (
                   <PublicHtml className="public-prose max-w-none" html={publicBodyHtml(day.description)} />
                 ) : (
                   <p className="public-prose">Details for this day will be shared with your itinerary.</p>
@@ -55,6 +57,9 @@ export default function TourItinerary({ days }: { days: ItineraryDay[] }) {
               </div>
             </details>
           );
+          } catch {
+            return null;
+          }
         })}
       </div>
     </div>

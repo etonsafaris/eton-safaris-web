@@ -311,57 +311,63 @@ export default function TourDetailClient({
               html={publicBodyHtml(visibleRecordHtml(tour, ['description', 'content', 'excerpt']))}
             />
 
-            {highlights.length > 0 && (
+            {(highlights?.length || 0) > 0 && (
               <div>
                 <h2 className="content-subheading">
                   Tour Highlights
                 </h2>
                 <ul className="list-none space-y-3 text-black">
-                  {highlights.map((item, index) => (
+                  {highlights?.map?.((item, index) =>
+                    item ? (
                     <li key={index} className="flex items-start gap-3">
                       <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#006400]">
                         <span className="h-1.5 w-1.5 rounded-full bg-white" />
                       </span>
                       <span>{item}</span>
                     </li>
-                  ))}
+                    ) : null
+                  )}
                 </ul>
               </div>
             )}
 
-            {(includes.length > 0 || excludes.length > 0) && (
+            {((includes?.length || 0) > 0 || (excludes?.length || 0) > 0) && (
               <div className="grid gap-8 md:grid-cols-2">
-                {includes.length > 0 && (
+                {(includes?.length || 0) > 0 && (
                   <div>
                     <h2 className="content-subheading">
                       Includes
                     </h2>
                     <ul className="list-none space-y-3">
-                      {includes.map((item, index) => (
+                      {includes?.map?.((item, index) =>
+                        item ? (
                         <li key={index} className="flex items-start gap-3">
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#00A651]">
                             <Check className="h-3 w-3 text-white" strokeWidth={3} />
                           </span>
                           <span>{item}</span>
                         </li>
-                      ))}
+                        ) : null
+                      )}
                     </ul>
                   </div>
                 )}
-                {excludes.length > 0 && (
+                {(excludes?.length || 0) > 0 && (
                   <div>
                     <h2 className="content-subheading">
                       Excludes
                     </h2>
                     <ul className="list-none space-y-3">
-                      {excludes.map((item, index) => (
+                      {excludes?.map?.((item, index) =>
+                        item ? (
                         <li key={index} className="flex items-start gap-3">
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500">
                             <X className="h-3 w-3 text-white" strokeWidth={3} />
                           </span>
                           <span>{item}</span>
                         </li>
-                      ))}
+                        ) : null
+                      )}
                     </ul>
                   </div>
                 )}
