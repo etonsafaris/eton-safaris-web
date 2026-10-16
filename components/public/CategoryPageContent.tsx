@@ -95,16 +95,27 @@ export default function CategoryPageContent({
     setTours(initialTours);
   }, [initialCategories, initialTours]);
 
+  const selectedCategory = useMemo(
+    () =>
+      findCategoryBySlug(categories, categorySlug, slug) ||
+      (initialCategory && categoryMatchesCountry(initialCategory, slug) ? initialCategory : null),
+    [categories, categorySlug, slug, initialCategory]
+  );
+
   useEffect(() => {
     if (serverPreloaded && initialTours.length > 0 && live === 0) return undefined;
     let mounted = true;
     async function load() {
       try {
         const label = countryLabelFromSlug(slug) || slug.replace(/-/g, ' ');
+        const categoryLabel =
+          (initialCategory && getRecordTitle(initialCategory)) ||
+          categorySlug.replace(/-/g, ' ');
         const params = new URLSearchParams({
           limit: '200',
           select: TOUR_LIST_COLUMNS,
           'ilike.country': `%${label}%`,
+          'ilike.category': `%${categoryLabel}%`,
         });
         const [allCategories, response] = await Promise.all([
           fetchCollectionRecords('categories'),
@@ -115,7 +126,9 @@ export default function CategoryPageContent({
         const nextCategories = allCategories
           .filter(isPublishedRecord)
           .filter((category) => categoryMatchesCountry(category, slug));
-        const nextTours = filterToursByCategory(body.data || [], null, categorySlug);
+        const nextCategory =
+          findCategoryBySlug(nextCategories, categorySlug, slug) || initialCategory;
+        const nextTours = filterToursByCategory(body.data || [], nextCategory, categorySlug);
         setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
         if (nextTours.length) setTours(nextTours);
       } catch (error) {
@@ -128,14 +141,7 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug, categorySlug, live, serverPreloaded, initialTours.length]);
-
-  const selectedCategory = useMemo(
-    () =>
-      findCategoryBySlug(categories, categorySlug, slug) ||
-      (initialCategory && categoryMatchesCountry(initialCategory, slug) ? initialCategory : null),
-    [categories, categorySlug, slug, initialCategory]
-  );
+  }, [slug, categorySlug, live, serverPreloaded, initialTours.length, initialCategory]);
 
   const categoryTitle = selectedCategory
     ? getRecordTitle(selectedCategory)
@@ -176,8 +182,7 @@ export default function CategoryPageContent({
 
   const filteredTours = useMemo(() => {
     const source = tours.length ? tours : initialTours;
-    const matched = filterToursByCategory(source, selectedCategory, categorySlug);
-    return matched.length ? matched : source;
+    return filterToursByCategory(source, selectedCategory, categorySlug);
   }, [tours, initialTours, selectedCategory, categorySlug]);
 
   return (

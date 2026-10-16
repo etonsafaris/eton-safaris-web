@@ -1027,7 +1027,15 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
       .filter(isPublishedRecord)
       .filter((row) => categoryMatchesCountry(row, bare));
     const category = findCategoryBySlug(categories, categorySlug, bare);
-    const filteredTours = filterToursByCategory(tourRows ?? [], category, categorySlug).slice(0, 120);
+    const categoryName = category ? pickString(category, ['name', 'title']) : '';
+    let filteredTours = filterToursByCategory(tourRows ?? [], category, categorySlug);
+    if (!filteredTours.length && categoryName) {
+      filteredTours = filterToursByCategory(tourRows ?? [], null, categoryName);
+    }
+    if (!filteredTours.length) {
+      filteredTours = filterToursByCategory(tourRows ?? [], null, categorySlug);
+    }
+    filteredTours = filteredTours.slice(0, 120);
     const countryName = publicCountryLabel(countryRow, bare) || fallbackName;
     const country: RecordRow =
       countryRow && isPublishedRecord(countryRow)
