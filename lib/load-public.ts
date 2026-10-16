@@ -464,7 +464,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v24-standard25', normalized],
+      ['country-page-data-v25-standard25', normalized],
       ['collection:countries', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
@@ -519,7 +519,9 @@ async function loadCountryPageDataInner(
       5000,
       { rows: [] as RecordRow[], total: 0 }
     ),
-    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), 5000, [] as RecordRow[]),
+    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), 5000, [] as RecordRow[]).then(
+      (rows) => (rows ?? []).filter((row) => !isGoogleOnlyTour(row)).slice(0, 25)
+    ),
   ]);
   const categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
   if (options?.requirePublishedCountry) {
@@ -569,7 +571,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v10-standard25', normalized],
+    ['country-page-sync-v11-standard25', normalized],
     ['collection:countries', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
@@ -1021,21 +1023,22 @@ export async function loadCategoryPageData(countrySlug: string, categorySlug: st
           { rows: [] as RecordRow[], total: 0 }
         ),
         fetchPublicRecordResilient('countries', bare),
-        withTimeout(fetchCountryToursForCategories(fallbackName || bare, 200), 6000, [] as RecordRow[]),
+        withTimeout(fetchCountryToursForCategories(fallbackName || bare, 25), 6000, [] as RecordRow[]),
     ]);
     const categories = (categoriesPage?.rows ?? [])
       .filter(isPublishedRecord)
       .filter((row) => categoryMatchesCountry(row, bare));
     const category = findCategoryBySlug(categories, categorySlug, bare);
     const categoryName = category ? pickString(category, ['name', 'title']) : '';
-    let filteredTours = filterToursByCategory(tourRows ?? [], category, categorySlug);
+    const standardTours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row));
+    let filteredTours = filterToursByCategory(standardTours, category, categorySlug);
     if (!filteredTours.length && categoryName) {
-      filteredTours = filterToursByCategory(tourRows ?? [], null, categoryName);
+      filteredTours = filterToursByCategory(standardTours, null, categoryName);
     }
     if (!filteredTours.length) {
-      filteredTours = filterToursByCategory(tourRows ?? [], null, categorySlug);
+      filteredTours = filterToursByCategory(standardTours, null, categorySlug);
     }
-    filteredTours = filteredTours.slice(0, 120);
+    filteredTours = filteredTours.slice(0, 25);
     const countryName = publicCountryLabel(countryRow, bare) || fallbackName;
     const country: RecordRow =
       countryRow && isPublishedRecord(countryRow)

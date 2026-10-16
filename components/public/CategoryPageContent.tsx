@@ -16,6 +16,7 @@ import {
   fetchCollectionRecords,
   getRecordImage,
   getRecordTitle,
+  isGoogleOnlyTour,
   isPublishedRecord,
   pickRecordId,
   pickString,
@@ -115,8 +116,9 @@ export default function CategoryPageContent({
           (initialCategory && getRecordTitle(initialCategory)) ||
           categorySlug.replace(/-/g, ' ');
         const params = new URLSearchParams({
-          limit: '200',
+          limit: '25',
           select: TOUR_LIST_COLUMNS,
+          scope: 'public',
           'ilike.country': `%${label}%`,
           'ilike.category': `%${categoryLabel}%`,
         });
@@ -131,7 +133,8 @@ export default function CategoryPageContent({
           .filter((category) => categoryMatchesCountry(category, slug));
         const nextCategory =
           findCategoryBySlug(nextCategories, categorySlug, slug) || initialCategory;
-        const nextTours = filterToursByCategory(body.data || [], nextCategory, categorySlug);
+        const standardOnly = (body.data || []).filter((row) => !isGoogleOnlyTour(row));
+        const nextTours = filterToursByCategory(standardOnly, nextCategory, categorySlug).slice(0, 25);
         setCategories((current) => (sameRecordList(current, nextCategories) ? current : nextCategories));
         if (nextTours.length) setTours(nextTours);
       } catch (error) {

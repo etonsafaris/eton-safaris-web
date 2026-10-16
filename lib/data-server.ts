@@ -1180,10 +1180,10 @@ export async function fetchSyncedPublicRecord(
 }
 
 /** Country-scoped tour cards — filter in Aiven database instead of downloading all tours. */
-export async function fetchToursForCountryLabel(countryLabel: string, limit = 48): Promise<RecordRow[]> {
+export async function fetchToursForCountryLabel(countryLabel: string, limit = 25): Promise<RecordRow[]> {
   const label = String(countryLabel || '').trim();
   if (!label) return [];
-  const capped = Math.max(1, Math.min(limit, 200));
+  const capped = Math.max(1, Math.min(limit, 25));
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
@@ -1200,27 +1200,26 @@ export async function fetchToursForCountryLabel(countryLabel: string, limit = 48
   }
 }
 
-/** Published tours in one country, standard tours first. Category pages filter this list. */
-export async function fetchCountryToursForCategories(countryLabel: string, limit = 200): Promise<RecordRow[]> {
+/** The public Standard Tours for one country (up to 25). Category pages split this same list. */
+export async function fetchCountryToursForCategories(countryLabel: string, limit = 25): Promise<RecordRow[]> {
   const label = String(countryLabel || '').trim();
   if (!label) return [];
-  const capped = Math.max(1, Math.min(limit, 200));
+  const capped = Math.max(1, Math.min(limit, 25));
   try {
     const rows = await queryWithColumnFallback(
       (cols) => ({
         text: `SELECT ${cols} FROM tours
           WHERE country ILIKE $1
             AND COALESCE(category::text, '') <> ''
-          ORDER BY
-            CASE WHEN COALESCE(post_type::text, '') ILIKE '%google%' THEN 1 ELSE 0 END,
-            created_date DESC NULLS LAST
+            AND ${publicStandardTourSql()}
+          ORDER BY created_date DESC NULLS LAST
           LIMIT ${capped}`,
         values: [`%${label}%`],
       }),
       resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
       TOUR_SELECT_CACHE_KEY
     );
-    return rows.filter((row) => isPublishedRecord(row));
+    return publishedTourRows(rows, capped);
   } catch (error: any) {
     console.error('[Aiven] fetchCountryToursForCategories failed:', error.message);
     return [];
