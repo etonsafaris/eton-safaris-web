@@ -75,8 +75,8 @@ export function metadataFromSeo(
   const ogTitle = values.og_title || title;
   const ogDescription = values.og_description || description;
   const privatePath = isPrivateSeoPath(options.path);
-  const index = !privatePath;
-  const follow = !privatePath;
+  const index = !privatePath && values.robots_index !== false;
+  const follow = !privatePath && values.robots_follow !== false;
 
   return {
     title: {

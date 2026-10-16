@@ -90,11 +90,18 @@ export function meetsIndexQuality(record: RecordRow, kind: IndexableContentKind)
 
 /**
  * Published public content is indexable so Google can crawl every live page.
- * Drafts stay out. Advanced SEO can still set No Index on a saved item.
+ * Drafts stay out. Advanced SEO No Index on a saved item is respected.
  */
 export function shouldIndexPublicRecord(record: RecordRow, kind: IndexableContentKind): boolean {
   void kind;
-  return isPublishedRecord(record);
+  if (!isPublishedRecord(record)) return false;
+  const robots = record.robots_index;
+  if (robots === false || robots === 0 || robots === '0') return false;
+  if (typeof robots === 'string') {
+    const token = robots.trim().toLowerCase();
+    if (['false', 'no', 'noindex', 'nofollow'].includes(token)) return false;
+  }
+  return true;
 }
 
 export function indexableKindForCollectionId(collectionId: string): IndexableContentKind | null {
