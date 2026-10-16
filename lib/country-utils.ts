@@ -304,7 +304,7 @@ export function filterToursByCategory(
   return tours;
 }
 
-/** Categories module: must match the country set on the row in admin (no guessing from category title). */
+/** Categories module: match the country field, or the country name in the category title. */
 export function categoryMatchesCountry(category: RecordRow, countrySlug: string): boolean {
   const target = canonicalCountrySlug(countrySlug);
   if (!target) return false;
@@ -313,12 +313,19 @@ export function categoryMatchesCountry(category: RecordRow, countrySlug: string)
   if (assigned.includes(target)) return true;
 
   const rawCountry = pickString(category, ['country', 'country_name', 'country_slug', 'destination']).trim();
-  if (!rawCountry) return false;
+  if (rawCountry) {
+    if (canonicalCountrySlug(rawCountry) === target) return true;
+    const label = countryLabelFromSlug(target);
+    if (label && rawCountry.toLowerCase() === label.toLowerCase()) return true;
+  }
 
-  if (canonicalCountrySlug(rawCountry) === target) return true;
-
+  // Many admin category titles are "Uganda Wildlife Safaris" without a country column set.
+  const title = normalizeSlug(pickString(category, ['name', 'title', 'slug', 'seo_slug']));
+  if (title && (title === target || title.startsWith(`${target}-`) || title.includes(`-${target}-`))) {
+    return true;
+  }
   const label = countryLabelFromSlug(target);
-  if (label && rawCountry.toLowerCase() === label.toLowerCase()) return true;
+  if (label && title.includes(normalizeSlug(label))) return true;
 
   return false;
 }

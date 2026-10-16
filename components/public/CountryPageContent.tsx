@@ -74,15 +74,17 @@ export default function CountryPageContent({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  /** Paint immediately when the server already sent country, categories, or tours. */
+  /** Full paint only when categories and tours arrived — otherwise client backfills. */
   const hasServerContent = Boolean(
     slug &&
       countryProp &&
-      (!isCountryPageShellCountry(countryProp) ||
-        initialTours.length > 0 ||
-        initialCategories.length > 0)
+      !isCountryPageShellCountry(countryProp) &&
+      initialCategories.length > 0 &&
+      initialTours.length > 0
   );
-  const [ready, setReady] = useState(hasServerContent);
+  const [ready, setReady] = useState(
+    Boolean(initialCategories.length || initialTours.length || !isCountryPageShellCountry(countryProp))
+  );
 
   useEffect(() => {
     setCountry((current) => (current?.id && !countryProp?.id ? current : countryProp));
@@ -102,8 +104,12 @@ export default function CountryPageContent({
         places?: RecordRow[];
       }>(`/api/public/country-page?slug=${encodeURIComponent(slug)}`);
       if (!body) return;
-      if (body.country) setCountry(body.country);
-      if (Array.isArray(body.categories)) setCategories(body.categories);
+      if (body.country && (body.country.id || !isCountryPageShellCountry(body.country))) {
+        setCountry(body.country);
+      }
+      if (Array.isArray(body.categories) && body.categories.length) {
+        setCategories(body.categories);
+      }
       if (body.tours?.length) setTours(body.tours);
       if (showParksOnCountryPages() && body.parks?.length) setParks(body.parks);
       if (showExploreOnCountryPages() && body.places?.length) setPlaces(body.places);

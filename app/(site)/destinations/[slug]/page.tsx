@@ -81,7 +81,16 @@ export default function DestinationCountryPage({ params }: { params: { slug: str
 
   return (
     <PublicShellServer>
-      <Suspense fallback={<CountryPageContent key={slug} slug={slug} country={shell} />}>
+      <Suspense
+        fallback={
+          <CountryPageContent
+            key={`${slug}-shell`}
+            slug={slug}
+            country={shell}
+            heroImage={countryHeroImage(slug, shell) || ''}
+          />
+        }
+      >
         <DestinationReady slug={slug} />
       </Suspense>
     </PublicShellServer>

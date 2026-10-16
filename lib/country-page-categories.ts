@@ -1,5 +1,10 @@
-import { categoryMatchesCountry, categoryPublicSlug, normalizeSlug } from '@/lib/country-utils';
-import { getRecordTitle } from '@/lib/data';
+import {
+  categoryMatchesCountry,
+  categoryPublicSlug,
+  countryLabelFromSlug,
+  normalizeSlug,
+} from '@/lib/country-utils';
+import { getRecordTitle, pickString } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
 
 function categorySortKey(row: RecordRow): string {
@@ -27,21 +32,85 @@ function dedupeCategories(rows: RecordRow[]): RecordRow[] {
   return out;
 }
 
+function tourCategoryLabels(tours: RecordRow[] | null | undefined): string[] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+  for (const tour of tours ?? []) {
+    const label = pickString(tour, ['category', 'category_name', 'safari_category']).trim();
+    if (!label) continue;
+    const key = normalizeSlug(label);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    labels.push(label);
+  }
+  return labels;
+}
+
+function categoryMatchesTourLabel(category: RecordRow, label: string): boolean {
+  const target = normalizeSlug(label);
+  if (!target) return false;
+  const tokens = [
+    categoryPublicSlug(category),
+    normalizeSlug(pickString(category, ['slug', 'seo_slug', 'name', 'title'])),
+  ].filter(Boolean);
+  if (tokens.some((token) => token === target || token.includes(target) || target.includes(token))) {
+    return true;
+  }
+  const targetParts = target.split('-').filter((part) => part.length > 3);
+  if (targetParts.length < 2) return false;
+  return tokens.some((token) => {
+    const parts = new Set(token.split('-').filter((part) => part.length > 3));
+    const hits = targetParts.filter((part) => parts.has(part)).length;
+    return hits >= Math.min(2, targetParts.length);
+  });
+}
+
+function synthesizeCategoriesFromTours(countrySlug: string, tours: RecordRow[]): RecordRow[] {
+  const countryName = countryLabelFromSlug(countrySlug) || countrySlug;
+  return tourCategoryLabels(tours).map((label) => {
+    const slug = normalizeSlug(label);
+    return {
+      name: label,
+      title: label,
+      slug,
+      seo_slug: slug,
+      country: countryName,
+      status: 'published',
+    } as RecordRow;
+  });
+}
+
 /**
- * Country destination page: only published categories assigned to this country in admin.
- * No synthetic categories from tour labels — if it is not in the Categories module, it is not shown.
+ * Country destination page categories.
+ * Prefer Categories-module rows for this country; also keep CMS rows whose
+ * titles match the Standard Tours on this page. If none are assigned, build
+ * cards from the distinct tour category labels so the section never blanks.
  */
 export function resolveCountryPageCategories(
   countrySlug: string,
   cmsCategories: RecordRow[] | null | undefined,
-  _tours?: RecordRow[] | null | undefined
+  tours?: RecordRow[] | null | undefined
 ): RecordRow[] {
   try {
-    return dedupeCategories(
-      (cmsCategories ?? []).filter((row) => row && categoryMatchesCountry(row, countrySlug))
-    );
+    const pool = (cmsCategories ?? []).filter(Boolean);
+    const byCountry = pool.filter((row) => categoryMatchesCountry(row, countrySlug));
+    const labels = tourCategoryLabels(tours);
+    const countryName = countryLabelFromSlug(countrySlug) || countrySlug;
+    const countryToken = normalizeSlug(countryName);
+
+    const byName = pool.filter((row) => {
+      if (byCountry.some((existing) => categoriesRepresentSame(existing, row))) return false;
+      const title = normalizeSlug(getRecordTitle(row));
+      if (countryToken && title.includes(countryToken)) return true;
+      return labels.some((label) => categoryMatchesTourLabel(row, label));
+    });
+
+    const merged = dedupeCategories([...byCountry, ...byName]);
+    if (merged.length) return merged;
+
+    return synthesizeCategoriesFromTours(countrySlug, tours ?? []);
   } catch (error) {
     console.warn('[Public] resolveCountryPageCategories failed:', countrySlug, error);
-    return [];
+    return synthesizeCategoriesFromTours(countrySlug, tours ?? []);
   }
 }
