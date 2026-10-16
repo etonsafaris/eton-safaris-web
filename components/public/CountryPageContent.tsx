@@ -74,17 +74,11 @@ export default function CountryPageContent({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  /** Full paint only when categories and tours arrived — otherwise client backfills. */
+  /** Trust SSR when tours or categories arrived — avoid a second API round-trip on every click. */
   const hasServerContent = Boolean(
-    slug &&
-      countryProp &&
-      !isCountryPageShellCountry(countryProp) &&
-      initialCategories.length > 0 &&
-      initialTours.length > 0
+    slug && countryProp && (initialTours.length > 0 || initialCategories.length > 0)
   );
-  const [ready, setReady] = useState(
-    Boolean(initialCategories.length || initialTours.length || !isCountryPageShellCountry(countryProp))
-  );
+  const [ready, setReady] = useState(hasServerContent || !isCountryPageShellCountry(countryProp));
 
   useEffect(() => {
     setCountry((current) => (current?.id && !countryProp?.id ? current : countryProp));

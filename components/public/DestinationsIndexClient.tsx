@@ -29,7 +29,7 @@ export default function DestinationsIndexClient({ initialCountries }: { initialC
     fetchCollectionRecords('countries', [], { maxRows: 48 })
       .then((rows) => setCountries(rows.filter(isPublishedRecord)))
       .catch((error) => console.error('[Supabase] Failed to load destinations:', error));
-  }, initialCountries.length > 0);
+  }, initialCountries.length > 0, []);
 
   const items = useMemo(() => destinationListingRows(countries), [countries]);
 

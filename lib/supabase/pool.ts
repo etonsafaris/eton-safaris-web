@@ -1,5 +1,4 @@
 ﻿import { isPgTooManyClientsError, withPgRetry } from '@/lib/pg-retry';
-import { serialPgWork } from '@/lib/pg-serial';
 
 const isServer = typeof window === 'undefined';
 
@@ -56,7 +55,8 @@ export function isDatabaseConfigured(): boolean {
 /** Aiven free tier Γëê 20 connections ΓÇö cap per isolate/process. */
 export const AIVEN_POOL_HARD_CAP = 15;
 
-const DEFAULT_POOL_MAX = process.env.VERCEL ? 2 : 5;
+/** Allow a few concurrent public reads — serializing every query made every page crawl. */
+const DEFAULT_POOL_MAX = process.env.VERCEL ? 4 : 6;
 
 const POOL_MAX = Math.max(
   1,
@@ -86,7 +86,7 @@ function getEdgeSql(): Sql {
       ssl: 'require',
       max: POSTGRES_MAX,
       idle_timeout: process.env.VERCEL ? 5 : 20,
-      connect_timeout: 10,
+      connect_timeout: 5,
       max_lifetime: process.env.VERCEL ? 60 : 60 * 5,
       prepare: false,
       fetch_types: false,
@@ -155,14 +155,14 @@ export function getSql(): Sql {
 
 const PG_SLOT_MAX = Math.max(
   1,
-  Math.min(POSTGRES_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 2 : 4))
+  Math.min(POSTGRES_MAX, Number(process.env.PG_SLOT_MAX) || (process.env.VERCEL ? 3 : 5))
 );
 let pgSlotsInUse = 0;
 const pgSlotWaiters: Array<() => void> = [];
 
 const PG_SLOT_WAIT_MS = Math.max(
-  5000,
-  Number(process.env.PG_SLOT_WAIT_MS) || (process.env.VERCEL ? 12000 : 45000)
+  3000,
+  Number(process.env.PG_SLOT_WAIT_MS) || (process.env.VERCEL ? 6000 : 20000)
 );
 
 function connectRetryDelayMs(attempt: number) {
@@ -172,7 +172,7 @@ function connectRetryDelayMs(attempt: number) {
 
 async function connectWithRetry(pool: PgPool): Promise<PoolClient> {
   let lastError: unknown;
-  const maxAttempts = process.env.VERCEL ? 4 : 8;
+  const maxAttempts = process.env.VERCEL ? 2 : 4;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       return await pool.connect();
@@ -218,21 +218,20 @@ export async function withPgClient<T>(fn: (client: PoolClient) => Promise<T>): P
   if (!pool) {
     throw new Error('Aiven DATABASE_URL is not configured.');
   }
-  return serialPgWork(() =>
-    withPgRetry(async () => {
-      let slotHeld = false;
-      let client: PoolClient | null = null;
-      try {
-        await acquirePgSlot();
-        slotHeld = true;
-        client = await connectWithRetry(pool);
-        return await fn(client);
-      } finally {
-        client?.release();
-        if (slotHeld) releasePgSlot();
-      }
-    }, process.env.VERCEL ? 4 : 6)
-  );
+  // Slot semaphore caps concurrency; do not serialize every query (that made pages crawl).
+  return withPgRetry(async () => {
+    let slotHeld = false;
+    let client: PoolClient | null = null;
+    try {
+      await acquirePgSlot();
+      slotHeld = true;
+      client = await connectWithRetry(pool);
+      return await fn(client);
+    } finally {
+      client?.release();
+      if (slotHeld) releasePgSlot();
+    }
+  }, process.env.VERCEL ? 3 : 5);
 }
 
 export async function queryRows<T extends QueryResultRow = QueryResultRow>(

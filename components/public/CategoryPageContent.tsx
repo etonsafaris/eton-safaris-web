@@ -102,7 +102,7 @@ export default function CategoryPageContent({
   );
 
   useEffect(() => {
-    // Trust server payload when it already has tours; only backfill when empty or CMS live.
+    // Trust SSR — only backfill when tours are missing or CMS live bumped.
     if (serverPreloaded && live === 0 && initialTours.length > 0) {
       setReady(true);
       return undefined;
@@ -126,7 +126,9 @@ export default function CategoryPageContent({
           needsCategories
             ? fetchCollectionRecords('categories')
             : Promise.resolve(initialCategories),
-          fetch(`/api/data/tours?${params.toString()}`, { cache: 'no-store' }),
+          fetch(`/api/data/tours?${params.toString()}`, {
+            cache: live > 0 ? 'no-store' : 'force-cache',
+          }),
         ]);
         if (!mounted) return;
         const body = (await response.json().catch(() => ({}))) as { data?: RecordRow[] };
@@ -138,7 +140,6 @@ export default function CategoryPageContent({
             sameRecordList(current, nextCategories) ? current : nextCategories
           );
         }
-        // API already filtered by country + category — do not re-filter away soft mismatches.
         const nextTours = (body.data || []).filter((row) => !isGoogleOnlyTour(row)).slice(0, 25);
         if (nextTours.length) setTours(nextTours);
       } catch (error) {

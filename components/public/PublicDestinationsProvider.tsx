@@ -35,6 +35,8 @@ export function PublicDestinationsProvider({
   }, [initialDestinations]);
 
   useEffect(() => {
+    // Seeded nav is enough for first paint; only refetch after an admin CMS live bump.
+    if (live === 0 && destinations.length > 0) return undefined;
     let cancelled = false;
     fetchCollectionRecords('countries', [], { maxRows: 48 })
       .then((rows) => {
@@ -49,7 +51,7 @@ export function PublicDestinationsProvider({
     return () => {
       cancelled = true;
     };
-  }, [live]);
+  }, [live, destinations.length]);
 
   const split = useMemo(() => splitNavDestinations(destinations), [destinations]);
   const value = useMemo(
