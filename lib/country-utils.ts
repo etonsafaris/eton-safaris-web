@@ -238,6 +238,12 @@ export function findCategoryBySlug(
   const exact = pool.find((category) => categoryPublicSlug(category) === target);
   if (exact) return exact;
 
+  const byStoredSlug = pool.find((category) => {
+    const stored = normalizeSlug(pickString(category, ['slug', 'seo_slug']));
+    return Boolean(stored && stored === target);
+  });
+  if (byStoredSlug) return byStoredSlug;
+
   const soft = pool.find((category) => categoryMatchTokens(category).includes(target));
   if (soft) return soft;
 
@@ -246,6 +252,10 @@ export function findCategoryBySlug(
 
   return (
     categories.find((category) => categoryPublicSlug(category) === target) ||
+    categories.find((category) => {
+      const stored = normalizeSlug(pickString(category, ['slug', 'seo_slug']));
+      return Boolean(stored && stored === target);
+    }) ||
     categories.find((category) => categoryMatchTokens(category).includes(target)) ||
     null
   );

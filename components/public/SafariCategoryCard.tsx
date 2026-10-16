@@ -1,7 +1,6 @@
 import CategoryThumbnail from '@/components/public/CategoryThumbnail';
 import { getRecordTitle } from '@/lib/data';
 import type { RecordRow } from '@/lib/types';
-import Link from 'next/link';
 
 type SafariCategoryCardProps = {
   category: RecordRow;
@@ -25,6 +24,7 @@ export default function SafariCategoryCard({
   image: imageOverride,
 }: SafariCategoryCardProps) {
   const title = getRecordTitle(category);
+  void titleOnly;
 
   const inner = (
     <>
@@ -48,15 +48,15 @@ export default function SafariCategoryCard({
     </>
   );
 
-  const className = `block w-full overflow-hidden rounded-[15px] bg-white p-2 text-left transition hover:-translate-y-0.5 ${
+  const className = `relative z-10 block w-full overflow-hidden rounded-[15px] bg-white p-2 text-left transition hover:-translate-y-0.5 ${
     active ? 'ring-2 ring-[#5bc787]/40' : ''
   }`;
 
   if (href) {
     return (
-      <Link href={href} prefetch className={className} style={{ boxShadow: CARD_SHADOW }}>
+      <a href={href} className={className} style={{ boxShadow: CARD_SHADOW }}>
         {inner}
-      </Link>
+      </a>
     );
   }
 

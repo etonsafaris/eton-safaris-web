@@ -133,7 +133,7 @@ export default function CountryPageContent({
             key={String(category?.id ?? categoryPublicSlug(category) ?? index)}
             category={category}
             titleOnly
-            href={countryCategoryPath(slug, category)}
+            href={countryCategoryPath(slug, category) || `/${slug}-safaris/${categoryPublicSlug(category)}`}
             image={resolveCountryCategoryCardImage(category, { countrySlug: slug, tours })}
           />
         ));

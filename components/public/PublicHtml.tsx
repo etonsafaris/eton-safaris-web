@@ -12,8 +12,24 @@ const FILE_HREF = /\.(pdf|docx?|xlsx?|pptx?|zip|csv|txt)(?:$|[?#])/i;
 function isDirectFileHref(href: string) {
   const value = href.trim();
   if (!value) return false;
-  if (FILE_HREF.test(value.split('#')[0])) return true;
-  return /\/downloads\//i.test(value);
+  const pathOnly = value.split('#')[0].split('?')[0];
+  if (FILE_HREF.test(pathOnly)) return true;
+  if (/\/(?:api\/media|cms-media)\//i.test(value)) return true;
+  if (/\/downloads\//i.test(value)) return true;
+  return false;
+}
+
+/** Files and uploaded media must use a normal browser open, not the app router. */
+function prepareDocumentAnchors(root: HTMLElement) {
+  root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
+    const href = anchor.getAttribute('href');
+    if (!href || !isDirectFileHref(href)) return;
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('rel', 'noopener noreferrer');
+    if (!anchor.getAttribute('title')) {
+      anchor.setAttribute('title', 'Open document');
+    }
+  });
 }
 
 type PublicHtmlProps = {
@@ -73,7 +89,9 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
       if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
 
       const href = anchor.getAttribute('href');
-      if (!href || isDirectFileHref(href)) return;
+      if (!href) return;
+      // PDFs, Word files, and /api/media uploads: leave the click to the browser.
+      if (isDirectFileHref(href)) return;
 
       try {
         const parsed = new URL(href, window.location.origin);
@@ -81,6 +99,7 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
           event.preventDefault();
           return;
         }
+        if (isDirectFileHref(parsed.pathname + parsed.search + parsed.hash)) return;
       } catch {
         /* relative */
       }
@@ -104,11 +123,12 @@ export default function PublicHtml({ html, className, style }: PublicHtmlProps) 
     if (!root || !html.trim()) return undefined;
 
     root.addEventListener('click', onClick);
+    prepareDocumentAnchors(root);
 
     const prefetched = new Set<string>();
     root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
       const href = anchor.getAttribute('href');
-      if (!href) return;
+      if (!href || isDirectFileHref(href)) return;
       const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
       if (!internal || isDirectFileHref(internal) || !isPrefixedPublicPath(internal)) return;
       const base = normalizePrefixedPublicPath(internal).split('#')[0];
@@ -153,7 +173,7 @@ export function PublicContentLink({
   const internal = internalPathFromHref(href);
   if (!internal || isDirectFileHref(href) || isDirectFileHref(internal)) {
     return (
-      <a href={href} className={className}>
+      <a href={href} className={className} target="_blank" rel="noopener noreferrer">
         {children}
       </a>
     );

@@ -103,7 +103,10 @@ export default function CategoryPageContent({
   );
 
   useEffect(() => {
-    if (serverPreloaded && initialTours.length > 0 && live === 0) return undefined;
+    if (serverPreloaded && live === 0) {
+      setReady(true);
+      return undefined;
+    }
     let mounted = true;
     async function load() {
       try {
@@ -141,7 +144,7 @@ export default function CategoryPageContent({
     return () => {
       mounted = false;
     };
-  }, [slug, categorySlug, live, serverPreloaded, initialTours.length, initialCategory]);
+  }, [slug, categorySlug, live, serverPreloaded, initialCategory]);
 
   const categoryTitle = selectedCategory
     ? getRecordTitle(selectedCategory)
