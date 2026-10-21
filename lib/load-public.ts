@@ -34,6 +34,8 @@ import {
   resolvePublicTours,
   fetchCountryToursForCategories,
   fetchToursForCountryLabel,
+  fetchCountryBySlugFast,
+  fetchCategoriesAssignedToCountry,
   fetchStandardToursForCategory,
   findRecordBySlug,
   getRecordTitle,
@@ -70,7 +72,7 @@ function staticDetailBuildLimit() {
 }
 
 /** Cap public DB waits so a slow Aiven round-trip cannot stall every page. */
-const PUBLIC_QUERY_MS = 2800;
+const PUBLIC_QUERY_MS = 900;
 
 const FAKE_STAY_SLUG_RE =
   /-(river|savannah|forest|hilltop|horizon|baobab|mist|sunset|valley|lagoon|canyon|plateau|oasis|crest|trail)-(luxury|safari)-(lodge|camp|hotel|bandas)(-|$)/i;
@@ -417,18 +419,13 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v30-assigned-cats', normalized],
+      ['country-page-data-v32-instant', normalized],
       ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
-        const filled = withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
-        // Do not cache a blank shell — that hides categories/tours for every visitor.
-        if (!filled.tours.length && !filled.categories.length) {
-          throw new Error(`country-page-empty:${normalized}`);
-        }
-        return filled;
+        return withCountryPageFallback(data ?? EMPTY_COUNTRY_PAGE_DATA, normalized);
       },
-      300
+      PUBLIC_DETAIL_REVALIDATE_SECONDS
     );
   } catch (error) {
     rethrowDynamicServerError(error);
@@ -458,7 +455,8 @@ export async function loadCountryPageDataResilient(slug: string): Promise<Countr
 
 type CountryPageLoadOptions = { requirePublishedCountry?: boolean };
 
-const COUNTRY_PAGE_QUERY_MS = 5000;
+/** Keep the country page inside ~1s even when Aiven is slow. */
+const COUNTRY_PAGE_QUERY_MS = 900;
 
 async function loadCountryPageDataInner(
   slug: string,
@@ -466,29 +464,13 @@ async function loadCountryPageDataInner(
 ): Promise<CountryPageData | null> {
   const countryLabel = countryLabelFromSlug(slug) || slug;
 
-  const [countryMeta, categoryPage, tourRows] = await Promise.all([
-    withTimeout(fetchPublicRecordResilient('countries', slug), COUNTRY_PAGE_QUERY_MS, null),
-    withTimeout(
-      fetchCollectionPage('categories', [], {
-        columns: listColumns('categories'),
-        limit: 80,
-        offset: 0,
-        filters: { country: countryLabel },
-      }),
-      COUNTRY_PAGE_QUERY_MS,
-      { rows: [] as RecordRow[], total: 0 }
-    ),
-    withTimeout(resolvePublicTours({ country: countryLabel, limit: 25 }), COUNTRY_PAGE_QUERY_MS, [] as RecordRow[]),
+  const [countryMeta, assignedCategories, tourRows] = await Promise.all([
+    withTimeout(fetchCountryBySlugFast(slug), COUNTRY_PAGE_QUERY_MS, null),
+    withTimeout(fetchCategoriesAssignedToCountry(countryLabel, 24), COUNTRY_PAGE_QUERY_MS, [] as RecordRow[]),
+    withTimeout(fetchToursForCountryLabel(countryLabel, 25), COUNTRY_PAGE_QUERY_MS, [] as RecordRow[]),
   ]);
 
-  let tours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row));
-  if (!tours.length) {
-    tours = await withTimeout(
-      fetchCountryToursForCategories(countryLabel, 25),
-      COUNTRY_PAGE_QUERY_MS,
-      [] as RecordRow[]
-    ).then((rows) => (rows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row)));
-  }
+  const tours = (tourRows ?? []).filter((row) => !isGoogleOnlyTour(row) && isPubliclyVisibleRecord(row));
 
   let country: RecordRow | null =
     countryMeta && isPubliclyVisibleRecord(countryMeta) ? countryMeta : null;
@@ -497,21 +479,9 @@ async function loadCountryPageDataInner(
     return null;
   }
 
-  let categoriesRaw = (categoryPage.rows ?? []).filter(isPublishedRecord);
-  if (!categoriesRaw.length) {
-    const allCategories = await withTimeout(
-      fetchCollectionPage('categories', [], {
-        columns: listColumns('categories'),
-        limit: 120,
-        offset: 0,
-      }),
-      COUNTRY_PAGE_QUERY_MS,
-      { rows: [] as RecordRow[], total: 0 }
-    );
-    categoriesRaw = (allCategories.rows ?? [])
-      .filter(isPublishedRecord)
-      .filter((row) => categoryMatchesCountry(row, slug));
-  }
+  const categoriesRaw = (assignedCategories ?? [])
+    .filter(isPublishedRecord)
+    .filter((row) => categoryMatchesCountry(row, slug));
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') || countryLabelFromSlug(slug) || slug;
   const parks: RecordRow[] = [];
@@ -550,7 +520,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v16-assigned-cats', normalized],
+    ['country-page-sync-v18-instant', normalized],
     ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS
@@ -575,7 +545,7 @@ async function loadTourDetailLive(slug: string, synced = false) {
       limit: 24,
       excludeId: tour.id != null ? String(tour.id) : undefined,
     }),
-    4000,
+    900,
     [] as RecordRow[]
   );
   const sameCountry = (relatedPool ?? []).filter((row) => row && String(row.id) !== String(tour.id || ''));

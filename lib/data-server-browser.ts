@@ -207,6 +207,14 @@ export async function fetchToursForCountryLabel(): Promise<RecordRow[]> {
   return [];
 }
 
+export async function fetchCountryBySlugFast(): Promise<RecordRow | null> {
+  return null;
+}
+
+export async function fetchCategoriesAssignedToCountry(): Promise<RecordRow[]> {
+  return [];
+}
+
 export async function resolvePublicTours(): Promise<RecordRow[]> {
   return [];
 }

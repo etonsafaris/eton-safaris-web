@@ -6,6 +6,8 @@ import PublicPageLoader from '@/components/public/PublicPageLoader';
 import JsonLd from '@/components/public/JsonLd';
 import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
 import PublicShellServer from '@/components/public/PublicShellServer';
+import { countryHeroTitle } from '@/lib/country-landing-copy';
+import { countryLabelFromSlug } from '@/lib/country-utils';
 import {
   destinationPublicPath,
   matchCmsRecord,
@@ -16,9 +18,9 @@ import { DEFAULT_CMS_PAGES } from '@/lib/cms-defaults';
 import { parseCmsPageExtras, stripHtmlText } from '@/lib/cms-page-model';
 import { fetchCollectionRecords, getRecordImage, getRecordTitle, pickString } from '@/lib/data';
 import { seoValuesFromRecord } from '@/lib/seo';
-import { metadataFromSeo, publicRecordMetadata } from '@/lib/seo-public';
+import { metadataFromSeo } from '@/lib/seo-public';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
-import { loadCmsPageResilient, loadCountryPageDataResilient } from '@/lib/load-public';
+import { loadCmsPageResilient } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 
@@ -42,12 +44,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (resolved.kind === 'country') {
     const slug = resolved.countrySlug || resolved.canonical;
-    try {
-      return await publicRecordMetadata('countries', slug, destinationPublicPath(slug), { contentType: 'country' });
-    } catch (error) {
-      rethrowDynamicServerError(error);
-      return { title: 'Destination | Eton Safaris' };
-    }
+    const label = countryLabelFromSlug(slug) || slug;
+    const headline = countryHeroTitle(slug, label);
+    return {
+      title: headline,
+      description: `${headline} with Eton Safaris.`,
+    };
   }
 
   const path = `/${resolved.canonical}`;
@@ -84,45 +86,30 @@ async function CmsSlugReady({ params }: PageProps) {
       </PublicShellServer>
     );
   }
-  const isCountryAlias = resolved.kind === 'country';
-  const countrySlug = resolved.countrySlug || resolved.canonical;
-  let countryData: Awaited<ReturnType<typeof loadCountryPageDataResilient>> | null = null;
-  if (isCountryAlias) {
-    countryData = await loadCountryPageDataResilient(countrySlug);
+  if (resolved.kind === 'country') {
+    permanentRedirect(destinationPublicPath(resolved.countrySlug || resolved.canonical));
   }
   let initialPage = null;
-  if (!isCountryAlias) {
-    try {
-      initialPage = await loadCmsPageResilient(resolved.canonical);
-    } catch (error) {
-      rethrowDynamicServerError(error);
-      console.warn('[Public] CMS page load failed:', resolved.canonical, error);
-      initialPage = null;
-    }
+  try {
+    initialPage = await loadCmsPageResilient(resolved.canonical);
+  } catch (error) {
+    rethrowDynamicServerError(error);
+    console.warn('[Public] CMS page load failed:', resolved.canonical, error);
+    initialPage = null;
   }
-  if (!isCountryAlias && initialPage) {
+  if (initialPage) {
     preloadPublicHero(hydratePublicCmsPage(initialPage, resolved.canonical).image);
   }
 
   return (
     <>
       <JsonLd
-        table={isCountryAlias ? 'countries' : 'pages'}
-        slug={isCountryAlias ? countrySlug : resolved.canonical}
-        path={isCountryAlias ? destinationPublicPath(countrySlug) : `/${resolved.canonical}`}
-        schemaHint={
-          isCountryAlias ? 'TouristDestination' : resolved.canonical === 'about-us' ? 'AboutPage' : 'WebPage'
-        }
+        table="pages"
+        slug={resolved.canonical}
+        path={`/${resolved.canonical}`}
+        schemaHint={resolved.canonical === 'about-us' ? 'AboutPage' : 'WebPage'}
       />
-      <CmsSlugClient
-        key={params.slug}
-        initialCountry={countryData?.country || null}
-        initialPage={initialPage}
-        initialCategories={countryData?.categories || []}
-        initialTours={countryData?.tours || []}
-        initialParks={countryData?.parks || []}
-        initialPlaces={countryData?.places || []}
-      />
+      <CmsSlugClient key={params.slug} initialPage={initialPage} />
     </>
   );
 }
@@ -130,6 +117,9 @@ async function CmsSlugReady({ params }: PageProps) {
 export default function PublicCmsSlugPage({ params }: PageProps) {
   if (isReservedPublicSlug(params.slug)) permanentRedirect('/');
   const resolved = resolvePublicSlugLenient(params.slug);
+  if (resolved?.kind === 'country') {
+    permanentRedirect(destinationPublicPath(resolved.countrySlug || resolved.canonical));
+  }
   if (!resolved) {
     return (
       <PublicShellServer>

@@ -1,7 +1,5 @@
 'use client';
 
-import { NAV_COUNTRIES } from '@/lib/collections';
-import { destinationPublicPath } from '@/lib/cms-routes';
 import { writeHomeViewSnapshot } from '@/lib/home-view-cache';
 import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
@@ -13,16 +11,7 @@ import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-const WARM_ROUTES = [
-  '/',
-  '/tours',
-  '/destinations',
-  '/safari-updates',
-  '/gallery',
-  '/contact-us',
-  '/community-support',
-  ...NAV_COUNTRIES.map(({ slug }) => destinationPublicPath(slug)),
-];
+const WARM_ROUTES = ['/', '/tours', '/destinations'];
 
 /** Prefetch main nav targets + warm the home snapshot so Home is instant on first click. */
 export default function PublicNavPrefetch() {

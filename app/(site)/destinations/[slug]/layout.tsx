@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import JsonLd from '@/components/public/JsonLd';
 import { SITE } from '@/lib/collections';
 import { countrySlugFromLanding, destinationPublicPath } from '@/lib/cms-routes';
 import { countryHeroTitle, countryMetaDescription } from '@/lib/country-landing-copy';
@@ -31,16 +29,22 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
 
 export default function DestinationSeoLayout({ children, params }: LayoutProps) {
   const slug = countrySlugFromLanding(params.slug);
+  const label = countryLabelFromSlug(slug) || slug;
+  const headline = countryHeroTitle(slug, label);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TouristDestination',
+    name: headline,
+    description: countryMetaDescription(slug, label),
+    url: publicCanonicalUrl(destinationPublicPath(slug)),
+  };
+
   return (
     <>
-      <Suspense fallback={null}>
-        <JsonLd
-          table="countries"
-          slug={slug}
-          path={destinationPublicPath(slug)}
-          schemaHint="TouristDestination"
-        />
-      </Suspense>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       {children}
     </>
   );

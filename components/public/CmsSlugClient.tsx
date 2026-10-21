@@ -85,6 +85,7 @@ export default function CmsSlugClient({
     if (hasFirstPaint || initialPage || initialCountry) {
       setReady(true);
       if (live === 0) return undefined;
+      if (resolved?.kind === 'country' && initialCountry) return undefined;
     }
 
     async function loadCountry(canonical: string, countrySlug: string) {

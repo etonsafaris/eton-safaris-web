@@ -48,6 +48,8 @@ type CountryPageContentProps = {
   initialTours?: RecordRow[];
   initialParks?: RecordRow[];
   initialPlaces?: RecordRow[];
+  /** False on the Suspense shell so empty copy does not flash before CMS rows arrive. */
+  contentReady?: boolean;
 };
 
 function toProseHtml(value: string) {
@@ -69,16 +71,16 @@ export default function CountryPageContent({
   initialTours = EMPTY_ROWS,
   initialParks = EMPTY_ROWS,
   initialPlaces = EMPTY_ROWS,
+  contentReady = true,
 }: CountryPageContentProps) {
   const [country, setCountry] = useState<RecordRow | null>(countryProp);
   const [categories, setCategories] = useState<RecordRow[]>(initialCategories);
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  /** Trust SSR only when packages arrived, so an empty tour section still recovers once. */
-  const hasServerContent = Boolean(slug && countryProp && initialTours.length > 0);
+  const hasServerLists = initialCategories.length > 0 || initialTours.length > 0;
   const router = useRouter();
-  const [ready, setReady] = useState(hasServerContent || !isCountryPageShellCountry(countryProp));
+  const [ready, setReady] = useState(hasServerLists);
 
   useEffect(() => {
     setCountry((current) => (current?.id && !countryProp?.id ? current : countryProp));
@@ -89,18 +91,26 @@ export default function CountryPageContent({
   }, [countryProp, initialCategories, initialTours, initialParks, initialPlaces]);
 
   useEffect(() => {
-    try {
-      for (const category of categories.slice(0, 12)) {
-        const href = countryCategoryPath(slug, category);
-        if (href) router.prefetch(href);
+    const warm = () => {
+      try {
+        for (const category of categories.slice(0, 8)) {
+          const href = countryCategoryPath(slug, category);
+          if (href) router.prefetch(href);
+        }
+        for (const tour of tours.slice(0, 6)) {
+          const tourSlug = publicRecordSlug(tour);
+          if (tourSlug) router.prefetch(`/tours/${tourSlug}`);
+        }
+      } catch {
+        /* prefetch is optional */
       }
-      for (const tour of tours.slice(0, 12)) {
-        const tourSlug = publicRecordSlug(tour);
-        if (tourSlug) router.prefetch(`/tours/${tourSlug}`);
-      }
-    } catch {
-      /* prefetch is optional */
+    };
+    const idle = window.requestIdleCallback?.(warm, { timeout: 1500 });
+    if (idle == null) {
+      const timer = window.setTimeout(warm, 400);
+      return () => window.clearTimeout(timer);
     }
+    return () => window.cancelIdleCallback?.(idle);
   }, [categories, tours, slug, router]);
 
   useCmsPageReload(async () => {
@@ -127,7 +137,7 @@ export default function CountryPageContent({
     } finally {
       setReady(true);
     }
-  }, hasServerContent, [slug]);
+  }, hasServerLists, [slug]);
 
   const extras = parseCmsPageExtras(country, slug);
   const title = publicCountryLabel(country, slug);
@@ -191,7 +201,7 @@ export default function CountryPageContent({
               gap={20}
               autoPlayMs={4500}
               emptyMessage={
-                ready && categoryItems.length === 0
+                contentReady && ready && categoryItems.length === 0
                   ? 'No safari categories are assigned to this country yet.'
                   : undefined
               }
@@ -305,7 +315,9 @@ export default function CountryPageContent({
           tours={tours}
           title={`Explore These Amazing Safaris in ${title}`}
           emptyMessage={
-            ready && tours.length === 0 ? 'Safari packages for this country are loading. Refresh in a moment.' : undefined
+            contentReady && ready && tours.length === 0
+              ? 'No Standard safari packages are listed for this country yet.'
+              : undefined
           }
         />
       </section>

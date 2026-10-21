@@ -86,7 +86,7 @@ function getEdgeSql(): Sql {
       ssl: 'require',
       max: POSTGRES_MAX,
       idle_timeout: process.env.VERCEL ? 5 : 20,
-      connect_timeout: 5,
+      connect_timeout: 2,
       max_lifetime: process.env.VERCEL ? 60 : 60 * 5,
       prepare: false,
       fetch_types: false,

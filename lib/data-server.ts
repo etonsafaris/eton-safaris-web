@@ -1179,24 +1179,97 @@ export async function fetchSyncedPublicRecord(
   return row;
 }
 
+/** One country row — a single OR lookup instead of sequential slug/id/name queries. */
+export async function fetchCountryBySlugFast(slug: string): Promise<RecordRow | null> {
+  const values = slugLookupValues(slug);
+  if (!values.length) return null;
+  const needle = values[0];
+  const label = `%${needle.replace(/-/g, ' ').replace(/\s+/g, ' ').trim()}%`;
+  try {
+    const res = await db.query(
+      `SELECT * FROM countries
+       WHERE slug = $1
+          OR seo_slug = $1
+          OR name ILIKE $2
+       LIMIT 1`,
+      [needle, label]
+    );
+    const row = (res.rows as RecordRow[])[0];
+    return row ? jsonSafeRow(row) : null;
+  } catch (error: any) {
+    try {
+      const res = await db.query(
+        `SELECT * FROM countries WHERE slug = $1 OR name ILIKE $2 LIMIT 1`,
+        [needle, label]
+      );
+      const row = (res.rows as RecordRow[])[0];
+      return row ? jsonSafeRow(row) : null;
+    } catch (inner: any) {
+      console.error('[Aiven] fetchCountryBySlugFast failed:', inner.message);
+      return null;
+    }
+  }
+}
+
+/** Categories assigned to this country via the country column — one query, no column retries. */
+export async function fetchCategoriesAssignedToCountry(
+  countryLabel: string,
+  limit = 24
+): Promise<RecordRow[]> {
+  const label = String(countryLabel || '').trim();
+  if (!label) return [];
+  const capped = Math.max(1, Math.min(limit, 24));
+  const like = `%${label}%`;
+  const columns = publicListColumnsFor('categories') || 'id,name,slug,seo_slug,country,image_url';
+  try {
+    const res = await db.query(
+      `SELECT ${columns} FROM categories WHERE country ILIKE $1 LIMIT ${capped}`,
+      [like]
+    );
+    return (res.rows as RecordRow[]).map(jsonSafeRow);
+  } catch (error: any) {
+    try {
+      const res = await db.query(
+        `SELECT id,name,slug,seo_slug,country,image_url FROM categories WHERE country ILIKE $1 LIMIT ${capped}`,
+        [like]
+      );
+      return (res.rows as RecordRow[]).map(jsonSafeRow);
+    } catch (inner: any) {
+      console.error('[Aiven] fetchCategoriesAssignedToCountry failed:', inner.message);
+      return [];
+    }
+  }
+}
+
 /** Country-scoped tour cards — filter in Aiven database instead of downloading all tours. */
 export async function fetchToursForCountryLabel(countryLabel: string, limit = 25): Promise<RecordRow[]> {
   const label = String(countryLabel || '').trim();
   if (!label) return [];
   const capped = Math.max(1, Math.min(limit, 25));
+  const like = `%${label}%`;
   try {
-    const rows = await queryWithColumnFallback(
-      (cols) => ({
-        text: `SELECT ${cols} FROM tours WHERE country ILIKE $1 AND ${publicStandardTourSql()} ORDER BY created_date DESC NULLS LAST LIMIT ${capped}`,
-        values: [`%${label}%`],
-      }),
-      resolvedSelects.get(TOUR_SELECT_CACHE_KEY) || TOUR_LIST_COLUMNS,
-      TOUR_SELECT_CACHE_KEY
+    const res = await db.query(
+      `SELECT ${TOUR_LIST_COLUMNS} FROM tours
+       WHERE country ILIKE $1 AND ${publicStandardTourSql()}
+       ORDER BY created_date DESC NULLS LAST
+       LIMIT ${capped}`,
+      [like]
     );
-    return publishedTourRows(rows, capped);
+    return publishedTourRows(res.rows as RecordRow[], capped);
   } catch (error: any) {
-    console.error('[Aiven] fetchToursForCountryLabel failed:', error.message);
-    return [];
+    try {
+      const res = await db.query(
+        `SELECT id,title,slug,seo_slug,country,category,duration_days,price,image_url,created_date
+         FROM tours WHERE country ILIKE $1
+         ORDER BY created_date DESC NULLS LAST
+         LIMIT ${capped}`,
+        [like]
+      );
+      return publishedTourRows(res.rows as RecordRow[], capped);
+    } catch (inner: any) {
+      console.error('[Aiven] fetchToursForCountryLabel failed:', inner.message);
+      return [];
+    }
   }
 }
 
