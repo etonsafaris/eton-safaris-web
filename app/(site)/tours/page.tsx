@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import ToursPageClient from '@/components/public/ToursPageClient';
 import { getPublicRecordImage } from '@/lib/content-image';
@@ -85,23 +86,7 @@ export default function ToursPage({
   const page = Math.max(1, Number(searchParams?.page) || 1);
   return (
     <PublicShellServer>
-      <Suspense
-        fallback={
-          <ToursPageClient
-            initialTours={[]}
-            initialCategories={[]}
-            initialCountries={[]}
-            initialTotal={0}
-            page={page}
-            pageSize={PAGE_SIZE}
-            initialQuery={param(searchParams?.q)}
-            initialCategory={param(searchParams?.category)}
-            initialDestination={param(searchParams?.destination)}
-            initialDays={param(searchParams?.days)}
-            initialDepart={param(searchParams?.depart)}
-          />
-        }
-      >
+      <Suspense fallback={<PublicPageLoader />}>
         <ToursListingReady page={page} searchParams={searchParams} />
       </Suspense>
     </PublicShellServer>

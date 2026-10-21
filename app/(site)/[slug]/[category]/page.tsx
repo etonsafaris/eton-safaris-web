@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CategoryPageContent from '@/components/public/CategoryPageContent';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, resolvePublicSlug, titleFromPublicSlug } from '@/lib/cms-routes';
 import { countryHeroTitle } from '@/lib/country-landing-copy';
@@ -76,25 +77,9 @@ export default function CountryCategoryPage({ params }: PageProps) {
   if (isReservedPublicSlug(params.slug)) permanentRedirect('/destinations');
   const resolved = resolvePublicSlug(params.slug);
   const countrySlug = resolved?.countrySlug || countrySlugFromLanding(params.slug) || params.slug;
-  const countryName = countryLabelFromSlug(countrySlug) || titleFromPublicSlug(countrySlug);
-  const shell = {
-    name: countryName,
-    title: countryHeroTitle(countrySlug, countryName),
-    slug: countrySlug,
-  } as RecordRow;
-
   return (
     <PublicShellServer>
-      <Suspense
-        fallback={
-          <CategoryPageContent
-            slug={countrySlug}
-            country={shell}
-            categorySlug={params.category}
-            heroImage={countryHeroImage(countrySlug, shell) || ''}
-          />
-        }
-      >
+      <Suspense fallback={<PublicPageLoader />}>
         <CategoryReady countrySlug={countrySlug} categorySlug={params.category} />
       </Suspense>
     </PublicShellServer>

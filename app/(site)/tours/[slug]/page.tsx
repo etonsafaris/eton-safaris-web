@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import TourDetailClient from './TourDetailClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { getPublicRecordImage } from '@/lib/content-image';
 import { loadStaticTourParams, loadTourDetail } from '@/lib/load-public';
@@ -52,7 +53,7 @@ export default function TourDetailPage({ params }: PageProps) {
 
   return (
     <PublicShellServer>
-      <Suspense fallback={<TourDetailClient key={slug} embedded initialTour={null} initialRelated={[]} />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <TourDetailReady slug={slug} />
       </Suspense>
     </PublicShellServer>

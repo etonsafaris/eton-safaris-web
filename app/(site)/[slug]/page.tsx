@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CmsSlugClient from '@/components/public/CmsSlugClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import JsonLd from '@/components/public/JsonLd';
 import PublicRecordUnavailable from '@/components/public/PublicRecordUnavailable';
 import PublicShellServer from '@/components/public/PublicShellServer';
@@ -138,7 +139,7 @@ export default function PublicCmsSlugPage({ params }: PageProps) {
   }
 
   return (
-    <Suspense fallback={<CmsSlugClient key={params.slug} />}>
+    <Suspense fallback={<PublicPageLoader />}>
       <CmsSlugReady params={params} />
     </Suspense>
   );

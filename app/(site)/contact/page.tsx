@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import ContactPageClient from '@/components/public/ContactPageClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import { hydratePublicCmsPage } from '@/lib/hydrate-cms-page';
 import { loadCmsPageResilient } from '@/lib/load-public';
 import { preloadPublicHero } from '@/lib/preload-public-hero';
@@ -15,7 +16,7 @@ async function ContactReady() {
 
 export default function ContactPage() {
   return (
-    <Suspense fallback={<ContactPageClient heroImage="" />}>
+    <Suspense fallback={<PublicPageLoader />}>
       <ContactReady />
     </Suspense>
   );

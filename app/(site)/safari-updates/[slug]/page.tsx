@@ -4,6 +4,7 @@ import { getPublicRecordImage } from '@/lib/content-image';
 import { loadSafariUpdateDetailResilient, loadStaticSafariUpdateParams } from '@/lib/load-public';
 import { rethrowDynamicServerError } from '@/lib/safe-public-load';
 import SafariUpdateDetailClient from './SafariUpdateDetailClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 
 export const revalidate = 900;
@@ -51,7 +52,7 @@ export default function SafariUpdateDetailPage({ params }: PageProps) {
   const slug = params?.slug?.trim() ?? '';
   return (
     <PublicShellServer>
-      <Suspense fallback={<SafariUpdateDetailClient key={slug} embedded initialPost={null} initialRelated={[]} initialTours={[]} />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <SafariUpdateReady slug={slug} />
       </Suspense>
     </PublicShellServer>

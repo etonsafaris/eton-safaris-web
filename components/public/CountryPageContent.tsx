@@ -232,6 +232,7 @@ export default function CountryPageContent({
             <div className="mt-8 text-center">
               <Link
                 href={countryParksListingPath(slug)}
+                prefetch
                 className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
               >
                 Other Parks
@@ -272,6 +273,7 @@ export default function CountryPageContent({
             <div className="mt-8 text-center">
               <Link
                 href={countryExploreListingPath(slug)}
+                prefetch
                 className="inline-flex rounded-full border-2 border-moss px-8 py-3 text-xs font-semibold uppercase tracking-widest text-moss hover:bg-moss hover:text-white"
               >
                 Other Places

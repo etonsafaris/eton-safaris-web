@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import AccommodationDetailClient from './AccommodationDetailClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { getPublicRecordImage } from '@/lib/content-image';
 import { loadAccommodationDetail, loadStaticAccommodationParams } from '@/lib/load-public';
@@ -54,7 +55,7 @@ export default function AccommodationDetailPage({ params }: PageProps) {
 
   return (
     <PublicShellServer>
-      <Suspense fallback={<AccommodationDetailClient key={slug} embedded initialItem={null} initialOthers={[]} initialTours={[]} />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <AccommodationReady slug={slug} />
       </Suspense>
     </PublicShellServer>

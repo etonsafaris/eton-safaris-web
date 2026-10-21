@@ -54,7 +54,7 @@ export default function PlaceCard({
   const to = typeof href === 'string' && href.trim() ? href : '/';
 
   return (
-    <Link href={to} className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link href={to} prefetch className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {hasImage ? (
           <ResponsiveImage

@@ -41,6 +41,7 @@ export default function PublicListingCard({
   return (
     <Link
       href={to}
+      prefetch
       onClick={() => onNavigate?.()}
       className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md"
     >

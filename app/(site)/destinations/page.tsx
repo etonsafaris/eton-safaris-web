@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import DestinationsIndexClient from '@/components/public/DestinationsIndexClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countryHeroImage } from '@/lib/country-heroes';
 import { publicCountrySlug } from '@/lib/country-utils';
@@ -38,7 +39,7 @@ async function DestinationsReady() {
 export default function DestinationsIndexPage() {
   return (
     <PublicShellServer>
-      <Suspense fallback={<DestinationsIndexClient initialCountries={fallbackHomeCountryRows()} />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <DestinationsReady />
       </Suspense>
     </PublicShellServer>

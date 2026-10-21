@@ -7,6 +7,9 @@ import { buildHomeHeroSlides } from '@/lib/home-hero-slides';
 import { prepareHomePageRenderState } from '@/lib/home-page-fallback';
 import { safeHeroSlides, normalizeHomePagePayload } from '@/lib/home-page-payload';
 import { heroImageSrc } from '@/lib/responsive-image';
+import { isDirectFileHref } from '@/lib/document-href';
+import { internalPathFromHref } from '@/lib/internal-link';
+import { isPrefixedPublicPath, normalizePrefixedPublicPath } from '@/lib/public-path-utils';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -72,11 +75,31 @@ export default function PublicNavPrefetch() {
     };
 
     const idle = window.requestIdleCallback?.(run, { timeout: 1200 });
+    const onHover = (event: PointerEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest?.('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || isDirectFileHref(href)) return;
+      const internal = internalPathFromHref(href, { pageOrigin: window.location.origin });
+      if (!internal || !isPrefixedPublicPath(internal)) return;
+      try {
+        router.prefetch(normalizePrefixedPublicPath(internal));
+      } catch {
+        /* ignore */
+      }
+    };
+    document.addEventListener('pointerover', onHover, { capture: true, passive: true });
     if (idle == null) {
       const timer = window.setTimeout(run, 200);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+        document.removeEventListener('pointerover', onHover, true);
+      };
     }
-    return () => window.cancelIdleCallback?.(idle);
+    return () => {
+      window.cancelIdleCallback?.(idle);
+      document.removeEventListener('pointerover', onHover, true);
+    };
   }, [router]);
 
   return null;

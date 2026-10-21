@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import CountryPageContent from '@/components/public/CountryPageContent';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { countrySlugFromLanding, isDedicatedLandingCountry, publicSlugFromInput } from '@/lib/cms-routes';
 import { countryHeroTitle } from '@/lib/country-landing-copy';
@@ -70,26 +71,10 @@ async function DestinationReady({ slug }: { slug: string }) {
 export default function DestinationCountryPage({ params }: { params: { slug: string } }) {
   const slug = countrySlugFromLanding(params.slug) || publicSlugFromInput(params.slug);
   if (!slug || !isDedicatedLandingCountry(slug)) permanentRedirect('/destinations');
-  const name = countryLabelFromSlug(slug) || slug;
-  const shell = {
-    name,
-    title: countryHeroTitle(slug, name),
-    slug,
-    status: 'published',
-  } as RecordRow;
 
   return (
     <PublicShellServer>
-      <Suspense
-        fallback={
-          <CountryPageContent
-            key={`${slug}-shell`}
-            slug={slug}
-            country={shell}
-            heroImage={countryHeroImage(slug, shell) || ''}
-          />
-        }
-      >
+      <Suspense fallback={<PublicPageLoader />}>
         <DestinationReady slug={slug} />
       </Suspense>
     </PublicShellServer>

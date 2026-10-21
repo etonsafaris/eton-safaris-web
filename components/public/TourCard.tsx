@@ -49,7 +49,7 @@ export default function TourCard({
 
   return (
     <article className="group flex h-full flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
-      <Link href={`/tours/${slug}`} className="block">
+      <Link href={`/tours/${slug}`} prefetch className="block">
         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
           {image ? (
             <ResponsiveImage
@@ -73,7 +73,7 @@ export default function TourCard({
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-4">
-        <Link href={`/tours/${slug}`} className="block">
+        <Link href={`/tours/${slug}`} prefetch className="block">
           <h3 className="public-article-body text-[15px] font-bold leading-snug text-[#111]">{tourTitle}</h3>
           {showPublishedDate && formatPublishedDate(tour) ? (
             <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#00A651]">

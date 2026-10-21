@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { permanentRedirect } from 'next/navigation';
 import ParkDetailClient from './ParkDetailClient';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import { getPublicRecordImage } from '@/lib/content-image';
 import { loadParkDetail, loadStaticParkParams } from '@/lib/load-public';
@@ -54,7 +55,7 @@ export default function ParkDetailPage({ params }: PageProps) {
 
   return (
     <PublicShellServer>
-      <Suspense fallback={<ParkDetailClient key={slug} embedded initialPark={null} initialOthers={[]} initialTours={[]} />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <ParkDetailReady slug={slug} />
       </Suspense>
     </PublicShellServer>

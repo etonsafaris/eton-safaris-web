@@ -64,7 +64,7 @@ export default function RelatedSidebar({
           <ul className="list-none px-5 text-[#343434]">
             {safeItems.map((item) => (
               <li key={item?.href} className="border-b border-[#d7e0e0] py-3 last:border-b-0">
-                <Link href={item?.href ?? '/'} className="group flex items-start gap-3">
+                <Link href={item?.href ?? '/'} prefetch className="group flex items-start gap-3">
                   <SidebarThumb src={item?.image} title={item?.title ?? ''} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-base leading-6 text-black group-hover:text-[#6aa441]">

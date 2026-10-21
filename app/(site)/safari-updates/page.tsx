@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import PublicPageLoader from '@/components/public/PublicPageLoader';
 import PublicShellServer from '@/components/public/PublicShellServer';
 import SafariUpdatesListingClient from '@/components/public/SafariUpdatesListingClient';
 import { PUBLIC_SITE_LABELS } from '@/lib/collections';
@@ -47,7 +48,7 @@ export default function SafariUpdatesPage({
   const page = Math.max(1, Number(searchParams?.page) || 1);
   return (
     <PublicShellServer>
-      <Suspense fallback={<SafariUpdatesListingClient initialPosts={[]} initialTotal={0} page={page} pageSize={PAGE_SIZE} showHero />}>
+      <Suspense fallback={<PublicPageLoader />}>
         <SafariUpdatesReady page={page} />
       </Suspense>
     </PublicShellServer>
