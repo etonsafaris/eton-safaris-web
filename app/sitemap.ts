@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { destinationPublicPath } from '@/lib/cms-routes';
-import { countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
+import { NAV_COUNTRIES, OTHER_DESTINATIONS } from '@/lib/collections';
+import { categoryMatchesCountry, countryCategoryPath, canonicalCountrySlug } from '@/lib/country-utils';
 import {
   isLanguagePost,
   pickString,
@@ -205,8 +206,13 @@ async function buildSitemapLive(): Promise<MetadataRoute.Sitemap> {
     }),
     ...(categories || []).map((row) => {
       try {
-        const country = canonicalCountrySlug(pickString(row, ['country']));
-        const path = country ? countryCategoryPath(country, row) : null;
+        const assigned =
+          canonicalCountrySlug(pickString(row, ['country'])) ||
+          [...NAV_COUNTRIES, ...OTHER_DESTINATIONS].map((item) => item.slug).find((slug) =>
+            categoryMatchesCountry(row, slug)
+          ) ||
+          '';
+        const path = assigned ? countryCategoryPath(assigned, row) : null;
         return path ? indexableRow('categories', row, path, 0.7) : null;
       } catch {
         return null;

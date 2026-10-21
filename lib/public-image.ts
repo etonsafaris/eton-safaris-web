@@ -48,6 +48,7 @@ function isKnownPublicAsset(pathname: string) {
   return (
     pathname === '/eton-safaris-gorilla.png' ||
     pathname.startsWith('/heroes/') ||
+    pathname.startsWith('/images/') ||
     pathname.startsWith('/flags/') ||
     pathname.startsWith('/eton-safaris')
   );

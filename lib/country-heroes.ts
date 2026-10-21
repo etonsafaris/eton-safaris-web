@@ -84,10 +84,12 @@ export function enrichCountryRecordForPublicPage(
   };
 }
 
-/** Destination page hero background — admin featured image only. */
+/** Destination page hero — admin featured image, then the bundled country photo. */
 export function countryHeroImage(slug?: string | null, record?: RecordRow | null): string | null {
+  const featured = countryAdminFeaturedImage(record);
+  if (featured) return featured;
   void slug;
-  return countryAdminFeaturedImage(record);
+  return '/images/official-default-safari.jpg';
 }
 
 /**

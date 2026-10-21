@@ -6,7 +6,10 @@ import { heroImageSrc } from '@/lib/responsive-image';
 
 function realHeroSrc(src: string | null | undefined) {
   const saved = resolvePublicCmsImage(src);
-  return saved ? heroImageSrc(saved, 58) : '';
+  if (saved) return heroImageSrc(saved, 58);
+  const raw = String(src || '').trim();
+  if (raw.startsWith('/images/') && /\.(jpe?g|webp|png|avif)$/i.test(raw)) return raw;
+  return '';
 }
 
 /** Keep the last decoded hero. A new photo replaces it only after that file has loaded. */

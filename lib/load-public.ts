@@ -18,6 +18,7 @@ import {
   publicCountryLabel,
   publicCountrySlug,
   recordCountryValues,
+  categoryMatchesCountry,
   recordMatchesCountrySlug,
 } from '@/lib/country-utils';
 import {
@@ -416,7 +417,7 @@ export async function loadCountryPageData(slug: string) {
   const normalized = normalizeSlug(slug);
   try {
     return await cachedPublic(
-      ['country-page-data-v29-dest-restore', normalized],
+      ['country-page-data-v30-assigned-cats', normalized],
       ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
       async () => {
         const data = await loadCountryPageDataInner(normalized);
@@ -501,13 +502,15 @@ async function loadCountryPageDataInner(
     const allCategories = await withTimeout(
       fetchCollectionPage('categories', [], {
         columns: listColumns('categories'),
-        limit: 80,
+        limit: 120,
         offset: 0,
       }),
       COUNTRY_PAGE_QUERY_MS,
       { rows: [] as RecordRow[], total: 0 }
     );
-    categoriesRaw = (allCategories.rows ?? []).filter(isPublishedRecord);
+    categoriesRaw = (allCategories.rows ?? [])
+      .filter(isPublishedRecord)
+      .filter((row) => categoryMatchesCountry(row, slug));
   }
   const countryName =
     (country ? publicCountryLabel(country, slug) : '') || countryLabelFromSlug(slug) || slug;
@@ -547,7 +550,7 @@ export async function loadCountryPageDataSynced(slug: string): Promise<CountryPa
   const normalized = normalizeSlug(slug);
   if (!normalized) return null;
   return cachedPublic(
-    ['country-page-sync-v15-dest-restore', normalized],
+    ['country-page-sync-v16-assigned-cats', normalized],
     ['collection:countries', 'collection:categories', 'collection:tours', `country:${normalized}`],
     () => loadCountryPageDataInner(normalized, { requirePublishedCountry: true }),
     PUBLIC_DETAIL_REVALIDATE_SECONDS

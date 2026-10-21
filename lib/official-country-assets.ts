@@ -34,8 +34,12 @@ export const COUNTRY_IMAGE_DIMENSIONS = {
   tourCard: { width: 640, height: 480 },
 } as const;
 
-export function officialCountryHeroPath(_slug: string) {
-  return '';
+export function officialCountryHeroPath(slug: string) {
+  const key = String(slug || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-');
+  return OFFICIAL_COUNTRY_HERO_PATHS[key] || '/images/official-default-safari.jpg';
 }
 
 export function isOfficialCountryHeroPath(_src: string) {

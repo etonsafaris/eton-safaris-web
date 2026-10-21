@@ -7,6 +7,13 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: [
           '/',
+          '/destinations',
+          '/tours',
+          '/parks',
+          '/accommodations',
+          '/explore',
+          '/safari-updates',
+          '/gallery',
           '/cms-media/',
           '/api/media/',
           '/api/public/sitemap',
@@ -29,6 +36,11 @@ export default function robots(): MetadataRoute.Robots {
           '/favicon.ico',
           '/icon-192.png',
         ],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: ['/', '/destinations', '/tours', '/parks', '/accommodations', '/explore', '/safari-updates', '/cms-media/', '/api/media/'],
+        disallow: ['/admin', '/login', '/dashboard', '/payment', '/invite', '/quote'],
       },
     ],
     // Primary + crash-proof fallbacks so Google always has a working map.

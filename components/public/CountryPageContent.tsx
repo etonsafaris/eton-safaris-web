@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { resolveCountryCategoryCardImage } from '@/lib/category-display-image';
 import AmazingSafaris from '@/components/public/AmazingSafaris';
 import Carousel from '@/components/public/Carousel';
@@ -74,10 +75,9 @@ export default function CountryPageContent({
   const [tours, setTours] = useState<RecordRow[]>(initialTours);
   const [parks, setParks] = useState<RecordRow[]>(initialParks);
   const [places, setPlaces] = useState<RecordRow[]>(initialPlaces);
-  /** Trust SSR when tours or categories arrived — avoid a second API round-trip on every click. */
-  const hasServerContent = Boolean(
-    slug && countryProp && (initialTours.length > 0 || initialCategories.length > 0)
-  );
+  /** Trust SSR only when packages arrived, so an empty tour section still recovers once. */
+  const hasServerContent = Boolean(slug && countryProp && initialTours.length > 0);
+  const router = useRouter();
   const [ready, setReady] = useState(hasServerContent || !isCountryPageShellCountry(countryProp));
 
   useEffect(() => {
@@ -87,6 +87,21 @@ export default function CountryPageContent({
     if (initialParks.length) setParks(initialParks);
     if (initialPlaces.length) setPlaces(initialPlaces);
   }, [countryProp, initialCategories, initialTours, initialParks, initialPlaces]);
+
+  useEffect(() => {
+    try {
+      for (const category of categories.slice(0, 12)) {
+        const href = countryCategoryPath(slug, category);
+        if (href) router.prefetch(href);
+      }
+      for (const tour of tours.slice(0, 12)) {
+        const tourSlug = publicRecordSlug(tour);
+        if (tourSlug) router.prefetch(`/tours/${tourSlug}`);
+      }
+    } catch {
+      /* prefetch is optional */
+    }
+  }, [categories, tours, slug, router]);
 
   useCmsPageReload(async () => {
     try {
@@ -176,7 +191,9 @@ export default function CountryPageContent({
               gap={20}
               autoPlayMs={4500}
               emptyMessage={
-                ready && categoryItems.length === 0 ? 'Safari categories for this country are loading. Refresh in a moment.' : undefined
+                ready && categoryItems.length === 0
+                  ? 'No safari categories are assigned to this country yet.'
+                  : undefined
               }
             />
           </div>
