@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { usePublicDestinations } from '@/components/public/usePublicDestinations';
-import { PUBLIC_SITE_LABELS } from '@/lib/collections';
 import { destinationPublicPath } from '@/lib/cms-routes';
 import type { PublicDestination } from '@/lib/public-destinations';
 
@@ -44,116 +43,93 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { primary, more } = usePublicDestinations();
   const homeActive = pathname === '/';
-  const eastAfricaActive = primary.some((destination) => destinationActive(pathname, destination));
+
+  const countries = [...primary, ...more];
 
   return (
-    <header className="site-header relative">
-      <Link href="/" className="site-header-logo shrink-0">
-        <BrandLogo size={52} />
-      </Link>
+    <header className="site-header">
+      <div className="site-header-utility">
+        <p>Safaris planned in Uganda, Kenya, Tanzania, and Rwanda</p>
+        <Link href="/request-a-quote" className="site-header-plan">
+          Plan a route
+        </Link>
+      </div>
 
-      <nav className="hidden items-center lg:flex">
-        <Link href="/" prefetch={true} className={navClass(homeActive)}>
-          Home
+      <div className="site-header-brandrow">
+        <Link href="/" className="site-header-logo shrink-0">
+          <BrandLogo size={52} />
         </Link>
-        {primary.length > 0 ? (
-          <div className={`site-nav-item${eastAfricaActive ? ' is-active' : ''}`}>
-            {PUBLIC_SITE_LABELS.eastAfrica}
-            <div className="site-nav-dropdown">
-              {primary.map((destination) => (
-                <Link
-                  key={destination.slug}
-                  href={destinationPublicPath(destination.slug)}
-                  prefetch
-                  className="site-nav-dropdown-item"
-                >
-                  <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {more.length > 0 ? (
-          <div className="site-nav-item">
-            {PUBLIC_SITE_LABELS.moreGetaways}
-            <div className="site-nav-dropdown">
-              {more.map((destination) => (
-                <Link
-                  key={destination.slug}
-                  href={destinationPublicPath(destination.slug)}
-                  prefetch
-                  className="site-nav-dropdown-item"
-                >
-                  <Flag iso={destination.iso} name={destination.name} large /> {destination.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        <Link href="/safari-updates" prefetch className={navClass(pathname.startsWith('/safari-updates'))}>
-          {PUBLIC_SITE_LABELS.blogPosts}
-        </Link>
-        <Link href="/gallery" prefetch className={navClass(pathname.startsWith('/gallery'))}>
-          Gallery
-        </Link>
-        <Link href="/community" prefetch className={navClass(pathname.startsWith('/community'))}>
-          Community
-        </Link>
-        <Link href="/contact-us" prefetch className={navClass(pathname.startsWith('/contact'))}>
-          {PUBLIC_SITE_LABELS.getInTouch}
-        </Link>
-      </nav>
 
-      <div className="flex items-center gap-2 lg:hidden">
-        <Link href="/contact-us" className="px-2 py-2 text-base text-[#222]">
-          {PUBLIC_SITE_LABELS.getInTouch}
-        </Link>
-        <button type="button" className="rounded-md p-2 text-[#222]" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu">
+        <nav className="hidden items-center lg:flex" aria-label="Primary">
+          <Link href="/" prefetch className={navClass(homeActive)}>
+            Home
+          </Link>
+          <Link href="/tours" prefetch className={navClass(pathname.startsWith('/tours'))}>
+            Routes
+          </Link>
+          <Link href="/safari-updates" prefetch className={navClass(pathname.startsWith('/safari-updates'))}>
+            Field notes
+          </Link>
+          <Link href="/gallery" prefetch className={navClass(pathname.startsWith('/gallery'))}>
+            Gallery
+          </Link>
+          <Link href="/community" prefetch className={navClass(pathname.startsWith('/community'))}>
+            Community
+          </Link>
+          <Link href="/contact-us" prefetch className={navClass(pathname.startsWith('/contact'))}>
+            Desk
+          </Link>
+        </nav>
+
+        <button
+          type="button"
+          className="rounded-md p-2 text-[#1c1915] lg:hidden"
+          onClick={() => setOpen((value) => !value)}
+          aria-label="Toggle menu"
+        >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full space-y-1 border-t border-gray-100 bg-white px-4 py-4 text-base shadow-md lg:hidden">
+      <nav className="site-header-rail" aria-label="Destinations">
+        {countries.map((destination) => (
+          <Link
+            key={destination.slug}
+            href={destinationPublicPath(destination.slug)}
+            prefetch
+            className={`site-rail-link${destinationActive(pathname, destination) ? ' is-active' : ''}`}
+          >
+            <Flag iso={destination.iso} name={destination.name} />
+            {destination.name}
+          </Link>
+        ))}
+      </nav>
+
+      {open ? (
+        <div className="space-y-1 border-t border-[#d9d2c5] bg-[#f6f1e8] px-5 py-4 text-base lg:hidden">
           <Link href="/" className="block py-2" onClick={() => setOpen(false)}>
             Home
           </Link>
-          {primary.length > 0 ? <p className="pt-2 text-base">{PUBLIC_SITE_LABELS.eastAfrica}</p> : null}
-          {primary.map((destination) => (
-            <Link
-              key={destination.slug}
-              href={destinationPublicPath(destination.slug)}
-              className="flex items-center gap-2 py-1 pl-2"
-              onClick={() => setOpen(false)}
-            >
-              <Flag iso={destination.iso} name={destination.name} /> {destination.name}
-            </Link>
-          ))}
-          {more.length > 0 ? <p className="pt-2 text-base">{PUBLIC_SITE_LABELS.moreGetaways}</p> : null}
-          {more.map((destination) => (
-            <Link
-              key={destination.slug}
-              href={destinationPublicPath(destination.slug)}
-              className="flex items-center gap-2 py-1 pl-2"
-              onClick={() => setOpen(false)}
-            >
-              <Flag iso={destination.iso} name={destination.name} /> {destination.name}
-            </Link>
-          ))}
-          <Link href="/safari-updates" className="block py-1" onClick={() => setOpen(false)}>
-            {PUBLIC_SITE_LABELS.blogPosts}
+          <Link href="/tours" className="block py-2" onClick={() => setOpen(false)}>
+            Routes
           </Link>
-          <Link href="/gallery" className="block py-1" onClick={() => setOpen(false)}>
+          <Link href="/safari-updates" className="block py-2" onClick={() => setOpen(false)}>
+            Field notes
+          </Link>
+          <Link href="/gallery" className="block py-2" onClick={() => setOpen(false)}>
             Gallery
           </Link>
-          <Link href="/community" className="block py-1" onClick={() => setOpen(false)}>
+          <Link href="/community" className="block py-2" onClick={() => setOpen(false)}>
             Community
           </Link>
-          <Link href="/contact-us" className="block py-1" onClick={() => setOpen(false)}>
-            {PUBLIC_SITE_LABELS.getInTouch}
+          <Link href="/contact-us" className="block py-2" onClick={() => setOpen(false)}>
+            Desk
+          </Link>
+          <Link href="/request-a-quote" className="block py-2" onClick={() => setOpen(false)}>
+            Plan a route
           </Link>
         </div>
-      )}
+      ) : null}
     </header>
   );
 }

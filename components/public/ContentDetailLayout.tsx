@@ -37,16 +37,17 @@ export default function ContentDetailLayout({
           items={items}
         />
       )}
-      <section className="bg-white">
-        <div className="relative grid grid-cols-1 items-start gap-3 px-5 py-5 lg:grid-cols-4">
-          <article data-content-article className="min-w-0 lg:col-span-3 lg:pl-[30px] lg:pr-[50px]">
-            {children}
-          </article>
+      <section className="bg-[#f6f1e8]">
+        <article data-content-article className="mx-auto min-w-0 max-w-3xl px-5 py-10 md:px-8">
+          {children}
+        </article>
+        <div className="border-t border-[#d9d2c5] px-5 py-8 md:px-8">
           <FitRelatedSidebar
             title={sidebarTitle}
             items={sidebarItems}
             countryName={country}
             alwaysShow={sidebarAlways}
+            layout="rail"
           />
         </div>
       </section>

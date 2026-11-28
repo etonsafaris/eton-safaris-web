@@ -9,6 +9,8 @@ import {
   queryAdminTablePage,
 } from '@/lib/admin-paginated-list';
 import { bustAdminCountsCache } from '@/lib/admin-counts-server-cache';
+import { indexNowPathsForRecord, notifyIndexNow } from '@/lib/indexnow';
+import { isPublishedRecord } from '@/lib/data-server-browser';
 import { revalidatePublicCms } from '@/lib/revalidate-public-cms';
 import { formatDatabaseErrorMessage } from '@/lib/database-error-message';
 import { isPgTooManyClientsError } from '@/lib/pg-retry';
@@ -215,11 +217,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'A record payload is required' }, { status: 400 });
     }
     if (table === 'tours') await ensureTourPostTypeColumn();
-  if (table === 'gallery') await ensureGalleryTable();
+    if (table === 'gallery') await ensureGalleryTable();
     const result = await saveWithColumnFallback(table, body.payload, body.id);
     if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
+    const saved = { ...body.payload, ...(result.data?.[0] || {}) } as RecordRow;
     bustAdminCountsCache();
-    revalidatePublicCms(table, { ...body.payload, ...(result.data?.[0] || {}) });
+    revalidatePublicCms(table, saved);
+    const isUpdate = body.id != null && body.id !== '';
+    if (isPublishedRecord(saved) || isUpdate) {
+      void notifyIndexNow(indexNowPathsForRecord(table, saved));
+    }
     return NextResponse.json({ data: jsonSafeRows(result.data || []) });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not save record' }, { status: 500 });
@@ -246,6 +253,11 @@ export async function DELETE(request: Request) {
     // Prefer service role so admins can delete bookings even when RLS blocks anon/auth deletes.
     const client = createAdminClient();
     const names = TABLE_ALIASES[table] || [table];
+    let existing: RecordRow | null = null;
+    for (const name of names) {
+      existing = await queryAdminRecordById(name, id);
+      if (existing) break;
+    }
     let lastMessage = '';
 
     for (const name of names) {
@@ -262,6 +274,7 @@ export async function DELETE(request: Request) {
       if (!removed.error) {
         bustAdminCountsCache();
         revalidatePublicCms(table);
+        void notifyIndexNow(indexNowPathsForRecord(table, existing));
         return NextResponse.json({ ok: true, table: name, id });
       }
       // Some tables use uuid/text ids — retry as-is already; try numeric only if it parses.
@@ -271,6 +284,7 @@ export async function DELETE(request: Request) {
         if (!numeric.error) {
           bustAdminCountsCache();
           revalidatePublicCms(table);
+          void notifyIndexNow(indexNowPathsForRecord(table, existing));
           return NextResponse.json({ ok: true, table: name, id });
         }
         lastMessage = isRlsError(numeric.error.message)

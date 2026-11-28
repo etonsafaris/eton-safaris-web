@@ -91,18 +91,19 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
 
   return (
     <PublicShellServer>
-      <section className="relative flex h-[min(58svh,560px)] min-h-[320px] flex-col items-center justify-center overflow-hidden bg-[#e4efe6] text-white">
-        <FastCoverImage src={heroImage} alt="Contact Us" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/25" />
-        <h1
-          className="relative z-10 mx-auto max-w-[75%] text-center font-merry text-[32px] font-semibold italic md:text-[40px]"
-          style={{ textShadow: '0 0 20px #000' }}
-        >
-          Start Planning your trip
-        </h1>
-        <p className="relative z-10 mt-2 text-center text-base text-white" style={{ textShadow: '0 0 12px #000' }}>
-          Arrange your dream holiday at the comfort of your home
-        </p>
+      <section className="grid bg-[#f6f1e8] lg:grid-cols-2">
+        <div className="flex flex-col justify-center px-6 py-12 md:px-12">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#8a5a2b]">Wakiso desk</p>
+          <h1 className="mt-3 font-serif text-4xl font-medium leading-tight text-[#1c1915] md:text-5xl">
+            Write the dates. We draw the route.
+          </h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-[#3f3830]">
+            Phone, WhatsApp, or the form below. The same desk confirms permits, lodges, and the vehicle.
+          </p>
+        </div>
+        <div className="relative min-h-[280px]">
+          <FastCoverImage src={heroImage} alt="" />
+        </div>
       </section>
 
       <section className="bg-[#f5f5f5] px-4 pb-[30px] pt-2.5 md:px-[50px]">
@@ -204,14 +205,14 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
 
             <div className="mt-8 w-full p-2.5 md:mt-0 md:max-w-[300px]">
               <div className="flex gap-2 pb-3">
-                <Clock className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
+                <Clock className="h-[26px] w-[26px] shrink-0 text-[#8a5a2b]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Office Hours</h5>
                   <p className="pl-2.5 text-base text-[#343434]">Monday - Sunday: Open 24hours</p>
                 </div>
               </div>
               <div className="flex gap-2 pb-3">
-                <MapPin className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
+                <MapPin className="h-[26px] w-[26px] shrink-0 text-[#8a5a2b]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Address</h5>
                   <p className="pl-2.5 text-base text-[#343434]">
@@ -220,7 +221,7 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                 </div>
               </div>
               <div className="flex gap-2 pb-3">
-                <Phone className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
+                <Phone className="h-[26px] w-[26px] shrink-0 text-[#8a5a2b]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Contacts</h5>
                   <PublicContactLines
@@ -228,12 +229,12 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                     emails={[]}
                     className="pl-2.5 text-base"
                     rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
-                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#8a5a2b]"
                   />
                 </div>
               </div>
               <div className="flex gap-2 pb-3">
-                <Mail className="h-[26px] w-[26px] shrink-0 text-[#f15d30]" />
+                <Mail className="h-[26px] w-[26px] shrink-0 text-[#8a5a2b]" />
                 <div>
                   <h5 className="text-xl font-medium text-black/80">Our Email Address</h5>
                   <PublicContactLines
@@ -241,7 +242,7 @@ export default function ContactPageClient({ heroImage = '' }: { heroImage?: stri
                     emails={emailItems}
                     className="pl-2.5 text-base"
                     rowClassName="flex items-center gap-2 hover:text-[#5bc787]"
-                    iconClassName="h-4 w-4 shrink-0 text-[#f15d30]"
+                    iconClassName="h-4 w-4 shrink-0 text-[#8a5a2b]"
                   />
                 </div>
               </div>

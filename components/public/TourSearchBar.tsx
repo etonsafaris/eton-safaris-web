@@ -144,7 +144,7 @@ export default function TourSearchBar({
 
     <div className={`relative z-20 ${className}`}>
 
-      <div className="mx-auto max-w-[1100px] bg-white px-5 py-5 shadow-xl md:px-8 md:py-6">
+      <div className="mx-auto max-w-[1100px] border border-[#1c1915] bg-[#f6f1e8] px-5 py-5 md:px-8 md:py-6">
 
         <form onSubmit={submit} className="grid grid-cols-1 items-end gap-3 md:grid-cols-4 md:gap-4">
 

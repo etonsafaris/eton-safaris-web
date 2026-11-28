@@ -44,26 +44,28 @@ export default function RelatedSidebar({
   countryName = '',
   showExpert = true,
   alwaysShow = false,
+  layout = 'stack',
 }: {
   title: string;
   items: RelatedSidebarItem[];
   countryName?: string;
   showExpert?: boolean;
   alwaysShow?: boolean;
+  layout?: 'stack' | 'rail';
 }) {
   const safeItems = (items ?? []).filter((item) => item?.href);
   const showList = safeItems.length > 0 || alwaysShow;
 
   return (
-    <aside className="lg:col-span-1 lg:self-start">
+    <aside className={layout === 'rail' ? 'mx-auto max-w-6xl' : 'lg:col-span-1 lg:self-start'}>
       {showList ? (
-        <div className="rounded-[20px] bg-[#edf2f2] p-2.5">
-          <div className="p-2.5">
-            <h2 className="mb-0 text-[28px] font-normal italic leading-[1.2] text-[#6aa441]">{title}</h2>
+        <div className={layout === 'rail' ? '' : 'rounded-[20px] bg-[#edf2f2] p-2.5'}>
+          <div className={layout === 'rail' ? 'mb-4' : 'p-2.5'}>
+            <h2 className={layout === 'rail' ? 'font-serif text-2xl text-[#1c1915]' : 'mb-0 text-[28px] font-normal italic leading-[1.2] text-[#6aa441]'}>{title}</h2>
           </div>
-          <ul className="list-none px-5 text-[#343434]">
+          <ul className={layout === 'rail' ? 'grid list-none gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'list-none px-5 text-[#343434]'}>
             {safeItems.map((item) => (
-              <li key={item?.href} className="border-b border-[#d7e0e0] py-3 last:border-b-0">
+              <li key={item?.href} className={layout === 'rail' ? 'border border-[#d9d2c5] bg-white p-3' : 'border-b border-[#d7e0e0] py-3 last:border-b-0'}>
                 <Link href={item?.href ?? '/'} prefetch className="group flex items-start gap-3">
                   <SidebarThumb src={item?.image} title={item?.title ?? ''} />
                   <span className="min-w-0 flex-1">

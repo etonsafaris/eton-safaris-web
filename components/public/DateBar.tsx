@@ -9,7 +9,7 @@ export default function DateBar() {
   });
 
   return (
-    <div className="bg-forest px-4 py-2 text-center text-xs text-white md:text-sm">
+    <div className="border-b border-[#d9d2c5] bg-[#f6f1e8] px-4 py-2 text-left text-xs uppercase tracking-[0.16em] text-[#5c564e] md:text-sm">
       <span className="inline-flex items-center justify-center gap-2">
         <Calendar className="h-3.5 w-3.5 text-sage" />
         {label}

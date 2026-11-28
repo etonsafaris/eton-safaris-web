@@ -13,12 +13,14 @@ export default function FitRelatedSidebar({
   countryName = '',
   articleSelector = '[data-content-article]',
   alwaysShow = false,
+  layout = 'stack',
 }: {
   title: string;
   items: RelatedSidebarItem[];
   countryName?: string;
   articleSelector?: string;
   alwaysShow?: boolean;
+  layout?: 'stack' | 'rail';
 }) {
   const measureRef = useRef<HTMLDivElement>(null);
   const safeItems = useMemo(() => items ?? [], [items]);
@@ -28,8 +30,8 @@ export default function FitRelatedSidebar({
     function measure() {
       if (typeof window === 'undefined') return;
       // Mobile: stack layout — show a modest list
-      if (window.matchMedia('(max-width: 1023px)').matches) {
-        setVisibleItems(safeItems.slice(0, 6));
+      if (layout === 'rail' || window.matchMedia('(max-width: 1023px)').matches) {
+        setVisibleItems(safeItems.slice(0, layout === 'rail' ? 3 : 6));
         return;
       }
 
@@ -71,7 +73,7 @@ export default function FitRelatedSidebar({
       ro?.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [safeItems, articleSelector]);
+  }, [safeItems, articleSelector, layout]);
 
   return (
     <>
@@ -102,7 +104,13 @@ export default function FitRelatedSidebar({
           </ul>
         </div>
       </div>
-      <RelatedSidebar title={title} items={visibleItems} countryName={countryName} alwaysShow={alwaysShow} />
+      <RelatedSidebar
+        title={title}
+        items={visibleItems}
+        countryName={countryName}
+        alwaysShow={alwaysShow}
+        layout={layout}
+      />
     </>
   );
 }

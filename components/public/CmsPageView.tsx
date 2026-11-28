@@ -54,7 +54,7 @@ function AboutStory({
         {blocks.map((block, index) => {
           const copy = toHtml(block.description);
           return (
-            <div key={`${block.title}-${index}`} className="grid items-start gap-6 md:grid-cols-2">
+            <div key={`${block.title}-${index}`} className="border-t border-[#d9d2c5] pt-8">
               {block.image_url ? (
                 <ResponsiveImage
                   src={block.image_url}
@@ -62,12 +62,12 @@ function AboutStory({
                   variant="hero"
                   width={720}
                   height={480}
-                  className="h-[240px] w-full rounded-xl object-cover md:h-[280px]"
+                  className="mb-5 h-[220px] w-full object-cover md:h-[320px]"
                 />
               ) : null}
               <div className={block.image_url ? '' : 'md:col-span-2'}>
                 {block.title ? (
-                  <h2 className="font-merry text-[28px] font-semibold italic text-[#111] md:text-[32px]">{block.title}</h2>
+                  <h2 className="font-serif text-3xl font-medium text-[#1c1915]">{block.title}</h2>
                 ) : null}
                 {copy ? <PublicHtml className="public-prose mt-4 max-w-none" html={copy} /> : null}
               </div>
@@ -184,17 +184,17 @@ export default function CmsPageView({
             </div>
           </div>
         </section>
-        <section className="bg-forest py-16 text-center text-white">
+        <section className="border-y border-[#1c1915] bg-[#f6f1e8] py-16 text-left text-[#1c1915]">
           <div className="mx-auto max-w-3xl px-4">
             <Heart className="mx-auto h-8 w-8 text-sage" />
             <h2 className="mt-4 font-serif text-3xl font-bold">Travel With Purpose</h2>
-            <p className="mt-4 text-sm leading-relaxed text-white/90">
+            <p className="mt-4 text-sm leading-relaxed text-[#3f3830]">
               When you book a safari with Eton Safaris, you&apos;re not just embarking on an adventure — you&apos;re
               supporting communities, conservation, and a more sustainable future for Africa.
             </p>
             <Link
               href={ctaHref}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-moss px-6 py-3 text-xs font-semibold uppercase tracking-wide text-white hover:bg-[#4a6b3a]"
+              className="mt-8 inline-flex items-center gap-2 border border-[#1c1915] px-6 py-3 text-xs uppercase tracking-[0.16em] text-[#1c1915] hover:bg-[#1c1915] hover:text-[#f6f1e8]"
             >
               {ctaLabel} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -208,7 +208,7 @@ export default function CmsPageView({
     return (
       <PublicShell>
         <PageHero title={title} image={image} variant="about" published={published} />
-        <section className="bg-white px-4 py-14 text-[#222] md:px-8 md:py-16">
+        <section className="bg-[#f6f1e8] px-4 py-14 text-[#1c1915] md:px-8 md:py-16">
           <div className="mx-auto max-w-[1100px]">
             <AboutStory blocks={blocks} html={html} videoUrl={videoUrl} image={image} />
             <DestinationChips names={destinations} tone="light" />
@@ -230,7 +230,7 @@ export default function CmsPageView({
   return (
     <PublicShell>
       <PageHero title={title} subtitle={subtitle} image={image} published={published} />
-      <section className="bg-white px-4 py-14 text-[#222] md:py-16">
+      <section className="bg-[#f6f1e8] px-4 py-14 text-[#1c1915] md:py-16">
         <div className="mx-auto max-w-3xl">
           {html ? (
             <PublicHtml

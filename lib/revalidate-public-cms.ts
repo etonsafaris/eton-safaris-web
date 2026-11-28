@@ -2,7 +2,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { CMS_PUBLIC_CACHE_TAG } from '@/lib/cms-public-cache';
 import { pagePublicPath } from '@/lib/cms-routes';
 
-function publicPathForSavedRow(table: string, payload?: Record<string, unknown> | null): string | null {
+export function publicPathForSavedRow(table: string, payload?: Record<string, unknown> | null): string | null {
   const slug = String(payload?.slug || payload?.seo_slug || '')
     .trim()
     .replace(/^\/+|\/+$/g, '');
@@ -40,6 +40,15 @@ function pagePaths(slug: string): string[] {
   if (key.includes('privacy')) paths.add('/privacy-policies');
   if (key.includes('agency')) paths.add('/tours-and-travel-agency');
   return [...paths];
+}
+
+export function publicPathsForSavedRow(table: string, payload?: Record<string, unknown> | null): string[] {
+  const slug = String(payload?.slug || payload?.seo_slug || '')
+    .trim()
+    .replace(/^\/+|\/+$/g, '');
+  if (table === 'pages') return pagePaths(slug);
+  const path = publicPathForSavedRow(table, payload);
+  return path ? [path] : [];
 }
 
 /** Drop the public CMS cache so admin edits show on the live site. */

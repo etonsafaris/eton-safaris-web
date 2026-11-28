@@ -46,8 +46,8 @@ function ForestMetaItem({
     <div className="flex items-center gap-2">
       <Icon className={`h-4 w-4 shrink-0 md:h-5 md:w-5 ${accent ? 'text-[#7dce6a]' : 'text-sage'}`} />
       <div className="min-w-0">
-        <p className="text-[9px] uppercase tracking-wide text-white/50 md:text-[10px]">{label}</p>
-        <p className={`text-xs font-bold md:text-sm ${accent ? 'text-[#7dce6a]' : 'text-white'}`}>{value}</p>
+        <p className="text-[9px] uppercase tracking-[0.14em] text-[#8a5a2b] md:text-[10px]">{label}</p>
+        <p className="text-xs font-medium text-[#1c1915] md:text-sm">{value}</p>
       </div>
     </div>
   );
@@ -84,19 +84,11 @@ export default function PageHero({
   const customWithPublished = customItems.some((item) => /^published$/i.test(item.label))
     ? customItems
     : [...customItems, { label: 'Published', value: publishedLabel }];
-  const showForestBar = true;
-  const fullViewportHero = isTour || isCountry || isUpdate || isPark;
-  const titleClass = src ? 'text-white' : 'text-[#1a3a2a]';
-  const titleShadow = src ? ({ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' } as const) : undefined;
+  const titleClass = 'text-[#1c1915]';
+  const titleShadow = undefined;
 
   const heroImage = (
-    <section
-      className={`relative w-full overflow-hidden bg-[#e4efe6] ${
-        fullViewportHero && showForestBar
-          ? 'min-h-0 flex-1'
-          : 'h-[min(58svh,560px)] min-h-[320px]'
-      }`}
-    >
+    <section className="relative h-full min-h-[320px] w-full overflow-hidden bg-[#e4efe6] lg:min-h-[68vh]">
       <FastCoverImage src={src} alt={title ?? ''} />
       {/* Dark wash only when a photo is present — empty heroes must not black out. */}
       {src ? (
@@ -190,7 +182,7 @@ export default function PageHero({
         }`}
       >
         <div className={isTour ? 'min-w-0 flex-1 md:max-w-[55%]' : 'min-w-0'}>
-          <PageBreadcrumbs currentTitle={title} tone="forest" truncateCurrent={isTour} />
+          <PageBreadcrumbs currentTitle={title} tone="light" truncateCurrent={isTour} />
         </div>
         <div
           className={`flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 md:gap-8 ${
@@ -243,17 +235,21 @@ export default function PageHero({
   return (
     <>
       <PageFavicon title={title} />
-      {showForestBar ? (
-        <div className={fullViewportHero ? 'flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] flex-col' : ''}>
+      <section className="grid bg-[#f6f1e8] lg:grid-cols-2">
+        <div className="eton-split-hero min-h-[320px] lg:min-h-[68vh] [&_a]:hidden [&_h1]:hidden [&_p]:hidden">
           {heroImage}
-          {forestMeta}
         </div>
-      ) : (
-        <>
-          {heroImage}
-          <PageBreadcrumbs currentTitle={title} />
-        </>
-      )}
+        <div className="flex flex-col justify-center px-6 py-10 md:px-12">
+          {backHref ? (
+            <Link href={backHref} className="mb-4 text-xs uppercase tracking-[0.16em] text-[#5c564e] hover:text-[#1c1915]">
+              ← {backLabel || 'Back'}
+            </Link>
+          ) : null}
+          <h1 className="font-serif text-4xl font-medium leading-[1.05] text-[#1c1915] md:text-5xl">{title}</h1>
+          {subtitle ? <p className="mt-4 max-w-md text-base leading-relaxed text-[#5c564e]">{subtitle}</p> : null}
+          <div className="eton-hero-facts mt-8">{forestMeta}</div>
+        </div>
+      </section>
     </>
   );
 }

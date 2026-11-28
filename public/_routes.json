@@ -2,5 +2,5 @@
   "version": 1,
   "description": "Route all paths through the Worker (OpenNext). Prevents a static index.html from winning over Next.js.",
   "include": ["/*"],
-  "exclude": ["/_next/static/*", "/favicon.ico", "/robots.txt", "/sitemap.xml"]
+  "exclude": ["/_next/static/*", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/4fb8b965eb174c3bb8b142a8c2dc4096.txt"]
 }

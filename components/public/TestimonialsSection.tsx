@@ -75,14 +75,14 @@ export default function TestimonialsSection() {
             {Array.from({ length: 5 }).map((_, starIndex) => (
               <Star
                 key={starIndex}
-                className={`h-4 w-4 ${starIndex < Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`}
+                className={`h-4 w-4 ${starIndex < Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-[#1c1915]/20'}`}
               />
             ))}
           </span>
         </div>
-        <p className="text-sm leading-relaxed text-white/80 md:text-base">&ldquo;{content}&rdquo;</p>
+        <p className="text-sm leading-relaxed text-[#3f3830] md:text-base">&ldquo;{content}&rdquo;</p>
         <div className="mt-6 space-y-1">
-          <p className="font-semibold text-white">{author}</p>
+          <p className="font-semibold text-[#1c1915]">{author}</p>
           {website ? (
             <p className="text-xs uppercase tracking-widest text-sage">
               {country ? country : 'Country of residence not provided'}
@@ -92,11 +92,11 @@ export default function TestimonialsSection() {
               {country ? (
                 <p className="text-xs uppercase tracking-widest text-sage">{country}</p>
               ) : null}
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{source}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#8a5a2b]">{source}</p>
             </>
           )}
           {href ? (
-            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-white/50">View on {source} →</p>
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#8a5a2b]">View on {source} →</p>
           ) : null}
         </div>
       </>
@@ -129,11 +129,11 @@ export default function TestimonialsSection() {
   }
 
   return (
-    <section className="bg-forest py-14 text-white md:py-20">
+    <section className="border-y border-[#d9d2c5] bg-[#f6f1e8] py-14 text-[#1c1915] md:py-20">
       <div className="mx-auto max-w-[900px] px-4 md:px-6">
-        <div className="mb-8 text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-sage">Testimonials</p>
-          <h2 className="font-serif text-2xl font-bold md:text-3xl">What Our Clients Say</h2>
+        <div className="mb-8 border-l-2 border-[#1c1915] pl-4 text-left">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a2b]">From the road</p>
+          <h2 className="font-serif text-2xl font-medium md:text-3xl">Notes from travellers</h2>
         </div>
         {platforms.length ? (
           <div className="mb-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
@@ -145,7 +145,7 @@ export default function TestimonialsSection() {
                   href={platform.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-3 text-white hover:text-white"
+                  className="inline-flex items-center gap-3 text-[#1c1915] hover:text-[#8a5a2b]"
                   title={`${label} Reviews`}
                   aria-label={`${label} Reviews, 4.9 out of 5`}
                 >

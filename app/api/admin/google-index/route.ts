@@ -9,6 +9,7 @@ import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session-cookie';
 import { applyAutoIndexSeo, collectionIdToTable } from '@/lib/auto-index-seo';
 import { getCollection } from '@/lib/collections';
 import { publicRecordSlug } from '@/lib/data';
+import { notifyIndexNow } from '@/lib/indexnow';
 import { indexableContentKindForTable } from '@/lib/public-indexing';
 import { requireAdminUser } from '@/lib/require-admin';
 import { packSeoSettings, seoValuesFromRecord } from '@/lib/seo';
@@ -180,6 +181,8 @@ export async function POST(request: Request) {
     revalidateTag(CMS_PUBLIC_CACHE_TAG);
     revalidatePath('/', 'layout');
     revalidatePath('/sitemap.xml');
+    const publicPath = publicPathForRecord(collectionId, saved);
+    if (publicPath) void notifyIndexNow([publicPath]);
 
     return NextResponse.json({
       ok: true,

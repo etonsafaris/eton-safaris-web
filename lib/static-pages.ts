@@ -55,20 +55,18 @@ export const STATIC_PAGES: Record<string, StaticPageCopy> = {
   'about-us': {
     title: 'About Us',
     slug: 'about-us',
-    content: `<h4>Who We are</h4>
-<p>Eton Safaris was established by native professionals in Uganda after gathering the skills and experience to run safaris and holidays. Our idea is to offer tours and travel services to guests throughout East Africa. Eton Safaris is a fully legally licensed company with operational offices in Wakiso, Uganda. We offer tours and travel, hotel booking, chimpanzee and gorilla trekking, beach holidays, flight tickets, and transport in Uganda, Kenya, Tanzania, Zanzibar, and Rwanda.</p>
-<h4>What We do</h4>
-<p>Tours and Travel Agency based in Uganda rendering mountain gorilla trekking, birding, and wildlife safaris doubled with mountaineering, white water rafting, and culture and community tours. We pride ourselves in convenient safaris based on budget, time, and travel needs.</p>
-<p>Mountain gorilla trekking in Uganda and Rwanda, wildebeest migration in Tanzania and Kenya, Rwenzori and Kilimanjaro hiking, and white water rafting on the Nile. Services run year-round, with the best windows December to January and June to August.</p>`,
+    content: `<h4>The desk</h4>
+<p>Eton Safaris is the Wakiso desk that draws private routes for people who would rather skip a catalogue itinerary. The company is licensed in Uganda. One planner holds the vehicle, the guide, the lodge, and the permit.</p>
+<h4>How a route is built</h4>
+<p>Dates, group size, and the pace of the days come first. The route then takes shape across Uganda, Kenya, Tanzania, or Rwanda, with the same vehicle and guide for the road portion.</p>`,
   },
   'tours-and-travel-agency': {
     title: 'Tours and Travel Agency',
     slug: 'tours-and-travel-agency',
-    content: `<h4>Uganda tours and travel agency</h4>
-<p>Eton Safaris is a tours and travel agency based in Uganda, arranging mountain gorilla trekking, chimpanzee tracking, birding, wildlife safaris, mountaineering, white water rafting, and culture and community tours across East Africa.</p>
-<p>We design tailor-made itineraries for budget, mid-range, and luxury travellers, with experienced native guides and a maintained safari fleet. Services include hotel booking, park permits, ground transport, and flight ticket support.</p>
-<h4>What we book</h4>
-<p>Gorilla and chimpanzee permits in Uganda and Rwanda, wildebeest migration safaris in Kenya and Tanzania, Rwenzori and Kilimanjaro hiking, Nile rafting, beach add-ons, and lodge or tented-camp stays.</p>`,
+    content: `<h4>A route, not a package list</h4>
+<p>Eton Safaris writes one itinerary at a time from Wakiso. Gorilla permits, crater drives, lake nights, and the vehicle are booked against your dates, not against a fixed departure calendar.</p>
+<h4>What the desk confirms</h4>
+<p>Park permits in Uganda and Rwanda, migration weeks in Kenya and Tanzania, climbs, rafting on the Nile when you want it, and the lodge or tented camp named in the route.</p>`,
   },
   'contact-us': {
     title: 'Contact Us',

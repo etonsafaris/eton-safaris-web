@@ -29,7 +29,7 @@ export default function SpeakToExpertCard({
     return (
       <aside className={`bg-[#f8f9fa] px-5 py-[17px] ${className}`}>
         <h2 className="mb-3 text-center font-merry text-[1.4rem] font-medium italic leading-snug text-[#343434]">
-          Speak to an expert who&apos;s there
+          The Wakiso desk is on this trip
         </h2>
         <div className="flex items-start">
           <img
@@ -77,7 +77,7 @@ export default function SpeakToExpertCard({
   return (
     <aside className={`border border-gray-100 bg-white p-5 shadow-card ${className || 'rounded-xl'}`}>
       <img src={SITE_LOGO} alt={SITE.name} width={224} height={56} loading="lazy" decoding="async" className="mx-auto mb-3 h-14 w-auto object-contain" />
-      <h3 className="mb-0.5 text-center font-serif text-sm font-bold text-[#333]">Speak to an Expert</h3>
+      <h3 className="mb-0.5 text-left font-serif text-sm font-medium text-[#1c1915]">Wakiso desk</h3>
       <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-widest text-sage">
         We&apos;re here to help
       </p>

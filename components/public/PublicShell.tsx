@@ -31,7 +31,7 @@ export default function PublicShell({
   return (
     <PublicChromeContext.Provider value={true}>
       <PublicDestinationsProvider initialDestinations={navDestinations}>
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-[#f6f1e8]">
           <PageFavicon />
           <PublicNavPrefetch />
           <PublicRouteProgress />

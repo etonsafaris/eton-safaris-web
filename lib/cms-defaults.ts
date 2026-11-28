@@ -48,13 +48,11 @@ function seoTitle(pageTitle: string) {
   return `${pageTitle} - ${BRAND_TITLE_SUFFIX}`;
 }
 
-const ABOUT_WHO = `<p>Eton Safaris was established by native professionals in Uganda after gathering the skills and experience to run safaris and holidays. Our idea is to offer tours and travel services to guests throughout East Africa. Eton Safaris is a fully legally licensed company with operational offices in Wakiso, Uganda. We offer a variety of services ranging from tours and travel, hotel booking, chimpanzee and gorilla trekking safaris, beach holidays, flight tickets, and transport — majorly in Uganda, Kenya, Tanzania, Zanzibar, and Rwanda.</p>`;
+const ABOUT_WHO = `<p>Eton Safaris is the Wakiso desk that draws private routes for people who would rather skip a catalogue itinerary. The company is licensed in Uganda. One planner holds the vehicle, the guide, the lodge, and the permit, and stays reachable until the group is home.</p>`;
 
-const ABOUT_WHAT = `<p>Tours and Travel Agency based in Uganda rendering mountain gorilla trekking, birding, and wildlife safaris doubled with mountaineering, white water rafting, and culture and community tours across Uganda and East Africa. We pride ourselves in convenient safaris based on guest requests for budget, time, and travel needs.</p>
-<p>Mountain gorilla trekking in Uganda and Rwanda, wildebeest migration in Tanzania and Kenya, Rwenzori and Kilimanjaro hiking, and white water rafting on the Nile. Our safari guides and mechanically sound fleet make the journey a lifetime experience. Services run year-round, with the best windows December to January and June to August.</p>
-<p><strong>Outbound travels</strong>: Our team also offers outbound travel — flight tickets, overseas hotel booking, and safaris in Europe, Asia, the Middle East, and North America — plus travel advisory.</p>
-<p>Give back to the community. Be part of our help-the-needy campaign by booking your safari with us or donating directly. We partner with community programmes supporting orphans, children from impoverished families, and street children with safer education. Community outreach also works with older people and HIV/AIDS women groups on food, clothing, and shelter.</p>
-<p>Eton Safaris partners with accommodation countrywide at every level: bed space, tented camps, homestays, lodges, cottages, hotels, and motels for budget, mid-range, and luxury guests.</p>`;
+const ABOUT_WHAT = `<p>A trip starts from dates, the size of the group, and how you want the days to feel. From that brief the route is drawn across Uganda, Kenya, Tanzania, or Rwanda: gorilla time in Bwindi or Volcanoes, a migration week on the Serengeti or the Mara, a climb, or a lake night between parks.</p>
+<p>Permits are requested once the dates are firm. Lodges are held only after you confirm them. The same vehicle and guide stay with you for the road portion, so the plan can shift if a gate, the weather, or a flight changes.</p>
+<p>Flights and city hotels that connect to the safari can be added. In Uganda, part of each paid itinerary is set aside for school fees and meals through community partners the desk already works with.</p>`;
 
 export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
   {
@@ -84,7 +82,7 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     hero_title: 'About Us',
     excerpt:
       'Eton Safaris is a Uganda-based tours and travel agency for gorilla trekking, wildlife safaris, and tailor-made holidays across East Africa.',
-    content: `<h4>Who We are</h4>${ABOUT_WHO}<h4>What We do</h4>${ABOUT_WHAT}`,
+    content: `<h4>The desk</h4>${ABOUT_WHO}<h4>How a route is built</h4>${ABOUT_WHAT}`,
     destinations: ABOUT_DESTINATION_CHIPS,
     faqs: [
       {
@@ -116,12 +114,12 @@ export const DEFAULT_CMS_PAGES: DefaultCmsPage[] = [
     breadcrumb_title: 'About Us',
     blocks: [
       {
-        title: 'Who We are',
+        title: 'The desk',
         description: ABOUT_WHO,
         image_url: SITE_MEDIA.gorillasForest,
       },
       {
-        title: 'What We do',
+        title: 'How a route is built',
         description: ABOUT_WHAT,
         image_url: SITE_MEDIA.wildlifeNationalPark,
       },

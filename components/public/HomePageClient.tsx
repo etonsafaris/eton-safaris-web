@@ -258,60 +258,42 @@ export default function HomePageClient({
 
   return (
     <>
-      <section className="relative h-[500px] overflow-hidden bg-[#e4efe6] md:h-[600px]">
-        <FastCoverImage src={current?.image} alt="" />
-        {current?.image ? (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
-        ) : null}
-          <button
-            type="button"
-            onClick={() => goHero(slide - 1)}
-            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/30 p-3 text-white hover:bg-black/45"
-            aria-label="Previous hero slide"
-          >
-            <ChevronLeft />
-          </button>
-          <button
-            type="button"
-            onClick={() => goHero(slide + 1)}
-            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/30 p-3 text-white hover:bg-black/45"
-            aria-label="Next hero slide"
-          >
-            <ChevronRight />
-          </button>
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4">
-            <div
-              className={`w-full max-w-2xl rounded-[3rem] border px-8 py-6 text-center shadow-2xl md:px-12 md:py-8 ${
-                current?.image
-                  ? 'border-white/25 bg-black/35'
-                  : 'border-[#1a3a2a]/15 bg-white/90'
-              }`}
-            >
-              <h1
-                className={`mb-2 font-serif text-2xl font-bold leading-tight md:text-4xl ${
-                  current?.image ? 'text-white' : 'text-[#1a3a2a]'
-                }`}
-                style={current?.image ? { textShadow: '2px 2px 8px rgba(0,0,0,0.9)' } : undefined}
-              >
+      <section className="grid min-h-[560px] bg-[#1c1915] md:min-h-[680px] lg:grid-cols-[minmax(280px,0.8fr)_1.2fr]">
+          <div className="relative z-10 flex items-end bg-[#f6f1e8] px-6 py-10 md:px-12 md:py-16">
+            <div className="w-full max-w-xl border border-[#c4a574] bg-[#f6f1e8] px-6 py-8 text-left md:px-8">
+              <h1 className="mb-3 font-serif text-4xl font-medium leading-[1.05] text-[#1c1915] md:text-5xl">
                 {current?.title || 'Eton Safaris'}
               </h1>
-              <p
-                className={`mb-4 text-sm leading-snug md:text-base ${
-                  current?.image ? 'text-white/90' : 'text-[#334]'
-                }`}
-                style={current?.image ? { textShadow: '1px 1px 4px rgba(0,0,0,0.8)' } : undefined}
-              >
+              <p className="mb-6 max-w-md text-base leading-relaxed text-[#3f3830]">
                 {current?.subtitle || 'Crafted safaris across Africa.'}
               </p>
               <Link
                 href={current?.href ?? '/destinations'}
-                className="pointer-events-auto inline-block rounded-full bg-moss px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white hover:bg-[#4a6b3a]"
+                className="pointer-events-auto inline-block border border-[#1c1915] px-5 py-2 text-xs uppercase tracking-[0.16em] text-[#1c1915] hover:bg-[#1c1915] hover:text-[#f6f1e8]"
               >
                 {current?.cta ?? 'Explore'}
               </Link>
             </div>
           </div>
-          <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          <div className="relative min-h-[360px]">
+            <FastCoverImage src={current?.image} alt="" />
+            <button
+              type="button"
+              onClick={() => goHero(slide - 1)}
+              className="absolute left-4 top-1/2 z-20 -translate-y-1/2 border border-white/40 bg-black/30 p-3 text-white"
+              aria-label="Previous hero slide"
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              type="button"
+              onClick={() => goHero(slide + 1)}
+              className="absolute right-4 top-1/2 z-20 -translate-y-1/2 border border-white/40 bg-black/30 p-3 text-white"
+              aria-label="Next hero slide"
+            >
+              <ChevronRight />
+            </button>
+          <div className="absolute bottom-6 left-6 z-20 flex gap-2">
             {(heroSlides ?? [])?.map?.((_, index) => (
               <button
                 key={index}
@@ -321,6 +303,7 @@ export default function HomePageClient({
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
+          </div>
           </div>
       </section>
 
